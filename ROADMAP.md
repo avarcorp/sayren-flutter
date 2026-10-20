@@ -1,7 +1,8 @@
 # sayren-flutter Roadmap
 
 sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storefront-sdk`·`@sayren/store-sdk`)와 이름·목록이 같은 SDK를 만든다.
-엔트리포인트, export, 팩토리, 옵션 필드, 네임스페이스, 메서드 이름은 Node SDK와 1:1로 대응한다. Node에 없는 공개 이름은 만들지 않고, Node에 있는 이름은 빼지 않는다.
+엔트리포인트, export, 팩토리, 옵션 필드, 네임스페이스, 메서드 이름은 Node SDK와 1:1로 대응한다. 예외는 두 가지다.
+Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 기능을 대신하는 이름은 아래 설계 규칙이 정한 것만 더한다.
 
 - 기준 소스: `avarcorp/sayren` `490c9e3`, `@sayren/storefront-sdk` 0.24.0 · `@sayren/store-sdk` 0.36.0
 - 이 문서의 목록은 Node SDK 소스(`src/**/*.ts`의 export, `client.ts`의 반환 객체, 옵션 인터페이스)에서 스크립트로 뽑았다. Node SDK가 바뀌면 같은 방식으로 다시 뽑아 맞춘다.
@@ -16,29 +17,51 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 | 하위 엔트리포인트 | `@sayren/storefront-sdk/auth` · `/payments` · `/analytics`, `@sayren/store-sdk/server` | `package:sayren_storefront_sdk/auth.dart` · `payments.dart` · `analytics.dart`, `package:sayren_store_sdk/server.dart` |
 | 소스 파일 경로 | `src/schemas/commerce-flow.ts` | `lib/src/schemas/commerce-flow.dart` (경로·하이픈 그대로, `file_names` lint 끔) |
 | export 이름 | `createStorefrontClient`, `ApiError`, `productCardSchema`, `ProductCard`, `STOREFRONT_SESSION_KEYS` | 같다 (`constant_identifier_names` lint 끔) |
-| zod 스키마 상수 | `productCardSchema` (`parse`·`safeParse`) | 같은 이름의 스키마 상수 (`parse`·`safeParse`) |
-| 타입·인터페이스 | `ProductCard` (`z.infer`), `StorefrontClientOptions` | 같은 이름의 클래스 |
 | 네임스페이스·메서드 | `client.catalog.searchProducts(params)` | `client.catalog.searchProducts(params)` |
-| 옵션 객체 인자 | `createStorefrontClient({ baseUrl, storeCode })` | `createStorefrontClient(baseUrl: …, storeCode: …)` 같은 이름의 네임드 인자 |
-| 위치 인자 | `getProduct(productId)` | 같은 순서의 위치 인자 |
-| `TokenSource` | `string \| null \| undefined \| () => string \| null \| undefined` | `String` 또는 `String? Function()`을 받는 `TokenSource` |
 | 비동기 | `Promise<T>` · `Promise<void>` | `Future<T>` · `Future<void>` |
 | 오류 | `ApiError(status, code, message, traceId, body, details, docs)` | 같은 필드의 `ApiError` |
 | `fetch` 옵션 | `fetch?: typeof globalThis.fetch` | `fetch` (HTTP 함수 주입, 이름 그대로) |
 
-`get`·`set`은 Dart 내장 식별자지만 메서드 이름으로 쓸 수 있다. 메서드·네임스페이스·export 이름 2,239개 중 Dart 예약어·`dart:core` 타입과 겹치는 이름은 없다.
+`get`·`set`은 Dart 내장 식별자지만 메서드 이름으로 쓸 수 있다. 메서드·네임스페이스·export 이름 2,230개 중 Dart 예약어·`dart:core` 타입과 겹치는 이름은 없다.
 
-## 단계
+## 설계 규칙
 
-| 단계 | 범위 |
-|---|---|
-| Phase 0 | 기반: `http.ts`(엔벨로프 해제·`ApiError`·`buildQuery`·`TokenSource`·401 refresh 재시도), `schemas/common.ts`, 목록 대조 스크립트 |
-| Phase 1 | `@sayren/storefront-sdk` 기본 엔트리포인트(클라이언트·세션·스키마) |
-| Phase 2 | `@sayren/storefront-sdk/auth` · `/payments` · `/analytics` |
-| Phase 3 | `@sayren/store-sdk` 기본 엔트리포인트 |
-| Phase 4 | `@sayren/store-sdk/server` |
+### 인자
 
-목록 대조 스크립트는 Node SDK에서 뽑은 이름 목록과 Dart 패키지의 공개 이름 목록이 같은지 확인한다. 각 Phase는 이 대조를 통과해야 끝난다.
+- export된 옵션·파라미터 인터페이스(`StorefrontClientOptions`, `StartOptions`, `ProductSearchParams` 등)는 같은 이름의 클래스이고, 함수는 그 클래스 인스턴스를 인자로 받는다.
+
+  ```dart
+  final client = createStorefrontClient(StorefrontClientOptions(baseUrl: baseUrl, storeCode: storeCode, session: session));
+  final page = await client.catalog.searchProducts(ProductSearchParams(keyword: '셔츠', size: 20));
+  ```
+
+- export되지 않은 인라인 객체 인자(`getProductCalendar`의 `{ from, to, variantId }`, `getGuestOrder`의 `{ phone, orderPassword }` 등)는 같은 이름의 네임드 인자다.
+- 위치 인자는 같은 순서의 위치 인자다. Node의 선택 인자(`params?`)는 Dart 선택 위치 인자(`[params]`)이고, 기본값(`input = {}`)도 같다.
+- `TokenSource`는 `String` 또는 `String? Function()`을 받는다(Dart에 union이 없어 `Object?`로 받고 실행 중 검사한다).
+
+### 타입
+
+- 문자열 리터럴 union과 `z.enum`(`AnalyticsConsent`, `ClaimStatus`, `status: "available"` 등)은 `String`이다. 호출부는 Node처럼 `'granted'`를 넘긴다. 타입 별칭은 `typedef AnalyticsConsent = String`이다.
+- 판별 union(`PaymentResult`, `AnalyticsTrackInput` 등)은 같은 이름의 sealed class다. 판별 필드(`status`, `name` 등)는 Node와 같은 이름·문자열 값을 갖는다.
+  분기는 Node처럼 판별 필드로 하고, 변형별 필드는 하위 클래스로 읽는다. 하위 클래스 이름은 `{union 이름}{판별 값 PascalCase}`다(`PaymentResultCompleted`, `AnalyticsTrackInputProductView`).
+- zod 스키마 상수(`productCardSchema`)는 같은 이름의 스키마 상수다. `parse`, `safeParse`(`success`·`data`·`error`), enum 스키마의 `options`, object 스키마의 `shape`를 제공한다.
+- `z.infer` 타입(`ProductCard`)은 같은 이름의 불변 클래스다(`fromJson`·`toJson`).
+
+### 검증과 오류
+
+- Node처럼 요청 본문은 보내기 전에, 응답은 받은 뒤에 스키마로 검증한다.
+- 검증 실패는 `ZodError`를 던진다. Node SDK는 `zod`의 `ZodError`를 그대로 던지므로, Dart SDK는 같은 이름의 클래스(`issues`)를 기본 엔트리포인트에서 export한다.
+- HTTP 실패는 `ApiError`, 관리 API의 승인 대기(202)는 `ApprovalPendingError`다.
+
+### 세션 저장소
+
+- `SessionStorage`는 Node와 같은 동기 인터페이스(`get`·`set`·`remove`)다. 세션 getter(`accessToken`·`refreshToken`)도 동기다.
+- Flutter의 영구 저장소는 비동기이므로 앱 어댑터가 시작할 때 키(`STOREFRONT_SESSION_KEYS`·`STORE_SESSION_KEYS`)를 미리 읽어 메모리에 두고, 쓰기는 메모리에 반영한 뒤 영구 저장소에 비동기로 쓴다.
+  어댑터는 Node처럼 앱 소유다. README에 이 어댑터 예제를 둔다.
+
+### 플랫폼 의존부(`*Env`)
+
+`PaymentsEnv`·`AnalyticsEnv`는 Node에서도 브라우저 의존부를 주입하는 자리다. 이름은 같고 멤버는 Flutter 기준으로 정한다. 생략하면 SDK의 Flutter 기본 구현을 쓴다.
 
 ---
 
@@ -206,6 +229,7 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 - [ ] `src/client.ts` → `lib/src/client.dart` (3): `StorefrontClient`, `StorefrontClientOptions`, `createStorefrontClient`
 - [ ] `src/http.ts` → `lib/src/http.dart` (4): `Query`, `TokenSource`, `ApiError`, `buildQuery`
 - [ ] `src/session.ts` → `lib/src/session.dart` (5): `createStorefrontSession`, `SessionStorage`, `STOREFRONT_SESSION_KEYS`, `StorefrontSession`, `StorefrontSessionOptions`
+- [ ] `ZodError` (설계 규칙 「검증과 오류」)
 
 ## `@sayren/storefront-sdk/auth` → `auth.dart`
 
@@ -213,6 +237,7 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 
 - [ ] `StorefrontAuthOptions`: `baseUrl`, `storeCode`, `fetch?`
 - [ ] `StorefrontAuth`: `anonymous()`, `session()`, `signUp()`, `idp()`, `idpCallback()`, `identities()`, `linkIdp()`, `linkIdpCallback()`, `unlinkIdp()`, `refresh()`, `signOut()`, `withdraw()`
+- [ ] `idp`·`linkIdp`의 복귀는 앱 딥링크로 받아 `idpCallback`·`linkIdpCallback`에 넘긴다(PKCE·state 흐름은 같다)
 
 ### export
 
@@ -224,18 +249,59 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 
 ## `@sayren/storefront-sdk/payments` → `payments.dart`
 
+### 기본 사용
+
+결제는 `start` 한 번의 `await`로 끝난다. 결제창 표시, 복귀 처리, 승인, 결과 확정은 SDK가 한다.
+
+```dart
+final payments = createPayments(PaymentsOptions(client: client, returnUrl: 'https://shop.example.com/payments/return'));
+
+final result = await payments.start(checkoutId, StartOptions(option: option, shippingAddress: address));
+switch (result) {
+  case PaymentResultCompleted(:final orderId): // 주문 완료 화면
+  case PaymentResultFailed(:final message): // 실패 안내, 다른 결제수단으로 payments.retry
+  case PaymentResultCanceled(): // 구매자가 결제창을 닫음
+  case PaymentResultProcessing(:final paymentId): // 확인 중, payments.getStatus로 다시 조회
+  case PaymentResultInvalid(): // start에서는 나오지 않는다
+}
+```
+
+### `start`·`retry`·`open` 동작
+
+Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise를 돌려주고, 결과는 복귀 화면의 `result()`가 읽는다. Dart는 같은 화면에서 결과까지 돌려준다.
+
+- [ ] 결제가 필요 없으면(`status`가 `pending`이 아님) 결제창 없이 바로 결과를 돌려준다(Node `settleWithoutWindow`와 같다)
+- [ ] 결제창은 전체 화면 WebView로 띄운다. Node `launchPayment`와 같은 분기로 PG를 실행한다(스크립트형 PG는 PG JS SDK 실행, 카카오페이·PayPal·mock은 주소 이동, 그 외는 `payUrl`). PC 판정은 하지 않고 늘 모바일 결제창이다
+- [ ] WebView가 `returnUrl`로 이동하면 그 페이지를 열지 않고 주소를 가로챈다. `readPaymentReturn`으로 읽어 승인(`payments.confirm`) 또는 실패 보고(`payments.reportFailure`)를 한 번 보내고 WebView를 닫는다
+- [ ] 구매자가 WebView를 닫으면 `USER_CANCELED`로 실패 보고하고 `CANCELED`를 돌려준다
+- [ ] 결과가 `PROCESSING`이면 `expiresAt`까지 `getStatus`로 조회해 확정된 결과를 돌려준다. 그때까지 확정되지 않을 때만 `PROCESSING`이다
+- [ ] `ATTEMPT_CAPTURED`(이미 매입) 처리, 같은 복귀의 중복 승인 방지는 Node와 같다
+- [ ] 카드사·은행·간편결제 앱 호출(`intent://`, 앱 스킴)은 OS로 넘기고, 앱에서 돌아오면 WebView 결제를 이어 간다
+- [ ] `open(start)`는 결제 시작(`checkout.startPayment`)을 앱이 직접 부른 경우에 쓴다. 이후 동작은 `start`와 같다
+- [ ] `retry(paymentId, options)`는 같은 결제를 다른 옵션으로 다시 시도한다. 동작은 `start`와 같다
+- [ ] `result(url)`은 결제 중 앱이 종료돼 복귀 주소를 나중에 받은 경우(딥링크 등)에 쓴다. Node와 같게 승인·실패 보고 후 결과를 만든다
+- [ ] 확인 필요: 스크립트형 PG(토스페이먼츠·포트원·네이버페이)를 실행할 WebView 페이지의 출처와 PG 허용 도메인
+
+### `PaymentsEnv` (Flutter)
+
+- [ ] `present(url)`: 결제창 WebView를 띄우고, `returnUrl`에 도착하면 그 주소를, 구매자가 닫으면 `null`을 돌려준다
+- [ ] `currentUrl()`: `result()`에서 주소를 생략했을 때 읽을 주소. 기본 구현은 `null`이고 결과는 `INVALID`다
+- [ ] 기본 구현은 앱의 루트 `Navigator`를 찾아 WebView 화면을 띄운다. 루트 `Navigator`가 없는 라우팅이면 앱이 `env`를 넘긴다
+
 ### `createPayments`
 
 - [ ] `PaymentsOptions`: `client`, `returnUrl?`, `env?`
-- [ ] `Payments`: `start()`, `retry()`, `open()`, `prepareWindow()`, `result()`, `getStatus()`
-- [ ] `StartOptions`: `option?`, `shippingAddress?`, `guest?`, `cashReceipt?`, `coupons?`, `pointAmount?`, `returnUrl?`, `mode?`, `window?`
-- [ ] `RetryOptions`: `option`, `returnUrl?`, `cashReceipt?`, `mode?`, `window?`
+- [ ] `Payments`: `start()`, `retry()`, `open()`, `result()`, `getStatus()`
+- [ ] `StartOptions`: `option?`, `shippingAddress?`, `guest?`, `cashReceipt?`, `coupons?`, `pointAmount?`, `returnUrl?`
+- [ ] `RetryOptions`: `option`, `returnUrl?`, `cashReceipt?`
 
 ### export
 
-총 15개.
+총 10개.
 
-- [ ] `src/payments/index.ts` → `lib/src/payments/index.dart` (15): `PaymentMode`, `PaymentDevice`, `PaymentResult`, `PaymentPopup`, `PaymentPostMessage`, `PaymentsEnv`, `resolvePaymentMode`, `paymentResultOf`, `PaymentsOptions`, `StartOptions`, `RetryOptions`, `PREPARED_WINDOW`, `PreparedPaymentWindow`, `Payments`, `createPayments`
+- [ ] `src/payments/index.ts` → `lib/src/payments/index.dart` (10): `PaymentDevice`, `PaymentResult`, `PaymentsEnv`, `resolvePaymentMode`, `paymentResultOf`, `PaymentsOptions`, `StartOptions`, `RetryOptions`, `Payments`, `createPayments`
+
+`resolvePaymentMode`의 `mode` 인자는 Node에서 deprecated 타입 `PaymentMode`다. Dart는 `PaymentMode` 없이 `String?`으로 받는다.
 
 ## `@sayren/storefront-sdk/analytics` → `analytics.dart`
 
@@ -243,6 +309,10 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 
 - [ ] `AnalyticsOptions`: `baseUrl`, `storeCode`, `consent?`, `autoPageViews?`, `debug?`, `cookieDomain?`, `flushIntervalMs?`
 - [ ] `Analytics`: `track()`, `page()`, `setConsent()`, `ids()`, `flush()`, `destroy()`
+- [ ] Node는 브라우저가 아니면 아무것도 하지 않는 객체를 돌려준다. Dart는 Flutter 기본 `AnalyticsEnv`로 동작한다
+- [ ] 방문자·세션 ID는 쿠키 대신 앱 저장소에 둔다. `ids()` 값을 `StorefrontClientOptions(visitorId:, sessionId:)`에 넘기는 사용법은 같다
+- [ ] `autoPageViews`는 시작할 때 첫 페이지뷰만 보낸다. 화면 이동의 페이지뷰는 앱이 `page()`를 부른다
+- [ ] `cookieDomain`은 받기만 하고 쓰지 않는다(앱에 쿠키 도메인이 없다)
 
 ### export
 
@@ -258,8 +328,9 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 
 - [ ] `StoreClientOptions`: `baseUrl`, `accessToken?`, `storeId?`, `session?`, `refresh?`, `onUnauthorized?`, `fetch?`
 - [ ] 최상위 멤버: `accessToken`, `refreshToken`, `authorize()`, `userinfo()`
+- [ ] `uploads.upload(file, { purpose, filename })`: Node의 `Blob`·`File` 자리에 `XFile`(`cross_file`)을 받는다. 파일 이름은 `filename`, 없으면 `XFile.name`이다
 
-엔드포인트 311개(경로는 `/v1` 기준):
+엔드포인트 308개(경로는 `/v1` 기준):
 
 #### `auth` (2)
 
@@ -496,11 +567,6 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 - [ ] `customerInquiries.answer` · `POST /v1/customer-inquiries/{inquiryId}/answer`
 - [ ] `customerInquiries.updateAnswer` · `PUT /v1/customer-inquiries/{inquiryId}/answer`
 
-#### `settlements` (2)
-
-- [ ] `settlements.list` · `GET /v1/settlements`
-- [ ] `settlements.get` · `GET /v1/settlements/{settlementId}`
-
 #### `salesReport` (1)
 
 - [ ] `salesReport.get` · `GET /v1/sales-report`
@@ -658,7 +724,7 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 - [ ] `ai.getRunFileDiff` · `GET /v1/ai/runs/{runId}/file-changes`
 - [ ] `ai.revertRun` · `POST /v1/ai/runs/{runId}/revert`
 
-#### `storefront` (42)
+#### `storefront` (41)
 
 - [ ] `storefront.listTemplates` · `GET /v1/storefront/templates`
 - [ ] `storefront.getStoreTemplate` · `GET /v1/storefront/template`
@@ -668,7 +734,6 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 - [ ] `storefront.create` · `POST /v1/storefront/site`
 - [ ] `storefront.getDeployment` · `GET /v1/storefront/site/deployment`
 - [ ] `storefront.retryDeployment` · `POST /v1/storefront/site/deployment/retry`
-- [ ] `storefront.changeTemplate` · `POST /v1/storefront/site/template`
 - [ ] `storefront.listVersions` · `GET /v1/storefront/site/versions`
 - [ ] `storefront.publish` · `POST /v1/storefront/site/versions/{versionId}/publish`
 - [ ] `storefront.rollback` · `POST /v1/storefront/site/rollback`
@@ -731,10 +796,11 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 - [ ] `StoreAuthServer`: `authorizeUrl`, `tokenUrl`, `revokeUrl`, `resource?`
 - [ ] `AuthorizeOptions`: `redirectUri`, `scope?`, `prompt?`
 - [ ] `StoreSession`: `getToken()`, `setTokens()`, `refresh()`, `clear()`, `logout()`, `subscribe()`, `accessToken`, `refreshToken`, `authorize()`, `handleCallback()`, `userinfo()`
+- [ ] `authorize`의 복귀는 앱 딥링크로 받아 `handleCallback(code, state)`에 넘긴다
 
 ### export
 
-총 1613개.
+총 1611개.
 
 - [ ] `src/schemas/ai.ts` → `lib/src/schemas/ai.dart` (99): `aiAttachmentSchema`, `aiPreviewSelectionSchema`, `AiPreviewSelection`, `aiRunStatusSchema`, `AiRunStatus`, `AI_RUN_ACTIVE_STATUSES`, `aiStreamAccessSchema`, `AiStreamAccess`, `aiRunSchema`, `AiRun`, `aiActivitySchema`, `AiActivity`, `aiToolChangeSchema`, `AiToolChange`, `AI_AGENT_PHASES`, `aiAgentPhaseSchema`, `AiAgentPhase`, `AI_AGENT_NOTES_DIR`, `AI_TODO_STATUSES`, `aiTodoSchema`, `AiTodo`, `AI_TODOS_MAX`, `isAiAgentNotesPath`, `AI_DESIGN_DIR`, `AI_DESIGN_CANVAS_PATH`, `isAiDesignPath`, `AI_DESIGN_BOARD_FILE_PATTERN`, `AI_DESIGN_BOARD_KINDS`, `AI_DESIGN_VIEWPORTS`, `AI_DESIGN_BOARDS_MAX`, `aiDesignBoardSchema`, `AiDesignBoard`, `aiDesignCanvasSchema`, `AiDesignCanvas`, `aiDesignSelectionSchema`, `AiDesignSelection`, `STORE_SHOP_TYPES`, `storeShopTypeSchema`, `StoreShopType`, `aiChoiceOptionSchema`, `AiChoiceOption`, `aiSetupConfirmItemSchema`, `AiSetupConfirmItem`, `AI_SETUP_CONFIRM_APPROVE`, `aiDesignConfirmBoardSchema`, `AiDesignConfirmBoard`, `AI_DESIGN_CONFIRM_APPROVE`, `aiMessagePartSchema`, `AiMessagePart`, `aiMessageSchema`, `AiMessage`, `aiConversationSummarySchema`, `AiConversationSummary`, `aiConversationSchema`, `AiConversation`, `storeSetupBriefSchema`, `StoreSetupBrief`, `createAiConversationRequestSchema`, `CreateAiConversationRequest`, `createAiConversationResponseSchema`, `CreateAiConversationResponse`, `sendAiMessageRequestSchema`, `SendAiMessageRequest`, `sendAiMessageResponseSchema`, `SendAiMessageResponse`, `aiFocusAreaSchema`, `AiFocusArea`, `aiFocusSchema`, `AiFocus`, `AI_RUN_FILE_CHANGES_RETENTION_DAYS`, `aiRunChangesStatusSchema`, `AiRunChangesStatus`, `aiFileChangeKindSchema`, `AiFileChangeKind`, `aiRunChangesSchema`, `AiRunChanges`, `aiConversationFileChangesSchema`, `AiConversationFileChanges`, `aiRunFileDiffSchema`, `AiRunFileDiff`, `aiRunRevertResultSchema`, `AiRunRevertResult`, `aiRunRevertConflictDetailsSchema`, `AiRunRevertConflictDetails`, `aiStreamEventSchema`, `AiStreamEvent`, `aiStreamRecordSchema`, `AiStreamRecord`, `STORE_DRAFT_MAX_ATTACHMENTS`, `STORE_DRAFT_ATTACHMENT_MAX_BYTES`, `STORE_DRAFT_RETENTION_DAYS`, `createStoreDraftRequestSchema`, `CreateStoreDraftRequest`, `createStoreDraftResponseSchema`, `CreateStoreDraftResponse`, `storeDraftSchema`, `StoreDraft`, `storeDraftPreviewSchema`, `StoreDraftPreview`
 - [ ] `src/schemas/analytics.ts` → `lib/src/schemas/analytics.dart` (44): `analyticsRangeQuerySchema`, `AnalyticsRangeParams`, `analyticsTotalsSchema`, `AnalyticsTotals`, `analyticsFunnelStepSchema`, `AnalyticsFunnelStep`, `analyticsOverviewSchema`, `AnalyticsOverview`, `analyticsProductSortSchema`, `AnalyticsProductSort`, `analyticsProductsQuerySchema`, `AnalyticsProductsParams`, `analyticsProductRowSchema`, `AnalyticsProductRow`, `analyticsProductsSchema`, `AnalyticsProducts`, `analyticsChannelSchema`, `AnalyticsChannel`, `analyticsSourceGroupBySchema`, `AnalyticsSourceGroupBy`, `analyticsSourcesQuerySchema`, `AnalyticsSourcesParams`, `analyticsSourceRowSchema`, `AnalyticsSourceRow`, `analyticsSourcesSchema`, `AnalyticsSources`, `analyticsRealtimeSchema`, `AnalyticsRealtime`, `analyticsDeviceRowSchema`, `AnalyticsDeviceRow`, `analyticsDevicesSchema`, `AnalyticsDevices`, `analyticsPagesQuerySchema`, `AnalyticsPagesParams`, `analyticsPagesSchema`, `AnalyticsPages`, `analyticsSearchQuerySchema`, `AnalyticsSearchParams`, `analyticsSearchSchema`, `AnalyticsSearch`, `analyticsCheckoutOutcomeSchema`, `AnalyticsCheckoutOutcome`, `analyticsCheckoutSchema`, `AnalyticsCheckout`
@@ -776,7 +842,7 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 - [ ] `src/schemas/starter.ts` → `lib/src/schemas/starter.dart` (22): `storeIndustrySchema`, `StoreIndustry`, `brandBriefProductSourceSchema`, `BrandBriefProductSource`, `BRAND_BRIEF_MAX_REFERENCES`, `brandBriefReferenceSchema`, `BrandBriefReference`, `brandBriefSchema`, `BrandBrief`, `putBrandBriefRequestSchema`, `PutBrandBriefRequest`, `brandBriefViewSchema`, `BrandBriefView`, `STARTER_STAGES`, `starterStageSchema`, `StarterStage`, `STARTER_SELLER_TASKS`, `starterSellerTaskSchema`, `StarterSellerTask`, `starterStoreInfoFieldSchema`, `starterStatusSchema`, `StarterStatus`
 - [ ] `src/schemas/stay.ts` → `lib/src/schemas/stay.dart` (15): `calendarDateSchema`, `MAX_STAY_NIGHTS`, `MAX_CALENDAR_DAYS`, `inventoryModeSchema`, `InventoryMode`, `stayRangeSchema`, `StayRange`, `staySnapshotSchema`, `StaySnapshot`, `nightsOf`, `calendarDaySchema`, `CalendarDay`, `calendarQuerySchema`, `setCalendarRequestSchema`, `SetCalendarRequest`
 - [ ] `src/schemas/store.ts` → `lib/src/schemas/store.dart` (40): `STORE_CODE_PATTERN`, `RESERVED_STORE_CODES`, `isReservedStoreCode`, `storeCodeSchema`, `isWebOrigin`, `analyticsOriginSchema`, `MAX_ANALYTICS_ALLOWED_ORIGINS`, `MAX_AUTO_TRANSITION_DAYS`, `policyVersionSchema`, `policyDocumentUrlSchema`, `BUSINESS_NUMBER_PATTERN`, `normalizeBusinessNumber`, `businessNumberSchema`, `BUSINESS_INFO_MAX_LENGTH`, `businessInfoPatchShape`, `businessInfoResponseShape`, `updateStoreRequestSchema`, `UpdateStoreRequest`, `storeSchema`, `Store`, `storeMemberSchema`, `StoreMember`, `invitationDeliveryStatusSchema`, `InvitationDeliveryStatus`, `invitationSchema`, `Invitation`, `inviteMemberRequestSchema`, `InviteMemberRequest`, `updateMemberRoleRequestSchema`, `UpdateMemberRoleRequest`, `invitationListQuerySchema`, `storeMemberRoleUpdatedSchema`, `StoreMemberRoleUpdated`, `addressTypeSchema`, `AddressType`, `sellerAddressListQuerySchema`, `sellerAddressSchema`, `SellerAddress`, `sellerAddressRequestSchema`, `SellerAddressRequest`
-- [ ] `src/schemas/storefront-hosting.ts` → `lib/src/schemas/storefront-hosting.dart` (186): `STOREFRONT_SLUG_PATTERN`, `RESERVED_STOREFRONT_SLUGS`, `STOREFRONT_EDIT_PREVIEW_SUFFIX`, `STOREFRONT_SHOWCASE_SLUG_PREFIX`, `isShowcaseStorefrontSlug`, `isReservedStorefrontSlug`, `storefrontEditPreviewLabelOf`, `storefrontVersionPreviewLabelOf`, `storefrontSlugSchema`, `STOREFRONT_SLUG_HOLD_DAYS`, `STOREFRONT_CLOSED_SITE_HOLD_DAYS`, `STOREFRONT_SLUG_CHANGE_WINDOW_DAYS`, `STOREFRONT_SLUG_CHANGE_LIMIT`, `STOREFRONT_SITE_CREATE_LIMIT`, `storefrontTemplateSchema`, `StorefrontTemplate`, `storeTemplateSchema`, `StoreTemplate`, `TEMPLATE_STORE_LOCKED_BUSINESS_FIELDS`, `updateStoreTemplateRequestSchema`, `UpdateStoreTemplateRequest`, `storefrontVersionStatusSchema`, `StorefrontVersionStatus`, `storefrontVersionSchema`, `StorefrontVersion`, `storefrontSiteStatusSchema`, `StorefrontSiteStatus`, `storefrontVisibilitySchema`, `StorefrontVisibility`, `storefrontSourceModeSchema`, `storefrontDomainSchema`, `StorefrontDomain`, `storefrontProvisioningSchema`, `StorefrontProvisioning`, `storefrontEditPreviewSchema`, `StorefrontEditPreview`, `storefrontSuspensionSchema`, `StorefrontSuspension`, `storefrontSiteSnapshotSchema`, `StorefrontSiteSnapshot`, `storefrontSiteSchema`, `StorefrontSite`, `storefrontHostingSchema`, `StorefrontHosting`, `storefrontSlugAvailabilitySchema`, `StorefrontSlugAvailability`, `storefrontDeploymentStepSchema`, `StorefrontDeploymentStep`, `storefrontDeploymentLogSchema`, `StorefrontDeploymentLog`, `storefrontDeploymentSchema`, `StorefrontDeployment`, `createStorefrontSiteRequestSchema`, `CreateStorefrontSiteRequest`, `changeStorefrontTemplateRequestSchema`, `ChangeStorefrontTemplateRequest`, `publishStorefrontVersionRequestSchema`, `PublishStorefrontVersionRequest`, `rollbackStorefrontRequestSchema`, `RollbackStorefrontRequest`, `changeStorefrontSlugRequestSchema`, `ChangeStorefrontSlugRequest`, `setStorefrontVisibilityRequestSchema`, `SetStorefrontVisibilityRequest`, `disableStorefrontHostingRequestSchema`, `DisableStorefrontHostingRequest`, `storefrontSlugAvailabilityQuerySchema`, `createStorefrontPreviewLinkRequestSchema`, `CreateStorefrontPreviewLinkRequest`, `storefrontPreviewLinkSchema`, `StorefrontPreviewLink`, `STOREFRONT_PLATFORM_DOMAINS`, `STOREFRONT_PUBLIC_SUFFIXES`, `STOREFRONT_CUSTOM_DOMAIN_LIMIT_DEFAULT`, `STOREFRONT_DOMAIN_DNS_WAIT_DAYS`, `STOREFRONT_DOMAIN_DNS_GRACE_DAYS`, `STOREFRONT_DOMAIN_TXT_LABEL`, `normalizeStorefrontHostname`, `StorefrontHostnameProblem`, `storefrontCustomHostnameProblem`, `storefrontDomainTxtNameOf`, `storefrontCustomDomainStatusSchema`, `StorefrontCustomDomainStatus`, `storefrontDnsRecordSchema`, `StorefrontDnsRecord`, `storefrontSiteDomainSchema`, `StorefrontSiteDomain`, `storefrontSiteDomainsSchema`, `StorefrontSiteDomains`, `addStorefrontDomainRequestSchema`, `AddStorefrontDomainRequest`, `STOREFRONT_EDIT_CAPACITY`, `STOREFRONT_EDIT_IDLE_MINUTES`, `STOREFRONT_EDIT_ACTIVITY_TIMEOUT_MINUTES`, `STOREFRONT_FILE_MAX_BYTES`, `STOREFRONT_WORKSPACE_MAX_BYTES`, `STOREFRONT_FILE_BATCH_MAX`, `STOREFRONT_BLOCKED_PATH_SEGMENTS`, `STOREFRONT_PATH_SEGMENT_PATTERN`, `normalizeStorefrontPath`, `isEditableStorefrontPath`, `storefrontFilePathSchema`, `storefrontFileHashSchema`, `storefrontFileEncodingSchema`, `storefrontEditSessionStatusSchema`, `STOREFRONT_EDIT_START_STAGES`, `storefrontEditSessionSchema`, `StorefrontEditSession`, `storefrontDevLogsSchema`, `StorefrontDevLogs`, `storefrontEditingSchema`, `StorefrontEditing`, `storefrontFileEntrySchema`, `StorefrontFileEntry`, `storefrontFileListSchema`, `StorefrontFileList`, `storefrontFileListQuerySchema`, `storefrontFileContentQuerySchema`, `storefrontFileContentSchema`, `StorefrontFileContent`, `writeStorefrontFilesRequestSchema`, `WriteStorefrontFilesRequest`, `storefrontFileWriteResultSchema`, `StorefrontFileWriteResult`, `storefrontFileConflictDetailsSchema`, `StorefrontFileConflictDetails`, `deleteStorefrontFileRequestSchema`, `DeleteStorefrontFileRequest`, `storefrontFileDeleteResultSchema`, `StorefrontFileDeleteResult`, `moveStorefrontFileRequestSchema`, `MoveStorefrontFileRequest`, `storefrontFileMoveResultSchema`, `StorefrontFileMoveResult`, `STOREFRONT_SEARCH_REGEX_MAX_LENGTH`, `searchStorefrontFilesRequestSchema`, `SearchStorefrontFilesRequest`, `storefrontFileSearchResultSchema`, `StorefrontFileSearchResult`, `runStorefrontCheckRequestSchema`, `RunStorefrontCheckRequest`, `storefrontCheckStatusSchema`, `StorefrontCheckStatus`, `STOREFRONT_CHECK_TERMINAL_STATUSES`, `storefrontCheckSchema`, `StorefrontCheck`, `storefrontRuleSeveritySchema`, `StorefrontRuleSeverity`, `storefrontRuleResultSchema`, `StorefrontRuleResult`, `storefrontVerifyReportSchema`, `StorefrontVerifyReport`, `storefrontBuildStatusSchema`, `StorefrontBuildStatus`, `STOREFRONT_BUILD_TERMINAL_STATUSES`, `STOREFRONT_BUILD_STAGES`, `storefrontDependencyFindingSchema`, `StorefrontDependencyFinding`, `storefrontBuildDependenciesSchema`, `StorefrontBuildDependencies`, `storefrontBuildSchema`, `StorefrontBuild`, `storefrontBuildListQuerySchema`, `createStorefrontVersionRequestSchema`, `CreateStorefrontVersionRequest`, `storefrontVersionCreatedSchema`, `StorefrontVersionCreated`, `createStorefrontEditPreviewLinkRequestSchema`, `CreateStorefrontEditPreviewLinkRequest`, `STOREFRONT_SOURCE_PART_BYTES`, `STOREFRONT_SOURCE_BLOB_BATCH_MAX`, `STOREFRONT_WORKSPACE_MAX_FILES`, `storefrontSourceRefSchema`, `storefrontSourceSchema`, `StorefrontSource`, `storefrontSourceArchiveQuerySchema`, `storefrontSourceArchivePartSchema`, `StorefrontSourceArchivePart`, `uploadStorefrontSourceBlobsRequestSchema`, `UploadStorefrontSourceBlobsRequest`, `storefrontSourceBlobsResultSchema`, `StorefrontSourceBlobsResult`, `replaceStorefrontSourceRequestSchema`, `ReplaceStorefrontSourceRequest`, `storefrontSourceReplacedSchema`, `StorefrontSourceReplaced`
+- [ ] `src/schemas/storefront-hosting.ts` → `lib/src/schemas/storefront-hosting.dart` (184): `STOREFRONT_SLUG_PATTERN`, `RESERVED_STOREFRONT_SLUGS`, `STOREFRONT_EDIT_PREVIEW_SUFFIX`, `STOREFRONT_SHOWCASE_SLUG_PREFIX`, `isShowcaseStorefrontSlug`, `isReservedStorefrontSlug`, `storefrontEditPreviewLabelOf`, `storefrontVersionPreviewLabelOf`, `storefrontSlugSchema`, `STOREFRONT_SLUG_HOLD_DAYS`, `STOREFRONT_CLOSED_SITE_HOLD_DAYS`, `STOREFRONT_SLUG_CHANGE_WINDOW_DAYS`, `STOREFRONT_SLUG_CHANGE_LIMIT`, `STOREFRONT_SITE_CREATE_LIMIT`, `storefrontTemplateSchema`, `StorefrontTemplate`, `storeTemplateSchema`, `StoreTemplate`, `TEMPLATE_STORE_LOCKED_BUSINESS_FIELDS`, `updateStoreTemplateRequestSchema`, `UpdateStoreTemplateRequest`, `storefrontVersionStatusSchema`, `StorefrontVersionStatus`, `storefrontVersionSchema`, `StorefrontVersion`, `storefrontSiteStatusSchema`, `StorefrontSiteStatus`, `storefrontVisibilitySchema`, `StorefrontVisibility`, `storefrontSourceModeSchema`, `storefrontDomainSchema`, `StorefrontDomain`, `storefrontProvisioningSchema`, `StorefrontProvisioning`, `storefrontEditPreviewSchema`, `StorefrontEditPreview`, `storefrontSuspensionSchema`, `StorefrontSuspension`, `storefrontSiteSnapshotSchema`, `StorefrontSiteSnapshot`, `storefrontSiteSchema`, `StorefrontSite`, `storefrontHostingSchema`, `StorefrontHosting`, `storefrontSlugAvailabilitySchema`, `StorefrontSlugAvailability`, `storefrontDeploymentStepSchema`, `StorefrontDeploymentStep`, `storefrontDeploymentLogSchema`, `StorefrontDeploymentLog`, `storefrontDeploymentSchema`, `StorefrontDeployment`, `createStorefrontSiteRequestSchema`, `CreateStorefrontSiteRequest`, `publishStorefrontVersionRequestSchema`, `PublishStorefrontVersionRequest`, `rollbackStorefrontRequestSchema`, `RollbackStorefrontRequest`, `changeStorefrontSlugRequestSchema`, `ChangeStorefrontSlugRequest`, `setStorefrontVisibilityRequestSchema`, `SetStorefrontVisibilityRequest`, `disableStorefrontHostingRequestSchema`, `DisableStorefrontHostingRequest`, `storefrontSlugAvailabilityQuerySchema`, `createStorefrontPreviewLinkRequestSchema`, `CreateStorefrontPreviewLinkRequest`, `storefrontPreviewLinkSchema`, `StorefrontPreviewLink`, `STOREFRONT_PLATFORM_DOMAINS`, `STOREFRONT_PUBLIC_SUFFIXES`, `STOREFRONT_CUSTOM_DOMAIN_LIMIT_DEFAULT`, `STOREFRONT_DOMAIN_DNS_WAIT_DAYS`, `STOREFRONT_DOMAIN_DNS_GRACE_DAYS`, `STOREFRONT_DOMAIN_TXT_LABEL`, `normalizeStorefrontHostname`, `StorefrontHostnameProblem`, `storefrontCustomHostnameProblem`, `storefrontDomainTxtNameOf`, `storefrontCustomDomainStatusSchema`, `StorefrontCustomDomainStatus`, `storefrontDnsRecordSchema`, `StorefrontDnsRecord`, `storefrontSiteDomainSchema`, `StorefrontSiteDomain`, `storefrontSiteDomainsSchema`, `StorefrontSiteDomains`, `addStorefrontDomainRequestSchema`, `AddStorefrontDomainRequest`, `STOREFRONT_EDIT_CAPACITY`, `STOREFRONT_EDIT_IDLE_MINUTES`, `STOREFRONT_EDIT_ACTIVITY_TIMEOUT_MINUTES`, `STOREFRONT_FILE_MAX_BYTES`, `STOREFRONT_WORKSPACE_MAX_BYTES`, `STOREFRONT_FILE_BATCH_MAX`, `STOREFRONT_BLOCKED_PATH_SEGMENTS`, `STOREFRONT_PATH_SEGMENT_PATTERN`, `normalizeStorefrontPath`, `isEditableStorefrontPath`, `storefrontFilePathSchema`, `storefrontFileHashSchema`, `storefrontFileEncodingSchema`, `storefrontEditSessionStatusSchema`, `STOREFRONT_EDIT_START_STAGES`, `storefrontEditSessionSchema`, `StorefrontEditSession`, `storefrontDevLogsSchema`, `StorefrontDevLogs`, `storefrontEditingSchema`, `StorefrontEditing`, `storefrontFileEntrySchema`, `StorefrontFileEntry`, `storefrontFileListSchema`, `StorefrontFileList`, `storefrontFileListQuerySchema`, `storefrontFileContentQuerySchema`, `storefrontFileContentSchema`, `StorefrontFileContent`, `writeStorefrontFilesRequestSchema`, `WriteStorefrontFilesRequest`, `storefrontFileWriteResultSchema`, `StorefrontFileWriteResult`, `storefrontFileConflictDetailsSchema`, `StorefrontFileConflictDetails`, `deleteStorefrontFileRequestSchema`, `DeleteStorefrontFileRequest`, `storefrontFileDeleteResultSchema`, `StorefrontFileDeleteResult`, `moveStorefrontFileRequestSchema`, `MoveStorefrontFileRequest`, `storefrontFileMoveResultSchema`, `StorefrontFileMoveResult`, `STOREFRONT_SEARCH_REGEX_MAX_LENGTH`, `searchStorefrontFilesRequestSchema`, `SearchStorefrontFilesRequest`, `storefrontFileSearchResultSchema`, `StorefrontFileSearchResult`, `runStorefrontCheckRequestSchema`, `RunStorefrontCheckRequest`, `storefrontCheckStatusSchema`, `StorefrontCheckStatus`, `STOREFRONT_CHECK_TERMINAL_STATUSES`, `storefrontCheckSchema`, `StorefrontCheck`, `storefrontRuleSeveritySchema`, `StorefrontRuleSeverity`, `storefrontRuleResultSchema`, `StorefrontRuleResult`, `storefrontVerifyReportSchema`, `StorefrontVerifyReport`, `storefrontBuildStatusSchema`, `StorefrontBuildStatus`, `STOREFRONT_BUILD_TERMINAL_STATUSES`, `STOREFRONT_BUILD_STAGES`, `storefrontDependencyFindingSchema`, `StorefrontDependencyFinding`, `storefrontBuildDependenciesSchema`, `StorefrontBuildDependencies`, `storefrontBuildSchema`, `StorefrontBuild`, `storefrontBuildListQuerySchema`, `createStorefrontVersionRequestSchema`, `CreateStorefrontVersionRequest`, `storefrontVersionCreatedSchema`, `StorefrontVersionCreated`, `createStorefrontEditPreviewLinkRequestSchema`, `CreateStorefrontEditPreviewLinkRequest`, `STOREFRONT_SOURCE_PART_BYTES`, `STOREFRONT_SOURCE_BLOB_BATCH_MAX`, `STOREFRONT_WORKSPACE_MAX_FILES`, `storefrontSourceRefSchema`, `storefrontSourceSchema`, `StorefrontSource`, `storefrontSourceArchiveQuerySchema`, `storefrontSourceArchivePartSchema`, `StorefrontSourceArchivePart`, `uploadStorefrontSourceBlobsRequestSchema`, `UploadStorefrontSourceBlobsRequest`, `storefrontSourceBlobsResultSchema`, `StorefrontSourceBlobsResult`, `replaceStorefrontSourceRequestSchema`, `ReplaceStorefrontSourceRequest`, `storefrontSourceReplacedSchema`, `StorefrontSourceReplaced`
 - [ ] `src/schemas/subscription.ts` → `lib/src/schemas/subscription.dart` (14): `planCodeSchema`, `PlanCode`, `responsePlanCodeSchema`, `ResponsePlanCode`, `subscriptionStatusSchema`, `SubscriptionStatus`, `subscriptionLimitsSchema`, `SubscriptionLimits`, `subscriptionUsageSchema`, `SubscriptionUsage`, `storeSubscriptionSchema`, `StoreSubscription`, `planErrorDetailsSchema`, `PlanErrorDetails`
 - [ ] `src/schemas/telemetry.ts` → `lib/src/schemas/telemetry.dart` (5): `mcpRuleResultSchema`, `McpRuleResult`, `MCP_TELEMETRY_MAX_RESULTS`, `mcpToolEventSchema`, `McpToolEvent`
 - [ ] `src/schemas/upload.ts` → `lib/src/schemas/upload.dart` (11): `uploadPurposeSchema`, `UploadPurpose`, `UploadPurposeLimit`, `UPLOAD_PURPOSE_LIMITS`, `uploadExtensionOf`, `UploadRejection`, `uploadRejection`, `uploadRequestSchema`, `UploadRequest`, `uploadTicketSchema`, `UploadTicket`
@@ -786,6 +852,7 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 - [ ] `src/http.ts` → `lib/src/http.dart` (7): `Query`, `TokenSource`, `APPROVAL_ALREADY_DECIDED_CODE`, `APPROVAL_REQUIRED_CODE`, `ApiError`, `ApprovalPendingError`, `buildQuery`
 - [ ] `src/oauth.ts` → `lib/src/oauth.dart` (6): `buildAuthorizeUrl`, `createPkcePair`, `exchangeAuthorizationCode`, `OAuthTokenResponse`, `oauthTokenResponseSchema`, `refreshUserToken`
 - [ ] `src/session.ts` → `lib/src/session.dart` (7): `AuthorizeOptions`, `createStoreSession`, `SessionStorage`, `STORE_SESSION_KEYS`, `StoreAuthServer`, `StoreSession`, `StoreSessionOptions`
+- [ ] `ZodError` (설계 규칙 「검증과 오류」)
 
 ## `@sayren/store-sdk/server` → `server.dart`
 
@@ -799,19 +866,32 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 
 ---
 
-## 플랫폼 차이
+## 만들지 않는 이름 (Node `@deprecated`)
 
-공개 이름과 시그니처는 위 목록 그대로 두고, 브라우저에 기대는 내부 동작만 Flutter 환경에 맞춘다.
-
-| 이름 | Node 동작 | Dart 동작 |
+| Node 이름 | 위치 | 비고 |
 |---|---|---|
-| `createPayments().start`·`retry`·`open`·`result` | 팝업·리디렉트로 PG 결제창, 복귀 주소에서 결과 읽기 | 인앱 WebView로 `payUrl`을 열고 복귀 주소 진입을 가로채 같은 결과를 만든다 |
-| `PaymentsEnv`·`AnalyticsEnv` | 브라우저 의존부 주입 | 같은 이름으로 Flutter 의존부 주입 |
-| `createAnalytics` | 쿠키(`sy_vid`·`sy_sid`)·자동 페이지뷰 | 앱 저장소에 같은 ID를 둔다. `ids()` 값 사용법은 같다 |
-| `analyticsIdsFromCookie` | SSR에서 Cookie 헤더 파싱 | 같은 입력·출력(Dart 서버에서 쓴다) |
-| `createStorefrontSession`·`createStoreSession`의 `refresh` | 탭 내 single-flight + `navigator.locks` | 프로세스 내 single-flight |
-| `createStorefrontAuth().idp`·`createStoreSession().authorize` | 브라우저 리디렉트 후 콜백 URL | 같은 PKCE·state 흐름, 콜백은 앱 딥링크로 받는다 |
-| `uploads.upload` | `Blob`·`File` | 바이트와 파일 이름 |
+| `PaymentMode` | `payments` export | 결제 서비스 팝업 폐지 |
+| `PaymentPopup` · `PaymentPostMessage` | `payments` export | 〃 |
+| `PreparedPaymentWindow` · `PREPARED_WINDOW` · `Payments.prepareWindow` | `payments` export·멤버 | 〃 |
+| `StartOptions.mode`·`window`, `RetryOptions.mode`·`window`, `open`의 `options` | `payments` 옵션 | 〃 |
+| `PaymentsEnv.openPopup`·`subscribe`·`now`·`setInterval`·`clearInterval` | `payments` 의존부 | 〃 |
+| `settlements.list` · `settlements.get` | `createStoreClient` | `salesReport.get`으로 대체 |
+| `storefront.changeTemplate` · `changeStorefrontTemplateRequestSchema` · `ChangeStorefrontTemplateRequest` | `createStoreClient`·export | 서버가 항상 409 |
+| `analyticsAllowedOrigins` 필드 | 상점 수정 요청 스키마(`schemas/store.ts`) | `storefrontOrigins`로 대체 |
+
+목록 대조 스크립트는 이 표의 이름을 Node 목록에서 빼고 비교한다.
+
+## 단계
+
+| 단계 | 범위 |
+|---|---|
+| Phase 0 | 기반: `http.ts`(엔벨로프 해제·`ApiError`·`buildQuery`·`TokenSource`·401 refresh 재시도), 스키마 상수·`ZodError`, `schemas/common.ts`, 목록 대조 스크립트 |
+| Phase 1 | `@sayren/storefront-sdk` 기본 엔트리포인트(클라이언트·세션·스키마) |
+| Phase 2 | `@sayren/storefront-sdk/auth` · `/payments` · `/analytics` |
+| Phase 3 | `@sayren/store-sdk` 기본 엔트리포인트 |
+| Phase 4 | `@sayren/store-sdk/server` |
+
+목록 대조 스크립트는 Node SDK에서 뽑은 이름 목록과 Dart 패키지의 공개 이름 목록이 같은지 확인한다. 각 Phase는 이 대조를 통과해야 끝난다.
 
 ## 미정 사항
 
