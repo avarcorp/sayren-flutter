@@ -122,7 +122,14 @@ export class IrBuilder {
 
   checks(schema, ctx) {
     const out = [];
-    for (const c of schema._zod.def.checks ?? []) {
+    // z.email()·z.url()·z.iso.datetime()은 형식 검사를 checks가 아니라 스키마 자체(def.format)에 둔다
+    const own = schema._zod.def;
+    if (own.type === "string" && own.format) {
+      if (own.format === "url") out.push({ k: "url" });
+      else if (own.pattern) out.push({ k: "pattern", format: own.format, regex: own.pattern });
+      else throw new Error(`형식 ${own.format}의 패턴이 없습니다 @ ${ctx.root}`);
+    }
+    for (const c of own.checks ?? []) {
       const cd = c._zod.def;
       switch (cd.check) {
         case "min_length":

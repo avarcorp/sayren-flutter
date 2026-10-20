@@ -59,4 +59,57 @@ const schemaResults = schemaCases.map((c) => {
   };
 });
 
-process.stdout.write(`${JSON.stringify({ scenarios: scenarioResults, schemaCases: schemaResults }, null, 2)}\n`);
+// 세션 단계 시나리오
+const sessionSpec = read("./session-scenarios.json");
+const tick = () => new Promise((r) => setTimeout(r, 0));
+const sessionResults = [];
+for (const s of sessionSpec.scenarios) {
+  const store = new Map(Object.entries(s.storage));
+  const storage = { get: (k) => store.get(k) ?? null, set: (k, v) => store.set(k, v), remove: (k) => store.delete(k) };
+  const queue = [...s.responses];
+  const requests = [];
+  const fetch = async (url, init) => {
+    requests.push({
+      method: init.method ?? "GET",
+      url,
+      headers: Object.fromEntries(Object.entries(init.headers ?? {}).map(([k, v]) => [k.toLowerCase(), v]).sort()),
+      body: init.body === undefined ? null : JSON.parse(init.body),
+    });
+    const r = queue.shift() ?? { status: 500, body: null };
+    return new Response(r.status === 204 ? null : JSON.stringify(r.body), { status: r.status, headers: { "content-type": "application/json" } });
+  };
+  const session = sdk.createStorefrontSession({ ...sessionSpec.defaults, storage, fetch });
+  let notified = 0;
+  session.subscribe(() => notified++);
+  const client = sdk.createStorefrontClient({ ...sessionSpec.defaults, fetch, ...(s.noSession ? {} : { session }) });
+  const steps = [];
+  for (const step of s.steps) {
+    let outcome;
+    try {
+      let value;
+      switch (step.op) {
+        case "login": value = await session.login(...step.args); break;
+        case "signup": value = await session.signup(...step.args); break;
+        case "refresh": value = await session.refresh(); break;
+        case "refreshTwice": value = await Promise.all([session.refresh(), session.refresh()]); break;
+        case "userinfo": value = await session.userinfo(); break;
+        case "clientUserinfo": value = await client.userinfo(); break;
+        case "clear": value = session.clear(); break;
+        case "tokens": value = { accessToken: session.accessToken, refreshToken: session.refreshToken, clientAccessToken: client.accessToken }; break;
+        case "call": {
+          const parts = step.call.split(".");
+          value = await parts.slice(0, -1).reduce((o, k) => o[k], client)[parts.at(-1)](...step.args);
+          break;
+        }
+      }
+      outcome = { ok: true, value: json(value) };
+    } catch (error) {
+      outcome = { ok: false, error: describeError(error) };
+    }
+    await tick();
+    steps.push({ op: step.op, outcome, notified, storage: Object.fromEntries([...store].sort()) });
+  }
+  sessionResults.push({ name: s.name, requests, steps });
+}
+
+process.stdout.write(`${JSON.stringify({ scenarios: scenarioResults, schemaCases: schemaResults, sessions: sessionResults }, null, 2)}\n`);

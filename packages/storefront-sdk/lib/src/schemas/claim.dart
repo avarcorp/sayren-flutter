@@ -51,7 +51,7 @@ final ZodObject<CreateClaimRequest> createClaimRequestSchema = z.object<CreateCl
   'type': claimTypeSchema,
   'reason': claimReasonSchema,
   'reasonDetail': z.string().max(1000).optional(),
-  'evidenceImages': z.array<String>(z.string()).max(5).optional(),
+  'evidenceImages': z.array<String>(z.string().url()).max(5).optional(),
   'exchangeOptionId': z.string().optional(),
   'quantity': z.number().int_().greaterThan(1, inclusive: true).optional(),
 }, CreateClaimRequest._);

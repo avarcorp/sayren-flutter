@@ -34,7 +34,7 @@ final ZodObject<PublicReview> publicReviewSchema = z.object<PublicReview>({
   'reviewId': z.string(),
   'rating': z.number().int_().greaterThan(1, inclusive: true).lessThan(5, inclusive: true),
   'content': z.string(),
-  'images': z.array<String>(z.string()),
+  'images': z.array<String>(z.string().url()),
   'optionName': z.string().nullable(),
   'variantId': z.string().nullable().optional(),
   'writerMaskedName': z.string(),
@@ -166,11 +166,11 @@ final ZodObject<MyReview> myReviewSchema = z.object<MyReview>({
   'reviewId': z.string(),
   'productId': z.string(),
   'productName': z.string().nullable(),
-  'thumbnailUrl': z.string().nullable(),
+  'thumbnailUrl': z.string().url().nullable(),
   'optionName': z.string().nullable(),
   'rating': z.number().int_().greaterThan(1, inclusive: true).lessThan(5, inclusive: true),
   'content': z.string(),
-  'images': z.array<String>(z.string()),
+  'images': z.array<String>(z.string().url()),
   'sellerReply': myReviewSellerReplySchema.nullable(),
   'blinded': z.boolean(),
   'editable': z.boolean(),
@@ -291,7 +291,7 @@ final ZodObject<WritableReview> writableReviewSchema = z.object<WritableReview>(
   'productId': z.string(),
   'productName': z.string(),
   'optionName': z.string().nullable(),
-  'thumbnailUrl': z.string().nullable(),
+  'thumbnailUrl': z.string().url().nullable(),
   'writableUntil': z.string(),
 }, WritableReview._);
 
@@ -344,7 +344,7 @@ class WritableReview extends ParsedObject {
 final ZodObject<CreateReviewRequest> createReviewRequestSchema = z.object<CreateReviewRequest>({
   'rating': z.number().int_().greaterThan(1, inclusive: true).lessThan(5, inclusive: true),
   'content': z.string().min(10).max(2000),
-  'images': z.array<String>(z.string()).max(5).optional(),
+  'images': z.array<String>(z.string().url()).max(5).optional(),
 }, CreateReviewRequest._);
 
 /// CreateReviewRequest 값입니다.
@@ -400,7 +400,7 @@ class CreateReviewResult extends ParsedObject {
 final ZodObject<UpdateReviewRequest> updateReviewRequestSchema = z.object<UpdateReviewRequest>({
   'rating': z.number().int_().greaterThan(1, inclusive: true).lessThan(5, inclusive: true).optional(),
   'content': z.string().min(10).max(2000).optional(),
-  'images': z.array<String>(z.string()).max(5).optional(),
+  'images': z.array<String>(z.string().url()).max(5).optional(),
 }, UpdateReviewRequest._).refine((v) => jsonOf(v as ParsedObject).isNotEmpty, message: '최소 1개 필드가 필요합니다');
 
 /// UpdateReviewRequest 값입니다.
@@ -554,8 +554,8 @@ class ReviewImageUploadRequest extends ParsedObject {
 ///
 /// 업로드 자리 — `uploadUrl`은 1시간 유효합니다.
 final ZodObject<UploadTicket> uploadTicketSchema = z.object<UploadTicket>({
-  'url': z.string(),
-  'uploadUrl': z.string(),
+  'url': z.string().url(),
+  'uploadUrl': z.string().url(),
 }, UploadTicket._);
 
 /// 업로드 자리 — `uploadUrl`은 1시간 유효합니다.

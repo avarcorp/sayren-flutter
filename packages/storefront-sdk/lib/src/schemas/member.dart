@@ -32,7 +32,13 @@ import 'store.dart';
 /// [Member] 스키마입니다.
 final ZodObject<Member> memberSchema = z.object<Member>({
   'memberId': z.string(),
-  'email': z.string().nullable(),
+  'email': z
+      .string()
+      .pattern(
+          RegExp(
+              r"^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$"),
+          format: 'email')
+      .nullable(),
   'name': z.string(),
   'phone': z.string().nullable(),
   'point': z.number().int_(),

@@ -174,8 +174,8 @@ String buildQuery([Query? query]) {
 /// ```
 typedef Fetch = Future<http.Response> Function(http.Request request);
 
-/// 기본 [Fetch] — `package:http` 클라이언트 하나를 만들어 두고 계속 쓴다(연결 재사용)
-Fetch _defaultFetch() {
+/// 기본 [Fetch] — `package:http` 클라이언트 하나를 만들어 두고 계속 쓴다(연결 재사용). SDK 내부용이다
+Fetch defaultFetch() {
   final client = http.Client();
   return (request) async => http.Response.fromStream(await client.send(request));
 }
@@ -229,7 +229,7 @@ class RequestOptions {
 /// 엔벨로프를 풀고 스키마로 검증하는 HTTP 코어입니다.
 class Http {
   /// HTTP 코어를 만듭니다.
-  Http(this.options) : _fetch = options.fetch ?? _defaultFetch();
+  Http(this.options) : _fetch = options.fetch ?? defaultFetch();
 
   /// 옵션입니다.
   final HttpOptions options;

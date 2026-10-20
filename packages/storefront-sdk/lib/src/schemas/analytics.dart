@@ -104,11 +104,14 @@ sealed class AnalyticsClientEvent {
 /// [AnalyticsClientEventPageView] 스키마입니다.
 final ZodObject<AnalyticsClientEventPageView> analyticsClientEventPageViewSchema =
     z.object<AnalyticsClientEventPageView>({
-  'occurredAt': z.string(),
-  'url': z.string().max(2048),
+  'occurredAt': z.string().pattern(
+      RegExp(
+          r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
+      format: 'datetime'),
+  'url': z.string().url().max(2048),
   'pageViewId': analyticsIdSchema,
   'name': z.literal<String>('page_view'),
-  'referrer': z.string().max(2048).optional(),
+  'referrer': z.string().url().max(2048).optional(),
 }, AnalyticsClientEventPageView._);
 
 /// AnalyticsClientEventPageView 값입니다.
@@ -159,8 +162,11 @@ class AnalyticsClientEventPageView extends ParsedObject implements AnalyticsClie
 /// [AnalyticsClientEventPageEngagement] 스키마입니다.
 final ZodObject<AnalyticsClientEventPageEngagement> analyticsClientEventPageEngagementSchema =
     z.object<AnalyticsClientEventPageEngagement>({
-  'occurredAt': z.string(),
-  'url': z.string().max(2048),
+  'occurredAt': z.string().pattern(
+      RegExp(
+          r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
+      format: 'datetime'),
+  'url': z.string().url().max(2048),
   'pageViewId': analyticsIdSchema,
   'name': z.literal<String>('page_engagement'),
   'visibleMs': z.number().int_().greaterThan(0, inclusive: true).lessThan(86400000, inclusive: true),
@@ -208,8 +214,11 @@ class AnalyticsClientEventPageEngagement extends ParsedObject implements Analyti
 /// [AnalyticsClientEventProductView] 스키마입니다.
 final ZodObject<AnalyticsClientEventProductView> analyticsClientEventProductViewSchema =
     z.object<AnalyticsClientEventProductView>({
-  'occurredAt': z.string(),
-  'url': z.string().max(2048),
+  'occurredAt': z.string().pattern(
+      RegExp(
+          r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
+      format: 'datetime'),
+  'url': z.string().url().max(2048),
   'pageViewId': analyticsIdSchema,
   'name': z.literal<String>('product_view'),
   'productId': z.string().trim().min(1).max(64),
@@ -269,8 +278,11 @@ class AnalyticsClientEventProductView extends ParsedObject implements AnalyticsC
 /// [AnalyticsClientEventProductListView] 스키마입니다.
 final ZodObject<AnalyticsClientEventProductListView> analyticsClientEventProductListViewSchema =
     z.object<AnalyticsClientEventProductListView>({
-  'occurredAt': z.string(),
-  'url': z.string().max(2048),
+  'occurredAt': z.string().pattern(
+      RegExp(
+          r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
+      format: 'datetime'),
+  'url': z.string().url().max(2048),
   'pageViewId': analyticsIdSchema,
   'name': z.literal<String>('product_list_view'),
   'listId': z.string().trim().min(1).max(128),
@@ -329,8 +341,11 @@ class AnalyticsClientEventProductListView extends ParsedObject implements Analyt
 
 /// [AnalyticsClientEventSearch] 스키마입니다.
 final ZodObject<AnalyticsClientEventSearch> analyticsClientEventSearchSchema = z.object<AnalyticsClientEventSearch>({
-  'occurredAt': z.string(),
-  'url': z.string().max(2048),
+  'occurredAt': z.string().pattern(
+      RegExp(
+          r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
+      format: 'datetime'),
+  'url': z.string().url().max(2048),
   'pageViewId': analyticsIdSchema,
   'name': z.literal<String>('search'),
   'query': z.string().trim().min(1).max(200),

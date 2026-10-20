@@ -311,7 +311,7 @@ final ZodObject<CheckoutSessionItemsItem> checkoutSessionItemsItemSchema = z.obj
   'lineId': z.string().optional(),
   'productId': z.string(),
   'productName': z.string(),
-  'thumbnailUrl': z.string().nullable().optional(),
+  'thumbnailUrl': z.string().url().nullable().optional(),
   'optionId': z.string().nullable(),
   'optionName': z.string().nullable(),
   'optionSelections': z.array<OptionSelectionView>(optionSelectionViewSchema).optional().withDefault(const []),
@@ -1306,7 +1306,9 @@ final ZodObject<GuestInfo> guestInfoSchema = z.object<GuestInfo>({
   'name': z.string().min(1),
   'phone': z.string().pattern(
       RegExp(r'^(?:01[0-9]{8,9}|050[0-9]{8,9}|070[0-9]{8}|02[0-9]{7,8}|0[3-6][1-5][0-9]{7,8})$|^\+[1-9][0-9]{6,14}$')),
-  'email': z.string(),
+  'email': z.string().pattern(
+      RegExp(r"^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$"),
+      format: 'email'),
   'orderPassword': z.string().min(6).max(128),
 }, GuestInfo._);
 
@@ -1389,7 +1391,7 @@ class CashReceiptRequest extends ParsedObject {
 /// `returnUrl`의 도메인은 상점 결제 도메인(상점 플랫폼 설정 › 결제)에 등록돼 있어야 합니다(테스트 결제는 localhost 허용).
 final ZodObject<StartPaymentRequest> startPaymentRequestSchema = z.object<StartPaymentRequest>({
   'option': paymentOptionSchema.optional(),
-  'returnUrl': z.string().max(2048),
+  'returnUrl': z.string().url().max(2048),
   'shippingAddress': startPaymentRequestShippingAddressSchema.optional(),
   'guest': guestInfoSchema.optional(),
   'cashReceipt': cashReceiptRequestSchema.optional(),
@@ -1492,7 +1494,7 @@ sealed class StartPaymentRequestShippingAddress {
 /// (승인된 결제수단이 계좌이체·가상계좌가 아니면 발급하지 않습니다).
 final ZodObject<RetryPaymentRequest> retryPaymentRequestSchema = z.object<RetryPaymentRequest>({
   'option': paymentOptionSchema,
-  'returnUrl': z.string().max(2048).optional(),
+  'returnUrl': z.string().url().max(2048).optional(),
   'cashReceipt': cashReceiptRequestSchema.optional(),
 }, RetryPaymentRequest._);
 

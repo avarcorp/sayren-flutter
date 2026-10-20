@@ -21,12 +21,13 @@ const OUT = path.join(here, "../../packages/storefront-sdk");
 const LIB = path.join(OUT, "lib/src");
 
 /** 이번 범위가 아닌 export(세션) */
-const EXCLUDED = new Set(["createStorefrontSession", "SessionStorage", "StorefrontSessionOptions", "StorefrontSession", "STOREFRONT_SESSION_KEYS"]);
+const EXCLUDED = new Set();
 /** 손으로 쓴 파일이 맡는 export — 생성하지 않는다 */
 const HAND_WRITTEN = {
   "http.ts": ["ApiError", "buildQuery", "Query", "TokenSource"],
   "client.ts": ["StorefrontClient", "StorefrontClientOptions", "createStorefrontClient"],
   "analytics-ids.ts": ["analyticsIdsFromCookie"],
+  "session.ts": ["createStorefrontSession", "SessionStorage", "StorefrontSessionOptions", "StorefrontSession", "STOREFRONT_SESSION_KEYS"],
 };
 /** manual part가 쓰는 추가 import(part는 import를 둘 수 없다) */
 const EXTRA_IMPORTS = {
@@ -306,6 +307,7 @@ const exportLines = [
   "export 'src/analytics-ids.dart';",
   "export 'src/client.dart';",
   "export 'src/http.dart' show ApiError, Fetch, Query, TokenSource, buildQuery;",
+  "export 'src/session.dart';",
   ...schemaFiles.map((f) => `export 'src/${f}';`),
   "export 'src/zod.dart' show Nullable, SafeParseResult, ZodArray, ZodEnum, ZodError, ZodIssue, ZodObject, ZodType;",
 ];

@@ -27,6 +27,7 @@ import 'schemas/product-options.dart';
 import 'schemas/review.dart';
 import 'schemas/stay.dart';
 import 'schemas/store.dart';
+import 'session.dart';
 import 'zod.dart';
 
 /// [createStorefrontClient]에 넘기는 옵션입니다.
@@ -55,6 +56,7 @@ class StorefrontClientOptions {
     this.host,
     this.locale,
     this.onCartToken,
+    this.session,
     this.fetch,
   });
 
@@ -68,7 +70,7 @@ class StorefrontClientOptions {
 
   /// 회원 액세스 토큰입니다. `Authorization: Bearer` 헤더로 보냅니다.
   ///
-  /// [auth]의 `accessToken`보다 우선합니다.
+  /// [auth]의 `accessToken`, [session]의 토큰보다 우선합니다.
   final TokenSource accessToken;
 
   /// [accessToken]의 별칭입니다. `auth: (accessToken: token)` 형태로 넘깁니다.
@@ -105,6 +107,12 @@ class StorefrontClientOptions {
   /// 서버가 응답 헤더로 새 장바구니 토큰을 발급했을 때 호출됩니다.
   final void Function(String token)? onCartToken;
 
+  /// 구매자 세션입니다. 넘기면 회원 토큰을 세션에서 읽고, 401이면 [StorefrontSession.refresh] 뒤 한 번 다시 보내고,
+  /// 갱신할 수 없으면 [StorefrontSession.clear]를 부릅니다.
+  ///
+  /// [accessToken]·[auth]를 함께 넘기면 그쪽 토큰을 사용합니다.
+  final StorefrontSession? session;
+
   /// HTTP 요청을 보내는 함수입니다. 생략하면 `package:http`로 보냅니다.
   ///
   /// 테스트에서 가짜 응답을 돌려주거나, 로깅·프록시가 필요할 때 넘기십시오.
@@ -133,12 +141,16 @@ StorefrontClient createStorefrontClient(StorefrontClientOptions options) => Stor
 
 /// 스토어프론트 API 클라이언트입니다. [createStorefrontClient]로 만듭니다.
 class StorefrontClient {
-  StorefrontClient._(StorefrontClientOptions options) {
-    // 우선순위: 명시적 accessToken 옵션 > auth.accessToken 별칭
-    final TokenSource accessTokenSource = options.accessToken ?? options.auth?.accessToken;
+  StorefrontClient._(StorefrontClientOptions options) : _session = options.session {
+    final session = options.session;
+    // 우선순위: 명시적 accessToken 옵션 > auth.accessToken 별칭 > session.accessToken
+    final TokenSource accessTokenSource =
+        options.accessToken ?? options.auth?.accessToken ?? (session == null ? null : () => session.accessToken);
     final http_ = Http(HttpOptions(
       baseUrl: options.baseUrl,
       fetch: options.fetch,
+      refresh: session?.refresh,
+      onUnauthorized: session?.clear,
       headers: () {
         final headers = <String, String>{};
         void put(String name, TokenSource source, [String prefix = '']) {
@@ -174,6 +186,21 @@ class StorefrontClient {
     reviews = StorefrontClientReviews._(http_);
     inquiries = StorefrontClientInquiries._(http_);
     me = StorefrontClientMe._(http_);
+  }
+
+  final StorefrontSession? _session;
+
+  /// 세션의 현재 액세스 토큰입니다. 세션을 넘기지 않았으면 null입니다.
+  String? get accessToken => _session?.accessToken;
+
+  /// 세션의 현재 갱신 토큰입니다. 세션을 넘기지 않았으면 null입니다.
+  String? get refreshToken => _session?.refreshToken;
+
+  /// 세션의 [StorefrontSession.userinfo]입니다. 세션을 넘기지 않았으면 [StateError]로 실패합니다.
+  Future<Member?> userinfo() async {
+    final session = _session;
+    if (session == null) throw StateError('세션 없음 — createStorefrontSession 필요');
+    return session.userinfo();
   }
 
   /// `client.auth` 네임스페이스입니다.

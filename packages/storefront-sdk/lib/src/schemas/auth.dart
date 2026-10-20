@@ -61,7 +61,9 @@ class TokenPair extends ParsedObject {
 
 /// [SignupRequest] 스키마입니다.
 final ZodObject<SignupRequest> signupRequestSchema = z.object<SignupRequest>({
-  'email': z.string(),
+  'email': z.string().pattern(
+      RegExp(r"^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$"),
+      format: 'email'),
   'password': z.string().min(10).refine(
       (v) =>
           [RegExp(r'[a-zA-Z]'), RegExp(r'[0-9]'), RegExp(r'[^a-zA-Z0-9]')]
@@ -152,7 +154,9 @@ class SignupRequestAgreements extends ParsedObject {
 
 /// [LoginRequest] 스키마입니다.
 final ZodObject<LoginRequest> loginRequestSchema = z.object<LoginRequest>({
-  'email': z.string(),
+  'email': z.string().pattern(
+      RegExp(r"^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$"),
+      format: 'email'),
   'password': z.string().min(1),
   'cartToken': z.string().optional(),
 }, LoginRequest._);
@@ -330,7 +334,7 @@ class IdpAgreements extends ParsedObject {
 ///
 /// `POST /auth/idp/{provider}/authorize` 본문 — PKCE(S256)와 state는 SDK가 만듭니다.
 final ZodObject<IdpAuthorizeRequest> idpAuthorizeRequestSchema = z.object<IdpAuthorizeRequest>({
-  'redirectUri': z.string(),
+  'redirectUri': z.string().url(),
   'codeChallenge': z.string().pattern(RegExp(r'^[A-Za-z0-9_-]{43}$')),
   'state': z.string().min(16).max(128),
   'agreements': idpAgreementsSchema.optional(),
@@ -370,7 +374,7 @@ class IdpAuthorizeRequest extends ParsedObject {
 
 /// [IdpAuthorizeResponse] 스키마입니다.
 final ZodObject<IdpAuthorizeResponse> idpAuthorizeResponseSchema = z.object<IdpAuthorizeResponse>({
-  'url': z.string(),
+  'url': z.string().url(),
 }, IdpAuthorizeResponse._);
 
 /// IdpAuthorizeResponse 값입니다.

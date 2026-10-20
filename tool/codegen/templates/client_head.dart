@@ -25,6 +25,7 @@ class StorefrontClientOptions {
     this.host,
     this.locale,
     this.onCartToken,
+    this.session,
     this.fetch,
   });
 
@@ -38,7 +39,7 @@ class StorefrontClientOptions {
 
   /// 회원 액세스 토큰입니다. `Authorization: Bearer` 헤더로 보냅니다.
   ///
-  /// [auth]의 `accessToken`보다 우선합니다.
+  /// [auth]의 `accessToken`, [session]의 토큰보다 우선합니다.
   final TokenSource accessToken;
 
   /// [accessToken]의 별칭입니다. `auth: (accessToken: token)` 형태로 넘깁니다.
@@ -74,6 +75,12 @@ class StorefrontClientOptions {
 
   /// 서버가 응답 헤더로 새 장바구니 토큰을 발급했을 때 호출됩니다.
   final void Function(String token)? onCartToken;
+
+  /// 구매자 세션입니다. 넘기면 회원 토큰을 세션에서 읽고, 401이면 [StorefrontSession.refresh] 뒤 한 번 다시 보내고,
+  /// 갱신할 수 없으면 [StorefrontSession.clear]를 부릅니다.
+  ///
+  /// [accessToken]·[auth]를 함께 넘기면 그쪽 토큰을 사용합니다.
+  final StorefrontSession? session;
 
   /// HTTP 요청을 보내는 함수입니다. 생략하면 `package:http`로 보냅니다.
   ///

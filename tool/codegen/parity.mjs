@@ -140,6 +140,8 @@ export function generateParity({ runtime, ir, emit, scan, out, here, methods, kn
         const { [key]: _, ...rest } = valid;
         cases.push({ schema: name, label: `-${key}`, input: rest });
         cases.push({ schema: name, label: `${key}:wrong`, input: { ...valid, [key]: wrongType(valid[key]) } });
+        // 문자열 형식(이메일·URL·정규식·길이) 검사가 같은지 — 타입은 맞고 형식만 틀린 값
+        if (typeof valid[key] === "string") cases.push({ schema: name, label: `${key}:format`, input: { ...valid, [key]: "%" } });
       }
     }
     if (Array.isArray(valid)) cases.push({ schema: name, label: "[wrong]", input: [wrongType(valid[0] ?? "x")] });
@@ -283,7 +285,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:sayren_storefront_sdk/sayren_storefront_sdk.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   final samples = <String, Object?>{

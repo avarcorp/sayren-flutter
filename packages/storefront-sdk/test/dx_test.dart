@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:sayren_storefront_sdk/sayren_storefront_sdk.dart';
 import 'package:sayren_storefront_sdk/src/zod.dart' show compact;
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 const _envelopeOk = {
   'meta': {'status': 200, 'code': 'OK', 'message': 'OK', 'isSuccess': true},

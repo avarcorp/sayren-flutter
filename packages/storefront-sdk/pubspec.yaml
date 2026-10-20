@@ -5,13 +5,25 @@ publish_to: none
 
 environment:
   sdk: ^3.6.0
+  flutter: ">=3.27.0"
 
 resolution: workspace
 
 dependencies:
+  flutter:
+    sdk: flutter
+  # PKCE(S256) — 소셜 로그인
+  crypto: ^3.0.7
   http: ^1.2.0
+  # 방문 분석 ID 보관(Flutter 기본 AnalyticsEnv)
+  shared_preferences: ^2.5.6
   # 직접 입력값 NFC 정규화(Node `String.prototype.normalize`)
   unorm_dart: 0.3.2
+  # 결제창 앱 호출(카드사·은행·간편결제 앱)
+  url_launcher: ^6.3.3
+  # 결제창(Flutter 기본 PaymentsEnv)
+  webview_flutter: ^4.14.1
 
 dev_dependencies:
-  test: ^1.25.0
+  flutter_test:
+    sdk: flutter

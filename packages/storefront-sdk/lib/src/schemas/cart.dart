@@ -35,7 +35,7 @@ final ZodObject<CartItem> cartItemSchema = z.object<CartItem>({
   'productId': z.string(),
   'productNo': z.number().int_().nullable().optional().withDefault(null),
   'productName': z.string(),
-  'thumbnailUrl': z.string().nullable(),
+  'thumbnailUrl': z.string().url().nullable(),
   'optionId': z.string().nullable(),
   'optionName': z.string().nullable(),
   'optionSelections': z.array<OptionSelectionView>(optionSelectionViewSchema).optional().withDefault(const []),

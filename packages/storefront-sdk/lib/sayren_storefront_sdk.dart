@@ -38,6 +38,7 @@ library;
 export 'src/analytics-ids.dart';
 export 'src/client.dart';
 export 'src/http.dart' show ApiError, Fetch, Query, TokenSource, buildQuery;
+export 'src/session.dart';
 export 'src/schemas/analytics.dart';
 export 'src/schemas/auth.dart';
 export 'src/schemas/cart.dart';

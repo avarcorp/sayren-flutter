@@ -7,7 +7,7 @@ import { pascal } from "./ir.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const BASE = "/storefront/v1";
-/** 세션이 있어야 하는 최상위 멤버 — 세션 범위(이번 배치 밖)라 만들지 않는다 */
+/** 세션 최상위 멤버 — templates/client_ctor.dart가 손으로 쓴다 */
 const SESSION_MEMBERS = new Set(["accessToken", "refreshToken", "userinfo"]);
 
 function jsdoc(node) {
@@ -226,6 +226,7 @@ import 'package:http/http.dart' as http;
 
 import 'http.dart';
 ${schemaFiles.map((f) => `import '${f}';`).join("\n")}
+import 'session.dart';
 import 'zod.dart';
 
 ${head.trimEnd()}

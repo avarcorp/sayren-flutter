@@ -1,0 +1,401 @@
+{
+  "$comment": "세션 단계 시나리오. 단계마다 요청·결과·저장소·구독 알림 수를 Node와 Dart에서 비교한다. responses는 요청 순서대로 돌려준다.",
+  "defaults": {
+    "baseUrl": "https://api.example.test/storefront/v1",
+    "storeCode": "demo"
+  },
+  "scenarios": [
+    {
+      "name": "로그인 — 토큰 저장과 알림",
+      "storage": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "accessToken": "access-1",
+              "refreshToken": "refresh-1",
+              "expiresIn": 900
+            },
+            "error": null
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "login",
+          "args": [
+            {
+              "email": "buyer@example.test",
+              "password": "pw"
+            }
+          ]
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "로그인 실패 — 저장하지 않는다",
+      "storage": {},
+      "responses": [
+        {
+          "status": 401,
+          "body": {
+            "meta": {
+              "status": 401,
+              "code": "INVALID_CREDENTIALS",
+              "message": "INVALID_CREDENTIALS",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "INVALID_CREDENTIALS",
+              "message": "INVALID_CREDENTIALS"
+            }
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "login",
+          "args": [
+            {
+              "email": "buyer@example.test",
+              "password": "pw"
+            }
+          ]
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "로그인 본문 검증 실패 — 요청 전 ZodError",
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "login",
+          "args": [
+            {
+              "email": "not-an-email",
+              "password": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "401 → 갱신 → 재시도",
+      "storage": {
+        "sayren.storefront.accessToken": "access-0",
+        "sayren.storefront.refreshToken": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 401,
+          "body": {
+            "meta": {
+              "status": 401,
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "accessToken": "access-1",
+              "refreshToken": "refresh-1",
+              "expiresIn": 900
+            },
+            "error": null
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "memberId": "mem_1",
+              "email": "buyer@example.test",
+              "name": "구매자",
+              "phone": null,
+              "point": 0,
+              "marketingAgreed": false,
+              "joinedAt": "2026-01-01T00:00:00.000Z",
+              "reconsentRequired": false
+            },
+            "error": null
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "call",
+          "call": "member.me",
+          "args": []
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "401 → 갱신 실패 → 세션 정리·로그아웃",
+      "storage": {
+        "sayren.storefront.accessToken": "access-0",
+        "sayren.storefront.refreshToken": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 401,
+          "body": {
+            "meta": {
+              "status": 401,
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED"
+            }
+          }
+        },
+        {
+          "status": 401,
+          "body": {
+            "meta": {
+              "status": 401,
+              "code": "REFRESH_TOKEN_REUSED",
+              "message": "REFRESH_TOKEN_REUSED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "REFRESH_TOKEN_REUSED",
+              "message": "REFRESH_TOKEN_REUSED"
+            }
+          }
+        },
+        {
+          "status": 204
+        }
+      ],
+      "steps": [
+        {
+          "op": "call",
+          "call": "member.me",
+          "args": []
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "갱신 토큰 없음 — 정리하고 false",
+      "storage": {
+        "sayren.storefront.accessToken": "access-0"
+      },
+      "responses": [
+        {
+          "status": 204
+        }
+      ],
+      "steps": [
+        {
+          "op": "refresh"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "동시 갱신 — 요청 한 번",
+      "storage": {
+        "sayren.storefront.accessToken": "access-0",
+        "sayren.storefront.refreshToken": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "accessToken": "access-1",
+              "refreshToken": "refresh-1",
+              "expiresIn": 900
+            },
+            "error": null
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "refreshTwice"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "userinfo — 토큰 없으면 요청하지 않는다",
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "userinfo"
+        }
+      ]
+    },
+    {
+      "name": "userinfo — 회원 정보",
+      "storage": {
+        "sayren.storefront.accessToken": "access-0",
+        "sayren.storefront.refreshToken": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "memberId": "mem_1",
+              "email": "buyer@example.test",
+              "name": "구매자",
+              "phone": null,
+              "point": 0,
+              "marketingAgreed": false,
+              "joinedAt": "2026-01-01T00:00:00.000Z",
+              "reconsentRequired": false
+            },
+            "error": null
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "userinfo"
+        },
+        {
+          "op": "clientUserinfo"
+        }
+      ]
+    },
+    {
+      "name": "clear — 로그아웃 요청과 알림",
+      "storage": {
+        "sayren.storefront.accessToken": "access-0",
+        "sayren.storefront.refreshToken": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 204
+        }
+      ],
+      "steps": [
+        {
+          "op": "clear"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "가입",
+      "storage": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "accessToken": "access-2",
+              "refreshToken": "refresh-2",
+              "expiresIn": 900
+            },
+            "error": null
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "signup",
+          "args": [
+            {
+              "email": "new@example.test",
+              "password": "Passw0rd!",
+              "name": "새 구매자",
+              "agreements": {
+                "terms": true,
+                "privacy": true
+              }
+            }
+          ]
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "세션 없이 client.userinfo",
+      "noSession": true,
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "clientUserinfo"
+        }
+      ]
+    }
+  ]
+}

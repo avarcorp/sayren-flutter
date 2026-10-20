@@ -51,7 +51,7 @@ final ZodObject<PublicInquiry> publicInquirySchema = z.object<PublicInquiry>({
   'createdAt': z.string(),
   'productId': z.string().nullable().optional().withDefault(null),
   'productName': z.string().nullable().optional().withDefault(null),
-  'thumbnailUrl': z.string().nullable().optional().withDefault(null),
+  'thumbnailUrl': z.string().url().nullable().optional().withDefault(null),
   'category': productInquiryCategorySchema.optional().withDefault('PRODUCT'),
 }, PublicInquiry._);
 

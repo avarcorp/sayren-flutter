@@ -104,6 +104,98 @@ Future<void> main(List<String> argv) async {
         };
       }(),
   ];
-  stdout.writeln(
-      const JsonEncoder.withIndent('  ').convert({'scenarios': scenarioResults, 'schemaCases': schemaResults}));
+  final sessionResults = await runSessions(readJson(dir, 'session-scenarios.json') as Map<String, Object?>);
+  stdout.writeln(const JsonEncoder.withIndent('  ')
+      .convert({'scenarios': scenarioResults, 'schemaCases': schemaResults, 'sessions': sessionResults}));
+}
+
+class _MapStorage implements SessionStorage {
+  _MapStorage(this.values);
+
+  final Map<String, String> values;
+
+  @override
+  String? get(String key) => values[key];
+
+  @override
+  void set(String key, String value) => values[key] = value;
+
+  @override
+  void remove(String key) => values.remove(key);
+}
+
+Future<List<Object?>> runSessions(Map<String, Object?> spec) async {
+  final defaults = spec['defaults'] as Map;
+  final results = <Object?>[];
+  for (final s in (spec['scenarios'] as List).cast<Map<String, Object?>>()) {
+    final store = (s['storage'] as Map).cast<String, String>();
+    final storage = _MapStorage({...store});
+    final queue = [...(s['responses'] as List).cast<Map<String, Object?>>()];
+    final requests = <Object?>[];
+    Future<http.Response> fetch(http.Request req) async {
+      final headers = req.headers.map((k, v) => MapEntry(k.toLowerCase(), v));
+      requests.add({
+        'method': req.method,
+        'url': req.url.toString(),
+        'headers': Map.fromEntries(headers.entries.toList()..sort((a, b) => a.key.compareTo(b.key))),
+        'body': req.bodyBytes.isEmpty ? null : jsonDecode(utf8.decode(req.bodyBytes)),
+      });
+      final r = queue.isEmpty ? <String, Object?>{'status': 500, 'body': null} : queue.removeAt(0);
+      return http.Response.bytes(r['status'] == 204 ? <int>[] : utf8.encode(jsonEncode(r['body'])), r['status'] as int,
+          headers: {'content-type': 'application/json'});
+    }
+
+    final session = createStorefrontSession(StorefrontSessionOptions(
+        baseUrl: defaults['baseUrl'] as String,
+        storeCode: defaults['storeCode'] as String?,
+        storage: storage,
+        fetch: fetch));
+    var notified = 0;
+    session.subscribe(() => notified++);
+    final client = createStorefrontClient(StorefrontClientOptions(
+        baseUrl: defaults['baseUrl'] as String,
+        storeCode: defaults['storeCode'],
+        fetch: fetch,
+        session: s['noSession'] == true ? null : session));
+    final steps = <Object?>[];
+    for (final step in (s['steps'] as List).cast<Map<String, Object?>>()) {
+      Map<String, Object?> outcome;
+      try {
+        final args = (step['args'] as List?)?.cast<Object?>() ?? const [];
+        final Object? value = switch (step['op']) {
+          'login' =>
+            await session.login(LoginRequest.fromJson((args[0] as Map).cast<String, Object?>())).then((_) => null),
+          'signup' =>
+            await session.signup(SignupRequest.fromJson((args[0] as Map).cast<String, Object?>())).then((_) => null),
+          'refresh' => await session.refresh(),
+          'refreshTwice' => await Future.wait([session.refresh(), session.refresh()]),
+          'userinfo' => await session.userinfo(),
+          'clientUserinfo' => await client.userinfo(),
+          'clear' => () {
+              session.clear();
+              return null;
+            }(),
+          'tokens' => {
+              'accessToken': session.accessToken,
+              'refreshToken': session.refreshToken,
+              'clientAccessToken': client.accessToken,
+            },
+          'call' => await calls[step['call']]!(client, args),
+          _ => throw StateError('알 수 없는 단계 ${step['op']}'),
+        };
+        outcome = {'ok': true, 'value': encode(value)};
+      } catch (error) {
+        outcome = {'ok': false, 'error': describeError(error)};
+      }
+      await Future<void>.delayed(Duration.zero);
+      steps.add({
+        'op': step['op'],
+        'outcome': outcome,
+        'notified': notified,
+        'storage': Map.fromEntries(storage.values.entries.toList()..sort((a, b) => a.key.compareTo(b.key))),
+      });
+    }
+    results.add({'name': s['name'], 'requests': requests, 'steps': steps});
+  }
+  return results;
 }
