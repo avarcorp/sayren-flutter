@@ -1,4 +1,16 @@
+# 게시 패키지에서도 읽히도록 루트 analysis_options.yaml을 그대로 옮긴다(include는 패키지 밖을 가리킬 수 없다)
+# Node SDK와 이름·경로를 같게 두려고 끄는 규칙(ROADMAP 「네이밍 규칙」)
 analyzer:
   exclude:
     - build/**
-include: ../../analysis_options.yaml
+  errors:
+    file_names: ignore
+    constant_identifier_names: ignore
+
+linter:
+  rules:
+    # pub 문서에 나오는 공개 API는 모두 주석을 단다(ROADMAP 「문서」)
+    - public_member_api_docs
+
+formatter:
+  page_width: 120
