@@ -5,5 +5,10 @@ analyzer:
     constant_identifier_names: ignore
     library_private_types_in_public_api: ignore
 
+linter:
+  rules:
+    # pub 문서에 나오는 공개 API는 모두 주석을 단다(ROADMAP 「문서」)
+    - public_member_api_docs
+
 formatter:
   page_width: 120

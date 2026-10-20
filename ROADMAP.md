@@ -67,6 +67,17 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
 
 `PaymentsEnv`·`AnalyticsEnv`는 Node에서도 브라우저 의존부를 주입하는 자리다. 이름은 같고 멤버는 Flutter 기준으로 정한다. 생략하면 SDK의 Flutter 기본 구현을 쓴다.
 
+### 문서
+
+pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
+
+- 공개 API(클래스·생성자·필드·getter·메서드·상수·typedef)는 모두 `///` 주석을 단다. `public_member_api_docs` lint로 강제한다.
+- 원천은 Node SDK의 JSDoc과 스키마 `.describe()` 문장이다. 문장은 하십시오체(제품 문장)로 옮긴다. 내부 구현 주석은 한다체다.
+- 첫 문장은 한 줄 요약이다. 메서드는 HTTP 경로, 로그인 필요 여부, 던지는 오류 코드를 적고, 자주 쓰는 메서드에는 예제를 단다.
+- 문자열 enum 필드·typedef는 허용 값과 각 값의 뜻을 적는다.
+- 라이브러리 주석(`library;` 위)에 시작하기·오류 처리 예제를 둔다.
+- `dart doc` 경고 0을 확인한다.
+
 ---
 
 ## `@sayren/storefront-sdk` → `sayren_storefront_sdk.dart`
