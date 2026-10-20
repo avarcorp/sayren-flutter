@@ -893,8 +893,13 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 
 목록 대조 스크립트는 Node SDK에서 뽑은 이름 목록과 Dart 패키지의 공개 이름 목록이 같은지 확인한다. 각 Phase는 이 대조를 통과해야 끝난다.
 
+## 배포
+
+- `sayren_storefront_sdk`·`sayren_store_sdk`는 pub.dev에 공개 게시한다. Node SDK(`@sayren/storefront-sdk`·`@sayren/store-sdk`)도 npm 공개 패키지다
+
 ## 미정 사항
 
-- pub.dev 게시 여부와 버전 정책
+- 버전 정책
+- 라이선스(Node SDK는 현재 `UNLICENSED`)
 - 모델 클래스 작성 방식(수기 작성 또는 Node 스키마 기반 코드 생성)
 - 지원 플랫폼 범위(iOS·Android 외 Web·데스크톱)
