@@ -10,6 +10,8 @@ resolution: workspace
 
 dependencies:
   http: ^1.2.0
+  # 직접 입력값 NFC 정규화(Node `String.prototype.normalize`)
+  unorm_dart: 0.3.2
 
 dev_dependencies:
   test: ^1.25.0

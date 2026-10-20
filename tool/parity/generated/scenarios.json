@@ -1,0 +1,3614 @@
+{
+  "scenarios": [
+    {
+      "name": "auth.anonymous 생성 예시",
+      "call": "auth.anonymous",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "cartToken": "sample",
+            "expiresAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "auth.signup 생성 예시",
+      "call": "auth.signup",
+      "args": [
+        {
+          "email": "buyer@example.test",
+          "password": "+12025550123",
+          "name": "sample",
+          "phone": "01012345678",
+          "agreements": {
+            "terms": true,
+            "privacy": true,
+            "marketing": true
+          },
+          "cartToken": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "accessToken": "sample",
+            "refreshToken": "sample",
+            "expiresIn": 1
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "auth.login 생성 예시",
+      "call": "auth.login",
+      "args": [
+        {
+          "email": "buyer@example.test",
+          "password": "sample",
+          "cartToken": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "accessToken": "sample",
+            "refreshToken": "sample",
+            "expiresIn": 1
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "auth.refresh 생성 예시",
+      "call": "auth.refresh",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "accessToken": "sample",
+            "refreshToken": "sample",
+            "expiresIn": 1
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "auth.logout 생성 예시",
+      "call": "auth.logout",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "auth.idpAuthorize 생성 예시",
+      "call": "auth.idpAuthorize",
+      "args": [
+        "kakao",
+        {
+          "redirectUri": "https://example.test/a.png",
+          "codeChallenge": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "state": "2026-01-01T00:00:00.000Z",
+          "agreements": {
+            "terms": true,
+            "privacy": true,
+            "marketing": true
+          }
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "url": "https://example.test/a.png"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "auth.idpToken 생성 예시",
+      "call": "auth.idpToken",
+      "args": [
+        {
+          "code": "sample",
+          "codeVerifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "cartToken": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "accessToken": "sample",
+            "refreshToken": "sample",
+            "expiresIn": 1
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "auth.withdraw 생성 예시",
+      "call": "auth.withdraw",
+      "args": [
+        {
+          "password": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "auth.identities 생성 예시",
+      "call": "auth.identities",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "hasPassword": true,
+            "hasExternalAuth": true,
+            "identities": [
+              {
+                "provider": "kakao",
+                "email": "sample",
+                "linkedAt": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "auth.linkIdentityAuthorize 생성 예시",
+      "call": "auth.linkIdentityAuthorize",
+      "args": [
+        "kakao",
+        {
+          "redirectUri": "https://example.test/a.png",
+          "codeChallenge": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "state": "2026-01-01T00:00:00.000Z",
+          "agreements": {
+            "terms": true,
+            "privacy": true,
+            "marketing": true
+          }
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "url": "https://example.test/a.png"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "auth.linkIdentity 생성 예시",
+      "call": "auth.linkIdentity",
+      "args": [
+        "kakao",
+        {
+          "code": "sample",
+          "codeVerifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "hasPassword": true,
+            "hasExternalAuth": true,
+            "identities": [
+              {
+                "provider": "kakao",
+                "email": "sample",
+                "linkedAt": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "auth.unlinkIdentity 생성 예시",
+      "call": "auth.unlinkIdentity",
+      "args": [
+        "kakao"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "hasPassword": true,
+            "hasExternalAuth": true,
+            "identities": [
+              {
+                "provider": "kakao",
+                "email": "sample",
+                "linkedAt": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "store.get 생성 예시",
+      "call": "store.get",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "storeCode": "sample",
+            "markets": [
+              {
+                "marketId": "sample",
+                "name": "sample",
+                "currency": "sample",
+                "countries": [],
+                "checkoutAvailable": true,
+                "locales": []
+              }
+            ],
+            "market": {
+              "marketId": "sample",
+              "currency": "sample",
+              "matched": true,
+              "couponsEnabled": true
+            },
+            "locale": "sample",
+            "defaultLocale": "sample",
+            "name": "sample",
+            "logoUrl": "sample",
+            "customerCenterPhone": "sample",
+            "businessHours": "sample",
+            "businessName": "sample",
+            "representativeName": "sample",
+            "businessNumber": "sample",
+            "mailOrderSalesNumber": "sample",
+            "businessAddress": "sample",
+            "customerCenterEmail": "sample",
+            "privacyOfficerName": "sample",
+            "privacyOfficerEmail": "sample",
+            "guestCheckout": true,
+            "loginMethods": [
+              "password"
+            ],
+            "checkoutAvailable": true,
+            "checkoutMode": "LIVE",
+            "checkoutUnavailableReason": "PAYMENT_NOT_CONFIGURED"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.listCategories 생성 예시",
+      "call": "catalog.listCategories",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "categoryId": "sample",
+              "name": "sample",
+              "depth": 1,
+              "children": []
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.getPointPolicy 생성 예시",
+      "call": "catalog.getPointPolicy",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "reviewReward": {
+              "enabled": true,
+              "textPoint": 1,
+              "photoPoint": 1
+            },
+            "purchaseEarn": {
+              "enabled": true,
+              "rateBp": 1
+            },
+            "expiryDays": 1,
+            "review": {
+              "writableDays": 1,
+              "editableDays": 1
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.searchProducts 생성 예시",
+      "call": "catalog.searchProducts",
+      "args": [
+        {
+          "page": 1,
+          "size": 1,
+          "keyword": "keyword-1",
+          "categoryId": "categoryId-1",
+          "minPrice": 1,
+          "maxPrice": 1,
+          "freeShipping": true,
+          "sort": "recommend"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "productId": "sample",
+                "currency": "sample",
+                "availableInMarket": true,
+                "productNo": 1,
+                "name": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "salePrice": 1,
+                "discountedPrice": 1,
+                "discountRate": 1,
+                "originalPrice": 1,
+                "freeShipping": true,
+                "fulfillment": {
+                  "type": "sample",
+                  "requiresShipping": true
+                },
+                "averageRating": 1,
+                "reviewCount": 1,
+                "soldOut": true
+              }
+            ],
+            "facets": {
+              "categories": [
+                {
+                  "categoryId": "sample",
+                  "name": "sample",
+                  "count": 1
+                }
+              ],
+              "priceRange": {
+                "min": 1,
+                "max": 1
+              }
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.getProduct 생성 예시",
+      "call": "catalog.getProduct",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "productId": "sample",
+            "currency": "sample",
+            "availableInMarket": true,
+            "productNo": 1,
+            "name": "sample",
+            "thumbnailUrl": "https://example.test/a.png",
+            "salePrice": 1,
+            "discountedPrice": 1,
+            "discountRate": 1,
+            "originalPrice": 1,
+            "freeShipping": true,
+            "fulfillment": {
+              "type": "SHIPPING",
+              "requiresShipping": true,
+              "shipping": {
+                "deliveryType": "sample",
+                "deliveryFee": 1,
+                "conditionalFreeAmount": 1,
+                "estimatedDays": "sample",
+                "returnDeliveryFee": 1,
+                "exchangeDeliveryFee": 1
+              },
+              "methods": [
+                "sample"
+              ]
+            },
+            "averageRating": 1,
+            "reviewCount": 1,
+            "soldOut": true,
+            "description": "sample",
+            "images": [
+              "https://example.test/a.png"
+            ],
+            "optionGroups": [
+              {
+                "groupId": "sample",
+                "name": "sample",
+                "values": []
+              }
+            ],
+            "variants": [
+              {
+                "variantId": "sample",
+                "variantNo": "sample",
+                "valueIds": [],
+                "name": "sample",
+                "additionalPrice": 1,
+                "soldOut": true,
+                "attributes": {
+                  "key": "sample"
+                }
+              }
+            ],
+            "addonGroups": [
+              {
+                "groupId": "sample",
+                "name": "sample",
+                "required": true,
+                "values": []
+              }
+            ],
+            "inventoryMode": "sample",
+            "customInputs": [
+              {
+                "inputId": "sample",
+                "label": "sample",
+                "placeholder": "sample",
+                "maxLength": 1,
+                "required": true,
+                "key": "sample",
+                "type": "sample",
+                "options": []
+              }
+            ],
+            "returnPeriodDays": 1,
+            "purchasePoint": 1,
+            "categoryPath": [
+              {
+                "categoryId": "sample",
+                "name": "sample"
+              }
+            ],
+            "notice": {
+              "schemaId": "sample",
+              "name": "sample",
+              "fields": [
+                {
+                  "key": "sample",
+                  "label": "sample",
+                  "value": "sample"
+                }
+              ]
+            },
+            "certifications": {
+              "items": [
+                {
+                  "kind": "sample",
+                  "kindLabel": "sample",
+                  "agency": "sample",
+                  "number": "sample"
+                }
+              ],
+              "exemptions": [
+                {
+                  "subject": "sample",
+                  "subjectLabel": "sample",
+                  "exemption": "sample",
+                  "exemptionLabel": "sample"
+                }
+              ]
+            },
+            "infoSections": [
+              {
+                "infoSectionId": "sample",
+                "title": "sample",
+                "body": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.listProductReviews 생성 예시",
+      "call": "catalog.listProductReviews",
+      "args": [
+        "id-1",
+        {
+          "page": 1,
+          "size": 1,
+          "rating": 1,
+          "hasImage": true,
+          "variantId": "variantId-1",
+          "sort": "latest"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "reviewId": "sample",
+                "rating": 1,
+                "content": "sample",
+                "images": [],
+                "optionName": "sample",
+                "variantId": "sample",
+                "writerMaskedName": "sample",
+                "sellerReply": {
+                  "content": "sample",
+                  "repliedAt": "sample"
+                },
+                "createdAt": "sample"
+              }
+            ],
+            "summary": {
+              "averageRating": 1,
+              "totalCount": 1,
+              "distribution": {
+                "key": 1
+              }
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.listProductInquiries 생성 예시",
+      "call": "catalog.listProductInquiries",
+      "args": [
+        "id-1",
+        {
+          "page": 1,
+          "size": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "inquiryId": "sample",
+                "content": "sample",
+                "secret": true,
+                "mine": true,
+                "writerMaskedName": "sample",
+                "answer": {
+                  "content": "sample",
+                  "answeredAt": "sample"
+                },
+                "createdAt": "sample",
+                "productId": "sample",
+                "productName": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "category": "PRODUCT"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.getProductCalendar 생성 예시",
+      "call": "catalog.getProductCalendar",
+      "args": [
+        "id-1",
+        {
+          "from": "from-1",
+          "to": "to-1",
+          "variantId": "variantId-1"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "date": "sample",
+              "available": true,
+              "price": 1
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.createInquiry 생성 예시",
+      "call": "catalog.createInquiry",
+      "args": [
+        "id-1",
+        {
+          "content": "sample",
+          "secret": true,
+          "category": "PRODUCT"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "catalog.listCollections 생성 예시",
+      "call": "catalog.listCollections",
+      "args": [
+        {
+          "page": 1,
+          "size": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "collectionId": "sample",
+                "slug": "sample",
+                "title": "sample",
+                "description": "sample",
+                "imageUrl": "sample",
+                "startsAt": "sample",
+                "endsAt": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.listCoupons 생성 예시",
+      "call": "catalog.listCoupons",
+      "args": [
+        {
+          "productId": "productId-1",
+          "page": 1,
+          "size": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "couponId": "sample",
+                "name": "sample",
+                "description": "sample",
+                "kind": "sample",
+                "benefit": {
+                  "type": "sample",
+                  "value": 1,
+                  "maxDiscountAmount": 1
+                },
+                "minOrderAmount": 1,
+                "stackWithInstantDiscount": true,
+                "target": {
+                  "allProducts": true,
+                  "includeProductIds": [],
+                  "includeCategoryIds": [],
+                  "excludeProductIds": [],
+                  "excludeCategoryIds": []
+                },
+                "startsAt": "sample",
+                "endsAt": "sample",
+                "validDaysAfterIssue": 1,
+                "perMemberIssueLimit": 1,
+                "loginRequired": true,
+                "downloaded": true,
+                "downloadable": true
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.getCollection 생성 예시",
+      "call": "catalog.getCollection",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "collectionId": "sample",
+            "slug": "sample",
+            "title": "sample",
+            "description": "sample",
+            "imageUrl": "sample",
+            "startsAt": "sample",
+            "endsAt": "sample",
+            "productSort": "sample",
+            "metaTitle": "sample",
+            "metaDescription": "sample",
+            "salesComputedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.listCollectionProducts 생성 예시",
+      "call": "catalog.listCollectionProducts",
+      "args": [
+        "id-1",
+        {
+          "page": 1,
+          "size": 1,
+          "sort": "manual",
+          "minPrice": 1,
+          "maxPrice": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "productId": "sample",
+                "currency": "sample",
+                "availableInMarket": true,
+                "productNo": 1,
+                "name": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "salePrice": 1,
+                "discountedPrice": 1,
+                "discountRate": 1,
+                "originalPrice": 1,
+                "freeShipping": true,
+                "fulfillment": {
+                  "type": "sample",
+                  "requiresShipping": true
+                },
+                "averageRating": 1,
+                "reviewCount": 1,
+                "soldOut": true
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "pickupLocations.list 생성 예시",
+      "call": "pickupLocations.list",
+      "args": [
+        {
+          "productId": "productId-1",
+          "optionId": "optionId-1"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "locationId": "sample",
+              "name": "sample",
+              "address": "sample",
+              "phone": "sample",
+              "hours": "sample",
+              "purchasable": true
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "cart.get 생성 예시",
+      "call": "cart.get",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "items": [
+              {
+                "cartItemId": "sample",
+                "productId": "sample",
+                "productNo": 1,
+                "productName": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "optionId": "sample",
+                "optionName": "sample",
+                "optionSelections": [],
+                "customInputs": [],
+                "stay": {
+                  "checkIn": "sample",
+                  "checkOut": "sample",
+                  "nights": []
+                },
+                "quantity": 1,
+                "unitPrice": 1,
+                "totalPrice": 1,
+                "fulfillment": {
+                  "type": "sample",
+                  "requiresShipping": true,
+                  "method": "sample",
+                  "withdrawalRestricted": true
+                },
+                "purchasable": true,
+                "unpurchasableReason": "SOLD_OUT",
+                "currency": "sample",
+                "availableInMarket": true
+              }
+            ],
+            "summary": {
+              "currency": "sample",
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "totalAmount": 1,
+              "requiresShipping": true
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "cart.addItem 생성 예시",
+      "call": "cart.addItem",
+      "args": [
+        {
+          "productId": "sample",
+          "optionId": "sample",
+          "quantity": 1,
+          "addons": [
+            {
+              "groupId": "sample",
+              "valueId": "sample"
+            }
+          ],
+          "customInputs": [
+            {
+              "inputId": "sample",
+              "value": "sample"
+            }
+          ],
+          "stay": {
+            "checkIn": "2026-01-01",
+            "checkOut": "2026-01-01"
+          }
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "items": [
+              {
+                "cartItemId": "sample",
+                "productId": "sample",
+                "productNo": 1,
+                "productName": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "optionId": "sample",
+                "optionName": "sample",
+                "optionSelections": [],
+                "customInputs": [],
+                "stay": {
+                  "checkIn": "sample",
+                  "checkOut": "sample",
+                  "nights": []
+                },
+                "quantity": 1,
+                "unitPrice": 1,
+                "totalPrice": 1,
+                "fulfillment": {
+                  "type": "sample",
+                  "requiresShipping": true,
+                  "method": "sample",
+                  "withdrawalRestricted": true
+                },
+                "purchasable": true,
+                "unpurchasableReason": "SOLD_OUT",
+                "currency": "sample",
+                "availableInMarket": true
+              }
+            ],
+            "summary": {
+              "currency": "sample",
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "totalAmount": 1,
+              "requiresShipping": true
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "cart.updateItem 생성 예시",
+      "call": "cart.updateItem",
+      "args": [
+        "id-1",
+        {
+          "quantity": 1,
+          "optionId": "sample",
+          "addons": [
+            {
+              "groupId": "sample",
+              "valueId": "sample"
+            }
+          ],
+          "customInputs": [
+            {
+              "inputId": "sample",
+              "value": "sample"
+            }
+          ]
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "items": [
+              {
+                "cartItemId": "sample",
+                "productId": "sample",
+                "productNo": 1,
+                "productName": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "optionId": "sample",
+                "optionName": "sample",
+                "optionSelections": [],
+                "customInputs": [],
+                "stay": {
+                  "checkIn": "sample",
+                  "checkOut": "sample",
+                  "nights": []
+                },
+                "quantity": 1,
+                "unitPrice": 1,
+                "totalPrice": 1,
+                "fulfillment": {
+                  "type": "sample",
+                  "requiresShipping": true,
+                  "method": "sample",
+                  "withdrawalRestricted": true
+                },
+                "purchasable": true,
+                "unpurchasableReason": "SOLD_OUT",
+                "currency": "sample",
+                "availableInMarket": true
+              }
+            ],
+            "summary": {
+              "currency": "sample",
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "totalAmount": 1,
+              "requiresShipping": true
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "cart.removeItem 생성 예시",
+      "call": "cart.removeItem",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "cart.createInputImageUpload 생성 예시",
+      "call": "cart.createInputImageUpload",
+      "args": [
+        {
+          "filename": "sample",
+          "size": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "url": "https://example.test/a.png",
+            "uploadUrl": "https://example.test/a.png"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "checkout.create 생성 예시",
+      "call": "checkout.create",
+      "args": [
+        {
+          "directItem": {
+            "productId": "sample",
+            "optionId": "sample",
+            "quantity": 1,
+            "addons": [
+              {
+                "groupId": "sample",
+                "valueId": "sample"
+              }
+            ],
+            "customInputs": [
+              {
+                "inputId": "sample",
+                "value": "sample"
+              }
+            ],
+            "stay": {
+              "checkIn": "2026-01-01",
+              "checkOut": "2026-01-01"
+            }
+          },
+          "fulfillmentMethod": "CARRIER",
+          "pickupLocationId": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "checkoutId": "sample",
+            "currency": "sample",
+            "items": [
+              {
+                "lineId": "sample",
+                "productId": "sample",
+                "productName": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "optionId": "sample",
+                "optionName": "sample",
+                "optionSelections": [],
+                "customInputs": [],
+                "stay": {
+                  "checkIn": "sample",
+                  "checkOut": "sample",
+                  "nights": []
+                },
+                "quantity": 1,
+                "unitPrice": 1,
+                "totalPrice": 1,
+                "fulfillment": {
+                  "type": "sample",
+                  "requiresShipping": true,
+                  "method": "sample",
+                  "withdrawalRestricted": true
+                }
+              }
+            ],
+            "amounts": {
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "totalAmount": 1,
+              "couponDiscountAmount": 1,
+              "deliveryDiscountAmount": 1,
+              "pointAmount": 1
+            },
+            "points": {
+              "enabled": true,
+              "balance": 1,
+              "maxUsable": 1,
+              "unit": 1,
+              "minAmount": 1,
+              "minBalance": 1
+            },
+            "delivery": {
+              "baseFee": 1,
+              "remoteSurcharge": 1,
+              "remoteArea": "NONE",
+              "remoteAreaLabel": "sample",
+              "bundleCount": 1,
+              "freeByThreshold": true,
+              "zipCode": "sample"
+            },
+            "requiresShipping": true,
+            "withdrawal": {
+              "required": true,
+              "notice": "sample"
+            },
+            "expiresAt": "sample",
+            "paymentOptions": [
+              {
+                "pg": "tosspayments",
+                "method": "CARD",
+                "label": "sample",
+                "pgName": "sample"
+              }
+            ],
+            "testPayment": true
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "checkout.quoteDelivery 생성 예시",
+      "call": "checkout.quoteDelivery",
+      "args": [
+        "id-1",
+        {
+          "countryCode": "KR",
+          "zipCode": "12345"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "amounts": {
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "totalAmount": 1,
+              "couponDiscountAmount": 1,
+              "deliveryDiscountAmount": 1,
+              "pointAmount": 1
+            },
+            "delivery": {
+              "baseFee": 1,
+              "remoteSurcharge": 1,
+              "remoteArea": "NONE",
+              "remoteAreaLabel": "sample",
+              "bundleCount": 1,
+              "freeByThreshold": true,
+              "zipCode": "sample"
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "checkout.startPayment 생성 예시",
+      "call": "checkout.startPayment",
+      "args": [
+        "id-1",
+        {
+          "option": {
+            "pg": "tosspayments",
+            "method": "CARD"
+          },
+          "returnUrl": "https://example.test/a.png",
+          "shippingAddress": {
+            "addressId": "sample",
+            "countryCode": "KR",
+            "receiverName": "sample",
+            "phone": "01012345678",
+            "zipCode": "12345",
+            "address1": "sample",
+            "address2": "sample",
+            "deliveryMemo": "sample",
+            "entranceCode": "sample"
+          },
+          "guest": {
+            "name": "sample",
+            "phone": "01012345678",
+            "email": "buyer@example.test",
+            "orderPassword": "sample"
+          },
+          "cashReceipt": {
+            "type": "INCOME_DEDUCTION",
+            "identityNumber": "01012345678"
+          },
+          "coupons": [
+            {
+              "code": "sample",
+              "optionId": "sample",
+              "lineId": "sample"
+            }
+          ],
+          "pointAmount": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "paymentId": "sample",
+            "status": "sample",
+            "orderId": "sample",
+            "attemptId": "sample",
+            "option": {
+              "pg": "tosspayments",
+              "method": "CARD"
+            },
+            "payUrl": "sample",
+            "launch": {
+              "type": "sample",
+              "attemptId": "sample",
+              "callbackToken": "sample"
+            },
+            "expiresAt": "sample",
+            "testPayment": true,
+            "amounts": {
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "totalAmount": 1,
+              "couponDiscountAmount": 1,
+              "deliveryDiscountAmount": 1,
+              "pointAmount": 1
+            },
+            "delivery": {
+              "baseFee": 1,
+              "remoteSurcharge": 1,
+              "remoteArea": "NONE",
+              "remoteAreaLabel": "sample",
+              "bundleCount": 1,
+              "freeByThreshold": true,
+              "zipCode": "sample"
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "checkout.pricing 생성 예시",
+      "call": "checkout.pricing",
+      "args": [
+        "id-1",
+        {
+          "zipCode": "12345",
+          "coupons": [
+            {
+              "code": "sample",
+              "optionId": "sample",
+              "lineId": "sample"
+            }
+          ],
+          "pointAmount": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "amounts": {
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "couponDiscountAmount": 1,
+              "deliveryDiscountAmount": 1,
+              "pointAmount": 1,
+              "totalAmount": 1
+            },
+            "coupons": [
+              {
+                "couponId": "sample",
+                "issueId": "sample",
+                "code": "sample",
+                "name": "sample",
+                "kind": "sample",
+                "benefit": {
+                  "type": "sample",
+                  "value": 1,
+                  "maxDiscountAmount": 1
+                },
+                "applied": true,
+                "discountAmount": 1,
+                "rejectReason": "sample",
+                "optionId": "sample",
+                "lineId": "sample"
+              }
+            ],
+            "items": [
+              {
+                "optionId": "sample",
+                "lineId": "sample",
+                "couponDiscountAmount": 1,
+                "pointAllocation": 1
+              }
+            ],
+            "points": {
+              "balance": 1,
+              "maxUsable": 1,
+              "adjustReason": "sample",
+              "rejectReason": "sample"
+            },
+            "payable": true,
+            "paymentRequired": true
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "checkout.applicableCoupons 생성 예시",
+      "call": "checkout.applicableCoupons",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "issueId": "sample",
+              "couponId": "sample",
+              "name": "sample",
+              "description": "sample",
+              "kind": "sample",
+              "benefit": {
+                "type": "sample",
+                "value": 1,
+                "maxDiscountAmount": 1
+              },
+              "minOrderAmount": 1,
+              "validUntil": "sample",
+              "applicable": true,
+              "expectedDiscountAmount": 1,
+              "rejectReason": "sample"
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "payments.getStatus 생성 예시",
+      "call": "payments.getStatus",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "paymentId": "sample",
+            "status": "sample",
+            "result": "sample",
+            "orderId": "sample",
+            "lastFailure": {
+              "attemptId": "sample",
+              "category": "sample",
+              "code": "sample",
+              "message": "sample",
+              "optionUnavailable": true
+            },
+            "testPayment": true,
+            "expiresAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "payments.retry 생성 예시",
+      "call": "payments.retry",
+      "args": [
+        "id-1",
+        {
+          "option": {
+            "pg": "tosspayments",
+            "method": "CARD"
+          },
+          "returnUrl": "https://example.test/a.png",
+          "cashReceipt": {
+            "type": "INCOME_DEDUCTION",
+            "identityNumber": "01012345678"
+          }
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "paymentId": "sample",
+            "status": "sample",
+            "orderId": "sample",
+            "attemptId": "sample",
+            "option": {
+              "pg": "tosspayments",
+              "method": "CARD"
+            },
+            "payUrl": "sample",
+            "launch": {
+              "type": "sample",
+              "attemptId": "sample",
+              "callbackToken": "sample"
+            },
+            "expiresAt": "sample",
+            "testPayment": true,
+            "amounts": {
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "totalAmount": 1,
+              "couponDiscountAmount": 1,
+              "deliveryDiscountAmount": 1,
+              "pointAmount": 1
+            },
+            "delivery": {
+              "baseFee": 1,
+              "remoteSurcharge": 1,
+              "remoteArea": "NONE",
+              "remoteAreaLabel": "sample",
+              "bundleCount": 1,
+              "freeByThreshold": true,
+              "zipCode": "sample"
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "payments.confirm 생성 예시",
+      "call": "payments.confirm",
+      "args": [
+        "id-1",
+        {
+          "attemptId": "sample",
+          "callbackToken": "sample",
+          "pgToken": "sample",
+          "amount": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "orderId": "sample",
+            "status": "sample",
+            "totalAmount": 1,
+            "paidAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "payments.reportFailure 생성 예시",
+      "call": "payments.reportFailure",
+      "args": [
+        "id-1",
+        {
+          "attemptId": "sample",
+          "callbackToken": "sample",
+          "category": "PREPARE_FAILURE",
+          "code": "sample",
+          "message": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "paymentId": "sample",
+            "attemptId": "sample",
+            "category": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myOrders.list 생성 예시",
+      "call": "myOrders.list",
+      "args": [
+        {
+          "page": 1,
+          "size": 1,
+          "status": "PAYMENT_WAITING",
+          "from": "from-1"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "orderId": "sample",
+                "progressStatus": "PAYMENT_WAITING",
+                "orderNo": "sample",
+                "orderedAt": "sample",
+                "items": [],
+                "requiresShipping": true,
+                "shippingAddress": {
+                  "receiverName": "sample",
+                  "phone": "sample",
+                  "zipCode": "sample",
+                  "countryCode": "sample",
+                  "region": "sample",
+                  "city": "sample",
+                  "address1": "sample",
+                  "address2": "sample",
+                  "deliveryMemo": "sample",
+                  "entranceCode": "sample"
+                },
+                "payment": {
+                  "method": "CARD",
+                  "easyPayProvider": "sample",
+                  "couponDiscountAmount": 1,
+                  "deliveryDiscountAmount": 1,
+                  "pointAmount": 1,
+                  "discounts": [],
+                  "totalAmount": 1,
+                  "paidAt": "sample",
+                  "receiptUrl": "https://example.test/a.png",
+                  "refundedAmount": 1,
+                  "refundPendingAmount": 1,
+                  "pointRefundedAmount": 1
+                },
+                "currency": "sample",
+                "testPayment": true
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myOrders.get 생성 예시",
+      "call": "myOrders.get",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "orderId": "sample",
+            "progressStatus": "PAYMENT_WAITING",
+            "orderNo": "sample",
+            "orderedAt": "sample",
+            "items": [
+              {
+                "orderItemId": "sample",
+                "orderItemNo": "sample",
+                "productId": "sample",
+                "productName": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "optionName": "sample",
+                "optionSelections": [],
+                "customInputs": [],
+                "stay": {
+                  "checkIn": "sample",
+                  "checkOut": "sample",
+                  "nights": []
+                },
+                "quantity": 1,
+                "canceledQuantity": 1,
+                "activeQuantity": 1,
+                "totalPrice": 1,
+                "couponDiscountAmount": 1,
+                "pointAllocation": 1,
+                "status": "PAYMENT_WAITING",
+                "fulfillmentSnapshot": {
+                  "type": "SHIPPING",
+                  "requiresShipping": true,
+                  "method": "sample",
+                  "pickupLocation": {
+                    "locationId": "sample",
+                    "name": "sample",
+                    "address": "sample",
+                    "phone": "sample",
+                    "hours": "sample",
+                    "purchasable": true
+                  }
+                },
+                "fulfillment": {
+                  "status": "sample",
+                  "fulfilledAt": "sample",
+                  "note": "sample"
+                },
+                "claimStatus": "sample",
+                "reviewWritten": true,
+                "reviewWritable": true,
+                "autoDecisionDate": "sample",
+                "flowState": {
+                  "key": "sample",
+                  "label": "sample",
+                  "coreStatus": "PAYMENT_WAITING",
+                  "message": "sample",
+                  "enteredAt": "sample",
+                  "deadlineAt": "sample",
+                  "attachments": [],
+                  "earlierAttachments": [],
+                  "inputs": {
+                    "by": "sample",
+                    "values": []
+                  },
+                  "progress": true,
+                  "fields": {
+                    "key": "sample"
+                  }
+                },
+                "actions": [],
+                "flowBranches": [],
+                "step": {
+                  "type": "sample",
+                  "label": "sample",
+                  "message": "sample",
+                  "deadlineAt": "sample",
+                  "attachments": [],
+                  "earlierAttachments": [],
+                  "inputs": {
+                    "by": "sample",
+                    "values": []
+                  },
+                  "actions": [],
+                  "claimable": [],
+                  "data": {
+                    "delivery": {
+                      "carrierName": "sample",
+                      "trackingNumber": "sample",
+                      "trackingUrl": "sample",
+                      "dispatchedAt": "sample"
+                    }
+                  }
+                }
+              }
+            ],
+            "requiresShipping": true,
+            "shippingAddress": {
+              "receiverName": "sample",
+              "phone": "sample",
+              "zipCode": "sample",
+              "countryCode": "sample",
+              "region": "sample",
+              "city": "sample",
+              "address1": "sample",
+              "address2": "sample",
+              "deliveryMemo": "sample",
+              "entranceCode": "sample"
+            },
+            "payment": {
+              "method": "CARD",
+              "easyPayProvider": "sample",
+              "couponDiscountAmount": 1,
+              "deliveryDiscountAmount": 1,
+              "pointAmount": 1,
+              "discounts": [
+                {
+                  "couponId": "sample",
+                  "name": "sample",
+                  "kind": "sample",
+                  "discountAmount": 1
+                }
+              ],
+              "totalAmount": 1,
+              "paidAt": "sample",
+              "receiptUrl": "https://example.test/a.png",
+              "refundedAmount": 1,
+              "refundPendingAmount": 1,
+              "pointRefundedAmount": 1
+            },
+            "currency": "sample",
+            "testPayment": true
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myOrders.getGuestOrder 생성 예시",
+      "call": "myOrders.getGuestOrder",
+      "args": [
+        "id-1",
+        {
+          "phone": "phone-1",
+          "orderPassword": "orderPassword-1"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "orderId": "sample",
+            "progressStatus": "PAYMENT_WAITING",
+            "orderNo": "sample",
+            "orderedAt": "sample",
+            "items": [
+              {
+                "orderItemId": "sample",
+                "orderItemNo": "sample",
+                "productId": "sample",
+                "productName": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "optionName": "sample",
+                "optionSelections": [],
+                "customInputs": [],
+                "stay": {
+                  "checkIn": "sample",
+                  "checkOut": "sample",
+                  "nights": []
+                },
+                "quantity": 1,
+                "canceledQuantity": 1,
+                "activeQuantity": 1,
+                "totalPrice": 1,
+                "couponDiscountAmount": 1,
+                "pointAllocation": 1,
+                "status": "PAYMENT_WAITING",
+                "fulfillmentSnapshot": {
+                  "type": "SHIPPING",
+                  "requiresShipping": true,
+                  "method": "sample",
+                  "pickupLocation": {
+                    "locationId": "sample",
+                    "name": "sample",
+                    "address": "sample",
+                    "phone": "sample",
+                    "hours": "sample",
+                    "purchasable": true
+                  }
+                },
+                "fulfillment": {
+                  "status": "sample",
+                  "fulfilledAt": "sample",
+                  "note": "sample"
+                },
+                "claimStatus": "sample",
+                "reviewWritten": true,
+                "reviewWritable": true,
+                "autoDecisionDate": "sample",
+                "flowState": {
+                  "key": "sample",
+                  "label": "sample",
+                  "coreStatus": "PAYMENT_WAITING",
+                  "message": "sample",
+                  "enteredAt": "sample",
+                  "deadlineAt": "sample",
+                  "attachments": [],
+                  "earlierAttachments": [],
+                  "inputs": {
+                    "by": "sample",
+                    "values": []
+                  },
+                  "progress": true,
+                  "fields": {
+                    "key": "sample"
+                  }
+                },
+                "actions": [],
+                "flowBranches": [],
+                "step": {
+                  "type": "sample",
+                  "label": "sample",
+                  "message": "sample",
+                  "deadlineAt": "sample",
+                  "attachments": [],
+                  "earlierAttachments": [],
+                  "inputs": {
+                    "by": "sample",
+                    "values": []
+                  },
+                  "actions": [],
+                  "claimable": [],
+                  "data": {
+                    "delivery": {
+                      "carrierName": "sample",
+                      "trackingNumber": "sample",
+                      "trackingUrl": "sample",
+                      "dispatchedAt": "sample"
+                    }
+                  }
+                }
+              }
+            ],
+            "requiresShipping": true,
+            "shippingAddress": {
+              "receiverName": "sample",
+              "phone": "sample",
+              "zipCode": "sample",
+              "countryCode": "sample",
+              "region": "sample",
+              "city": "sample",
+              "address1": "sample",
+              "address2": "sample",
+              "deliveryMemo": "sample",
+              "entranceCode": "sample"
+            },
+            "payment": {
+              "method": "CARD",
+              "easyPayProvider": "sample",
+              "couponDiscountAmount": 1,
+              "deliveryDiscountAmount": 1,
+              "pointAmount": 1,
+              "discounts": [
+                {
+                  "couponId": "sample",
+                  "name": "sample",
+                  "kind": "sample",
+                  "discountAmount": 1
+                }
+              ],
+              "totalAmount": 1,
+              "paidAt": "sample",
+              "receiptUrl": "https://example.test/a.png",
+              "refundedAmount": 1,
+              "refundPendingAmount": 1,
+              "pointRefundedAmount": 1
+            },
+            "currency": "sample",
+            "testPayment": true
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myOrders.getDelivery 생성 예시",
+      "call": "myOrders.getDelivery",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "carrierName": "sample",
+            "trackingNumber": "sample",
+            "trackingUrl": "https://example.test/a.png",
+            "status": "DISPATCHED",
+            "trackingEvents": [
+              {
+                "status": "sample",
+                "location": "sample",
+                "occurredAt": "sample",
+                "stage": "sample"
+              }
+            ],
+            "trackingStage": "sample",
+            "trackingCheckedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myOrders.decidePurchase 생성 예시",
+      "call": "myOrders.decidePurchase",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "myOrders.act 생성 예시",
+      "call": "myOrders.act",
+      "args": [
+        "id-1",
+        "id-1",
+        {
+          "note": "x"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "status": "COMPLETED",
+            "flowState": {
+              "key": "sample",
+              "label": "sample",
+              "coreStatus": "PAYMENT_WAITING",
+              "message": "sample",
+              "enteredAt": "sample",
+              "deadlineAt": "sample",
+              "attachments": [
+                "sample"
+              ],
+              "earlierAttachments": [
+                "sample"
+              ],
+              "inputs": {
+                "by": "sample",
+                "values": []
+              },
+              "progress": true,
+              "fields": {
+                "key": "sample"
+              }
+            },
+            "actions": [
+              {
+                "key": "sample",
+                "label": "sample",
+                "mode": "INSTANT",
+                "enabled": true,
+                "disabled": {
+                  "reason": "sample",
+                  "message": "sample"
+                },
+                "availableUntil": "sample",
+                "subflow": "sample",
+                "input": [],
+                "partialQuantity": true
+              }
+            ],
+            "affectedOrderItemIds": [
+              "sample"
+            ],
+            "claim": {
+              "claimId": "sample",
+              "claimNo": "sample",
+              "approved": true
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myOrders.guestAct 생성 예시",
+      "call": "myOrders.guestAct",
+      "args": [
+        "id-1",
+        "id-1",
+        "id-1",
+        {
+          "phone": "phone-1",
+          "orderPassword": "orderPassword-1",
+          "input": {
+            "note": "x"
+          }
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "status": "COMPLETED",
+            "flowState": {
+              "key": "sample",
+              "label": "sample",
+              "coreStatus": "PAYMENT_WAITING",
+              "message": "sample",
+              "enteredAt": "sample",
+              "deadlineAt": "sample",
+              "attachments": [
+                "sample"
+              ],
+              "earlierAttachments": [
+                "sample"
+              ],
+              "inputs": {
+                "by": "sample",
+                "values": []
+              },
+              "progress": true,
+              "fields": {
+                "key": "sample"
+              }
+            },
+            "actions": [
+              {
+                "key": "sample",
+                "label": "sample",
+                "mode": "INSTANT",
+                "enabled": true,
+                "disabled": {
+                  "reason": "sample",
+                  "message": "sample"
+                },
+                "availableUntil": "sample",
+                "subflow": "sample",
+                "input": [],
+                "partialQuantity": true
+              }
+            ],
+            "affectedOrderItemIds": [
+              "sample"
+            ],
+            "claim": {
+              "claimId": "sample",
+              "claimNo": "sample",
+              "approved": true
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myOrders.actOnOrder 생성 예시",
+      "call": "myOrders.actOnOrder",
+      "args": [
+        "id-1",
+        "id-1",
+        {
+          "note": "x"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "orderId": "sample",
+            "key": "sample",
+            "results": [
+              {
+                "orderItemId": "sample",
+                "status": "COMPLETED",
+                "reason": "sample",
+                "message": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myOrders.guestActOnOrder 생성 예시",
+      "call": "myOrders.guestActOnOrder",
+      "args": [
+        "id-1",
+        "id-1",
+        {
+          "phone": "phone-1",
+          "orderPassword": "orderPassword-1",
+          "input": {
+            "note": "x"
+          }
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "orderId": "sample",
+            "key": "sample",
+            "results": [
+              {
+                "orderItemId": "sample",
+                "status": "COMPLETED",
+                "reason": "sample",
+                "message": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myClaims.create 생성 예시",
+      "call": "myClaims.create",
+      "args": [
+        "id-1",
+        {
+          "type": "CANCEL",
+          "reason": "CHANGE_OF_MIND",
+          "reasonDetail": "sample",
+          "evidenceImages": [
+            "https://example.test/a.png"
+          ],
+          "exchangeOptionId": "sample",
+          "quantity": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "claimId": "sample",
+            "claimNo": "sample",
+            "status": "REQUESTED",
+            "approved": true,
+            "expectedRefundAmount": 1,
+            "claimDeliveryFee": 1,
+            "quantity": 1,
+            "deliveryFeeRefundAmount": 1,
+            "couponChargeAmount": 1,
+            "couponChargeRefundAmount": 1,
+            "pointRefundAmount": 1
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myClaims.preview 생성 예시",
+      "call": "myClaims.preview",
+      "args": [
+        "id-1",
+        {
+          "type": "CANCEL",
+          "reason": "CHANGE_OF_MIND",
+          "reasonDetail": "sample",
+          "evidenceImages": [
+            "https://example.test/a.png"
+          ],
+          "exchangeOptionId": "sample",
+          "quantity": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "approved": true,
+            "expectedRefundAmount": 1,
+            "claimDeliveryFee": 1,
+            "quantity": 1,
+            "deliveryFeeRefundAmount": 1,
+            "couponChargeAmount": 1,
+            "couponChargeRefundAmount": 1,
+            "pointRefundAmount": 1,
+            "deductAmount": 1
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myClaims.list 생성 예시",
+      "call": "myClaims.list",
+      "args": [
+        {
+          "page": 1,
+          "size": 1,
+          "status": "REQUESTED"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "claimId": "sample",
+                "claimNo": "sample",
+                "type": "CANCEL",
+                "status": "REQUESTED",
+                "orderItemId": "sample",
+                "productName": "sample",
+                "quantity": 1,
+                "reason": "sample",
+                "expectedRefundAmount": 1,
+                "expectedDeliveryFeeRefundAmount": 1,
+                "expectedPointRefundAmount": 1,
+                "rejectReason": "sample",
+                "returnAddress": {
+                  "name": "sample",
+                  "contactName": "sample",
+                  "phone": "sample",
+                  "zipCode": "sample",
+                  "address1": "sample",
+                  "address2": "sample"
+                },
+                "requestedAt": "sample",
+                "completedAt": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "myClaims.withdraw 생성 예시",
+      "call": "myClaims.withdraw",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "member.me 생성 예시",
+      "call": "member.me",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "memberId": "sample",
+            "email": "buyer@example.test",
+            "name": "sample",
+            "phone": "sample",
+            "point": 1,
+            "marketingAgreed": true,
+            "joinedAt": "sample",
+            "reconsentRequired": true
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "member.getPoints 생성 예시",
+      "call": "member.getPoints",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "balance": 1,
+            "expiringSoon": 1
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "member.listPointHistory 생성 예시",
+      "call": "member.listPointHistory",
+      "args": [
+        {
+          "page": 1,
+          "size": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "entryId": "sample",
+                "type": "sample",
+                "amount": 1,
+                "balanceAfter": 1,
+                "createdAt": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "member.updateMe 생성 예시",
+      "call": "member.updateMe",
+      "args": [
+        {
+          "name": "sample",
+          "phone": "sample",
+          "marketingAgreed": true
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "member.consents 생성 예시",
+      "call": "member.consents",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "terms": {
+              "kind": "TERMS",
+              "agreed": true,
+              "agreedVersion": "sample",
+              "currentVersion": "sample",
+              "currentDocumentUrl": "sample",
+              "updatedAt": "sample",
+              "reconsentRequired": true
+            },
+            "privacy": {
+              "kind": "TERMS",
+              "agreed": true,
+              "agreedVersion": "sample",
+              "currentVersion": "sample",
+              "currentDocumentUrl": "sample",
+              "updatedAt": "sample",
+              "reconsentRequired": true
+            },
+            "marketing": {
+              "kind": "TERMS",
+              "agreed": true,
+              "agreedVersion": "sample",
+              "currentVersion": "sample",
+              "currentDocumentUrl": "sample",
+              "updatedAt": "sample",
+              "reconsentRequired": true
+            },
+            "reconsentRequired": true
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "member.updateConsents 생성 예시",
+      "call": "member.updateConsents",
+      "args": [
+        {
+          "terms": true,
+          "privacy": true,
+          "marketing": true
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "terms": {
+              "kind": "TERMS",
+              "agreed": true,
+              "agreedVersion": "sample",
+              "currentVersion": "sample",
+              "currentDocumentUrl": "sample",
+              "updatedAt": "sample",
+              "reconsentRequired": true
+            },
+            "privacy": {
+              "kind": "TERMS",
+              "agreed": true,
+              "agreedVersion": "sample",
+              "currentVersion": "sample",
+              "currentDocumentUrl": "sample",
+              "updatedAt": "sample",
+              "reconsentRequired": true
+            },
+            "marketing": {
+              "kind": "TERMS",
+              "agreed": true,
+              "agreedVersion": "sample",
+              "currentVersion": "sample",
+              "currentDocumentUrl": "sample",
+              "updatedAt": "sample",
+              "reconsentRequired": true
+            },
+            "reconsentRequired": true
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "member.listAddresses 생성 예시",
+      "call": "member.listAddresses",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "addressId": "sample",
+              "alias": "sample",
+              "isDefault": true,
+              "receiverName": "sample",
+              "phone": "sample",
+              "zipCode": "sample",
+              "address1": "sample",
+              "address2": "sample",
+              "countryCode": "sample",
+              "city": "sample",
+              "region": "sample"
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "member.createAddress 생성 예시",
+      "call": "member.createAddress",
+      "args": [
+        {
+          "alias": "sample",
+          "receiverName": "sample",
+          "phone": "01012345678",
+          "zipCode": "12345",
+          "address1": "sample",
+          "address2": "sample",
+          "isDefault": true
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "member.updateAddress 생성 예시",
+      "call": "member.updateAddress",
+      "args": [
+        "id-1",
+        {
+          "alias": "sample",
+          "receiverName": "sample",
+          "phone": "01012345678",
+          "zipCode": "12345",
+          "address1": "sample",
+          "address2": "sample",
+          "isDefault": true
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "member.deleteAddress 생성 예시",
+      "call": "member.deleteAddress",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "member.listWishlist 생성 예시",
+      "call": "member.listWishlist",
+      "args": [
+        {
+          "page": 1,
+          "size": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "productId": "sample",
+                "currency": "sample",
+                "availableInMarket": true,
+                "productNo": 1,
+                "name": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "salePrice": 1,
+                "discountedPrice": 1,
+                "discountRate": 1,
+                "originalPrice": 1,
+                "freeShipping": true,
+                "fulfillment": {
+                  "type": "sample",
+                  "requiresShipping": true
+                },
+                "averageRating": 1,
+                "reviewCount": 1,
+                "soldOut": true
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "member.addWishlist 생성 예시",
+      "call": "member.addWishlist",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "member.removeWishlist 생성 예시",
+      "call": "member.removeWishlist",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "reviews.listMine 생성 예시",
+      "call": "reviews.listMine",
+      "args": [
+        {
+          "page": 1,
+          "size": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "reviewId": "sample",
+                "productId": "sample",
+                "productName": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "optionName": "sample",
+                "rating": 1,
+                "content": "sample",
+                "images": [],
+                "sellerReply": {
+                  "content": "sample",
+                  "repliedAt": "sample"
+                },
+                "blinded": true,
+                "editable": true,
+                "editableUntil": "sample",
+                "createdAt": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "reviews.listWritable 생성 예시",
+      "call": "reviews.listWritable",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "orderItemId": "sample",
+              "productId": "sample",
+              "productName": "sample",
+              "optionName": "sample",
+              "thumbnailUrl": "https://example.test/a.png",
+              "writableUntil": "sample"
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "reviews.createImageUpload 생성 예시",
+      "call": "reviews.createImageUpload",
+      "args": [
+        {
+          "filename": "sample",
+          "purpose": "review-image",
+          "size": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "url": "https://example.test/a.png",
+            "uploadUrl": "https://example.test/a.png"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "reviews.create 생성 예시",
+      "call": "reviews.create",
+      "args": [
+        "id-1",
+        {
+          "rating": 1,
+          "content": "01012345678",
+          "images": [
+            "https://example.test/a.png"
+          ]
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "reviewId": "sample",
+            "rewardPoint": 1
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "reviews.update 생성 예시",
+      "call": "reviews.update",
+      "args": [
+        "id-1",
+        {
+          "rating": 1,
+          "content": "01012345678",
+          "images": [
+            "https://example.test/a.png"
+          ]
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "reviews.remove 생성 예시",
+      "call": "reviews.remove",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "inquiries.listMine 생성 예시",
+      "call": "inquiries.listMine",
+      "args": [
+        {
+          "page": 1,
+          "size": 1,
+          "answered": true
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "inquiryId": "sample",
+                "content": "sample",
+                "secret": true,
+                "mine": true,
+                "writerMaskedName": "sample",
+                "answer": {
+                  "content": "sample",
+                  "answeredAt": "sample"
+                },
+                "createdAt": "sample",
+                "productId": "sample",
+                "productName": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "category": "PRODUCT"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "me.coupons 생성 예시",
+      "call": "me.coupons",
+      "args": [
+        {
+          "status": "status-1"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "issueId": "sample",
+              "couponId": "sample",
+              "name": "sample",
+              "description": "sample",
+              "kind": "sample",
+              "benefit": {
+                "type": "sample",
+                "value": 1,
+                "maxDiscountAmount": 1
+              },
+              "minOrderAmount": 1,
+              "status": "sample",
+              "validFrom": "sample",
+              "validUntil": "sample",
+              "usedOrderId": "sample",
+              "issuedAt": "sample",
+              "source": "sample"
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "me.downloadCoupon 생성 예시",
+      "call": "me.downloadCoupon",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "issueId": "sample",
+            "couponId": "sample",
+            "name": "sample",
+            "description": "sample",
+            "kind": "sample",
+            "benefit": {
+              "type": "sample",
+              "value": 1,
+              "maxDiscountAmount": 1
+            },
+            "minOrderAmount": 1,
+            "status": "sample",
+            "validFrom": "sample",
+            "validUntil": "sample",
+            "usedOrderId": "sample",
+            "issuedAt": "sample",
+            "source": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "me.customerInquiries.create 생성 예시",
+      "call": "me.customerInquiries.create",
+      "args": [
+        {
+          "category": "DELIVERY",
+          "title": "sample",
+          "content": "sample",
+          "orderItemId": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "inquiryId": "sample",
+            "category": "DELIVERY",
+            "title": "sample",
+            "content": "sample",
+            "orderItemId": "sample",
+            "answered": true,
+            "answer": {
+              "content": "sample",
+              "answeredAt": "sample"
+            },
+            "createdAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "me.customerInquiries.list 생성 예시",
+      "call": "me.customerInquiries.list",
+      "args": [
+        {
+          "page": 1,
+          "size": 1,
+          "answered": true,
+          "category": "DELIVERY"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "inquiryId": "sample",
+                "category": "DELIVERY",
+                "title": "sample",
+                "content": "sample",
+                "orderItemId": "sample",
+                "answered": true,
+                "answer": {
+                  "content": "sample",
+                  "answeredAt": "sample"
+                },
+                "createdAt": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "me.customerInquiries.get 생성 예시",
+      "call": "me.customerInquiries.get",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "inquiryId": "sample",
+            "category": "DELIVERY",
+            "title": "sample",
+            "content": "sample",
+            "orderItemId": "sample",
+            "answered": true,
+            "answer": {
+              "content": "sample",
+              "answeredAt": "sample"
+            },
+            "createdAt": "sample"
+          },
+          "error": null
+        }
+      }
+    }
+  ]
+}

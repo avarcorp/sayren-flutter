@@ -12,8 +12,8 @@ final errorDetailSchema = z.plainObject({
   'code': z.string(),
   'message': z.string(),
   'traceId': z.string().optional(),
-  'docs': z.url().optional().catchValue(absent),
-  'details': z.record().optional().catchValue(absent),
+  'docs': z.string().url().optional().catchValue(absent),
+  'details': z.record<Object?>(z.unknown()).optional().catchValue(absent),
 });
 
 /// 표준 응답 엔벨로프 — $.meta / $.data / $.error

@@ -52,7 +52,13 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
   - `toJson`, 값 비교(`==`), `toString`. 검증한 JSON은 비공개이고 필드는 getter로만 읽는다.
 - 스키마 타입 `ZodType`·`ZodObject`·`ZodEnum`·`ZodArray`는 export한다(스키마 상수의 문서와 타입 표기용). 스키마 생성자 모음 `z`는 내부용이다.
 
-- Node의 인라인 객체 타입(옵션 필드 `auth: { accessToken? }`, 응답 필드 `StorefrontStore.market` 등)은 같은 필드 이름의 레코드다(`auth: (accessToken: '…')`).
+- TS로만 쓴 인라인 객체 타입(옵션 필드 `auth: { accessToken? }`, 함수 반환 `analyticsIdsFromCookie` 등)은 같은 필드 이름의 레코드다(`auth: (accessToken: '…')`).
+- zod 스키마 안의 익명 객체·union은 클래스다. 응답 JSON의 키 있음·없음과 필드 문서를 그대로 지키려는 것이다. 이름 규칙(생성기 `tool/codegen/ir.mjs`)은 다음과 같다.
+  - 객체 필드: `{소유 클래스}{필드 PascalCase}`(`StorefrontStore.market` → `StorefrontStoreMarket`). 배열 항목은 끝에 `Item`, record 값은 `Value`를 붙인다.
+  - 판별 union의 형태: `{union}{판별 값 PascalCase}`(`PaymentOptionEasyPay`). 판별 필드가 없는 익명 형태: `{union}Option{n}`.
+  - 익명 클래스마다 공개 스키마 상수 `{클래스 camelCase}Schema`를 둔다(`fromJson`과 다른 파일의 스키마가 쓴다).
+  - transform으로 바로 다른 모델이 되는 객체(모르는 이행 유형의 입력 등)는 클래스를 두지 않는다.
+- intersection(`paymentOptionSchema.and({...})`)은 zod처럼 양쪽을 따로 검증하고, 출력은 형태마다 객체를 합친 판별 union 클래스다.
 - 제네릭 익명 타입인 `pageSchema(item)`의 출력은 `Page<T>`(`PageInfo` + `contents`)다.
 - 클라이언트 네임스페이스(`client.catalog` 등)는 공개 클래스다. pub 문서에 메서드가 나오게 하려는 것이다. 이름은 `{클라이언트 타입}{네임스페이스 PascalCase}`다(`StorefrontClientCatalog`, `client.me.customerInquiries`는 `StorefrontClientMeCustomerInquiries`). 생성자는 비공개다.
 
@@ -74,6 +80,17 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
 
 `PaymentsEnv`·`AnalyticsEnv`는 Node에서도 브라우저 의존부를 주입하는 자리다. 이름은 같고 멤버는 Flutter 기준으로 정한다. 생략하면 SDK의 Flutter 기본 구현을 쓴다.
 
+### 생성
+
+`sayren_storefront_sdk`의 스키마·모델·클라이언트는 `tool/codegen`이 npm `@sayren/storefront-sdk`(버전 고정)에서 생성한다. 생성 파일은 직접 고치지 않는다.
+
+- 원천: 패키지의 TS 원본(`src`, export 순서·JSDoc·인터페이스·클라이언트 정의)과 런타임 zod 스키마(검증 규칙·기본값·`describe`).
+- 실행: `cd tool/codegen && npm install && node generate.mjs`. 끝에 `dart format`을 돌린다.
+- 클로저(`refine`·`superRefine`·`transform`·`preprocess`·`trim`)는 `tool/codegen/hooks.mjs`가 Node 함수 원문 → Dart 구현으로 잇는다. 모르는 원문이 나오면 생성기가 멈추고 원문을 보여 준다.
+- 생성할 수 없는 함수·클래스·상수(`formatOrderNo`, 통화 함수, `CURRENCIES` 등)는 같은 라이브러리의 `{파일}.manual.dart` part에 손으로 쓴다. 생성기는 빠진 이름을 알린다.
+- 손으로 쓰는 파일: `http.dart`, `zod.dart`, `analytics-ids.dart`, `*.manual.dart`, 클라이언트 옵션·생성자 템플릿(`tool/codegen/templates/`).
+- 생성기는 대조 자료(`tool/parity/generated/`), Dart 대조 표(`tool/parity_generated.dart`), getter 테스트(`test/getters_test.dart`)도 만든다.
+
 ### 문서
 
 pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
@@ -84,6 +101,7 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 - 문자열 enum 필드·typedef는 허용 값과 각 값의 뜻을 적는다.
 - 라이브러리 주석(`library;` 위)에 시작하기·오류 처리 예제를 둔다.
 - `dart doc` 경고 0을 확인한다.
+- 생성 코드는 Node 설명(한다체)을 하십시오체로 바꿔 옮긴다(`tool/codegen/korean.mjs`). 설명이 없는 필드는 「`key` 값입니다.」로 둔다.
 
 ---
 
@@ -91,25 +109,25 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 
 ### `createStorefrontClient`
 
-- [ ] `StorefrontClientOptions`: `baseUrl`, `storeCode?`, `accessToken?`, `auth?`, `cartToken?`, `visitorId?`, `sessionId?`, `country?`, `host?`, `locale?`, `onCartToken?`, `session?`, `fetch?`
+- [x] `StorefrontClientOptions`: `baseUrl`, `storeCode?`, `accessToken?`, `auth?`, `cartToken?`, `visitorId?`, `sessionId?`, `country?`, `host?`, `locale?`, `onCartToken?`, `session?`, `fetch?` — `session?`은 세션(`createStorefrontSession`)과 함께 만든다
 - [ ] 최상위 멤버: `accessToken`, `refreshToken`, `userinfo()`
 
 엔드포인트 78개(경로는 `/storefront/v1` 기준):
 
 #### `auth` (12)
 
-- [ ] `auth.anonymous` · `POST /storefront/v1/auth/anonymous`
-- [ ] `auth.signup` · `POST /storefront/v1/auth/signup`
-- [ ] `auth.login` · `POST /storefront/v1/auth/login`
-- [ ] `auth.refresh` · `POST /storefront/v1/auth/token/refresh`
-- [ ] `auth.logout` · `POST /storefront/v1/auth/logout`
-- [ ] `auth.idpAuthorize` · `POST /storefront/v1/auth/idp/{provider}/authorize`
-- [ ] `auth.idpToken` · `POST /storefront/v1/auth/idp/token`
-- [ ] `auth.withdraw` · `POST /storefront/v1/auth/withdraw`
-- [ ] `auth.identities` · `GET /storefront/v1/me/identities`
-- [ ] `auth.linkIdentityAuthorize` · `POST /storefront/v1/me/identities/{provider}/authorize`
-- [ ] `auth.linkIdentity` · `POST /storefront/v1/me/identities/{provider}`
-- [ ] `auth.unlinkIdentity` · `DELETE /storefront/v1/me/identities/{provider}`
+- [x] `auth.anonymous` · `POST /storefront/v1/auth/anonymous`
+- [x] `auth.signup` · `POST /storefront/v1/auth/signup`
+- [x] `auth.login` · `POST /storefront/v1/auth/login`
+- [x] `auth.refresh` · `POST /storefront/v1/auth/token/refresh`
+- [x] `auth.logout` · `POST /storefront/v1/auth/logout`
+- [x] `auth.idpAuthorize` · `POST /storefront/v1/auth/idp/{provider}/authorize`
+- [x] `auth.idpToken` · `POST /storefront/v1/auth/idp/token`
+- [x] `auth.withdraw` · `POST /storefront/v1/auth/withdraw`
+- [x] `auth.identities` · `GET /storefront/v1/me/identities`
+- [x] `auth.linkIdentityAuthorize` · `POST /storefront/v1/me/identities/{provider}/authorize`
+- [x] `auth.linkIdentity` · `POST /storefront/v1/me/identities/{provider}`
+- [x] `auth.unlinkIdentity` · `DELETE /storefront/v1/me/identities/{provider}`
 
 #### `store` (1)
 
@@ -118,103 +136,103 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 #### `catalog` (12)
 
 - [x] `catalog.listCategories` · `GET /storefront/v1/categories`
-- [ ] `catalog.getPointPolicy` · `GET /storefront/v1/point-policy`
-- [ ] `catalog.searchProducts` · `GET /storefront/v1/products`
-- [ ] `catalog.getProduct` · `GET /storefront/v1/products/{productId}`
-- [ ] `catalog.listProductReviews` · `GET /storefront/v1/products/{productId}/reviews`
-- [ ] `catalog.listProductInquiries` · `GET /storefront/v1/products/{productId}/inquiries`
-- [ ] `catalog.getProductCalendar` · `GET /storefront/v1/products/{productId}/calendar`
-- [ ] `catalog.createInquiry` · `POST /storefront/v1/products/{productId}/inquiries`
+- [x] `catalog.getPointPolicy` · `GET /storefront/v1/point-policy`
+- [x] `catalog.searchProducts` · `GET /storefront/v1/products`
+- [x] `catalog.getProduct` · `GET /storefront/v1/products/{productId}`
+- [x] `catalog.listProductReviews` · `GET /storefront/v1/products/{productId}/reviews`
+- [x] `catalog.listProductInquiries` · `GET /storefront/v1/products/{productId}/inquiries`
+- [x] `catalog.getProductCalendar` · `GET /storefront/v1/products/{productId}/calendar`
+- [x] `catalog.createInquiry` · `POST /storefront/v1/products/{productId}/inquiries`
 - [x] `catalog.listCollections` · `GET /storefront/v1/collections`
-- [ ] `catalog.listCoupons` · `GET /storefront/v1/coupons`
-- [ ] `catalog.getCollection` · `GET /storefront/v1/collections/{slug}`
-- [ ] `catalog.listCollectionProducts` · `GET /storefront/v1/collections/{slug}/products`
+- [x] `catalog.listCoupons` · `GET /storefront/v1/coupons`
+- [x] `catalog.getCollection` · `GET /storefront/v1/collections/{slug}`
+- [x] `catalog.listCollectionProducts` · `GET /storefront/v1/collections/{slug}/products`
 
 #### `pickupLocations` (1)
 
-- [ ] `pickupLocations.list` · `GET /storefront/v1/pickup-locations`
+- [x] `pickupLocations.list` · `GET /storefront/v1/pickup-locations`
 
 #### `cart` (5)
 
-- [ ] `cart.get` · `GET /storefront/v1/cart`
-- [ ] `cart.addItem` · `POST /storefront/v1/cart/items`
-- [ ] `cart.updateItem` · `PATCH /storefront/v1/cart/items/{cartItemId}`
-- [ ] `cart.removeItem` · `DELETE /storefront/v1/cart/items/{cartItemId}`
-- [ ] `cart.createInputImageUpload` · `POST /storefront/v1/uploads/order-inputs`
+- [x] `cart.get` · `GET /storefront/v1/cart`
+- [x] `cart.addItem` · `POST /storefront/v1/cart/items`
+- [x] `cart.updateItem` · `PATCH /storefront/v1/cart/items/{cartItemId}`
+- [x] `cart.removeItem` · `DELETE /storefront/v1/cart/items/{cartItemId}`
+- [x] `cart.createInputImageUpload` · `POST /storefront/v1/uploads/order-inputs`
 
 #### `checkout` (5)
 
-- [ ] `checkout.create` · `POST /storefront/v1/checkout`
-- [ ] `checkout.quoteDelivery` · `POST /storefront/v1/checkout/{checkoutId}/delivery-quote`
-- [ ] `checkout.startPayment` · `POST /storefront/v1/checkout/{checkoutId}/payment`
-- [ ] `checkout.pricing` · `POST /storefront/v1/checkout/{checkoutId}/pricing`
-- [ ] `checkout.applicableCoupons` · `GET /storefront/v1/checkout/{checkoutId}/coupons`
+- [x] `checkout.create` · `POST /storefront/v1/checkout`
+- [x] `checkout.quoteDelivery` · `POST /storefront/v1/checkout/{checkoutId}/delivery-quote`
+- [x] `checkout.startPayment` · `POST /storefront/v1/checkout/{checkoutId}/payment`
+- [x] `checkout.pricing` · `POST /storefront/v1/checkout/{checkoutId}/pricing`
+- [x] `checkout.applicableCoupons` · `GET /storefront/v1/checkout/{checkoutId}/coupons`
 
 #### `payments` (4)
 
-- [ ] `payments.getStatus` · `GET /storefront/v1/payments/{paymentId}`
-- [ ] `payments.retry` · `POST /storefront/v1/payments/{paymentId}/attempts`
-- [ ] `payments.confirm` · `POST /storefront/v1/payments/{paymentId}/confirm`
-- [ ] `payments.reportFailure` · `POST /storefront/v1/payments/{paymentId}/failure`
+- [x] `payments.getStatus` · `GET /storefront/v1/payments/{paymentId}`
+- [x] `payments.retry` · `POST /storefront/v1/payments/{paymentId}/attempts`
+- [x] `payments.confirm` · `POST /storefront/v1/payments/{paymentId}/confirm`
+- [x] `payments.reportFailure` · `POST /storefront/v1/payments/{paymentId}/failure`
 
 #### `myOrders` (9)
 
-- [ ] `myOrders.list` · `GET /storefront/v1/me/orders`
-- [ ] `myOrders.get` · `GET /storefront/v1/me/orders/{orderId}`
-- [ ] `myOrders.getGuestOrder` · `POST /storefront/v1/guest/orders/{orderId}`
-- [ ] `myOrders.getDelivery` · `GET /storefront/v1/me/order-items/{orderItemId}/delivery`
-- [ ] `myOrders.decidePurchase` · `POST /storefront/v1/me/order-items/{orderItemId}/purchase-decision`
-- [ ] `myOrders.act` · `POST /storefront/v1/me/order-items/{orderItemId}/actions/{key}`
-- [ ] `myOrders.guestAct` · `POST /storefront/v1/guest/orders/{orderId}/items/{orderItemId}/actions/{key}`
-- [ ] `myOrders.actOnOrder` · `POST /storefront/v1/me/orders/{orderId}/actions/{key}`
-- [ ] `myOrders.guestActOnOrder` · `POST /storefront/v1/guest/orders/{orderId}/actions/{key}`
+- [x] `myOrders.list` · `GET /storefront/v1/me/orders`
+- [x] `myOrders.get` · `GET /storefront/v1/me/orders/{orderId}`
+- [x] `myOrders.getGuestOrder` · `POST /storefront/v1/guest/orders/{orderId}`
+- [x] `myOrders.getDelivery` · `GET /storefront/v1/me/order-items/{orderItemId}/delivery`
+- [x] `myOrders.decidePurchase` · `POST /storefront/v1/me/order-items/{orderItemId}/purchase-decision`
+- [x] `myOrders.act` · `POST /storefront/v1/me/order-items/{orderItemId}/actions/{key}`
+- [x] `myOrders.guestAct` · `POST /storefront/v1/guest/orders/{orderId}/items/{orderItemId}/actions/{key}`
+- [x] `myOrders.actOnOrder` · `POST /storefront/v1/me/orders/{orderId}/actions/{key}`
+- [x] `myOrders.guestActOnOrder` · `POST /storefront/v1/guest/orders/{orderId}/actions/{key}`
 
 #### `myClaims` (4)
 
-- [ ] `myClaims.create` · `POST /storefront/v1/me/order-items/{orderItemId}/claims`
-- [ ] `myClaims.preview` · `POST /storefront/v1/me/order-items/{orderItemId}/claims/preview`
-- [ ] `myClaims.list` · `GET /storefront/v1/me/claims`
-- [ ] `myClaims.withdraw` · `POST /storefront/v1/me/claims/{claimId}/withdraw`
+- [x] `myClaims.create` · `POST /storefront/v1/me/order-items/{orderItemId}/claims`
+- [x] `myClaims.preview` · `POST /storefront/v1/me/order-items/{orderItemId}/claims/preview`
+- [x] `myClaims.list` · `GET /storefront/v1/me/claims`
+- [x] `myClaims.withdraw` · `POST /storefront/v1/me/claims/{claimId}/withdraw`
 
 #### `member` (13)
 
-- [ ] `member.me` · `GET /storefront/v1/me`
-- [ ] `member.getPoints` · `GET /storefront/v1/me/points`
-- [ ] `member.listPointHistory` · `GET /storefront/v1/me/points/history`
-- [ ] `member.updateMe` · `PATCH /storefront/v1/me`
-- [ ] `member.consents` · `GET /storefront/v1/me/consents`
+- [x] `member.me` · `GET /storefront/v1/me`
+- [x] `member.getPoints` · `GET /storefront/v1/me/points`
+- [x] `member.listPointHistory` · `GET /storefront/v1/me/points/history`
+- [x] `member.updateMe` · `PATCH /storefront/v1/me`
+- [x] `member.consents` · `GET /storefront/v1/me/consents`
 - [x] `member.updateConsents` · `POST /storefront/v1/me/consents`
-- [ ] `member.listAddresses` · `GET /storefront/v1/me/addresses`
-- [ ] `member.createAddress` · `POST /storefront/v1/me/addresses`
-- [ ] `member.updateAddress` · `PUT /storefront/v1/me/addresses/{addressId}`
-- [ ] `member.deleteAddress` · `DELETE /storefront/v1/me/addresses/{addressId}`
-- [ ] `member.listWishlist` · `GET /storefront/v1/me/wishlist`
-- [ ] `member.addWishlist` · `POST /storefront/v1/me/wishlist`
-- [ ] `member.removeWishlist` · `DELETE /storefront/v1/me/wishlist/{productId}`
+- [x] `member.listAddresses` · `GET /storefront/v1/me/addresses`
+- [x] `member.createAddress` · `POST /storefront/v1/me/addresses`
+- [x] `member.updateAddress` · `PUT /storefront/v1/me/addresses/{addressId}`
+- [x] `member.deleteAddress` · `DELETE /storefront/v1/me/addresses/{addressId}`
+- [x] `member.listWishlist` · `GET /storefront/v1/me/wishlist`
+- [x] `member.addWishlist` · `POST /storefront/v1/me/wishlist`
+- [x] `member.removeWishlist` · `DELETE /storefront/v1/me/wishlist/{productId}`
 
 #### `reviews` (6)
 
-- [ ] `reviews.listMine` · `GET /storefront/v1/me/reviews`
-- [ ] `reviews.listWritable` · `GET /storefront/v1/me/reviews/writable`
-- [ ] `reviews.createImageUpload` · `POST /storefront/v1/me/uploads`
-- [ ] `reviews.create` · `POST /storefront/v1/me/order-items/{orderItemId}/review`
-- [ ] `reviews.update` · `PUT /storefront/v1/me/reviews/{reviewId}`
-- [ ] `reviews.remove` · `DELETE /storefront/v1/me/reviews/{reviewId}`
+- [x] `reviews.listMine` · `GET /storefront/v1/me/reviews`
+- [x] `reviews.listWritable` · `GET /storefront/v1/me/reviews/writable`
+- [x] `reviews.createImageUpload` · `POST /storefront/v1/me/uploads`
+- [x] `reviews.create` · `POST /storefront/v1/me/order-items/{orderItemId}/review`
+- [x] `reviews.update` · `PUT /storefront/v1/me/reviews/{reviewId}`
+- [x] `reviews.remove` · `DELETE /storefront/v1/me/reviews/{reviewId}`
 
 #### `inquiries` (1)
 
-- [ ] `inquiries.listMine` · `GET /storefront/v1/me/inquiries`
+- [x] `inquiries.listMine` · `GET /storefront/v1/me/inquiries`
 
 #### `me` (2)
 
-- [ ] `me.coupons` · `GET /storefront/v1/me/coupons`
-- [ ] `me.downloadCoupon` · `POST /storefront/v1/coupons/{couponId}/download`
+- [x] `me.coupons` · `GET /storefront/v1/me/coupons`
+- [x] `me.downloadCoupon` · `POST /storefront/v1/coupons/{couponId}/download`
 
 #### `me.customerInquiries` (3)
 
-- [ ] `me.customerInquiries.create` · `POST /storefront/v1/me/customer-inquiries`
-- [ ] `me.customerInquiries.list` · `GET /storefront/v1/me/customer-inquiries`
-- [ ] `me.customerInquiries.get` · `GET /storefront/v1/me/customer-inquiries/{inquiryId}`
+- [x] `me.customerInquiries.create` · `POST /storefront/v1/me/customer-inquiries`
+- [x] `me.customerInquiries.list` · `GET /storefront/v1/me/customer-inquiries`
+- [x] `me.customerInquiries.get` · `GET /storefront/v1/me/customer-inquiries/{inquiryId}`
 
 ### `createStorefrontSession`
 
@@ -225,33 +243,33 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 
 총 375개.
 
-- [ ] `src/schemas/analytics.ts` → `lib/src/schemas/analytics.dart` (15): `analyticsIdSchema`, `ANALYTICS_VISITOR_COOKIE`, `ANALYTICS_SESSION_COOKIE`, `ANALYTICS_VISITOR_HEADER`, `ANALYTICS_SESSION_HEADER`, `analyticsClientEventNameSchema`, `AnalyticsClientEventName`, `analyticsServerEventNameSchema`, `AnalyticsServerEventName`, `AnalyticsEventName`, `analyticsClientEventSchema`, `AnalyticsClientEvent`, `analyticsBatchSchema`, `AnalyticsBatch`, `ANALYTICS_MAX_BATCH_BYTES`
-- [ ] `src/schemas/auth.ts` → `lib/src/schemas/auth.dart` (25): `tokenPairSchema`, `TokenPair`, `signupRequestSchema`, `SignupRequest`, `loginRequestSchema`, `LoginRequest`, `anonymousSessionSchema`, `AnonymousSession`, `withdrawRequestSchema`, `WithdrawRequest`, `withdrawalBlockedDetailsSchema`, `WithdrawalBlockedDetails`, `socialProviderSchema`, `SocialProvider`, `idpAgreementsSchema`, `IdpAgreements`, `idpAuthorizeRequestSchema`, `IdpAuthorizeRequest`, `idpAuthorizeResponseSchema`, `idpTokenRequestSchema`, `IdpTokenRequest`, `memberIdentitiesSchema`, `MemberIdentities`, `linkIdentityRequestSchema`, `LinkIdentityRequest`
-- [ ] `src/schemas/cart.ts` → `lib/src/schemas/cart.dart` (8): `cartItemSchema`, `CartItem`, `cartSchema`, `Cart`, `addCartItemRequestSchema`, `AddCartItemRequest`, `updateCartItemRequestSchema`, `UpdateCartItemRequest`
-- [ ] `src/schemas/catalog.ts` → `lib/src/schemas/catalog.dart` (30): `CategoryNode`, `categoryNodeSchema`, `productCardSchema`, `ProductCard`, `productNoticeViewSchema`, `ProductNoticeView`, `productCertificationsViewSchema`, `ProductCertificationsView`, `infoSectionViewSchema`, `InfoSectionView`, `productDetailSchema`, `ProductDetail`, `productSortSchema`, `ProductSort`, `ProductSearchParams`, `productFacetsSchema`, `ProductFacets`, `productPageSchema`, `ProductPage`, `storefrontCollectionSchema`, `StorefrontCollection`, `collectionProductSortSchema`, `CollectionProductSortParam`, `storefrontCollectionDetailSchema`, `StorefrontCollectionDetail`, `CollectionProductParams`, `collectionProductQuerySchema`, `collectionProductPageSchema`, `CollectionProductPage`, `storefrontCollectionListQuerySchema`
-- [ ] `src/schemas/checkout.ts` → `lib/src/schemas/checkout.dart` (73): `createCheckoutRequestSchema`, `CreateCheckoutRequest`, `remoteAreaSchema`, `RemoteArea`, `checkoutDeliverySchema`, `CheckoutDelivery`, `checkoutSessionSchema`, `CheckoutSession`, `deliveryQuoteRequestSchema`, `DeliveryQuoteRequest`, `deliveryQuoteSchema`, `DeliveryQuoteResult`, `paymentMethodSchema`, `PaymentMethod`, `responsePaymentMethodSchema`, `ResponsePaymentMethod`, `pgProviderSchema`, `PgProvider`, `easyPayProviderSchema`, `EasyPayProvider`, `easyPayProviderResponseSchema`, `paymentOptionSchema`, `PaymentOption`, `availablePaymentOptionSchema`, `AvailablePaymentOption`, `paymentOptionListSchema`, `paymentOptionKey`, `CONTACT_PHONE_PATTERN`, `shippingAddressInputSchema`, `ShippingAddressInput`, `INTERNATIONAL_PHONE_PATTERN`, `internationalShippingAddressInputSchema`, `InternationalShippingAddressInput`, `ORDERER_PHONE_PATTERN`, `guestInfoSchema`, `GuestInfo`, `CASH_RECEIPT_METHODS`, `cashReceiptAvailable`, `cashReceiptTypeSchema`, `CashReceiptType`, `CashReceiptIdentityType`, `residentNumberLike`, `cashReceiptIdentityTypeOf`, `cashReceiptRequestSchema`, `CashReceiptRequest`, `startPaymentRequestSchema`, `StartPaymentRequest`, `retryPaymentRequestSchema`, `RetryPaymentRequest`, `paymentLaunchSchema`, `PaymentLaunch`, `confirmPaymentRequestSchema`, `ConfirmPaymentRequest`, `paymentConfirmResultSchema`, `PaymentConfirmResult`, `reportPaymentFailureRequestSchema`, `ReportPaymentFailureRequest`, `paymentFailureResultSchema`, `PaymentFailureResult`, `PAYMENT_START_STATUS_VALUES`, `KnownPaymentStartStatus`, `paymentStartSchema`, `PaymentStart`, `paymentFailureCategorySchema`, `PaymentFailureCategory`, `PAYMENT_STATUS_VALUES`, `KnownPaymentStatus`, `PAYMENT_RESULT_VALUES`, `KnownPaymentResult`, `paymentStatusSchema`, `PaymentStatus`, `paymentMessageSchema`, `PaymentMessage`
-- [ ] `src/schemas/claim.ts` → `lib/src/schemas/claim.dart` (14): `claimTypeSchema`, `ClaimType`, `claimReasonSchema`, `ClaimReason`, `createClaimRequestSchema`, `CreateClaimRequest`, `createClaimResultSchema`, `CreateClaimResult`, `claimPreviewSchema`, `ClaimPreview`, `claimReturnAddressSchema`, `ClaimReturnAddress`, `myClaimSchema`, `MyClaim`
-- [ ] `src/schemas/commerce-flow.ts` → `lib/src/schemas/commerce-flow.dart` (19): `flowInputFieldSchema`, `FlowInputField`, `flowActionSchema`, `FlowAction`, `flowFieldValueSchema`, `FlowFieldValue`, `flowStateSchema`, `FlowState`, `ORDER_STEP_TYPES`, `orderStepSchema`, `OrderStep`, `flowActionRequestSchema`, `FlowActionRequest`, `guestFlowActionRequestSchema`, `GuestFlowActionRequest`, `flowActionResultSchema`, `FlowActionResult`, `orderFlowActionResultSchema`, `OrderFlowActionResult`
-- [ ] `src/schemas/commerce-number.ts` → `lib/src/schemas/commerce-number.dart` (3): `formatOrderNo`, `parseOrderNo`, `commerceNumberField`
-- [ ] `src/schemas/common.ts` → `lib/src/schemas/common.dart` (8): `pageInfoSchema`, `PageInfo`, `pageSchema`, `PageParams`, `orderItemStatusSchema`, `OrderItemStatus`, `claimStatusSchema`, `ClaimStatus`
-- [ ] `src/schemas/consent.ts` → `lib/src/schemas/consent.dart` (12): `consentKindSchema`, `ConsentKind`, `consentActionSchema`, `ConsentAction`, `consentSourceSchema`, `ConsentSource`, `consentStateSchema`, `ConsentState`, `memberConsentsSchema`, `MemberConsents`, `consentUpdateRequestSchema`, `ConsentUpdateRequest`
-- [ ] `src/schemas/coupon.ts` → `lib/src/schemas/coupon.dart` (23): `couponApplicationSchema`, `CouponApplication`, `MAX_COUPONS_PER_CHECKOUT`, `couponApplicationListSchema`, `couponBenefitViewSchema`, `couponResultSchema`, `CouponResult`, `pricingAmountsSchema`, `checkoutPricingRequestSchema`, `CheckoutPricingRequest`, `MIN_PAYMENT_AMOUNT`, `checkoutPricingSchema`, `CheckoutPricing`, `applicableCouponSchema`, `ApplicableCoupon`, `myCouponSchema`, `MyCoupon`, `myCouponListQuerySchema`, `storefrontCouponTargetSchema`, `storefrontCouponSchema`, `StorefrontCoupon`, `storefrontCouponListQuerySchema`, `StorefrontCouponListParams`
-- [ ] `src/schemas/currency.ts` → `lib/src/schemas/currency.dart` (20): `CurrencySpec`, `CURRENCIES`, `CurrencyCode`, `CURRENCY_CODES`, `BASE_CURRENCY`, `currencyCodeSchema`, `isCurrencyCode`, `currencySpecOf`, `toMinor`, `minorToMajor`, `toDecimalString`, `fromDecimalString`, `floorToSaleUnit`, `isSaleUnitPrice`, `InvalidPriceUnitError`, `assertSaleUnit`, `minPaymentOf`, `MoneyRules`, `moneyRulesOf`, `KRW_MONEY_RULES`
-- [ ] `src/schemas/customer-inquiry.ts` → `lib/src/schemas/customer-inquiry.dart` (6): `customerInquiryCategorySchema`, `CustomerInquiryCategory`, `customerInquirySchema`, `CustomerInquiry`, `createCustomerInquiryRequestSchema`, `CreateCustomerInquiryRequest`
-- [ ] `src/schemas/fulfillment.ts` → `lib/src/schemas/fulfillment.dart` (11): `UnknownFulfillmentView`, `productCardFulfillmentSchema`, `ProductCardFulfillment`, `productFulfillmentViewSchema`, `ProductFulfillmentView`, `lineFulfillmentSchema`, `LineFulfillment`, `pickupLocationViewSchema`, `PickupLocationView`, `myOrderItemFulfillmentSnapshotSchema`, `MyOrderItemFulfillmentSnapshot`
-- [ ] `src/schemas/inquiry.ts` → `lib/src/schemas/inquiry.dart` (8): `productInquiryCategorySchema`, `ProductInquiryCategory`, `publicInquirySchema`, `PublicInquiry`, `createInquiryRequestSchema`, `CreateInquiryRequest`, `createInquiryResultSchema`, `CreateInquiryResult`
-- [ ] `src/schemas/member.ts` → `lib/src/schemas/member.dart` (14): `memberSchema`, `Member`, `updateProfileRequestSchema`, `UpdateProfileRequest`, `memberAddressSchema`, `MemberAddress`, `memberAddressRequestSchema`, `MemberAddressRequest`, `internationalMemberAddressRequestSchema`, `InternationalMemberAddressRequest`, `memberAddressWriteSchema`, `MemberAddressWrite`, `wishlistAddResultSchema`, `WishlistAddResult`
-- [ ] `src/schemas/order.ts` → `lib/src/schemas/order.dart` (11): `myOrderItemSchema`, `MyOrderItem`, `orderShippingAddressSchema`, `OrderShippingAddress`, `myOrderSchema`, `MyOrder`, `trackingStageResponseSchema`, `deliveryTrackingSchema`, `DeliveryTracking`, `purchaseDecisionResultSchema`, `PurchaseDecisionResult`
-- [ ] `src/schemas/points.ts` → `lib/src/schemas/points.dart` (7): `storefrontPointPolicySchema`, `StorefrontPointPolicy`, `memberPointsSchema`, `MemberPoints`, `memberPointEntrySchema`, `MemberPointEntry`, `memberPointEntryPageSchema`
-- [ ] `src/schemas/product-options.ts` → `lib/src/schemas/product-options.dart` (19): `addonGroupViewSchema`, `AddonGroupView`, `customInputViewSchema`, `CustomInputView`, `parseCustomInputValue`, `normalizeCustomInputValue`, `customInputLength`, `customInputEntrySchema`, `CustomInputEntry`, `addonSelectionSchema`, `AddonSelection`, `lineSelectionRequestShape`, `optionSelectionViewSchema`, `OptionSelectionView`, `customInputValueViewSchema`, `CustomInputValueView`, `lineSelectionResponseShape`, `orderInputUploadRequestSchema`, `OrderInputUploadRequest`
-- [ ] `src/schemas/review.ts` → `lib/src/schemas/review.dart` (26): `publicReviewSchema`, `PublicReview`, `reviewSummarySchema`, `ReviewSummary`, `myReviewSchema`, `MyReview`, `writableReviewSchema`, `WritableReview`, `createReviewRequestSchema`, `CreateReviewRequest`, `createReviewResultSchema`, `CreateReviewResult`, `updateReviewRequestSchema`, `UpdateReviewRequest`, `productReviewSortSchema`, `ProductReviewSort`, `productReviewQuerySchema`, `ProductReviewParams`, `reviewImageUploadRequestSchema`, `ReviewImageUploadRequest`, `uploadTicketSchema`, `UploadTicket`, `reviewPageSchema`, `ReviewPage`, `updateReviewResultSchema`, `UpdateReviewResult`
-- [ ] `src/schemas/stay.ts` → `lib/src/schemas/stay.dart` (6): `stayRequestSchema`, `StayRequest`, `stayViewSchema`, `StayView`, `calendarDayViewSchema`, `CalendarDayView`
-- [ ] `src/schemas/store.ts` → `lib/src/schemas/store.dart` (4): `storefrontMarketSchema`, `StorefrontMarket`, `storefrontStoreSchema`, `StorefrontStore`
-- [ ] `src/analytics-ids.ts` → `lib/src/analytics-ids.dart` (1): `analyticsIdsFromCookie`
-- [ ] `src/client.ts` → `lib/src/client.dart` (3): `StorefrontClient`, `StorefrontClientOptions`, `createStorefrontClient`
-- [ ] `src/http.ts` → `lib/src/http.dart` (4): `Query`, `TokenSource`, `ApiError`, `buildQuery`
+- [x] `src/schemas/analytics.ts` → `lib/src/schemas/analytics.dart` (15): `analyticsIdSchema`, `ANALYTICS_VISITOR_COOKIE`, `ANALYTICS_SESSION_COOKIE`, `ANALYTICS_VISITOR_HEADER`, `ANALYTICS_SESSION_HEADER`, `analyticsClientEventNameSchema`, `AnalyticsClientEventName`, `analyticsServerEventNameSchema`, `AnalyticsServerEventName`, `AnalyticsEventName`, `analyticsClientEventSchema`, `AnalyticsClientEvent`, `analyticsBatchSchema`, `AnalyticsBatch`, `ANALYTICS_MAX_BATCH_BYTES`
+- [x] `src/schemas/auth.ts` → `lib/src/schemas/auth.dart` (25): `tokenPairSchema`, `TokenPair`, `signupRequestSchema`, `SignupRequest`, `loginRequestSchema`, `LoginRequest`, `anonymousSessionSchema`, `AnonymousSession`, `withdrawRequestSchema`, `WithdrawRequest`, `withdrawalBlockedDetailsSchema`, `WithdrawalBlockedDetails`, `socialProviderSchema`, `SocialProvider`, `idpAgreementsSchema`, `IdpAgreements`, `idpAuthorizeRequestSchema`, `IdpAuthorizeRequest`, `idpAuthorizeResponseSchema`, `idpTokenRequestSchema`, `IdpTokenRequest`, `memberIdentitiesSchema`, `MemberIdentities`, `linkIdentityRequestSchema`, `LinkIdentityRequest`
+- [x] `src/schemas/cart.ts` → `lib/src/schemas/cart.dart` (8): `cartItemSchema`, `CartItem`, `cartSchema`, `Cart`, `addCartItemRequestSchema`, `AddCartItemRequest`, `updateCartItemRequestSchema`, `UpdateCartItemRequest`
+- [x] `src/schemas/catalog.ts` → `lib/src/schemas/catalog.dart` (30): `CategoryNode`, `categoryNodeSchema`, `productCardSchema`, `ProductCard`, `productNoticeViewSchema`, `ProductNoticeView`, `productCertificationsViewSchema`, `ProductCertificationsView`, `infoSectionViewSchema`, `InfoSectionView`, `productDetailSchema`, `ProductDetail`, `productSortSchema`, `ProductSort`, `ProductSearchParams`, `productFacetsSchema`, `ProductFacets`, `productPageSchema`, `ProductPage`, `storefrontCollectionSchema`, `StorefrontCollection`, `collectionProductSortSchema`, `CollectionProductSortParam`, `storefrontCollectionDetailSchema`, `StorefrontCollectionDetail`, `CollectionProductParams`, `collectionProductQuerySchema`, `collectionProductPageSchema`, `CollectionProductPage`, `storefrontCollectionListQuerySchema`
+- [x] `src/schemas/checkout.ts` → `lib/src/schemas/checkout.dart` (73): `createCheckoutRequestSchema`, `CreateCheckoutRequest`, `remoteAreaSchema`, `RemoteArea`, `checkoutDeliverySchema`, `CheckoutDelivery`, `checkoutSessionSchema`, `CheckoutSession`, `deliveryQuoteRequestSchema`, `DeliveryQuoteRequest`, `deliveryQuoteSchema`, `DeliveryQuoteResult`, `paymentMethodSchema`, `PaymentMethod`, `responsePaymentMethodSchema`, `ResponsePaymentMethod`, `pgProviderSchema`, `PgProvider`, `easyPayProviderSchema`, `EasyPayProvider`, `easyPayProviderResponseSchema`, `paymentOptionSchema`, `PaymentOption`, `availablePaymentOptionSchema`, `AvailablePaymentOption`, `paymentOptionListSchema`, `paymentOptionKey`, `CONTACT_PHONE_PATTERN`, `shippingAddressInputSchema`, `ShippingAddressInput`, `INTERNATIONAL_PHONE_PATTERN`, `internationalShippingAddressInputSchema`, `InternationalShippingAddressInput`, `ORDERER_PHONE_PATTERN`, `guestInfoSchema`, `GuestInfo`, `CASH_RECEIPT_METHODS`, `cashReceiptAvailable`, `cashReceiptTypeSchema`, `CashReceiptType`, `CashReceiptIdentityType`, `residentNumberLike`, `cashReceiptIdentityTypeOf`, `cashReceiptRequestSchema`, `CashReceiptRequest`, `startPaymentRequestSchema`, `StartPaymentRequest`, `retryPaymentRequestSchema`, `RetryPaymentRequest`, `paymentLaunchSchema`, `PaymentLaunch`, `confirmPaymentRequestSchema`, `ConfirmPaymentRequest`, `paymentConfirmResultSchema`, `PaymentConfirmResult`, `reportPaymentFailureRequestSchema`, `ReportPaymentFailureRequest`, `paymentFailureResultSchema`, `PaymentFailureResult`, `PAYMENT_START_STATUS_VALUES`, `KnownPaymentStartStatus`, `paymentStartSchema`, `PaymentStart`, `paymentFailureCategorySchema`, `PaymentFailureCategory`, `PAYMENT_STATUS_VALUES`, `KnownPaymentStatus`, `PAYMENT_RESULT_VALUES`, `KnownPaymentResult`, `paymentStatusSchema`, `PaymentStatus`, `paymentMessageSchema`, `PaymentMessage`
+- [x] `src/schemas/claim.ts` → `lib/src/schemas/claim.dart` (14): `claimTypeSchema`, `ClaimType`, `claimReasonSchema`, `ClaimReason`, `createClaimRequestSchema`, `CreateClaimRequest`, `createClaimResultSchema`, `CreateClaimResult`, `claimPreviewSchema`, `ClaimPreview`, `claimReturnAddressSchema`, `ClaimReturnAddress`, `myClaimSchema`, `MyClaim`
+- [x] `src/schemas/commerce-flow.ts` → `lib/src/schemas/commerce-flow.dart` (19): `flowInputFieldSchema`, `FlowInputField`, `flowActionSchema`, `FlowAction`, `flowFieldValueSchema`, `FlowFieldValue`, `flowStateSchema`, `FlowState`, `ORDER_STEP_TYPES`, `orderStepSchema`, `OrderStep`, `flowActionRequestSchema`, `FlowActionRequest`, `guestFlowActionRequestSchema`, `GuestFlowActionRequest`, `flowActionResultSchema`, `FlowActionResult`, `orderFlowActionResultSchema`, `OrderFlowActionResult`
+- [x] `src/schemas/commerce-number.ts` → `lib/src/schemas/commerce-number.dart` (3): `formatOrderNo`, `parseOrderNo`, `commerceNumberField`
+- [x] `src/schemas/common.ts` → `lib/src/schemas/common.dart` (8): `pageInfoSchema`, `PageInfo`, `pageSchema`, `PageParams`, `orderItemStatusSchema`, `OrderItemStatus`, `claimStatusSchema`, `ClaimStatus`
+- [x] `src/schemas/consent.ts` → `lib/src/schemas/consent.dart` (12): `consentKindSchema`, `ConsentKind`, `consentActionSchema`, `ConsentAction`, `consentSourceSchema`, `ConsentSource`, `consentStateSchema`, `ConsentState`, `memberConsentsSchema`, `MemberConsents`, `consentUpdateRequestSchema`, `ConsentUpdateRequest`
+- [x] `src/schemas/coupon.ts` → `lib/src/schemas/coupon.dart` (23): `couponApplicationSchema`, `CouponApplication`, `MAX_COUPONS_PER_CHECKOUT`, `couponApplicationListSchema`, `couponBenefitViewSchema`, `couponResultSchema`, `CouponResult`, `pricingAmountsSchema`, `checkoutPricingRequestSchema`, `CheckoutPricingRequest`, `MIN_PAYMENT_AMOUNT`, `checkoutPricingSchema`, `CheckoutPricing`, `applicableCouponSchema`, `ApplicableCoupon`, `myCouponSchema`, `MyCoupon`, `myCouponListQuerySchema`, `storefrontCouponTargetSchema`, `storefrontCouponSchema`, `StorefrontCoupon`, `storefrontCouponListQuerySchema`, `StorefrontCouponListParams`
+- [x] `src/schemas/currency.ts` → `lib/src/schemas/currency.dart` (20): `CurrencySpec`, `CURRENCIES`, `CurrencyCode`, `CURRENCY_CODES`, `BASE_CURRENCY`, `currencyCodeSchema`, `isCurrencyCode`, `currencySpecOf`, `toMinor`, `minorToMajor`, `toDecimalString`, `fromDecimalString`, `floorToSaleUnit`, `isSaleUnitPrice`, `InvalidPriceUnitError`, `assertSaleUnit`, `minPaymentOf`, `MoneyRules`, `moneyRulesOf`, `KRW_MONEY_RULES`
+- [x] `src/schemas/customer-inquiry.ts` → `lib/src/schemas/customer-inquiry.dart` (6): `customerInquiryCategorySchema`, `CustomerInquiryCategory`, `customerInquirySchema`, `CustomerInquiry`, `createCustomerInquiryRequestSchema`, `CreateCustomerInquiryRequest`
+- [x] `src/schemas/fulfillment.ts` → `lib/src/schemas/fulfillment.dart` (11): `UnknownFulfillmentView`, `productCardFulfillmentSchema`, `ProductCardFulfillment`, `productFulfillmentViewSchema`, `ProductFulfillmentView`, `lineFulfillmentSchema`, `LineFulfillment`, `pickupLocationViewSchema`, `PickupLocationView`, `myOrderItemFulfillmentSnapshotSchema`, `MyOrderItemFulfillmentSnapshot`
+- [x] `src/schemas/inquiry.ts` → `lib/src/schemas/inquiry.dart` (8): `productInquiryCategorySchema`, `ProductInquiryCategory`, `publicInquirySchema`, `PublicInquiry`, `createInquiryRequestSchema`, `CreateInquiryRequest`, `createInquiryResultSchema`, `CreateInquiryResult`
+- [x] `src/schemas/member.ts` → `lib/src/schemas/member.dart` (14): `memberSchema`, `Member`, `updateProfileRequestSchema`, `UpdateProfileRequest`, `memberAddressSchema`, `MemberAddress`, `memberAddressRequestSchema`, `MemberAddressRequest`, `internationalMemberAddressRequestSchema`, `InternationalMemberAddressRequest`, `memberAddressWriteSchema`, `MemberAddressWrite`, `wishlistAddResultSchema`, `WishlistAddResult`
+- [x] `src/schemas/order.ts` → `lib/src/schemas/order.dart` (11): `myOrderItemSchema`, `MyOrderItem`, `orderShippingAddressSchema`, `OrderShippingAddress`, `myOrderSchema`, `MyOrder`, `trackingStageResponseSchema`, `deliveryTrackingSchema`, `DeliveryTracking`, `purchaseDecisionResultSchema`, `PurchaseDecisionResult`
+- [x] `src/schemas/points.ts` → `lib/src/schemas/points.dart` (7): `storefrontPointPolicySchema`, `StorefrontPointPolicy`, `memberPointsSchema`, `MemberPoints`, `memberPointEntrySchema`, `MemberPointEntry`, `memberPointEntryPageSchema`
+- [x] `src/schemas/product-options.ts` → `lib/src/schemas/product-options.dart` (19): `addonGroupViewSchema`, `AddonGroupView`, `customInputViewSchema`, `CustomInputView`, `parseCustomInputValue`, `normalizeCustomInputValue`, `customInputLength`, `customInputEntrySchema`, `CustomInputEntry`, `addonSelectionSchema`, `AddonSelection`, `lineSelectionRequestShape`, `optionSelectionViewSchema`, `OptionSelectionView`, `customInputValueViewSchema`, `CustomInputValueView`, `lineSelectionResponseShape`, `orderInputUploadRequestSchema`, `OrderInputUploadRequest`
+- [x] `src/schemas/review.ts` → `lib/src/schemas/review.dart` (26): `publicReviewSchema`, `PublicReview`, `reviewSummarySchema`, `ReviewSummary`, `myReviewSchema`, `MyReview`, `writableReviewSchema`, `WritableReview`, `createReviewRequestSchema`, `CreateReviewRequest`, `createReviewResultSchema`, `CreateReviewResult`, `updateReviewRequestSchema`, `UpdateReviewRequest`, `productReviewSortSchema`, `ProductReviewSort`, `productReviewQuerySchema`, `ProductReviewParams`, `reviewImageUploadRequestSchema`, `ReviewImageUploadRequest`, `uploadTicketSchema`, `UploadTicket`, `reviewPageSchema`, `ReviewPage`, `updateReviewResultSchema`, `UpdateReviewResult`
+- [x] `src/schemas/stay.ts` → `lib/src/schemas/stay.dart` (6): `stayRequestSchema`, `StayRequest`, `stayViewSchema`, `StayView`, `calendarDayViewSchema`, `CalendarDayView`
+- [x] `src/schemas/store.ts` → `lib/src/schemas/store.dart` (4): `storefrontMarketSchema`, `StorefrontMarket`, `storefrontStoreSchema`, `StorefrontStore`
+- [x] `src/analytics-ids.ts` → `lib/src/analytics-ids.dart` (1): `analyticsIdsFromCookie`
+- [x] `src/client.ts` → `lib/src/client.dart` (3): `StorefrontClient`, `StorefrontClientOptions`, `createStorefrontClient`
+- [x] `src/http.ts` → `lib/src/http.dart` (4): `Query`, `TokenSource`, `ApiError`, `buildQuery`
 - [ ] `src/session.ts` → `lib/src/session.dart` (5): `createStorefrontSession`, `SessionStorage`, `STOREFRONT_SESSION_KEYS`, `StorefrontSession`, `StorefrontSessionOptions`
-- [ ] `ZodError` (설계 규칙 「검증과 오류」)
+- [x] `ZodError` (설계 규칙 「검증과 오류」)
 
 ## `@sayren/storefront-sdk/auth` → `auth.dart`
 
@@ -913,8 +931,12 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 | Phase 3 | `@sayren/store-sdk` 기본 엔트리포인트 |
 | Phase 4 | `@sayren/store-sdk/server` |
 
-동작 대조 하네스(`tool/parity`)는 같은 시나리오(옵션·인자·서버 응답)를 npm의 `@sayren/storefront-sdk`와 Dart SDK에 넣고 요청(메서드·URL·헤더·본문)과 결과(파싱 값·`ApiError`·`ZodError` 이슈 코드와 경로)를 비교한다.
-실행은 `tool/parity`에서 `npm install` 후 `node compare.mjs`다. 대조로 볼 수 없는 Dart 쪽 동작(Future 오류 전달, `fromJson` 검증, 모델 생성자, `Nullable`)은 `packages/storefront-sdk/test`의 `dart test`가 확인한다. 메서드를 추가하면 시나리오와 `packages/storefront-sdk/tool/parity_runner.dart`의 호출 표에 함께 넣는다.
+동작 대조 하네스(`tool/parity`)는 같은 자료를 npm의 `@sayren/storefront-sdk`와 Dart SDK에 넣고 결과를 비교한다.
+
+- 시나리오: 옵션·인자·서버 응답 → 요청(메서드·URL·헤더·본문)과 결과(파싱 값·`ApiError`·`ZodError` 이슈 코드와 경로). 손으로 쓴 `scenarios.json`과 메서드마다 생성한 `generated/scenarios.json`이다.
+- 스키마 대조: export 스키마마다 유효 예시·`null`·키 하나 빼기·키 하나 타입 바꾸기(`generated/schema-cases.json`).
+
+실행은 `tool/parity`에서 `npm install` 후 `node compare.mjs`(`--verbose`면 모든 항목)다. 대조로 볼 수 없는 Dart 쪽 동작(getter 캐스트, Future 오류 전달, `fromJson` 검증, 모델 생성자, `Nullable`)은 `packages/storefront-sdk/test`의 `dart test`가 확인한다.
 
 목록 대조 스크립트는 Node SDK에서 뽑은 이름 목록과 Dart 패키지의 공개 이름 목록이 같은지 확인한다. 각 Phase는 이 대조를 통과해야 끝난다.
 

@@ -1,7 +1,10 @@
 {
-  "$comment": "같은 옵션·인자·서버 응답을 Node SDK와 Dart SDK에 넣고 요청과 결과를 비교한다. 옵션 값이 {\"$fn\": 값}이면 함수로 넘긴다.",
+  "$comment": "손으로 쓴 시나리오. 생성 시나리오(generated/scenarios.json)와 함께 Node SDK·Dart SDK에 넣고 요청과 결과를 비교한다. 옵션 값이 {\"$fn\": 값}이면 함수로 넘긴다.",
   "defaults": {
-    "options": { "baseUrl": "https://api.example.test/storefront/v1", "storeCode": "demo" }
+    "options": {
+      "baseUrl": "https://api.example.test/storefront/v1",
+      "storeCode": "demo"
+    }
   },
   "scenarios": [
     {
@@ -11,10 +14,24 @@
       "response": {
         "status": 200,
         "body": {
-          "meta": { "status": 200, "code": "OK", "message": "OK", "isSuccess": true },
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
           "data": {
-            "storeCode": "demo", "name": "데모 상점", "logoUrl": null, "customerCenterPhone": "02-000-0000",
-            "businessHours": null, "guestCheckout": true, "loginMethods": ["password", "kakao"], "unknownField": 1
+            "storeCode": "demo",
+            "name": "데모 상점",
+            "logoUrl": null,
+            "customerCenterPhone": "02-000-0000",
+            "businessHours": null,
+            "guestCheckout": true,
+            "loginMethods": [
+              "password",
+              "kakao"
+            ],
+            "unknownField": 1
           },
           "error": null
         }
@@ -24,21 +41,65 @@
       "name": "store.get 전체 응답 — 권역·중첩 nullable 객체",
       "call": "store.get",
       "args": [],
-      "options": { "country": "US", "host": "shop.example.com", "locale": "en-US,en;q=0.9", "accessToken": "member-token" },
+      "options": {
+        "country": "US",
+        "host": "shop.example.com",
+        "locale": "en-US,en;q=0.9",
+        "accessToken": "member-token"
+      },
       "response": {
         "status": 200,
         "body": {
-          "meta": { "status": 200, "code": "OK", "message": "OK", "isSuccess": true },
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
           "data": {
             "storeCode": "demo",
             "markets": [
-              { "marketId": "mkt_kr", "name": "한국", "currency": "KRW", "countries": ["KR"], "checkoutAvailable": true, "locales": ["ko"] },
-              { "marketId": "mkt_us", "name": "미국", "currency": "USD", "countries": ["US", "CA"] }
+              {
+                "marketId": "mkt_kr",
+                "name": "한국",
+                "currency": "KRW",
+                "countries": [
+                  "KR"
+                ],
+                "checkoutAvailable": true,
+                "locales": [
+                  "ko"
+                ]
+              },
+              {
+                "marketId": "mkt_us",
+                "name": "미국",
+                "currency": "USD",
+                "countries": [
+                  "US",
+                  "CA"
+                ]
+              }
             ],
-            "market": { "marketId": "mkt_us", "currency": "USD", "matched": true },
-            "locale": "en", "defaultLocale": "ko", "name": "데모 상점", "logoUrl": "https://cdn.example.test/logo.png",
-            "customerCenterPhone": null, "businessHours": "10:00-18:00", "businessName": "데모", "representativeName": null,
-            "guestCheckout": false, "loginMethods": ["google"], "checkoutAvailable": false, "checkoutMode": null,
+            "market": {
+              "marketId": "mkt_us",
+              "currency": "USD",
+              "matched": true
+            },
+            "locale": "en",
+            "defaultLocale": "ko",
+            "name": "데모 상점",
+            "logoUrl": "https://cdn.example.test/logo.png",
+            "customerCenterPhone": null,
+            "businessHours": "10:00-18:00",
+            "businessName": "데모",
+            "representativeName": null,
+            "guestCheckout": false,
+            "loginMethods": [
+              "google"
+            ],
+            "checkoutAvailable": false,
+            "checkoutMode": null,
             "checkoutUnavailableReason": "PAYMENT_NOT_LIVE"
           },
           "error": null
@@ -52,9 +113,22 @@
       "response": {
         "status": 404,
         "body": {
-          "meta": { "status": 404, "code": "STORE_NOT_FOUND", "message": "상점을 찾을 수 없습니다", "isSuccess": false },
+          "meta": {
+            "status": 404,
+            "code": "STORE_NOT_FOUND",
+            "message": "상점을 찾을 수 없습니다",
+            "isSuccess": false
+          },
           "data": null,
-          "error": { "code": "STORE_NOT_FOUND", "message": "상점을 찾을 수 없습니다", "traceId": "trace-1", "details": { "storeCode": "demo" }, "docs": "https://docs.example.test/errors/STORE_NOT_FOUND" }
+          "error": {
+            "code": "STORE_NOT_FOUND",
+            "message": "상점을 찾을 수 없습니다",
+            "traceId": "trace-1",
+            "details": {
+              "storeCode": "demo"
+            },
+            "docs": "https://docs.example.test/errors/STORE_NOT_FOUND"
+          }
         }
       }
     },
@@ -62,7 +136,12 @@
       "name": "store.get 500 — 엔벨로프가 아닌 오류 본문",
       "call": "store.get",
       "args": [],
-      "response": { "status": 500, "body": { "unexpected": true } }
+      "response": {
+        "status": 500,
+        "body": {
+          "unexpected": true
+        }
+      }
     },
     {
       "name": "store.get 응답 계약 위반 — 필수 필드 누락·enum 밖 값",
@@ -71,8 +150,22 @@
       "response": {
         "status": 200,
         "body": {
-          "meta": { "status": 200, "code": "OK", "message": "OK", "isSuccess": true },
-          "data": { "storeCode": "demo", "name": "데모", "logoUrl": null, "customerCenterPhone": null, "businessHours": null, "loginMethods": ["apple"] },
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "storeCode": "demo",
+            "name": "데모",
+            "logoUrl": null,
+            "customerCenterPhone": null,
+            "businessHours": null,
+            "loginMethods": [
+              "apple"
+            ]
+          },
           "error": null
         }
       }
@@ -84,12 +177,32 @@
       "response": {
         "status": 200,
         "body": {
-          "meta": { "status": 200, "code": "OK", "message": "OK", "isSuccess": true },
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
           "data": [
-            { "categoryId": "cat_1", "name": "의류", "depth": 1, "children": [
-              { "categoryId": "cat_2", "name": "상의", "depth": 2, "children": [] }
-            ] },
-            { "categoryId": "cat_3", "name": "잡화", "depth": 1, "children": [] }
+            {
+              "categoryId": "cat_1",
+              "name": "의류",
+              "depth": 1,
+              "children": [
+                {
+                  "categoryId": "cat_2",
+                  "name": "상의",
+                  "depth": 2,
+                  "children": []
+                }
+              ]
+            },
+            {
+              "categoryId": "cat_3",
+              "name": "잡화",
+              "depth": 1,
+              "children": []
+            }
           ],
           "error": null
         }
@@ -98,17 +211,44 @@
     {
       "name": "catalog.listCollections 쿼리 파라미터",
       "call": "catalog.listCollections",
-      "args": [{ "page": 2, "size": 10 }],
-      "options": { "cartToken": "cart-1", "visitorId": "v1", "sessionId": "s1" },
+      "args": [
+        {
+          "page": 2,
+          "size": 10
+        }
+      ],
+      "options": {
+        "cartToken": "cart-1",
+        "visitorId": "v1",
+        "sessionId": "s1"
+      },
       "response": {
         "status": 200,
-        "headers": { "x-cart-token": "cart-2" },
+        "headers": {
+          "x-cart-token": "cart-2"
+        },
         "body": {
-          "meta": { "status": 200, "code": "OK", "message": "OK", "isSuccess": true },
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
           "data": {
-            "page": 2, "size": 10, "totalElements": 11, "totalPages": 2,
+            "page": 2,
+            "size": 10,
+            "totalElements": 11,
+            "totalPages": 2,
             "contents": [
-              { "collectionId": "col_1", "slug": "summer", "title": "여름", "description": "", "imageUrl": null, "startsAt": "2026-06-01T00:00:00.000Z", "endsAt": null }
+              {
+                "collectionId": "col_1",
+                "slug": "summer",
+                "title": "여름",
+                "description": "",
+                "imageUrl": null,
+                "startsAt": "2026-06-01T00:00:00.000Z",
+                "endsAt": null
+              }
             ]
           },
           "error": null
@@ -122,8 +262,19 @@
       "response": {
         "status": 200,
         "body": {
-          "meta": { "status": 200, "code": "OK", "message": "OK", "isSuccess": true },
-          "data": { "page": 0, "size": 20, "totalElements": 0, "totalPages": 0, "contents": [] },
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 0,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 0,
+            "contents": []
+          },
           "error": null
         }
       }
@@ -131,16 +282,53 @@
     {
       "name": "member.updateConsents 마케팅 철회 — 함수형 토큰",
       "call": "member.updateConsents",
-      "args": [{ "marketing": false }],
-      "options": { "accessToken": { "$fn": "member-token-fn" } },
+      "args": [
+        {
+          "marketing": false
+        }
+      ],
+      "options": {
+        "accessToken": {
+          "$fn": "member-token-fn"
+        }
+      },
       "response": {
         "status": 200,
         "body": {
-          "meta": { "status": 200, "code": "OK", "message": "OK", "isSuccess": true },
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
           "data": {
-            "terms": { "kind": "TERMS", "agreed": true, "agreedVersion": "v2", "currentVersion": "v2", "currentDocumentUrl": null, "updatedAt": "2026-01-01T00:00:00.000Z", "reconsentRequired": false },
-            "privacy": { "kind": "PRIVACY", "agreed": true, "agreedVersion": "v1", "currentVersion": "v1", "currentDocumentUrl": "https://shop.example.com/privacy", "updatedAt": null, "reconsentRequired": false },
-            "marketing": { "kind": "MARKETING", "agreed": false, "agreedVersion": null, "currentVersion": null, "currentDocumentUrl": null, "updatedAt": "2026-10-20T00:00:00.000Z", "reconsentRequired": false },
+            "terms": {
+              "kind": "TERMS",
+              "agreed": true,
+              "agreedVersion": "v2",
+              "currentVersion": "v2",
+              "currentDocumentUrl": null,
+              "updatedAt": "2026-01-01T00:00:00.000Z",
+              "reconsentRequired": false
+            },
+            "privacy": {
+              "kind": "PRIVACY",
+              "agreed": true,
+              "agreedVersion": "v1",
+              "currentVersion": "v1",
+              "currentDocumentUrl": "https://shop.example.com/privacy",
+              "updatedAt": null,
+              "reconsentRequired": false
+            },
+            "marketing": {
+              "kind": "MARKETING",
+              "agreed": false,
+              "agreedVersion": null,
+              "currentVersion": null,
+              "currentDocumentUrl": null,
+              "updatedAt": "2026-10-20T00:00:00.000Z",
+              "reconsentRequired": false
+            },
             "reconsentRequired": false
           },
           "error": null
@@ -150,27 +338,52 @@
     {
       "name": "member.updateConsents auth.accessToken 별칭",
       "call": "member.updateConsents",
-      "args": [{ "terms": true, "privacy": true }],
-      "options": { "auth": { "accessToken": "alias-token" } },
+      "args": [
+        {
+          "terms": true,
+          "privacy": true
+        }
+      ],
+      "options": {
+        "auth": {
+          "accessToken": "alias-token"
+        }
+      },
       "response": {
         "status": 401,
         "body": {
-          "meta": { "status": 401, "code": "UNAUTHORIZED", "message": "로그인이 필요합니다", "isSuccess": false },
+          "meta": {
+            "status": 401,
+            "code": "UNAUTHORIZED",
+            "message": "로그인이 필요합니다",
+            "isSuccess": false
+          },
           "data": null,
-          "error": { "code": "UNAUTHORIZED", "message": "로그인이 필요합니다", "docs": "not-a-url", "details": "not-a-record" }
+          "error": {
+            "code": "UNAUTHORIZED",
+            "message": "로그인이 필요합니다",
+            "docs": "not-a-url",
+            "details": "not-a-record"
+          }
         }
       }
     },
     {
       "name": "member.updateConsents 빈 본문 — refine 실패로 요청 전 ZodError",
       "call": "member.updateConsents",
-      "args": [{}],
+      "args": [
+        {}
+      ],
       "response": null
     },
     {
       "name": "member.updateConsents 필수 동의 철회 — literal 실패로 요청 전 ZodError",
       "call": "member.updateConsents",
-      "args": [{ "terms": false }],
+      "args": [
+        {
+          "terms": false
+        }
+      ],
       "response": null
     }
   ]

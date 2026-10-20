@@ -1,5 +1,5 @@
-// zod 대응 스키마 — Node SDK의 zod 스키마와 같은 규칙으로 입력을 검증하고 출력을 만든다.
-// 공개 이름은 ZodError·ZodIssue·SafeParseResult와 각 스키마 상수의 parse·safeParse·options·shape다.
+// zod 대응 스키마 — Node SDK의 zod(v4) 스키마와 같은 규칙으로 입력을 검증하고 출력을 만든다.
+// 공개 이름은 ZodError·ZodIssue·SafeParseResult·Nullable과 스키마 타입(ZodType·ZodObject·ZodEnum·ZodArray)이다.
 
 /// 객체에 키가 없음(JS `undefined`). 객체 출력에서 이 값이면 키를 싣지 않는다.
 const Object absent = _Absent();
@@ -11,12 +11,12 @@ final class _Absent {
 /// 검증 실패 한 건입니다. [ZodError.issues]에 담깁니다.
 class ZodIssue {
   /// 이슈를 만듭니다.
-  const ZodIssue({required this.code, required this.path, required this.message});
+  const ZodIssue({required this.code, required this.path, required this.message, this.continuable = false});
 
   /// 이슈 코드입니다. zod와 같은 값을 사용합니다.
   ///
-  /// `invalid_type`(타입 불일치·필수 값 없음), `invalid_value`(허용하지 않는 값), `invalid_format`(주소 형식 등),
-  /// `too_small`·`too_big`(범위 밖), `custom`(그 밖의 규칙)입니다.
+  /// `invalid_type`(타입 불일치·필수 값 없음), `invalid_value`(허용하지 않는 값), `invalid_format`(형식 불일치),
+  /// `invalid_union`(어느 형태에도 맞지 않음), `too_small`·`too_big`(범위 밖), `custom`(그 밖의 규칙)입니다.
   final String code;
 
   /// 문제가 된 값의 위치입니다. 객체 키는 문자열, 배열 위치는 정수입니다. 예: `['loginMethods', 0]`
@@ -24,6 +24,9 @@ class ZodIssue {
 
   /// 사람이 읽는 설명입니다.
   final String message;
+
+  /// 이 이슈가 난 뒤에도 같은 값의 다른 검사를 이어 하는지입니다(zod `continue`). SDK 내부용입니다.
+  final bool continuable;
 
   /// JSON으로 바꿉니다.
   Map<String, Object?> toJson() => {'code': code, 'path': path, 'message': message};
@@ -62,15 +65,57 @@ class SafeParseResult<T> {
   final ZodError? error;
 }
 
-/// 스키마 하나. `run`은 출력 값을 돌려주고, 실패는 `issues`에 쌓는다.
+/// 사용자 검사([ZodType.check])가 이슈를 더하는 자리입니다(zod `superRefine`의 `ctx`).
+class ZodCheckContext {
+  ZodCheckContext._(this._path, this._issues);
+
+  final List<Object> _path;
+  final List<ZodIssue> _issues;
+
+  /// `custom` 이슈를 더합니다. [path]는 검사하는 값 기준의 상대 경로입니다.
+  void addIssue(String message, {List<Object> path = const []}) => _issues
+      .add(ZodIssue(code: 'custom', path: List.unmodifiable([..._path, ...path]), message: message, continuable: true));
+}
+
+/// 값 하나에 거는 검사입니다. 값을 바꿔 돌려줄 수 있습니다(zod `overwrite`). SDK 내부용입니다.
+typedef ZodCheckFn = Object? Function(Object? value, List<Object> path, List<ZodIssue> issues);
+
+bool _aborted(List<ZodIssue> issues, int from) {
+  for (var i = from; i < issues.length; i++) {
+    if (!issues[i].continuable) return true;
+  }
+  return false;
+}
+
+ZodIssue _issue(String code, List<Object> path, String message, {bool continuable = false}) =>
+    ZodIssue(code: code, path: List.unmodifiable(path), message: message, continuable: continuable);
+
+/// 스키마 하나입니다. 같은 이름의 Node SDK zod 스키마와 같은 규칙으로 검증합니다.
 abstract class ZodType<T> {
   /// 스키마를 만듭니다.
-  const ZodType();
+  const ZodType([this.checks = const []]);
+
+  /// 타입 검사를 지난 값에 차례로 거는 검사입니다. SDK 내부용입니다.
+  final List<ZodCheckFn> checks;
+
+  /// 타입을 검사해 출력 값을 돌려줍니다. 실패는 [issues]에 쌓습니다. SDK 내부용입니다.
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues);
+
+  /// 검사를 더한 같은 종류의 스키마를 돌려줍니다. SDK 내부용입니다.
+  ZodType<T> withChecks(List<ZodCheckFn> checks);
 
   /// [input]을 검증해 출력 값을 돌려줍니다. 실패는 [issues]에 쌓고, [path]는 현재 값의 위치입니다.
   ///
   /// SDK 내부용입니다. 검증은 [parse]·[safeParse]를 사용하십시오.
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues);
+  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) {
+    final from = issues.length;
+    var value = parseType(input, path, issues);
+    if (checks.isEmpty || _aborted(issues, from)) return value;
+    for (final check in checks) {
+      value = check(value, path, issues);
+    }
+    return value;
+  }
 
   /// [input]을 검증하고 출력 값을 돌려줍니다. 맞지 않으면 [ZodError]를 던집니다.
   ///
@@ -102,17 +147,556 @@ abstract class ZodType<T> {
 
   /// zod `.catch(value)` — 검증에 실패하면 이슈 없이 `value`다(`absent`면 키를 싣지 않는다)
   ZodType<T?> catchValue(Object? value) => _Catch<T>(this, value);
+
+  /// zod `.refine(predicate, message)` — [predicate]가 false면 `custom` 이슈다
+  ZodType<T> refine(bool Function(T value) predicate,
+          {String message = 'Invalid input', List<Object> path = const []}) =>
+      withChecks([
+        ...checks,
+        (value, at, issues) {
+          if (!predicate(value as T)) issues.add(_issue('custom', [...at, ...path], message, continuable: true));
+          return value;
+        },
+      ]);
+
+  /// zod `.superRefine((value, ctx) => …)` — [check]가 [ZodCheckContext.addIssue]로 이슈를 더한다
+  ZodType<T> check(void Function(T value, ZodCheckContext ctx) check) => withChecks([
+        ...checks,
+        (value, at, issues) {
+          check(value as T, ZodCheckContext._(at, issues));
+          return value;
+        },
+      ]);
 }
 
-void _typeIssue(List<Object> path, List<ZodIssue> issues, String expected, Object? input) {
-  issues.add(ZodIssue(
-    code: 'invalid_type',
-    path: List.unmodifiable(path),
-    message: 'Invalid input: expected $expected, received ${input == absent ? 'undefined' : _typeName(input)}',
-  ));
+/// 문자열 스키마입니다(zod `z.string()`).
+class ZodString extends ZodType<String> {
+  /// 문자열 스키마를 만듭니다.
+  const ZodString([super.checks]);
+
+  @override
+  ZodString withChecks(List<ZodCheckFn> checks) => ZodString(checks);
+
+  ZodString _add(ZodCheckFn check) => ZodString([...checks, check]);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    if (input is String) return input;
+    issues.add(_issue('invalid_type', path, 'Invalid input: expected string, received ${_typeName(input)}'));
+    return null;
+  }
+
+  /// 최소 길이입니다(zod `.min()`).
+  ZodString min(int length) => _add((v, p, i) {
+        if ((v as String).length < length) {
+          i.add(_issue('too_small', p, 'Too small: expected string to have >=$length characters', continuable: true));
+        }
+        return v;
+      });
+
+  /// 최대 길이입니다(zod `.max()`).
+  ZodString max(int length) => _add((v, p, i) {
+        if ((v as String).length > length) {
+          i.add(_issue('too_big', p, 'Too big: expected string to have <=$length characters', continuable: true));
+        }
+        return v;
+      });
+
+  /// 정규식 형식입니다(zod `.regex()`·`z.email()`·`z.iso.datetime()`). [format]은 이슈의 형식 이름입니다.
+  ZodString pattern(RegExp regex, {String format = 'regex', String? message}) => _add((v, p, i) {
+        if (!regex.hasMatch(v as String)) {
+          i.add(_issue('invalid_format', p, message ?? 'Invalid $format', continuable: true));
+        }
+        return v;
+      });
+
+  /// 주소 형식입니다(zod `z.url()`). WHATWG `URL`로 읽히는 절대 주소여야 합니다.
+  ZodString url() => _add((v, p, i) {
+        if (!_isUrl(v as String)) i.add(_issue('invalid_format', p, 'Invalid URL', continuable: true));
+        return v;
+      });
+
+  /// 앞뒤 공백을 지웁니다(zod `.trim()`).
+  ZodString trim() => _add((v, p, i) => (v as String).trim());
+
+  static const _specialSchemes = {'http', 'https', 'ws', 'wss', 'ftp'};
+
+  static bool _isUrl(String value) {
+    if (!RegExp(r'^[A-Za-z][A-Za-z0-9+.\-]*:').hasMatch(value.trimLeft())) return false;
+    final uri = Uri.tryParse(value.trim());
+    if (uri == null || !uri.hasScheme) return false;
+    if (_specialSchemes.contains(uri.scheme.toLowerCase())) return uri.host.isNotEmpty;
+    return true;
+  }
+}
+
+/// 숫자 스키마입니다(zod `z.number()`).
+class ZodNumber<T extends num> extends ZodType<T> {
+  /// 숫자 스키마를 만듭니다.
+  const ZodNumber([super.checks, this.isInt = false]);
+
+  /// 정수만 허용하는지입니다. 출력이 `int`가 됩니다.
+  final bool isInt;
+
+  @override
+  ZodNumber<T> withChecks(List<ZodCheckFn> checks) => ZodNumber<T>(checks, isInt);
+
+  ZodNumber<T> _add(ZodCheckFn check) => ZodNumber<T>([...checks, check], isInt);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    if (input is num && !input.isNaN && input.isFinite) return input;
+    issues.add(_issue('invalid_type', path, 'Invalid input: expected number, received ${_typeName(input)}'));
+    return null;
+  }
+
+  static const _maxSafe = 9007199254740991;
+
+  /// 안전한 정수만 허용합니다(zod `.int()`).
+  ZodNumber<int> int_() => ZodNumber<int>([
+        ...checks,
+        (v, p, i) {
+          final n = v as num;
+          if (n != n.truncate()) {
+            i.add(_issue('invalid_type', p, 'Invalid input: expected int, received number', continuable: true));
+            return n;
+          }
+          if (n > _maxSafe) i.add(_issue('too_big', p, 'Too big: expected int to be <=$_maxSafe', continuable: true));
+          if (n < -_maxSafe)
+            i.add(_issue('too_small', p, 'Too small: expected int to be >=-$_maxSafe', continuable: true));
+          return n.toInt();
+        },
+      ], true);
+
+  /// 최솟값입니다. [inclusive]가 false면 초과(zod `.gt()`), true면 이상(zod `.min()`)입니다.
+  ZodNumber<T> greaterThan(num value, {required bool inclusive}) => _add((v, p, i) {
+        final n = v as num;
+        if (inclusive ? n < value : n <= value) {
+          i.add(_issue('too_small', p, 'Too small: expected number to be ${inclusive ? '>=' : '>'}$value',
+              continuable: true));
+        }
+        return n;
+      });
+
+  /// 최댓값입니다. [inclusive]가 false면 미만(zod `.lt()`), true면 이하(zod `.max()`)입니다.
+  ZodNumber<T> lessThan(num value, {required bool inclusive}) => _add((v, p, i) {
+        final n = v as num;
+        if (inclusive ? n > value : n >= value) {
+          i.add(_issue('too_big', p, 'Too big: expected number to be ${inclusive ? '<=' : '<'}$value',
+              continuable: true));
+        }
+        return n;
+      });
+}
+
+/// 불리언 스키마입니다(zod `z.boolean()`).
+class ZodBoolean extends ZodType<bool> {
+  /// 불리언 스키마를 만듭니다.
+  const ZodBoolean([super.checks]);
+
+  @override
+  ZodBoolean withChecks(List<ZodCheckFn> checks) => ZodBoolean(checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    if (input is bool) return input;
+    issues.add(_issue('invalid_type', path, 'Invalid input: expected boolean, received ${_typeName(input)}'));
+    return null;
+  }
+}
+
+/// null만 허용하는 스키마입니다(zod `z.null()`).
+class ZodNull extends ZodType<Null> {
+  /// 스키마를 만듭니다.
+  const ZodNull([super.checks]);
+
+  @override
+  ZodNull withChecks(List<ZodCheckFn> checks) => ZodNull(checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    if (input == null) return null;
+    issues.add(_issue('invalid_type', path, 'Invalid input: expected null, received ${_typeName(input)}'));
+    return null;
+  }
+}
+
+/// 어떤 값이든 그대로 받는 스키마입니다(zod `z.unknown()`).
+class ZodUnknown extends ZodType<Object?> {
+  /// 스키마를 만듭니다.
+  const ZodUnknown([super.checks]);
+
+  @override
+  ZodUnknown withChecks(List<ZodCheckFn> checks) => ZodUnknown(checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) => input;
+}
+
+/// 정해진 문자열 값만 허용하는 스키마입니다(zod `z.enum()`). 값은 문자열 그대로입니다.
+class ZodEnum extends ZodType<String> {
+  /// 허용 값 목록으로 스키마를 만듭니다.
+  const ZodEnum(this.options, [super.checks]);
+
+  /// 허용하는 값 목록입니다. 선택 메뉴를 그릴 때 사용합니다.
+  final List<String> options;
+
+  @override
+  ZodEnum withChecks(List<ZodCheckFn> checks) => ZodEnum(options, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    if (input is String && options.contains(input)) return input;
+    issues
+        .add(_issue('invalid_value', path, 'Invalid option: expected one of ${options.map((o) => '"$o"').join('|')}'));
+    return input;
+  }
+}
+
+/// 정해진 값만 허용하는 스키마입니다(zod `z.literal()`).
+class ZodLiteral<T> extends ZodType<T> {
+  /// 허용할 값 목록으로 스키마를 만듭니다.
+  const ZodLiteral(this.values, [super.checks]);
+
+  /// 허용하는 값입니다.
+  final List<Object?> values;
+
+  @override
+  ZodLiteral<T> withChecks(List<ZodCheckFn> checks) => ZodLiteral<T>(values, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    if (values.contains(input)) return input;
+    issues.add(_issue('invalid_value', path, 'Invalid input: expected ${values.join('|')}'));
+    return input;
+  }
+}
+
+/// 배열 스키마입니다(zod `z.array()`).
+class ZodArray<T> extends ZodType<List<T>> {
+  /// 항목 스키마로 배열 스키마를 만듭니다.
+  const ZodArray(this.element, [super.checks]);
+
+  /// 항목 스키마입니다.
+  final ZodType<T> element;
+
+  @override
+  ZodArray<T> withChecks(List<ZodCheckFn> checks) => ZodArray<T>(element, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    if (input is! List) {
+      issues.add(_issue('invalid_type', path, 'Invalid input: expected array, received ${_typeName(input)}'));
+      return null;
+    }
+    final from = issues.length;
+    final out = [
+      for (var i = 0; i < input.length; i++) element.run(input[i], [...path, i], issues)
+    ];
+    return _aborted(issues, from) ? out : List<T>.unmodifiable(out.cast<T>());
+  }
+
+  /// 최소 항목 수입니다(zod `.min()`).
+  ZodArray<T> min(int length) => ZodArray<T>(element, [
+        ...checks,
+        (v, p, i) {
+          if ((v as List).length < length) {
+            i.add(_issue('too_small', p, 'Too small: expected array to have >=$length items', continuable: true));
+          }
+          return v;
+        },
+      ]);
+
+  /// 최대 항목 수입니다(zod `.max()`).
+  ZodArray<T> max(int length) => ZodArray<T>(element, [
+        ...checks,
+        (v, p, i) {
+          if ((v as List).length > length) {
+            i.add(_issue('too_big', p, 'Too big: expected array to have <=$length items', continuable: true));
+          }
+          return v;
+        },
+      ]);
+}
+
+/// 문자열 키 객체 스키마입니다(zod `z.record(z.string(), value)`).
+class ZodRecord<T> extends ZodType<Map<String, T>> {
+  /// 값 스키마로 만듭니다.
+  const ZodRecord(this.value, [super.checks]);
+
+  /// 값 스키마입니다.
+  final ZodType<T> value;
+
+  @override
+  ZodRecord<T> withChecks(List<ZodCheckFn> checks) => ZodRecord<T>(value, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    if (input is! Map) {
+      issues.add(_issue('invalid_type', path, 'Invalid input: expected record, received ${_typeName(input)}'));
+      return null;
+    }
+    final out = <String, Object?>{};
+    for (final e in input.entries) {
+      final v = value.run(e.value, [...path, e.key as String], issues);
+      if (v != absent) out[e.key as String] = v;
+    }
+    return Map<String, Object?>.unmodifiable(out);
+  }
+}
+
+/// 객체 스키마입니다(zod `z.object()`). 선언한 키만 남기고(모르는 키는 버린다) 모델을 만듭니다.
+class ZodObject<T> extends ZodType<T> {
+  /// 필드 스키마와 모델 생성 함수로 객체 스키마를 만듭니다.
+  const ZodObject(this.shape, this.create, {this.loose = false, List<ZodCheckFn> checks = const []}) : super(checks);
+
+  /// 필드 이름별 스키마입니다.
+  final Map<String, ZodType<Object?>> shape;
+
+  /// 검증을 마친 JSON으로 모델을 만드는 함수입니다.
+  final T Function(Map<String, Object?> json) create;
+
+  /// 모르는 키도 남기는지입니다(zod `z.looseObject()`).
+  final bool loose;
+
+  @override
+  ZodObject<T> withChecks(List<ZodCheckFn> checks) => ZodObject<T>(shape, create, loose: loose, checks: checks);
+
+  /// 필드를 더한 객체 스키마를 돌려줍니다(zod `.extend()`).
+  ZodObject<R> extend<R>(Map<String, ZodType<Object?>> more, R Function(Map<String, Object?> json) create) =>
+      ZodObject<R>({...shape, ...more}, create, loose: loose);
+
+  @override
+  ZodObject<T> refine(bool Function(T value) predicate,
+          {String message = 'Invalid input', List<Object> path = const []}) =>
+      super.refine(predicate, message: message, path: path) as ZodObject<T>;
+
+  @override
+  ZodObject<T> check(void Function(T value, ZodCheckContext ctx) check) => super.check(check) as ZodObject<T>;
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    if (input is ParsedObject) input = input.toJson();
+    if (input is! Map) {
+      issues.add(_issue('invalid_type', path, 'Invalid input: expected object, received ${_typeName(input)}'));
+      return null;
+    }
+    final from = issues.length;
+    final out = <String, Object?>{};
+    shape.forEach((key, schema) {
+      final value = schema.run(input is Map && input.containsKey(key) ? input[key] : absent, [...path, key], issues);
+      if (value != absent) out[key] = value;
+    });
+    if (loose) {
+      for (final e in input.entries) {
+        if (!shape.containsKey(e.key)) out[e.key as String] = e.value;
+      }
+    }
+    // 이어서 해도 되는 이슈(형식 검사 등)만 있으면 zod처럼 값을 만들어 객체 검사(refine)를 이어 간다
+    if (_aborted(issues, from)) return out;
+    return create(Map.unmodifiable(out));
+  }
+}
+
+/// 여러 형태 중 하나를 허용하는 스키마입니다(zod `z.union()`·`z.discriminatedUnion()`).
+class ZodUnion<T> extends ZodType<T> {
+  /// 형태 목록으로 만듭니다. [discriminator]가 있으면 그 필드 값으로 형태를 고릅니다.
+  const ZodUnion(this.options, {this.discriminator, List<ZodCheckFn> checks = const []}) : super(checks);
+
+  /// 허용하는 형태입니다.
+  final List<ZodType<Object?>> options;
+
+  /// 형태를 고르는 필드 이름입니다(zod `z.discriminatedUnion()`).
+  final String? discriminator;
+
+  @override
+  ZodUnion<T> withChecks(List<ZodCheckFn> checks) => ZodUnion<T>(options, discriminator: discriminator, checks: checks);
+
+  static List<Object?> _literalsOf(ZodType<Object?> schema, String key) {
+    var s = schema;
+    while (s is ZodLazy<Object?>) {
+      s = s.getter();
+    }
+    final field = s is ZodObject ? s.shape[key] : null;
+    return field is ZodLiteral ? field.values : const [];
+  }
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    final key = discriminator;
+    if (key != null) {
+      if (input is ParsedObject) input = input.toJson();
+      if (input is! Map) {
+        issues.add(_issue('invalid_type', path, 'Invalid input: expected object, received ${_typeName(input)}'));
+        return null;
+      }
+      for (final option in options) {
+        if (_literalsOf(option, key).contains(input[key])) return option.run(input, path, issues);
+      }
+      issues.add(_issue('invalid_union', [...path, key], 'No matching discriminator'));
+      return null;
+    }
+    final results = <(Object?, List<ZodIssue>)>[];
+    for (final option in options) {
+      final local = <ZodIssue>[];
+      final value = option.run(input, path, local);
+      if (local.isEmpty) return value;
+      results.add((value, local));
+    }
+    final nonAborted = results.where((r) => !_aborted(r.$2, 0)).toList();
+    if (nonAborted.length == 1) {
+      issues.addAll(nonAborted.single.$2);
+      return nonAborted.single.$1;
+    }
+    issues.add(_issue('invalid_union', path, 'Invalid input'));
+    return null;
+  }
+}
+
+/// 두 스키마를 모두 만족해야 하는 스키마입니다(zod `.and()`·`z.intersection()`).
+///
+/// 검증은 zod처럼 양쪽을 따로 하고, 출력은 양쪽 JSON을 합쳐 [merged]로 만든 모델입니다.
+class ZodIntersection<T> extends ZodType<T> {
+  /// 두 스키마와 합친 출력을 만드는 스키마로 만듭니다.
+  const ZodIntersection(this.left, this.right, this.merged, [super.checks]);
+
+  /// 왼쪽 스키마입니다.
+  final ZodType<Object?> left;
+
+  /// 오른쪽 스키마입니다.
+  final ZodType<Object?> right;
+
+  /// 양쪽 출력을 합친 JSON으로 모델을 만드는 스키마입니다.
+  final ZodType<T> merged;
+
+  @override
+  ZodIntersection<T> withChecks(List<ZodCheckFn> checks) => ZodIntersection<T>(left, right, merged, checks);
+
+  static Object? _json(Object? v) => v is ParsedObject ? v.toJson() : v;
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    final from = issues.length;
+    final a = _json(left.run(input, path, issues));
+    final b = _json(right.run(input, path, issues));
+    if (_aborted(issues, from)) return null;
+    if (a is Map && b is Map) return merged.run({...a, ...b}, path, issues);
+    return a;
+  }
+}
+
+/// 앞 스키마의 출력을 뒤 스키마로 다시 검증합니다(zod `.pipe()`·`z.preprocess()`).
+class ZodPipe<T> extends ZodType<T> {
+  /// 두 스키마로 만듭니다.
+  const ZodPipe(this.input, this.output, [super.checks]);
+
+  /// 먼저 거치는 스키마입니다.
+  final ZodType<Object?> input;
+
+  /// 나중에 거치는 스키마입니다.
+  final ZodType<Object?> output;
+
+  @override
+  ZodPipe<T> withChecks(List<ZodCheckFn> checks) => ZodPipe<T>(input, output, checks);
+
+  @override
+  Object? parseType(Object? value, List<Object> path, List<ZodIssue> issues) {
+    final from = issues.length;
+    final mid = input.run(value, path, issues);
+    if (issues.length > from) return mid;
+    return output.run(mid, path, issues);
+  }
+}
+
+/// 값을 함수로 바꾸는 스키마입니다(zod `z.transform()`).
+class ZodTransform<T> extends ZodType<T> {
+  /// 바꾸는 함수로 만듭니다.
+  const ZodTransform(this.transform, [super.checks]);
+
+  /// 값을 바꾸는 함수입니다.
+  final Object? Function(Object? value) transform;
+
+  @override
+  ZodTransform<T> withChecks(List<ZodCheckFn> checks) => ZodTransform<T>(transform, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) => transform(input);
+}
+
+/// 재귀 구조를 위해 스키마를 늦게 읽는 스키마입니다(zod `z.lazy()`).
+class ZodLazy<T> extends ZodType<T> {
+  /// 스키마를 돌려주는 함수로 만듭니다.
+  const ZodLazy(this.getter, [super.checks]);
+
+  /// 스키마를 돌려주는 함수입니다.
+  final ZodType<T> Function() getter;
+
+  @override
+  ZodLazy<T> withChecks(List<ZodCheckFn> checks) => ZodLazy<T>(getter, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) => getter().run(input, path, issues);
+}
+
+class _Nullable<T> extends ZodType<T?> {
+  const _Nullable(this.inner, [super.checks]);
+
+  final ZodType<T> inner;
+
+  @override
+  _Nullable<T> withChecks(List<ZodCheckFn> checks) => _Nullable<T>(inner, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) =>
+      input == null ? null : inner.run(input, path, issues);
+}
+
+class _Optional<T> extends ZodType<T?> {
+  const _Optional(this.inner, [super.checks]);
+
+  final ZodType<T> inner;
+
+  @override
+  _Optional<T> withChecks(List<ZodCheckFn> checks) => _Optional<T>(inner, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) =>
+      input == absent ? absent : inner.run(input, path, issues);
+}
+
+class _Default<T> extends ZodType<T> {
+  const _Default(this.inner, this.value, [super.checks]);
+
+  final ZodType<Object?> inner;
+  final T value;
+
+  @override
+  _Default<T> withChecks(List<ZodCheckFn> checks) => _Default<T>(inner, value, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) =>
+      input == absent ? value : inner.run(input, path, issues);
+}
+
+class _Catch<T> extends ZodType<T?> {
+  const _Catch(this.inner, this.value, [super.checks]);
+
+  final ZodType<Object?> inner;
+  final Object? value;
+
+  @override
+  _Catch<T> withChecks(List<ZodCheckFn> checks) => _Catch<T>(inner, value, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    final local = <ZodIssue>[];
+    final out = inner.run(input, path, local);
+    return local.isEmpty ? out : value;
+  }
 }
 
 String _typeName(Object? v) => switch (v) {
+      _Absent() => 'undefined',
       null => 'null',
       String() => 'string',
       num() => 'number',
@@ -122,291 +706,19 @@ String _typeName(Object? v) => switch (v) {
       _ => v.runtimeType.toString(),
     };
 
-/// 문자열 스키마입니다(zod `z.string()`).
-class ZodString extends ZodType<String> {
-  /// 문자열 스키마를 만듭니다.
-  const ZodString({this.isUrl = false});
-
-  /// 주소 형식을 검사하는지입니다.
-  final bool isUrl;
-
-  /// 주소 형식을 검사하는 스키마를 돌려줍니다(zod `z.url()`).
-  ZodString url() => const ZodString(isUrl: true);
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) {
-    if (input is! String) {
-      _typeIssue(path, issues, 'string', input);
-      return null;
-    }
-    if (isUrl && !_isUrl(input)) {
-      issues.add(ZodIssue(code: 'invalid_format', path: List.unmodifiable(path), message: 'Invalid URL'));
-    }
-    return input;
-  }
-
-  /// zod v4 `z.url()` — WHATWG URL로 읽히고 호스트가 있어야 한다
-  static bool _isUrl(String value) {
-    final uri = Uri.tryParse(value);
-    return uri != null && uri.hasScheme && uri.host.isNotEmpty;
-  }
-}
-
-/// 숫자 스키마입니다(zod `z.number()`).
-class ZodNumber extends ZodType<num> {
-  /// 숫자 스키마를 만듭니다.
-  const ZodNumber({this.isInt = false, this.min, this.max});
-
-  /// 정수만 허용하는지입니다.
-  final bool isInt;
-
-  /// 허용하는 최솟값입니다.
-  final num? min;
-
-  /// 허용하는 최댓값입니다.
-  final num? max;
-
-  /// 정수만 허용하는 스키마를 돌려줍니다(zod `.int()`).
-  ZodNumber int_() => ZodNumber(isInt: true, min: min, max: max);
-
-  /// 최솟값을 정한 스키마를 돌려줍니다(zod `.min()`).
-  ZodNumber gte(num value) => ZodNumber(isInt: isInt, min: value, max: max);
-
-  /// 최댓값을 정한 스키마를 돌려줍니다(zod `.max()`).
-  ZodNumber lte(num value) => ZodNumber(isInt: isInt, min: min, max: value);
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) {
-    if (input is! num || input.isNaN || input.isInfinite) {
-      _typeIssue(path, issues, isInt ? 'int' : 'number', input);
-      return null;
-    }
-    if (isInt && input != input.truncate()) {
-      _typeIssue(path, issues, 'int', input);
-      return null;
-    }
-    if (min != null && input < min!) {
-      issues.add(ZodIssue(
-          code: 'too_small', path: List.unmodifiable(path), message: 'Too small: expected number to be >=$min'));
-    }
-    if (max != null && input > max!) {
-      issues.add(
-          ZodIssue(code: 'too_big', path: List.unmodifiable(path), message: 'Too big: expected number to be <=$max'));
-    }
-    return isInt ? input.toInt() : input;
-  }
-}
-
-/// 불리언 스키마입니다(zod `z.boolean()`).
-class ZodBoolean extends ZodType<bool> {
-  /// 불리언 스키마를 만듭니다.
-  const ZodBoolean();
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) {
-    if (input is! bool) _typeIssue(path, issues, 'boolean', input);
-    return input;
-  }
-}
-
-/// 어떤 값이든 그대로 받는 스키마입니다(zod `z.unknown()`).
-class ZodUnknown extends ZodType<Object?> {
-  /// 스키마를 만듭니다.
-  const ZodUnknown();
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) => input == absent ? absent : input;
-}
-
-/// zod `z.enum([...])` — 값은 문자열 그대로다(ROADMAP 「타입」)
-class ZodEnum extends ZodType<String> {
-  /// 허용 값 목록으로 스키마를 만듭니다.
-  const ZodEnum(this.options);
-
-  /// 허용하는 값 목록입니다. 선택 메뉴를 그릴 때 사용합니다.
-  final List<String> options;
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) {
-    if (input is! String || !options.contains(input)) {
-      issues.add(ZodIssue(
-        code: 'invalid_value',
-        path: List.unmodifiable(path),
-        message: 'Invalid option: expected one of ${options.map((o) => '"$o"').join('|')}',
-      ));
-    }
-    return input;
-  }
-}
-
-/// 한 값만 허용하는 스키마입니다(zod `z.literal()`).
-class ZodLiteral<T> extends ZodType<T> {
-  /// 허용할 값으로 스키마를 만듭니다.
-  const ZodLiteral(this.value);
-
-  /// 허용하는 값입니다.
-  final T value;
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) {
-    if (input != value) {
-      issues.add(
-          ZodIssue(code: 'invalid_value', path: List.unmodifiable(path), message: 'Invalid input: expected $value'));
-    }
-    return input;
-  }
-}
-
-/// 배열 스키마입니다(zod `z.array()`).
-class ZodArray<T> extends ZodType<List<T>> {
-  /// 항목 스키마로 배열 스키마를 만듭니다.
-  const ZodArray(this.element);
-
-  /// 항목 스키마입니다.
-  final ZodType<T> element;
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) {
-    if (input is! List) {
-      _typeIssue(path, issues, 'array', input);
-      return null;
-    }
-    final before = issues.length;
-    final out = [
-      for (var i = 0; i < input.length; i++) element.run(input[i], [...path, i], issues)
-    ];
-    return issues.length > before ? null : List<T>.unmodifiable(out.cast<T>());
-  }
-}
-
-/// 문자열 키 객체를 그대로 받는 스키마입니다(zod `z.record(z.string(), z.unknown())`).
-class ZodRecord extends ZodType<Map<String, Object?>> {
-  /// 스키마를 만듭니다.
-  const ZodRecord();
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) {
-    if (input is! Map) {
-      _typeIssue(path, issues, 'record', input);
-      return null;
-    }
-    return Map<String, Object?>.unmodifiable(input.cast<String, Object?>());
-  }
-}
-
-/// zod `z.object(shape)` — 선언한 키만 남기고(모르는 키는 버린다) `create`로 모델을 만든다
-class ZodObject<T> extends ZodType<T> {
-  /// 필드 스키마와 모델 생성 함수로 객체 스키마를 만듭니다.
-  const ZodObject(this.shape, this.create, {this.refinements = const []});
-
-  /// 필드 이름별 스키마입니다.
-  final Map<String, ZodType<Object?>> shape;
-
-  /// 검증을 마친 JSON으로 모델을 만드는 함수입니다.
-  final T Function(Map<String, Object?> json) create;
-
-  /// 객체 전체에 거는 추가 규칙입니다.
-  final List<({bool Function(Map<String, Object?> value) check, String message})> refinements;
-
-  /// 필드를 더한 객체 스키마를 돌려줍니다(zod `.extend()`).
-  ZodObject<R> extend<R>(Map<String, ZodType<Object?>> more, R Function(Map<String, Object?> json) create) =>
-      ZodObject<R>({...shape, ...more}, create);
-
-  /// 객체 전체 규칙을 더한 스키마를 돌려줍니다(zod `.refine()`). 규칙이 false면 `custom` 이슈입니다.
-  ZodObject<T> refine(bool Function(Map<String, Object?> value) check, {required String message}) =>
-      ZodObject<T>(shape, create, refinements: [...refinements, (check: check, message: message)]);
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) {
-    if (input is ParsedObject) input = input.toJson();
-    if (input is! Map) {
-      _typeIssue(path, issues, 'object', input);
-      return null;
-    }
-    final before = issues.length;
-    final out = <String, Object?>{};
-    shape.forEach((key, schema) {
-      final value = schema.run(input is Map && input.containsKey(key) ? input[key] : absent, [...path, key], issues);
-      if (value != absent) out[key] = value;
-    });
-    if (issues.length > before) return null;
-    for (final r in refinements) {
-      if (!r.check(out)) issues.add(ZodIssue(code: 'custom', path: List.unmodifiable(path), message: r.message));
-    }
-    return issues.length > before ? null : create(Map.unmodifiable(out));
-  }
-}
-
-/// 재귀 구조를 위해 스키마를 늦게 읽는 스키마입니다(zod `z.lazy()`).
-class ZodLazy<T> extends ZodType<T> {
-  /// 스키마를 돌려주는 함수로 만듭니다.
-  const ZodLazy(this.getter);
-
-  /// 스키마를 돌려주는 함수입니다.
-  final ZodType<T> Function() getter;
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) => getter().run(input, path, issues);
-}
-
-class _Nullable<T> extends ZodType<T?> {
-  const _Nullable(this.inner);
-
-  final ZodType<T> inner;
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) =>
-      input == null ? null : inner.run(input, path, issues);
-}
-
-class _Optional<T> extends ZodType<T?> {
-  const _Optional(this.inner);
-
-  final ZodType<T> inner;
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) =>
-      input == absent ? absent : inner.run(input, path, issues);
-}
-
-class _Default<T> extends ZodType<T> {
-  const _Default(this.inner, this.value);
-
-  final ZodType<Object?> inner;
-  final T value;
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) =>
-      input == absent ? value : inner.run(input, path, issues);
-}
-
-class _Catch<T> extends ZodType<T?> {
-  const _Catch(this.inner, this.value);
-
-  final ZodType<Object?> inner;
-  final Object? value;
-
-  @override
-  Object? run(Object? input, List<Object> path, List<ZodIssue> issues) {
-    final local = <ZodIssue>[];
-    final out = inner.run(input, path, local);
-    return local.isEmpty ? out : value;
-  }
-}
-
-/// zod 생성자 모음 — 스키마 파일이 Node 소스와 같은 모양으로 읽히게 한다
+/// zod 생성자 모음 — 생성한 스키마 코드가 Node 소스와 같은 모양으로 읽히게 한다(SDK 내부용)
 abstract final class z {
   /// zod `z.string()`입니다.
   static ZodString string() => const ZodString();
 
-  /// zod `z.url()`입니다.
-  static ZodString url() => const ZodString(isUrl: true);
-
   /// zod `z.number()`입니다.
-  static ZodNumber number() => const ZodNumber();
+  static ZodNumber<num> number() => const ZodNumber<num>();
 
   /// zod `z.boolean()`입니다.
   static ZodBoolean boolean() => const ZodBoolean();
+
+  /// zod `z.null()`입니다.
+  static ZodNull null_() => const ZodNull();
 
   /// zod `z.unknown()`입니다.
   static ZodUnknown unknown() => const ZodUnknown();
@@ -415,21 +727,42 @@ abstract final class z {
   static ZodEnum enum_(List<String> options) => ZodEnum(options);
 
   /// zod `z.literal()`입니다.
-  static ZodLiteral<T> literal<T>(T value) => ZodLiteral<T>(value);
+  static ZodLiteral<T> literal<T>(T value) => ZodLiteral<T>([value]);
+
+  /// 여러 값의 zod `z.literal([...])`입니다.
+  static ZodLiteral<T> literals<T>(List<T> values) => ZodLiteral<T>(values);
 
   /// zod `z.array()`입니다.
   static ZodArray<T> array<T>(ZodType<T> element) => ZodArray<T>(element);
 
-  /// zod `z.record(z.string(), z.unknown())`입니다.
-  static ZodRecord record() => const ZodRecord();
+  /// zod `z.record(z.string(), value)`입니다.
+  static ZodRecord<T> record<T>(ZodType<T> value) => ZodRecord<T>(value);
 
   /// zod `z.object()`입니다. 출력은 `create`로 만든 모델입니다.
-  static ZodObject<T> object<T>(Map<String, ZodType<Object?>> shape, T Function(Map<String, Object?> json) create) =>
-      ZodObject<T>(shape, create);
+  static ZodObject<T> object<T>(Map<String, ZodType<Object?>> shape, T Function(Map<String, Object?> json) create,
+          {bool loose = false}) =>
+      ZodObject<T>(shape, create, loose: loose);
 
   /// zod `z.object()`입니다. 출력은 JSON 맵 그대로입니다.
-  static ZodObject<Map<String, Object?>> plainObject(Map<String, ZodType<Object?>> shape) =>
-      ZodObject<Map<String, Object?>>(shape, (json) => json);
+  static ZodObject<Map<String, Object?>> plainObject(Map<String, ZodType<Object?>> shape, {bool loose = false}) =>
+      ZodObject<Map<String, Object?>>(shape, (json) => json, loose: loose);
+
+  /// zod `z.union()`입니다.
+  static ZodUnion<T> union<T>(List<ZodType<Object?>> options) => ZodUnion<T>(options);
+
+  /// zod `z.discriminatedUnion()`입니다.
+  static ZodUnion<T> discriminatedUnion<T>(String discriminator, List<ZodType<Object?>> options) =>
+      ZodUnion<T>(options, discriminator: discriminator);
+
+  /// zod `.and()`입니다. [merged]는 합친 출력을 만드는 스키마입니다.
+  static ZodIntersection<T> intersection<T>(ZodType<Object?> left, ZodType<Object?> right, ZodType<T> merged) =>
+      ZodIntersection<T>(left, right, merged);
+
+  /// zod `.pipe()`입니다.
+  static ZodPipe<T> pipe<T>(ZodType<Object?> input, ZodType<Object?> output) => ZodPipe<T>(input, output);
+
+  /// zod `z.transform()`입니다.
+  static ZodTransform<T> transform<T>(Object? Function(Object? value) fn) => ZodTransform<T>(fn);
 
   /// zod `z.lazy()`입니다.
   static ZodLazy<T> lazy<T>(ZodType<T> Function() getter) => ZodLazy<T>(getter);
@@ -504,3 +837,6 @@ Map<String, Object?> compact(Map<String, Object?> fields) => {
       for (final e in fields.entries)
         if (e.value is Nullable) e.key: (e.value as Nullable).value else if (e.value != null) e.key: e.value,
     };
+
+/// JS 참·거짓 판정(`!!value`)이다(SDK 내부용) — null·false·0·빈 문자열이 거짓이다
+bool truthy(Object? value) => !(value == null || value == false || value == 0 || value == '' || value == absent);

@@ -1,8 +1,13 @@
-// Node SDK(@sayren/storefront-sdk)로 시나리오를 실행하고 요청·결과를 JSON으로 쓴다.
+// Node SDK(@sayren/storefront-sdk)로 시나리오·스키마 대조 자료를 실행하고 결과를 JSON으로 쓴다.
 import { readFileSync } from "node:fs";
-import { createStorefrontClient, ApiError } from "@sayren/storefront-sdk";
+import * as sdk from "@sayren/storefront-sdk";
 
-const { defaults, scenarios } = JSON.parse(readFileSync(new URL("./scenarios.json", import.meta.url), "utf8"));
+const read = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), "utf8"));
+const hand = read("./scenarios.json");
+const generated = read("./generated/scenarios.json");
+const schemaCases = read("./generated/schema-cases.json");
+const defaults = hand.defaults;
+const scenarios = [...hand.scenarios, ...generated.scenarios];
 
 function toOptions(raw) {
   const out = {};
@@ -10,17 +15,17 @@ function toOptions(raw) {
   return out;
 }
 
+const json = (v) => (v === undefined ? null : JSON.parse(JSON.stringify(v)));
+
 function describeError(error) {
-  if (error instanceof ApiError) {
+  if (error instanceof sdk.ApiError) {
     return { type: "ApiError", status: error.status, code: error.code, message: error.message, traceId: error.traceId ?? null, details: error.details ?? null, docs: error.docs ?? null, body: error.body ?? null };
   }
-  if (error?.name === "ZodError") {
-    return { type: "ZodError", issues: error.issues.map((i) => ({ code: i.code, path: i.path })) };
-  }
-  return { type: "Error", message: String(error) };
+  if (error?.name === "ZodError") return { type: "ZodError", issues: error.issues.map((i) => ({ code: i.code, path: i.path })) };
+  return { type: "Error" };
 }
 
-const results = [];
+const scenarioResults = [];
 for (const s of scenarios) {
   const requests = [];
   const cartTokens = [];
@@ -34,15 +39,24 @@ for (const s of scenarios) {
     const r = s.response;
     return new Response(r.status === 204 ? null : JSON.stringify(r.body), { status: r.status, headers: { "content-type": "application/json", ...(r.headers ?? {}) } });
   };
-  const client = createStorefrontClient({ ...toOptions({ ...defaults.options, ...(s.options ?? {}) }), fetch, onCartToken: (t) => cartTokens.push(t) });
-  const [ns, method] = s.call.split(".");
+  const client = sdk.createStorefrontClient({ ...toOptions({ ...defaults.options, ...(s.options ?? {}) }), fetch, onCartToken: (t) => cartTokens.push(t) });
+  const parts = s.call.split(".");
+  const target = parts.slice(0, -1).reduce((o, k) => o[k], client);
   let outcome;
   try {
-    const value = await client[ns][method](...s.args);
-    outcome = { ok: true, value: value === undefined ? null : JSON.parse(JSON.stringify(value)) };
+    outcome = { ok: true, value: json(await target[parts.at(-1)](...s.args)) };
   } catch (error) {
     outcome = { ok: false, error: describeError(error) };
   }
-  results.push({ name: s.name, requests, cartTokens, outcome });
+  scenarioResults.push({ name: s.name, requests, cartTokens, outcome });
 }
-process.stdout.write(`${JSON.stringify(results, null, 2)}\n`);
+
+const schemaResults = schemaCases.map((c) => {
+  const r = sdk[c.schema].safeParse(c.input);
+  return {
+    name: `${c.schema} ${c.label}`,
+    outcome: r.success ? { ok: true, value: json(r.data) } : { ok: false, issues: r.error.issues.map((i) => ({ code: i.code, path: i.path })) },
+  };
+});
+
+process.stdout.write(`${JSON.stringify({ scenarios: scenarioResults, schemaCases: schemaResults }, null, 2)}\n`);
