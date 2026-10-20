@@ -24,22 +24,9 @@ sayren 공개 API를 Dart·Flutter에서 호출하는 SDK입니다. Node SDK(`@s
 
 ## Installation
 
-pub.dev 게시 전에는 git 의존성으로 설치합니다.
-
-```yaml
-dependencies:
-  sayren_storefront_sdk:
-    git:
-      url: https://github.com/avarcorp/sayren-flutter.git
-      path: packages/storefront-sdk
-  sayren_store_sdk:
-    git:
-      url: https://github.com/avarcorp/sayren-flutter.git
-      path: packages/store-sdk
-```
-
 ```sh
-flutter pub get
+flutter pub add sayren_storefront_sdk   # 구매자 앱(Flutter)
+dart pub add sayren_store_sdk           # 셀러 도구·서버(Dart)
 ```
 
 ## Getting Started
@@ -190,4 +177,4 @@ cd packages/store-sdk && dart analyze && dart test
 
 ## License
 
-라이선스는 아직 정하지 않았습니다. 정해지면 이 절과 `LICENSE` 파일에 적습니다.
+Apache License 2.0. [LICENSE](LICENSE)를 참고하십시오.

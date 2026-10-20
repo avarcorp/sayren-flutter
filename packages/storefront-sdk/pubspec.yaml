@@ -1,7 +1,13 @@
 name: sayren_storefront_sdk
-description: sayren 스토어프론트 API SDK. @sayren/storefront-sdk와 같은 이름·사용법을 제공합니다.
-version: 0.0.0
-publish_to: none
+description: Flutter SDK for the sayren storefront API — catalog, cart, checkout, payments, buyer auth and analytics. Same API as @sayren/storefront-sdk.
+version: 0.1.0
+repository: https://github.com/avarcorp/sayren-flutter
+issue_tracker: https://github.com/avarcorp/sayren-flutter/issues
+topics:
+  - ecommerce
+  - sdk
+  - api
+  - payments
 
 environment:
   sdk: ^3.6.0
@@ -18,7 +24,7 @@ dependencies:
   # 방문 분석 ID 보관(Flutter 기본 AnalyticsEnv)
   shared_preferences: ^2.5.6
   # 직접 입력값 NFC 정규화(Node `String.prototype.normalize`)
-  unorm_dart: 0.3.2
+  unorm_dart: ^0.3.2
   # 결제창 앱 호출(카드사·은행·간편결제 앱)
   url_launcher: ^6.3.3
   # 결제창(Flutter 기본 PaymentsEnv)

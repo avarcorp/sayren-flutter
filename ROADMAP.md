@@ -968,10 +968,10 @@ Phase 0~4가 모두 끝났다. `sayren_store_sdk`는 Flutter 의존이 없는 Da
 ## 배포
 
 - `sayren_storefront_sdk`·`sayren_store_sdk`는 pub.dev에 공개 게시한다. Node SDK(`@sayren/storefront-sdk`·`@sayren/store-sdk`)도 npm 공개 패키지다
+- 라이선스는 Apache-2.0이다. 첫 버전은 두 패키지 모두 0.1.0이고, 0.x 동안 호환되지 않는 변경은 minor를 올린다
+- 게시 파일에서 `tool/`(대조 하네스)은 뺀다(`.pubignore`)
 
 ## 미정 사항
 
-- 버전 정책
-- 라이선스(Node SDK는 현재 `UNLICENSED`)
 - 모델 클래스 작성 방식(수기 작성 또는 Node 스키마 기반 코드 생성)
 - 지원 플랫폼 범위(iOS·Android 외 Web·데스크톱)

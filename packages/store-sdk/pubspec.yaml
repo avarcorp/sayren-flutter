@@ -1,7 +1,13 @@
 name: sayren_store_sdk
-description: sayren 관리 API SDK. @sayren/store-sdk와 같은 이름·사용법을 제공합니다.
-version: 0.0.0
-publish_to: none
+description: Dart SDK for the sayren admin API — products, orders, claims, settings and webhook signatures. Same API as @sayren/store-sdk.
+version: 0.1.0
+repository: https://github.com/avarcorp/sayren-flutter
+issue_tracker: https://github.com/avarcorp/sayren-flutter/issues
+topics:
+  - ecommerce
+  - sdk
+  - api
+  - webhooks
 
 environment:
   sdk: ^3.6.0
@@ -15,7 +21,7 @@ dependencies:
   crypto: ^3.0.7
   http: ^1.2.0
   # 직접 입력값 NFC 정규화(Node `String.prototype.normalize`)
-  unorm_dart: 0.3.2
+  unorm_dart: ^0.3.2
 
 dev_dependencies:
   test: ^1.25.0
