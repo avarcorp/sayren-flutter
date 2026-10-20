@@ -9,6 +9,8 @@ import 'package:sayren_storefront_sdk/auth.dart'
 import 'package:sayren_storefront_sdk/sayren_storefront_sdk.dart';
 // Flutter 없이 돌도록 핵심 로직 파일만 불러온다
 import 'package:sayren_storefront_sdk/src/analytics/index.dart';
+import 'package:sayren_storefront_sdk/src/payments/index.dart';
+import 'package:sayren_storefront_sdk/src/payments/launch.dart';
 
 import 'parity_generated.dart';
 
@@ -112,13 +114,101 @@ Future<void> main(List<String> argv) async {
   final sessionResults = await runSessions(readJson(dir, 'session-scenarios.json') as Map<String, Object?>);
   final authResults = await runAuth(readJson(dir, 'auth-scenarios.json') as Map<String, Object?>);
   final analyticsResults = runAnalytics(readJson(dir, 'analytics-scenarios.json') as Map<String, Object?>);
+  final paymentResults = await runPayments(readJson(dir, 'payments-scenarios.json') as Map<String, Object?>);
   stdout.writeln(const JsonEncoder.withIndent('  ').convert({
     'scenarios': scenarioResults,
     'schemaCases': schemaResults,
     'sessions': sessionResults,
     'auth': authResults,
     'analytics': analyticsResults,
+    'payments': paymentResults,
   }));
+}
+
+class _NoWindowEnv implements PaymentsEnv {
+  @override
+  Future<({String? returnUrl, LaunchFailure? failure})> present(
+          {String? html, String? url, required String baseUrl, required String returnUrl}) =>
+      throw StateError('결제창을 열지 않는 시나리오다');
+  @override
+  String? currentUrl() => null;
+  @override
+  DateTime now() => DateTime.utc(2026);
+  @override
+  Future<void> wait(Duration duration) async {}
+}
+
+String _cut(String s) => s.length > 120 ? s.substring(0, 120) : s;
+
+Future<List<Object?>> runPayments(Map<String, Object?> spec) async {
+  final results = <Object?>[];
+  for (final url in (spec['urls'] as List).cast<String>()) {
+    results.add(
+        {'name': 'readPaymentReturn ${_cut(url)}', 'value': readPaymentReturn(firstParams(Uri.parse(url))).toJson()});
+    results.add({'name': 'scrubReturnUrl ${_cut(url)}', 'value': scrubReturnUrl(url)});
+  }
+  for (final status in (spec['statuses'] as List).cast<Map<String, Object?>>()) {
+    final parsed = PaymentStatus.fromJson(status);
+    results.add({'name': 'paymentResultOf ${status['result']}', 'value': paymentResultOf(parsed).toJson()});
+    results.add({
+      'name': 'paymentResultOf ${status['result']} closed',
+      'value': paymentResultOf(parsed, popupClosed: true).toJson(),
+    });
+  }
+  for (final m in (spec['modes'] as List).cast<List<Object?>>()) {
+    final d = _m(m[1]);
+    results.add({
+      'name': 'resolvePaymentMode ${m[0]} ${d['userAgent']}',
+      'value': resolvePaymentMode(
+          m[0] as String?,
+          PaymentDevice(
+              userAgent: d['userAgent'] as String,
+              coarsePointer: d['coarsePointer'] as bool,
+              viewportWidth: d['viewportWidth'] as num)),
+    });
+  }
+  for (final f in (spec['flows'] as List).cast<Map<String, Object?>>()) {
+    final queue = [...(f['responses'] as List).cast<Map<String, Object?>>()];
+    final requests = <Object?>[];
+    Future<http.Response> fetch(http.Request req) async {
+      requests.add({
+        'method': req.method,
+        'url': req.url.toString(),
+        'body': req.bodyBytes.isEmpty ? null : jsonDecode(utf8.decode(req.bodyBytes)),
+      });
+      final r = queue.isEmpty ? <String, Object?>{'status': 500, 'body': null} : queue.removeAt(0);
+      return http.Response.bytes(r['status'] == 204 ? <int>[] : utf8.encode(jsonEncode(r['body'])), r['status'] as int,
+          headers: {'content-type': 'application/json'});
+    }
+
+    final client = createStorefrontClient(
+        StorefrontClientOptions(baseUrl: 'https://api.example.test/storefront/v1', storeCode: 'demo', fetch: fetch));
+    final payments = createPaymentsWith(
+        PaymentsOptions(client: client, returnUrl: spec['returnUrl'] as String, env: _NoWindowEnv()), _NoWindowEnv());
+    Map<String, Object?> outcome;
+    try {
+      final PaymentResult value;
+      if (f['op'] == 'result') {
+        value = await payments.result(f['url'] as String);
+      } else {
+        final args = f['args'] as List;
+        final o = _m(args[1]);
+        value = await payments.start(
+          args[0] as String,
+          StartOptions(
+            option: o['option'] == null ? null : PaymentOption.fromJson(_m(o['option'])),
+            coupons: (o['coupons'] as List?)?.map((c) => CouponApplication.fromJson(_m(c))).toList(),
+            pointAmount: o['pointAmount'] as int?,
+          ),
+        );
+      }
+      outcome = {'ok': true, 'value': value.toJson()};
+    } catch (error) {
+      outcome = {'ok': false, 'error': describeError(error)};
+    }
+    results.add({'name': 'flow ${f['name']}', 'requests': requests, 'outcome': outcome});
+  }
+  return results;
 }
 
 class _FakeAnalyticsEnv implements AnalyticsEnv {

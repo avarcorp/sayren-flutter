@@ -78,7 +78,8 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
 
 ### 플랫폼 의존부(`*Env`)
 
-`PaymentsEnv`·`AnalyticsEnv`는 Node에서도 브라우저 의존부를 주입하는 자리다. 이름은 같고 멤버는 Flutter 기준으로 정한다. 생략하면 SDK의 Flutter 기본 구현을 쓴다.
+`PaymentsEnv`·`AnalyticsEnv`는 Node에서도 브라우저 의존부를 주입하는 자리다. 이름은 같다. `AnalyticsEnv`의 멤버는 Node와 같고, `PaymentsEnv`의 멤버는 WebView 결제창 기준으로 정한다.
+순수 로직은 `createAnalyticsWith`·`createPaymentsWith`(env를 받는다)에 두고 대조 하네스가 이 함수를 검사한다. `createAnalytics`·`createPayments`는 Flutter 기본 env를 붙인다.
 
 ### 생성
 
@@ -110,7 +111,7 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 ### `createStorefrontClient`
 
 - [x] `StorefrontClientOptions`: `baseUrl`, `storeCode?`, `accessToken?`, `auth?`, `cartToken?`, `visitorId?`, `sessionId?`, `country?`, `host?`, `locale?`, `onCartToken?`, `session?`, `fetch?` — `session?`은 세션(`createStorefrontSession`)과 함께 만든다
-- [ ] 최상위 멤버: `accessToken`, `refreshToken`, `userinfo()`
+- [x] 최상위 멤버: `accessToken`, `refreshToken`, `userinfo()`
 
 엔드포인트 78개(경로는 `/storefront/v1` 기준):
 
@@ -236,8 +237,8 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 
 ### `createStorefrontSession`
 
-- [ ] `StorefrontSessionOptions`: `baseUrl`, `storeCode?`, `storage`, `fetch?`
-- [ ] `StorefrontSession`: `login()`, `signup()`, `refresh()`, `accessToken`, `refreshToken`, `userinfo()`, `clear()`, `subscribe()`
+- [x] `StorefrontSessionOptions`: `baseUrl`, `storeCode?`, `storage`, `fetch?`
+- [x] `StorefrontSession`: `login()`, `signup()`, `refresh()`, `accessToken`, `refreshToken`, `userinfo()`, `clear()`, `subscribe()`
 
 ### export
 
@@ -268,24 +269,24 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 - [x] `src/analytics-ids.ts` → `lib/src/analytics-ids.dart` (1): `analyticsIdsFromCookie`
 - [x] `src/client.ts` → `lib/src/client.dart` (3): `StorefrontClient`, `StorefrontClientOptions`, `createStorefrontClient`
 - [x] `src/http.ts` → `lib/src/http.dart` (4): `Query`, `TokenSource`, `ApiError`, `buildQuery`
-- [ ] `src/session.ts` → `lib/src/session.dart` (5): `createStorefrontSession`, `SessionStorage`, `STOREFRONT_SESSION_KEYS`, `StorefrontSession`, `StorefrontSessionOptions`
+- [x] `src/session.ts` → `lib/src/session.dart` (5): `createStorefrontSession`, `SessionStorage`, `STOREFRONT_SESSION_KEYS`, `StorefrontSession`, `StorefrontSessionOptions`
 - [x] `ZodError` (설계 규칙 「검증과 오류」)
 
 ## `@sayren/storefront-sdk/auth` → `auth.dart`
 
 ### `createStorefrontAuth`
 
-- [ ] `StorefrontAuthOptions`: `baseUrl`, `storeCode`, `fetch?`
-- [ ] `StorefrontAuth`: `anonymous()`, `session()`, `signUp()`, `idp()`, `idpCallback()`, `identities()`, `linkIdp()`, `linkIdpCallback()`, `unlinkIdp()`, `refresh()`, `signOut()`, `withdraw()`
-- [ ] `idp`·`linkIdp`의 복귀는 앱 딥링크로 받아 `idpCallback`·`linkIdpCallback`에 넘긴다(PKCE·state 흐름은 같다)
+- [x] `StorefrontAuthOptions`: `baseUrl`, `storeCode`, `fetch?`
+- [x] `StorefrontAuth`: `anonymous()`, `session()`, `signUp()`, `idp()`, `idpCallback()`, `identities()`, `linkIdp()`, `linkIdpCallback()`, `unlinkIdp()`, `refresh()`, `signOut()`, `withdraw()`
+- [x] `idp`·`linkIdp`의 복귀는 앱 딥링크로 받아 `idpCallback`·`linkIdpCallback`에 넘긴다(PKCE·state 흐름은 같다)
 
 ### export
 
 총 15개.
 
-- [ ] `src/auth/index.ts` → `lib/src/auth/index.dart` (6): `IdpStart`, `IdpCallbackInput`, `IdpCallbackError`, `StorefrontAuthOptions`, `createStorefrontAuth`, `StorefrontAuth`
-- [ ] `src/http.ts` → `lib/src/http.dart` (1): `ApiError`
-- [ ] `src/schemas/auth.ts` → `lib/src/schemas/auth.dart` (8): `AnonymousSession`, `LoginRequest`, `MemberIdentities`, `SignupRequest`, `SocialProvider`, `TokenPair`, `WithdrawalBlockedDetails`, `WithdrawRequest`
+- [x] `src/auth/index.ts` → `lib/src/auth/index.dart` (6): `IdpStart`, `IdpCallbackInput`, `IdpCallbackError`, `StorefrontAuthOptions`, `createStorefrontAuth`, `StorefrontAuth`
+- [x] `src/http.ts` → `lib/src/http.dart` (1): `ApiError`
+- [x] `src/schemas/auth.ts` → `lib/src/schemas/auth.dart` (8): `AnonymousSession`, `LoginRequest`, `MemberIdentities`, `SignupRequest`, `SocialProvider`, `TokenPair`, `WithdrawalBlockedDetails`, `WithdrawRequest`
 
 ## `@sayren/storefront-sdk/payments` → `payments.dart`
 
@@ -310,36 +311,39 @@ switch (result) {
 
 Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise를 돌려주고, 결과는 복귀 화면의 `result()`가 읽는다. Dart는 같은 화면에서 결과까지 돌려준다.
 
-- [ ] 결제가 필요 없으면(`status`가 `pending`이 아님) 결제창 없이 바로 결과를 돌려준다(Node `settleWithoutWindow`와 같다)
-- [ ] 결제창은 전체 화면 WebView로 띄운다. Node `launchPayment`와 같은 분기로 PG를 실행한다(스크립트형 PG는 PG JS SDK 실행, 카카오페이·PayPal·mock은 주소 이동, 그 외는 `payUrl`). PC 판정은 하지 않고 늘 모바일 결제창이다
-- [ ] WebView가 `returnUrl`로 이동하면 그 페이지를 열지 않고 주소를 가로챈다. `readPaymentReturn`으로 읽어 승인(`payments.confirm`) 또는 실패 보고(`payments.reportFailure`)를 한 번 보내고 WebView를 닫는다
-- [ ] 구매자가 WebView를 닫으면 `USER_CANCELED`로 실패 보고하고 `CANCELED`를 돌려준다
-- [ ] 결과가 `PROCESSING`이면 `expiresAt`까지 `getStatus`로 조회해 확정된 결과를 돌려준다. 그때까지 확정되지 않을 때만 `PROCESSING`이다
-- [ ] `ATTEMPT_CAPTURED`(이미 매입) 처리, 같은 복귀의 중복 승인 방지는 Node와 같다
-- [ ] 카드사·은행·간편결제 앱 호출(`intent://`, 앱 스킴)은 OS로 넘기고, 앱에서 돌아오면 WebView 결제를 이어 간다
-- [ ] `open(start)`는 결제 시작(`checkout.startPayment`)을 앱이 직접 부른 경우에 쓴다. 이후 동작은 `start`와 같다
-- [ ] `retry(paymentId, options)`는 같은 결제를 다른 옵션으로 다시 시도한다. 동작은 `start`와 같다
-- [ ] `result(url)`은 결제 중 앱이 종료돼 복귀 주소를 나중에 받은 경우(딥링크 등)에 쓴다. Node와 같게 승인·실패 보고 후 결과를 만든다
-- [ ] 확인 필요: 스크립트형 PG(토스페이먼츠·포트원·네이버페이)를 실행할 WebView 페이지의 출처와 PG 허용 도메인
+- [x] 결제가 필요 없으면(`status`가 `pending`이 아님) 결제창 없이 바로 결과를 돌려준다(Node `settleWithoutWindow`와 같다)
+- [x] 결제창은 전체 화면 WebView로 띄운다. Node `launch.ts`를 esbuild로 묶은 스크립트(`launch_js.dart`, 생성)를 SDK가 만든 HTML에 넣어 실행하므로 PG 분기는 Node와 같다(스크립트형 PG는 PG JS SDK 실행, 카카오페이·PayPal·mock은 주소 이동). 모르는 `type`이면 `payUrl`을 연다. PC 판정은 하지 않고 늘 모바일 결제창이다
+- [x] HTML은 `returnUrl`의 출처를 `baseUrl`로 두고 연다. 결제창을 열지 못하면 JS 채널 `SayrenPayments`로 실패를 받는다
+- [x] WebView가 `returnUrl`로 이동하면 그 페이지를 열지 않고 주소를 가로챈다. `readPaymentReturn`으로 읽어 승인(`payments.confirm`) 또는 실패 보고(`payments.reportFailure`)를 한 번 보내고 WebView를 닫는다
+- [x] 구매자가 WebView를 닫으면 `USER_CANCELED`로 실패 보고하고 `CANCELED`(`POPUP_CLOSED`)를 돌려준다. `payUrl` 결제창은 결제 서비스가 시도를 다루므로 보고하지 않고 상태로만 정한다
+- [x] 결과가 `PROCESSING`이면 `expiresAt`까지 `getStatus`로 조회해 확정된 결과를 돌려준다. 그때까지 확정되지 않을 때만 `PROCESSING`이다
+- [x] `ATTEMPT_CAPTURED`(이미 매입) 처리, 같은 복귀의 중복 승인 방지는 Node와 같다
+- [x] 카드사·은행·간편결제 앱 호출(`intent://`, 앱 스킴)은 OS로 넘기고, 앱에서 돌아오면 WebView 결제를 이어 간다
+- [x] `open(start)`는 결제 시작(`checkout.startPayment`)을 앱이 직접 부른 경우에 쓴다. 이후 동작은 `start`와 같다
+- [x] `retry(paymentId, options)`는 같은 결제를 다른 옵션으로 다시 시도한다. 동작은 `start`와 같다
+- [x] `result(url)`은 결제 중 앱이 종료돼 복귀 주소를 나중에 받은 경우(딥링크 등)에 쓴다. Node와 같게 승인·실패 보고 후 결과를 만든다
+- [ ] 확인 필요: 스크립트형 PG(토스페이먼츠·포트원·네이버페이)가 `returnUrl` 출처(`baseUrl`)의 WebView 페이지를 허용하는지 샌드박스 검증
+- [ ] 확인 필요: 실기기(iOS·Android)에서 WebView 결제창·앱 호출·복귀
 
 ### `PaymentsEnv` (Flutter)
 
-- [ ] `present(url)`: 결제창 WebView를 띄우고, `returnUrl`에 도착하면 그 주소를, 구매자가 닫으면 `null`을 돌려준다
-- [ ] `currentUrl()`: `result()`에서 주소를 생략했을 때 읽을 주소. 기본 구현은 `null`이고 결과는 `INVALID`다
-- [ ] 기본 구현은 앱의 루트 `Navigator`를 찾아 WebView 화면을 띄운다. 루트 `Navigator`가 없는 라우팅이면 앱이 `env`를 넘긴다
+- [x] `present({html, url, baseUrl, returnUrl})`: 결제창 WebView를 띄우고 `(returnUrl, failure)`를 돌려준다. `returnUrl`에 도착하면 그 주소, 결제창을 열지 못하면 그 실패, 구매자가 닫으면 둘 다 `null`이다
+- [x] `currentUrl()`: `result()`에서 주소를 생략했을 때 읽을 주소. 기본 구현은 `null`이고 결과는 `INVALID`다
+- [x] `now()`·`wait()`: `PROCESSING` 조회의 시각과 간격(1초). 만료 시각이 없으면 30초까지 조회한다
+- [x] 기본 구현은 앱의 루트 `Navigator`를 찾아 WebView 화면을 띄운다. 루트 `Navigator`가 없는 라우팅이면 앱이 `env`를 넘긴다
 
 ### `createPayments`
 
-- [ ] `PaymentsOptions`: `client`, `returnUrl?`, `env?`
-- [ ] `Payments`: `start()`, `retry()`, `open()`, `result()`, `getStatus()`
-- [ ] `StartOptions`: `option?`, `shippingAddress?`, `guest?`, `cashReceipt?`, `coupons?`, `pointAmount?`, `returnUrl?`
-- [ ] `RetryOptions`: `option`, `returnUrl?`, `cashReceipt?`
+- [x] `PaymentsOptions`: `client`, `returnUrl?`, `env?`
+- [x] `Payments`: `start()`, `retry()`, `open()`, `result()`, `getStatus()`
+- [x] `StartOptions`: `option?`, `shippingAddress?`, `guest?`, `cashReceipt?`, `coupons?`, `pointAmount?`, `returnUrl?`
+- [x] `RetryOptions`: `option`, `returnUrl?`, `cashReceipt?`
 
 ### export
 
 총 10개.
 
-- [ ] `src/payments/index.ts` → `lib/src/payments/index.dart` (10): `PaymentDevice`, `PaymentResult`, `PaymentsEnv`, `resolvePaymentMode`, `paymentResultOf`, `PaymentsOptions`, `StartOptions`, `RetryOptions`, `Payments`, `createPayments`
+- [x] `src/payments/index.ts` → `lib/src/payments/index.dart` (10): `PaymentDevice`, `PaymentResult`, `PaymentsEnv`, `resolvePaymentMode`, `paymentResultOf`, `PaymentsOptions`, `StartOptions`, `RetryOptions`, `Payments`, `createPayments`
 
 `resolvePaymentMode`의 `mode` 인자는 Node에서 deprecated 타입 `PaymentMode`다. Dart는 `PaymentMode` 없이 `String?`으로 받는다.
 
@@ -347,18 +351,20 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 
 ### `createAnalytics`
 
-- [ ] `AnalyticsOptions`: `baseUrl`, `storeCode`, `consent?`, `autoPageViews?`, `debug?`, `cookieDomain?`, `flushIntervalMs?`
-- [ ] `Analytics`: `track()`, `page()`, `setConsent()`, `ids()`, `flush()`, `destroy()`
-- [ ] Node는 브라우저가 아니면 아무것도 하지 않는 객체를 돌려준다. Dart는 Flutter 기본 `AnalyticsEnv`로 동작한다
-- [ ] 방문자·세션 ID는 쿠키 대신 앱 저장소에 둔다. `ids()` 값을 `StorefrontClientOptions(visitorId:, sessionId:)`에 넘기는 사용법은 같다
-- [ ] `autoPageViews`는 시작할 때 첫 페이지뷰만 보낸다. 화면 이동의 페이지뷰는 앱이 `page()`를 부른다
-- [ ] `cookieDomain`은 받기만 하고 쓰지 않는다(앱에 쿠키 도메인이 없다)
+- [x] `AnalyticsOptions`: `baseUrl`, `storeCode`, `consent?`, `autoPageViews?`, `debug?`, `cookieDomain?`, `flushIntervalMs?`
+- [x] `Analytics`: `track()`, `page()`, `setConsent()`, `ids()`, `flush()`, `destroy()`
+- [x] Node는 브라우저가 아니면 아무것도 하지 않는 객체를 돌려준다. Dart는 Flutter 기본 `AnalyticsEnv`로 동작한다
+- [x] 방문자·세션 ID는 쿠키 대신 앱 저장소에 둔다. `ids()` 값을 `StorefrontClientOptions(visitorId:, sessionId:)`에 넘기는 사용법은 같다
+- [x] `autoPageViews`는 루트 `Navigator`의 화면 이름(`RouteSettings.name`)이 바뀔 때(500ms 확인) 페이지뷰를 보낸다. 주소는 `app://{storeCode}{화면 이름}`이다. 이름 없는 화면만 쓰면 `autoPageViews: false`로 두고 앱이 `page()`를 부른다
+- [x] 앱 생명주기(백그라운드 전환·종료)를 Node의 `visibilitychange`·`pagehide`로 옮긴다
+- [ ] 확인 필요: 서버가 `app://` 주소의 페이지뷰를 받는지
+- [x] `cookieDomain`은 받기만 하고 쓰지 않는다(앱에 쿠키 도메인이 없다). 저장은 `shared_preferences`의 `sayren.analytics.` 접두사 키다
 
 ### export
 
 총 7개.
 
-- [ ] `src/analytics/index.ts` → `lib/src/analytics/index.dart` (7): `AnalyticsConsent`, `AnalyticsOptions`, `AnalyticsTrackInput`, `Analytics`, `AnalyticsEnv`, `createAnalytics`, `createAnalyticsWith`
+- [x] `src/analytics/index.ts` → `lib/src/analytics/index.dart` (7): `AnalyticsConsent`, `AnalyticsOptions`, `AnalyticsTrackInput`, `Analytics`, `AnalyticsEnv`, `createAnalytics`, `createAnalyticsWith`
 
 ---
 
@@ -931,10 +937,13 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 | Phase 3 | `@sayren/store-sdk` 기본 엔트리포인트 |
 | Phase 4 | `@sayren/store-sdk/server` |
 
+Phase 0·1·2는 끝났고 Phase 3·4가 남았다.
+
 동작 대조 하네스(`tool/parity`)는 같은 자료를 npm의 `@sayren/storefront-sdk`와 Dart SDK에 넣고 결과를 비교한다.
 
 - 시나리오: 옵션·인자·서버 응답 → 요청(메서드·URL·헤더·본문)과 결과(파싱 값·`ApiError`·`ZodError` 이슈 코드와 경로). 손으로 쓴 `scenarios.json`과 메서드마다 생성한 `generated/scenarios.json`이다.
 - 스키마 대조: export 스키마마다 유효 예시·`null`·키 하나 빼기·키 하나 타입 바꾸기(`generated/schema-cases.json`).
+- 세션·인증·분석·결제: `session-scenarios.json`·`auth-scenarios.json`·`analytics-scenarios.json`·`payments-scenarios.json`. 분석·결제는 같은 가짜 env를 양쪽에 넣는다.
 
 실행은 `tool/parity`에서 `npm install` 후 `node compare.mjs`(`--verbose`면 모든 항목)다. 대조로 볼 수 없는 Dart 쪽 동작(getter 캐스트, Future 오류 전달, `fromJson` 검증, 모델 생성자, `Nullable`)은 `packages/storefront-sdk/test`의 `dart test`가 확인한다.
 

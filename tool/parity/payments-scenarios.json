@@ -1,0 +1,639 @@
+{
+  "$comment": "결제 대조 — 복귀 주소 해석·주소 정리(Node launch.ts 묶음과 비교), paymentResultOf·resolvePaymentMode, result()·start() 흐름.",
+  "returnUrl": "https://shop.example.com/payments/return",
+  "urls": [
+    "https://shop.example.com/payments/return",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=portone&code=USER_CANCEL&message=%EC%B7%A8%EC%86%8C",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=portone&code=F&pgCode=CANCELED_BY_USER&pgMessage=%EC%82%AC%EC%9A%A9%EC%9E%90+%EC%B7%A8%EC%86%8C",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=portone&code=DECLINED_X&message=%EA%B1%B0%EC%A0%88",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=portone&txId=tx_1",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=portone",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=kakaopay&sayrenResult=cancel",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=kakaopay&sayrenResult=fail",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=kakaopay&sayrenResult=success&pg_token=pgt",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=kakaopay&sayrenResult=success",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=naverpay&resultCode=Success&paymentId=np_1",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=naverpay&resultCode=Success",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=naverpay&resultCode=UserCancel&resultMessage=%EC%B7%A8%EC%86%8C",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=naverpay&resultCode=OwnerAuthFail",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=naverpay",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=tosspayments&sayrenResult=fail&code=PAY_PROCESS_CANCELED&message=%EC%B7%A8%EC%86%8C",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=tosspayments&sayrenResult=fail",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=tosspayments&sayrenResult=fail&code=REJECT_CARD_COMPANY",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=tosspayments&sayrenResult=success&paymentKey=pk_1&amount=15000",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=tosspayments&sayrenResult=success&paymentKey=pk_1&amount=abc",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=tosspayments&sayrenResult=success&paymentKey=pk_1&amount=",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=tosspayments&sayrenResult=success&paymentKey=pk_1",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=tosspayments&sayrenResult=success&paymentKey=pk_1&amount=+1e3+",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=tosspayments&sayrenResult=success&paymentKey=pk_1&amount=0x10",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=mock&txId=x",
+    "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=portone&code=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&message=%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80%EA%B0%80",
+    "https://shop.example.com/payments/return?sayrenPaymentId=a&sayrenPaymentId=b&sayrenAttemptId=t&sayrenToken=k&sayrenPg=portone&txId=1&txId=2",
+    "https://shop.example.com/payments/return?keep=a+b&sayrenToken=t&x=%26%3D&y=%EA%B0%80#frag",
+    "https://shop.example.com?sayrenToken=t",
+    "https://shop.example.com/p/%EA%B0%80?paymentKey=1&z=1"
+  ],
+  "statuses": [
+    {
+      "paymentId": "p",
+      "status": "completed",
+      "result": "COMPLETED",
+      "orderId": "o",
+      "expiresAt": "x",
+      "lastFailure": null,
+      "testPayment": false
+    },
+    {
+      "paymentId": "p",
+      "status": "completed",
+      "result": "COMPLETED",
+      "orderId": "",
+      "expiresAt": "x",
+      "lastFailure": null,
+      "testPayment": false
+    },
+    {
+      "paymentId": "p",
+      "status": "failed",
+      "result": "CANCELED",
+      "expiresAt": "x",
+      "orderId": null,
+      "lastFailure": null,
+      "testPayment": false
+    },
+    {
+      "paymentId": "p",
+      "status": "failed",
+      "result": "FAILED",
+      "lastFailure": {
+        "attemptId": "a",
+        "category": "DECLINED",
+        "code": "C",
+        "message": "M",
+        "optionUnavailable": true
+      },
+      "expiresAt": "x",
+      "orderId": null,
+      "testPayment": false
+    },
+    {
+      "paymentId": "p",
+      "status": "failed",
+      "result": "FAILED",
+      "lastFailure": {
+        "attemptId": "a",
+        "category": "DECLINED",
+        "code": "C",
+        "message": "M",
+        "optionUnavailable": false
+      },
+      "expiresAt": "x",
+      "orderId": null,
+      "testPayment": false
+    },
+    {
+      "paymentId": "p",
+      "status": "expired",
+      "result": "EXPIRED",
+      "expiresAt": "x",
+      "orderId": null,
+      "lastFailure": null,
+      "testPayment": false
+    },
+    {
+      "paymentId": "p",
+      "status": "pending",
+      "result": "PENDING",
+      "expiresAt": "x",
+      "orderId": null,
+      "lastFailure": null,
+      "testPayment": false
+    },
+    {
+      "paymentId": "p",
+      "status": "processing",
+      "result": "PROCESSING",
+      "expiresAt": "x",
+      "orderId": null,
+      "lastFailure": null,
+      "testPayment": false
+    },
+    {
+      "paymentId": "p",
+      "status": "pending",
+      "result": "NEW_VALUE",
+      "expiresAt": "x",
+      "orderId": null,
+      "lastFailure": null,
+      "testPayment": false
+    }
+  ],
+  "modes": [
+    [
+      null,
+      {
+        "userAgent": "Mozilla/5.0 (Macintosh)",
+        "coarsePointer": false,
+        "viewportWidth": 1400
+      }
+    ],
+    [
+      null,
+      {
+        "userAgent": "Mozilla/5.0 (iPhone)",
+        "coarsePointer": true,
+        "viewportWidth": 390
+      }
+    ],
+    [
+      null,
+      {
+        "userAgent": "Mozilla/5.0 (X11)",
+        "coarsePointer": true,
+        "viewportWidth": 700
+      }
+    ],
+    [
+      null,
+      {
+        "userAgent": "Mozilla/5.0 (X11)",
+        "coarsePointer": true,
+        "viewportWidth": 0
+      }
+    ],
+    [
+      "popup",
+      {
+        "userAgent": "iPhone",
+        "coarsePointer": true,
+        "viewportWidth": 300
+      }
+    ],
+    [
+      "auto",
+      {
+        "userAgent": "x",
+        "coarsePointer": false,
+        "viewportWidth": 300
+      }
+    ]
+  ],
+  "flows": [
+    {
+      "name": "승인 → 완료",
+      "op": "result",
+      "url": "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=tosspayments&sayrenResult=success&paymentKey=pk_1&amount=15000",
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "orderId": "ord_1",
+              "status": "PAID",
+              "totalAmount": 15000,
+              "paidAt": "2026-01-01T00:00:00.000Z"
+            },
+            "error": null
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "paymentId": "pay_1",
+              "status": "completed",
+              "result": "COMPLETED",
+              "orderId": "ord_1",
+              "lastFailure": null,
+              "testPayment": true,
+              "expiresAt": "2026-01-01T00:30:00.000Z"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "승인 → 이미 매입 → 거래 id로 다시 승인",
+      "op": "result",
+      "url": "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=portone&txId=tx_1",
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "meta": {
+              "status": 409,
+              "code": "ATTEMPT_CAPTURED",
+              "message": "ATTEMPT_CAPTURED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "ATTEMPT_CAPTURED",
+              "message": "ATTEMPT_CAPTURED",
+              "details": {
+                "pgTransactionId": "tx_real",
+                "amount": 15000
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "orderId": "ord_1",
+              "status": "PAID",
+              "totalAmount": 15000,
+              "paidAt": "2026-01-01T00:00:00.000Z"
+            },
+            "error": null
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "paymentId": "pay_1",
+              "status": "completed",
+              "result": "COMPLETED",
+              "orderId": "ord_1",
+              "lastFailure": null,
+              "testPayment": true,
+              "expiresAt": "2026-01-01T00:30:00.000Z"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "승인 실패(402) → 상태로 결과",
+      "op": "result",
+      "url": "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=kakaopay&sayrenResult=success&pg_token=pgt",
+      "responses": [
+        {
+          "status": 402,
+          "body": {
+            "meta": {
+              "status": 402,
+              "code": "PAYMENT_DECLINED",
+              "message": "PAYMENT_DECLINED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "PAYMENT_DECLINED",
+              "message": "PAYMENT_DECLINED"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "paymentId": "pay_1",
+              "status": "pending",
+              "result": "FAILED",
+              "orderId": null,
+              "lastFailure": {
+                "attemptId": "att_1",
+                "category": "DECLINED",
+                "code": "CARD_DECLINED",
+                "message": "카드가 거절됐습니다",
+                "optionUnavailable": true
+              },
+              "testPayment": true,
+              "expiresAt": "2026-01-01T00:30:00.000Z"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "실패 보고 → 이미 매입 → 승인",
+      "op": "result",
+      "url": "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=naverpay&resultCode=OwnerAuthFail",
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "meta": {
+              "status": 409,
+              "code": "ATTEMPT_CAPTURED",
+              "message": "ATTEMPT_CAPTURED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "ATTEMPT_CAPTURED",
+              "message": "ATTEMPT_CAPTURED",
+              "details": {
+                "pgTransactionId": "np_real"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "orderId": "ord_1",
+              "status": "PAID",
+              "totalAmount": 15000,
+              "paidAt": "2026-01-01T00:00:00.000Z"
+            },
+            "error": null
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "paymentId": "pay_1",
+              "status": "completed",
+              "result": "COMPLETED",
+              "orderId": "ord_1",
+              "lastFailure": null,
+              "testPayment": true,
+              "expiresAt": "2026-01-01T00:30:00.000Z"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "실패 보고 → 취소",
+      "op": "result",
+      "url": "https://shop.example.com/payments/return?sayrenPaymentId=pay_1&sayrenAttemptId=att_1&sayrenToken=tok_1&sayrenPg=kakaopay&sayrenResult=cancel",
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "paymentId": "pay_1",
+              "attemptId": "att_1",
+              "category": "DECLINED"
+            },
+            "error": null
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "paymentId": "pay_1",
+              "status": "pending",
+              "result": "CANCELED",
+              "orderId": null,
+              "lastFailure": {
+                "attemptId": "att_1",
+                "category": "USER_CANCELED",
+                "code": "USER_CANCEL",
+                "message": "결제를 취소했습니다"
+              },
+              "testPayment": true,
+              "expiresAt": "2026-01-01T00:30:00.000Z"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "토큰 없음 → 상태만",
+      "op": "result",
+      "url": "https://shop.example.com/payments/return?sayrenPaymentId=pay_1",
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "paymentId": "pay_1",
+              "status": "pending",
+              "result": "PENDING",
+              "orderId": null,
+              "lastFailure": null,
+              "testPayment": true,
+              "expiresAt": "2026-01-01T00:30:00.000Z"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "만료",
+      "op": "result",
+      "url": "https://shop.example.com/payments/return?sayrenPaymentId=pay_1",
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "paymentId": "pay_1",
+              "status": "pending",
+              "result": "EXPIRED",
+              "orderId": null,
+              "lastFailure": null,
+              "testPayment": true,
+              "expiresAt": "2026-01-01T00:30:00.000Z"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "상태 조회 실패 → 확인 중",
+      "op": "result",
+      "url": "https://shop.example.com/payments/return?sayrenPaymentId=pay_1",
+      "responses": [
+        {
+          "status": 503,
+          "body": {
+            "meta": {
+              "status": 503,
+              "code": "STORE_SUSPENDED",
+              "message": "STORE_SUSPENDED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "STORE_SUSPENDED",
+              "message": "STORE_SUSPENDED"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "결제 정보 없는 주소",
+      "op": "result",
+      "url": "https://shop.example.com/payments/return",
+      "responses": []
+    },
+    {
+      "name": "주소가 아님",
+      "op": "result",
+      "url": "nope",
+      "responses": []
+    },
+    {
+      "name": "결제가 필요 없음 → 창 없이 완료",
+      "op": "start",
+      "args": [
+        "chk_1",
+        {
+          "pointAmount": 15000,
+          "coupons": []
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "paymentId": "pay_1",
+              "status": "completed",
+              "orderId": "ord_1",
+              "attemptId": null,
+              "payUrl": null,
+              "launch": null,
+              "expiresAt": "2026-01-01T00:30:00.000Z",
+              "testPayment": false,
+              "amounts": {
+                "productAmount": 15000,
+                "deliveryFee": 0,
+                "totalAmount": 0,
+                "couponDiscountAmount": 0,
+                "deliveryDiscountAmount": 0,
+                "pointAmount": 15000
+              },
+              "option": {
+                "pg": "tosspayments",
+                "method": "CARD"
+              },
+              "delivery": {
+                "baseFee": 0,
+                "remoteSurcharge": 0,
+                "remoteArea": "NONE",
+                "remoteAreaLabel": "",
+                "bundleCount": 1,
+                "freeByThreshold": true,
+                "zipCode": null
+              }
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "결제 시작 실패 → ApiError",
+      "op": "start",
+      "args": [
+        "chk_1",
+        {
+          "option": {
+            "pg": "tosspayments",
+            "method": "CARD"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "meta": {
+              "status": 409,
+              "code": "PAYMENT_OPTION_UNAVAILABLE",
+              "message": "PAYMENT_OPTION_UNAVAILABLE",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "PAYMENT_OPTION_UNAVAILABLE",
+              "message": "PAYMENT_OPTION_UNAVAILABLE"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

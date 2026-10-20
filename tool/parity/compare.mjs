@@ -25,7 +25,7 @@ function diff(a, b, path = "$", out = []) {
 const verbose = process.argv.includes("--verbose");
 let failed = 0;
 let total = 0;
-for (const key of ["scenarios", "schemaCases", "sessions", "auth", "analytics"]) {
+for (const key of ["scenarios", "schemaCases", "sessions", "auth", "analytics", "payments"]) {
   let bad = 0;
   for (let i = 0; i < node[key].length; i++) {
     total++;

@@ -128,6 +128,9 @@ String _percentEncode(String value, String safe, {bool spaceAsPlus = false}) {
   return out.toString();
 }
 
+/// `URLSearchParams` 직렬화의 한 조각(공백은 `+`)이다. SDK 내부용이다
+String formEncode(String value) => _percentEncode(value, _formSafe, spaceAsPlus: true);
+
 /// JS `encodeURIComponent`
 String encodeURIComponent(String value) => _percentEncode(value, _uriComponentSafe);
 

@@ -212,4 +212,39 @@ for (const s of analyticsSpec.scenarios) {
   analyticsResults.push({ name: s.name, steps, sent, cookies: cookieValues, listeners: listenerCounts });
 }
 
-process.stdout.write(`${JSON.stringify({ scenarios: scenarioResults, schemaCases: schemaResults, sessions: sessionResults, auth: authResults, analytics: analyticsResults }, null, 2)}\n`);
+// 결제 — 복귀 주소 해석·정리(launch.ts 묶음), paymentResultOf·resolvePaymentMode, result()·start() 흐름
+const launch = await import("./generated/launch.mjs");
+const { createPayments, paymentResultOf, resolvePaymentMode } = await import("@sayren/storefront-sdk/payments");
+const paySpec = read("./payments-scenarios.json");
+const paymentResults = [];
+for (const url of paySpec.urls) {
+  paymentResults.push({ name: `readPaymentReturn ${url.slice(0, 120)}`, value: json(launch.readPaymentReturn(new URL(url).searchParams)) });
+  paymentResults.push({ name: `scrubReturnUrl ${url.slice(0, 120)}`, value: launch.scrubReturnUrl(url) });
+}
+for (const status of paySpec.statuses) {
+  paymentResults.push({ name: `paymentResultOf ${status.result}`, value: json(paymentResultOf(status)) });
+  paymentResults.push({ name: `paymentResultOf ${status.result} closed`, value: json(paymentResultOf(status, { popupClosed: true })) });
+}
+for (const [mode, device] of paySpec.modes) paymentResults.push({ name: `resolvePaymentMode ${mode} ${device.userAgent}`, value: resolvePaymentMode(mode ?? undefined, device) });
+for (const f of paySpec.flows) {
+  const queue = [...f.responses];
+  const requests = [];
+  const fetch = async (url, init) => {
+    requests.push({ method: init.method, url, body: init.body === undefined ? null : JSON.parse(init.body) });
+    const r = queue.shift() ?? { status: 500, body: null };
+    return new Response(r.status === 204 ? null : JSON.stringify(r.body), { status: r.status, headers: { "content-type": "application/json" } });
+  };
+  const client = sdk.createStorefrontClient({ baseUrl: "https://api.example.test/storefront/v1", storeCode: "demo", fetch });
+  const env = { navigate() {}, currentUrl: () => paySpec.returnUrl, device: () => ({ userAgent: "x", coarsePointer: false, viewportWidth: 1000 }), replaceUrl() {} };
+  const payments = createPayments({ client, returnUrl: paySpec.returnUrl, env });
+  let outcome;
+  try {
+    const value = f.op === "result" ? await payments.result(f.url) : await payments.start(...f.args);
+    outcome = { ok: true, value: json(value) };
+  } catch (error) {
+    outcome = { ok: false, error: describeError(error) };
+  }
+  paymentResults.push({ name: `flow ${f.name}`, requests, outcome });
+}
+
+process.stdout.write(`${JSON.stringify({ scenarios: scenarioResults, schemaCases: schemaResults, sessions: sessionResults, auth: authResults, analytics: analyticsResults, payments: paymentResults }, null, 2)}\n`);
