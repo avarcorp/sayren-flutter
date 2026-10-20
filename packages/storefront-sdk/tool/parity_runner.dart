@@ -13,8 +13,11 @@ final Map<String, Call> calls = {
   'catalog.listCategories': (c, a) => c.catalog.listCategories(),
   'catalog.listCollections': (c, a) => c.catalog.listCollections(
       a.isEmpty ? null : PageParams(page: (a[0] as Map)['page'] as int?, size: (a[0] as Map)['size'] as int?)),
-  'member.updateConsents': (c, a) =>
-      c.member.updateConsents(ConsentUpdateRequest.fromJson((a[0] as Map).cast<String, Object?>())),
+  'member.updateConsents': (c, a) {
+    final body = a[0] as Map;
+    return c.member.updateConsents(ConsentUpdateRequest(
+        terms: body['terms'] as bool?, privacy: body['privacy'] as bool?, marketing: body['marketing'] as bool?));
+  },
 };
 
 Object? toOption(Object? value) => value is Map && value.containsKey(r'$fn') ? () => value[r'$fn'] as String? : value;

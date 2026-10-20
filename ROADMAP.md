@@ -38,6 +38,7 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
 - export되지 않은 인라인 객체 인자(`getProductCalendar`의 `{ from, to, variantId }`, `getGuestOrder`의 `{ phone, orderPassword }` 등)는 같은 이름의 네임드 인자다.
 - 위치 인자는 같은 순서의 위치 인자다. Node의 선택 인자(`params?`)는 Dart 선택 위치 인자(`[params]`)이고, 기본값(`input = {}`)도 같다.
 - `TokenSource`는 `String` 또는 `String? Function()`을 받는다(Dart에 union이 없어 `Object?`로 받고 실행 중 검사한다).
+- nullable이면서 선택인 요청 필드(「null을 주면 지운다」)는 `Nullable<T>?`로 받는다. 생략하면 보내지 않고, `Nullable(null)`이면 null, `Nullable(값)`이면 그 값을 보낸다. 그 밖의 선택 필드는 `T?`이고 null이면 보내지 않는다.
 
 ### 타입
 
@@ -45,15 +46,21 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
 - 판별 union(`PaymentResult`, `AnalyticsTrackInput` 등)은 같은 이름의 sealed class다. 판별 필드(`status`, `name` 등)는 Node와 같은 이름·문자열 값을 갖는다.
   분기는 Node처럼 판별 필드로 하고, 변형별 필드는 하위 클래스로 읽는다. 하위 클래스 이름은 `{union 이름}{판별 값 PascalCase}`다(`PaymentResultCompleted`, `AnalyticsTrackInputProductView`).
 - zod 스키마 상수(`productCardSchema`)는 같은 이름의 스키마 상수다. `parse`, `safeParse`(`success`·`data`·`error`), enum 스키마의 `options`, object 스키마의 `shape`를 제공한다.
-- `z.infer` 타입(`ProductCard`)은 같은 이름의 불변 클래스다(`fromJson`·`toJson`).
+- `z.infer` 타입(`ProductCard`)은 같은 이름의 불변 클래스다. 모델은 다음을 갖는다.
+  - 기본 생성자: 필드를 네임드 인자로 받고 검증하지 않는다(테스트·미리보기 데이터용). 기본값이 있는 필드는 같은 기본값의 선택 인자, nullable 필드는 `required T?`, 선택 필드는 `T?`(null이면 키 없음)다.
+  - `fromJson`: 같은 이름의 스키마로 검증해 만든다(`StorefrontStore.fromJson(json)` = `storefrontStoreSchema.parse(json)`). `Page<T>.fromJson(json, item)`은 항목 스키마를 받는다.
+  - `toJson`, 값 비교(`==`), `toString`. 검증한 JSON은 비공개이고 필드는 getter로만 읽는다.
+- 스키마 타입 `ZodType`·`ZodObject`·`ZodEnum`·`ZodArray`는 export한다(스키마 상수의 문서와 타입 표기용). 스키마 생성자 모음 `z`는 내부용이다.
 
 - Node의 인라인 객체 타입(옵션 필드 `auth: { accessToken? }`, 응답 필드 `StorefrontStore.market` 등)은 같은 필드 이름의 레코드다(`auth: (accessToken: '…')`).
 - 제네릭 익명 타입인 `pageSchema(item)`의 출력은 `Page<T>`(`PageInfo` + `contents`)다.
-- 클라이언트 네임스페이스(`client.catalog` 등)는 비공개 클래스다. 사용자는 타입 이름을 쓰지 않고 `client.catalog.…`로만 부른다.
+- 클라이언트 네임스페이스(`client.catalog` 등)는 공개 클래스다. pub 문서에 메서드가 나오게 하려는 것이다. 이름은 `{클라이언트 타입}{네임스페이스 PascalCase}`다(`StorefrontClientCatalog`, `client.me.customerInquiries`는 `StorefrontClientMeCustomerInquiries`). 생성자는 비공개다.
 
 ### 검증과 오류
 
 - Node처럼 요청 본문은 보내기 전에, 응답은 받은 뒤에 스키마로 검증한다.
+- 클라이언트 메서드는 모두 `async`다. 요청 전 검증 실패도 동기 예외가 아니라 Future 오류로 전달한다(Node는 동기로 던지지만 Dart 관례를 따른다).
+- 기본 HTTP(`fetch` 생략)는 클라이언트마다 `http.Client` 하나를 재사용한다.
 - 검증 실패는 `ZodError`를 던진다. Node SDK는 `zod`의 `ZodError`를 그대로 던지므로, Dart SDK는 같은 이름의 클래스(`issues`)를 기본 엔트리포인트에서 export한다.
 - HTTP 실패는 `ApiError`, 관리 API의 승인 대기(202)는 `ApprovalPendingError`다.
 
@@ -907,7 +914,7 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 | Phase 4 | `@sayren/store-sdk/server` |
 
 동작 대조 하네스(`tool/parity`)는 같은 시나리오(옵션·인자·서버 응답)를 npm의 `@sayren/storefront-sdk`와 Dart SDK에 넣고 요청(메서드·URL·헤더·본문)과 결과(파싱 값·`ApiError`·`ZodError` 이슈 코드와 경로)를 비교한다.
-실행은 `tool/parity`에서 `npm install` 후 `node compare.mjs`다. 메서드를 추가하면 시나리오와 `packages/storefront-sdk/tool/parity_runner.dart`의 호출 표에 함께 넣는다.
+실행은 `tool/parity`에서 `npm install` 후 `node compare.mjs`다. 대조로 볼 수 없는 Dart 쪽 동작(Future 오류 전달, `fromJson` 검증, 모델 생성자, `Nullable`)은 `packages/storefront-sdk/test`의 `dart test`가 확인한다. 메서드를 추가하면 시나리오와 `packages/storefront-sdk/tool/parity_runner.dart`의 호출 표에 함께 넣는다.
 
 목록 대조 스크립트는 Node SDK에서 뽑은 이름 목록과 Dart 패키지의 공개 이름 목록이 같은지 확인한다. 각 Phase는 이 대조를 통과해야 끝난다.
 

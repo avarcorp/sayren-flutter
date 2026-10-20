@@ -35,11 +35,18 @@
 /// 저장해 둔 JSON을 다시 읽을 때 `parse`·`safeParse`로 검증하십시오.
 library;
 
-export 'src/client.dart' show StorefrontClient, StorefrontClientOptions, createStorefrontClient;
+export 'src/client.dart'
+    show
+        StorefrontClient,
+        StorefrontClientCatalog,
+        StorefrontClientMember,
+        StorefrontClientOptions,
+        StorefrontClientStore,
+        createStorefrontClient;
 export 'src/http.dart' show ApiError, Fetch, Query, TokenSource, buildQuery;
 export 'src/schemas/analytics.dart';
 export 'src/schemas/catalog.dart';
 export 'src/schemas/common.dart';
 export 'src/schemas/consent.dart';
 export 'src/schemas/store.dart';
-export 'src/zod.dart' show SafeParseResult, ZodError, ZodIssue;
+export 'src/zod.dart' show Nullable, SafeParseResult, ZodArray, ZodEnum, ZodError, ZodIssue, ZodObject, ZodType;

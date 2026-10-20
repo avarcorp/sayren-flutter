@@ -68,6 +68,8 @@ abstract class ZodType<T> {
   const ZodType();
 
   /// [input]을 검증해 출력 값을 돌려줍니다. 실패는 [issues]에 쌓고, [path]는 현재 값의 위치입니다.
+  ///
+  /// SDK 내부용입니다. 검증은 [parse]·[safeParse]를 사용하십시오.
   Object? run(Object? input, List<Object> path, List<ZodIssue> issues);
 
   /// [input]을 검증하고 출력 값을 돌려줍니다. 맞지 않으면 [ZodError]를 던집니다.
@@ -433,20 +435,22 @@ abstract final class z {
   static ZodLazy<T> lazy<T>(ZodType<T> Function() getter) => ZodLazy<T>(getter);
 }
 
-/// 객체 스키마의 출력 — 검증을 지난 JSON을 그대로 들고, 모델 클래스가 필드 getter를 둔다.
+/// 객체 스키마의 출력 모델의 기반 클래스입니다(SDK 내부용, export하지 않는다).
+///
+/// 검증을 마친 JSON을 비공개로 들고, 모델 클래스는 [jsonOf]로 읽어 필드 getter를 둔다.
 /// 키가 있고 없음이 Node 결과와 같게 유지된다(없는 선택 필드는 `toJson`에도 없다).
 abstract class ParsedObject {
-  /// 검증을 마친 JSON으로 만듭니다.
-  ParsedObject.fromJson(Map<String, Object?> json) : json = Map.unmodifiable(json);
+  /// JSON으로 만든다. 검증하지 않는다.
+  ParsedObject(Map<String, Object?> json) : _json = Map.unmodifiable(json);
 
-  /// 검증을 마친 JSON입니다. 선언한 키만 담깁니다.
-  final Map<String, Object?> json;
+  final Map<String, Object?> _json;
 
   /// JSON으로 바꿉니다. 중첩 모델도 JSON으로 바꿉니다.
-  Map<String, Object?> toJson() => {for (final e in json.entries) e.key: _encode(e.value)};
+  Map<String, Object?> toJson() => {for (final e in _json.entries) e.key: _encode(e.value)};
 
   static Object? _encode(Object? value) => switch (value) {
         ParsedObject() => value.toJson(),
+        Nullable() => _encode(value.value),
         List() => [for (final v in value) _encode(v)],
         Map() => {for (final e in value.entries) e.key as String: _encode(e.value)},
         _ => value,
@@ -457,11 +461,14 @@ abstract class ParsedObject {
       other.runtimeType == runtimeType && other is ParsedObject && _deepEquals(toJson(), other.toJson());
 
   @override
-  int get hashCode => Object.hashAll(json.keys);
+  int get hashCode => Object.hashAll(_json.keys);
 
   @override
   String toString() => '$runtimeType${toJson()}';
 }
+
+/// 모델 getter가 읽는 JSON이다(SDK 내부용).
+Map<String, Object?> jsonOf(ParsedObject object) => object._json;
 
 bool _deepEquals(Object? a, Object? b) {
   if (a is Map && b is Map) {
@@ -477,8 +484,23 @@ bool _deepEquals(Object? a, Object? b) {
   return a == b;
 }
 
-/// 선택 필드를 JSON에 담는다 — null이면 키를 싣지 않는다(JS에서 `undefined`를 넘긴 것과 같다)
+/// 요청 본문에서 생략과 null을 구분하는 값입니다.
+///
+/// nullable이면서 선택인 요청 필드(예: 「null을 주면 지운다」)에 사용합니다.
+///
+/// - 인자를 생략하면 그 필드를 보내지 않습니다(그대로 둡니다).
+/// - `Nullable(null)`이면 null을 보냅니다(지웁니다).
+/// - `Nullable('02-000-0000')`이면 그 값을 보냅니다(바꿉니다).
+final class Nullable<T> {
+  /// [value]를 보낼 값으로 만듭니다. null이면 null을 보냅니다.
+  const Nullable(this.value);
+
+  /// 보낼 값입니다.
+  final T? value;
+}
+
+/// 선택 필드를 JSON에 담는다 — null이면 키를 싣지 않고(JS `undefined`와 같다), [Nullable]이면 그 값을 싣는다
 Map<String, Object?> compact(Map<String, Object?> fields) => {
       for (final e in fields.entries)
-        if (e.value != null) e.key: e.value
+        if (e.value is Nullable) e.key: (e.value as Nullable).value else if (e.value != null) e.key: e.value,
     };

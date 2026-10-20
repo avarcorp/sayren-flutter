@@ -138,51 +138,54 @@ class StorefrontClient {
         if (issued != null && issued.isNotEmpty) options.onCartToken?.call(issued);
       },
     ));
-    store = _Store(http_);
-    catalog = _Catalog(http_);
-    member = _Member(http_);
+    store = StorefrontClientStore._(http_);
+    catalog = StorefrontClientCatalog._(http_);
+    member = StorefrontClientMember._(http_);
   }
 
   /// 상점 공개 설정입니다.
-  late final _Store store;
+  late final StorefrontClientStore store;
 
   /// 카테고리·상품·컬렉션 등 카탈로그입니다.
-  late final _Catalog catalog;
+  late final StorefrontClientCatalog catalog;
 
   /// 로그인한 회원의 정보·동의·주소·찜입니다.
-  late final _Member member;
+  late final StorefrontClientMember member;
 }
 
-class _Store {
-  const _Store(this._http);
+/// `client.store` 네임스페이스입니다. 상점 공개 설정을 다룹니다.
+class StorefrontClientStore {
+  const StorefrontClientStore._(this._http);
 
   final Http _http;
 
   /// 상점 공개 설정을 가져옵니다. `GET /store`
   ///
   /// 상점 이름, 고객센터, 사업자 정보, 판매 권역, 로그인 방법, 비회원 주문·결제 가능 여부를 담습니다.
-  Future<StorefrontStore> get() => _http.request('GET', '/store', storefrontStoreSchema);
+  Future<StorefrontStore> get() async => _http.request('GET', '/store', storefrontStoreSchema);
 }
 
-class _Catalog {
-  const _Catalog(this._http);
+/// `client.catalog` 네임스페이스입니다. 카테고리·상품·컬렉션 등 카탈로그를 다룹니다.
+class StorefrontClientCatalog {
+  const StorefrontClientCatalog._(this._http);
 
   final Http _http;
 
   /// 카테고리 트리를 가져옵니다. `GET /categories`
   ///
   /// 최상위 카테고리 목록이고, 하위 카테고리는 [CategoryNode.children]에 있습니다.
-  Future<List<CategoryNode>> listCategories() => _http.request('GET', '/categories', z.array(categoryNodeSchema));
+  Future<List<CategoryNode>> listCategories() async => _http.request('GET', '/categories', z.array(categoryNodeSchema));
 
   /// 노출 중인 컬렉션 목록을 가져옵니다. `GET /collections`
   ///
   /// 노출이 켜져 있고 노출 기간 안인 컬렉션만, 셀러가 정한 순서로 돌려줍니다.
-  Future<Page<StorefrontCollection>> listCollections([PageParams? params]) => _http.request(
+  Future<Page<StorefrontCollection>> listCollections([PageParams? params]) async => _http.request(
       'GET', '/collections', pageSchema(storefrontCollectionSchema), RequestOptions(query: params?.toJson()));
 }
 
-class _Member {
-  const _Member(this._http);
+/// `client.member` 네임스페이스입니다. 로그인한 회원의 정보·동의·주소·찜을 다룹니다.
+class StorefrontClientMember {
+  const StorefrontClientMember._(this._http);
 
   final Http _http;
 
@@ -190,11 +193,11 @@ class _Member {
   ///
   /// 바꿀 항목만 [body]에 넣습니다. 바꾼 뒤의 동의 상태를 돌려줍니다. 로그인이 필요합니다.
   ///
-  /// [body]에 항목이 하나도 없거나 필수 동의(`terms`·`privacy`)에 `false`를 넣으면 요청을 보내기 전에 [ZodError]를 던집니다.
+  /// [body]에 항목이 하나도 없거나 필수 동의(`terms`·`privacy`)에 `false`를 넣으면 요청을 보내지 않고 [ZodError]로 실패합니다.
   ///
   /// ```dart
   /// final consents = await client.member.updateConsents(ConsentUpdateRequest(marketing: false));
   /// ```
-  Future<MemberConsents> updateConsents(ConsentUpdateRequest body) => _http.request('POST', '/me/consents',
+  Future<MemberConsents> updateConsents(ConsentUpdateRequest body) async => _http.request('POST', '/me/consents',
       memberConsentsSchema, RequestOptions(body: consentUpdateRequestSchema.parse(body).toJson()));
 }
