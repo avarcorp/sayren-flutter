@@ -1,6 +1,8 @@
 // zod 대응 스키마 — Node SDK의 zod(v4) 스키마와 같은 규칙으로 입력을 검증하고 출력을 만든다.
 // 공개 이름은 ZodError·ZodIssue·SafeParseResult·Nullable과 스키마 타입(ZodType·ZodObject·ZodEnum·ZodArray)이다.
 
+import 'dart:math' as math;
+
 /// 객체에 키가 없음(JS `undefined`). 객체 출력에서 이 값이면 키를 싣지 않는다.
 const Object absent = _Absent();
 
@@ -233,18 +235,22 @@ class ZodString extends ZodType<String> {
 /// 숫자 스키마입니다(zod `z.number()`).
 class ZodNumber<T extends num> extends ZodType<T> {
   /// 숫자 스키마를 만듭니다.
-  const ZodNumber([super.checks, this.isInt = false]);
+  const ZodNumber([super.checks, this.isInt = false, this.coerce = false]);
 
   /// 정수만 허용하는지입니다. 출력이 `int`가 됩니다.
   final bool isInt;
 
-  @override
-  ZodNumber<T> withChecks(List<ZodCheckFn> checks) => ZodNumber<T>(checks, isInt);
+  /// 검사 전에 JS `Number(value)`로 바꾸는지입니다(zod `z.coerce.number()`).
+  final bool coerce;
 
-  ZodNumber<T> _add(ZodCheckFn check) => ZodNumber<T>([...checks, check], isInt);
+  @override
+  ZodNumber<T> withChecks(List<ZodCheckFn> checks) => ZodNumber<T>(checks, isInt, coerce);
+
+  ZodNumber<T> _add(ZodCheckFn check) => ZodNumber<T>([...checks, check], isInt, coerce);
 
   @override
   Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    if (coerce) input = _jsNumber(input);
     if (input is num && !input.isNaN && input.isFinite) return input;
     issues.add(_issue('invalid_type', path, 'Invalid input: expected number, received ${_typeName(input)}'));
     return null;
@@ -266,7 +272,7 @@ class ZodNumber<T extends num> extends ZodType<T> {
             i.add(_issue('too_small', p, 'Too small: expected int to be >=-$_maxSafe', continuable: true));
           return n.toInt();
         },
-      ], true);
+      ], true, coerce);
 
   /// 최솟값입니다. [inclusive]가 false면 초과(zod `.gt()`), true면 이상(zod `.min()`)입니다.
   ZodNumber<T> greaterThan(num value, {required bool inclusive}) => _add((v, p, i) {
@@ -274,6 +280,18 @@ class ZodNumber<T extends num> extends ZodType<T> {
         if (inclusive ? n < value : n <= value) {
           i.add(_issue('too_small', p, 'Too small: expected number to be ${inclusive ? '>=' : '>'}$value',
               continuable: true));
+        }
+        return n;
+      });
+
+  /// [divisor]의 배수만 허용합니다(zod `.multipleOf()`). 소수 오차는 zod와 같은 허용 범위로 무시합니다.
+  ZodNumber<T> multipleOf(num divisor) => _add((v, p, i) {
+        final n = v as num;
+        final ratio = n / divisor;
+        final rounded = (ratio + 0.5).floorToDouble(); // JS Math.round
+        final tolerance = 4 * 2.220446049250313e-16 * math.max(ratio.abs(), 1);
+        if (!((ratio - rounded).abs() < tolerance)) {
+          i.add(_issue('not_multiple_of', p, 'Invalid number: must be a multiple of $divisor', continuable: true));
         }
         return n;
       });
@@ -436,12 +454,14 @@ class ZodRecord<T> extends ZodType<Map<String, T>> {
       issues.add(_issue('invalid_type', path, 'Invalid input: expected record, received ${_typeName(input)}'));
       return null;
     }
+    final from = issues.length;
     final out = <String, Object?>{};
     for (final e in input.entries) {
       final v = value.run(e.value, [...path, e.key as String], issues);
       if (v != absent) out[e.key as String] = v;
     }
-    return Map<String, Object?>.unmodifiable(out);
+    // 값 타입으로 만들어 둔다 — 뒤의 검사(refine 등)가 출력 타입(Map<String, T>)으로 읽는다
+    return _aborted(issues, from) ? out : Map<String, T>.unmodifiable(out.cast<String, T>());
   }
 }
 
@@ -484,7 +504,13 @@ class ZodObject<T> extends ZodType<T> {
     final from = issues.length;
     final out = <String, Object?>{};
     shape.forEach((key, schema) {
-      final value = schema.run(input is Map && input.containsKey(key) ? input[key] : absent, [...path, key], issues);
+      final present = input is Map && input.containsKey(key);
+      final before = issues.length;
+      final value = schema.run(present ? input[key] : absent, [...path, key], issues);
+      // zod v4는 선택이 아닌 키가 없으면, 없음을 받아 주는 스키마(unknown·unknown.nullable 등)여도 실패한다
+      if (!present && value == absent && schema is! _Optional && schema is! _Catch && issues.length == before) {
+        issues.add(_issue('invalid_type', [...path, key], 'Invalid input: expected nonoptional, received undefined'));
+      }
       if (value != absent) out[key] = value;
     });
     if (loose) {
@@ -518,7 +544,11 @@ class ZodUnion<T> extends ZodType<T> {
       s = s.getter();
     }
     final field = s is ZodObject ? s.shape[key] : null;
-    return field is ZodLiteral ? field.values : const [];
+    return switch (field) {
+      ZodLiteral() => field.values,
+      ZodEnum() => field.options,
+      _ => const [],
+    };
   }
 
   @override
@@ -611,16 +641,27 @@ class ZodPipe<T> extends ZodType<T> {
 /// 값을 함수로 바꾸는 스키마입니다(zod `z.transform()`).
 class ZodTransform<T> extends ZodType<T> {
   /// 바꾸는 함수로 만듭니다.
-  const ZodTransform(this.transform, [super.checks]);
+  const ZodTransform(this.transform, [super.checks]) : _raw = null;
+
+  const ZodTransform._raw(ZodCheckFn raw, [super.checks])
+      : _raw = raw,
+        transform = _never;
+
+  static Object? _never(Object? value) => value;
 
   /// 값을 바꾸는 함수입니다.
   final Object? Function(Object? value) transform;
 
-  @override
-  ZodTransform<T> withChecks(List<ZodCheckFn> checks) => ZodTransform<T>(transform, checks);
+  /// 이슈를 더할 수 있는 변환(zod `ctx.addIssue`). 더한 이슈는 검증을 멈춘다
+  final ZodCheckFn? _raw;
 
   @override
-  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) => transform(input);
+  ZodTransform<T> withChecks(List<ZodCheckFn> checks) =>
+      _raw == null ? ZodTransform<T>(transform, checks) : ZodTransform<T>._raw(_raw, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) =>
+      _raw == null ? transform(input) : _raw(input, path, issues);
 }
 
 /// 재귀 구조를 위해 스키마를 늦게 읽는 스키마입니다(zod `z.lazy()`).
@@ -712,7 +753,7 @@ abstract final class z {
   static ZodString string() => const ZodString();
 
   /// zod `z.number()`입니다.
-  static ZodNumber<num> number() => const ZodNumber<num>();
+  static ZodNumber<num> number({bool coerce = false}) => ZodNumber<num>(const [], false, coerce);
 
   /// zod `z.boolean()`입니다.
   static ZodBoolean boolean() => const ZodBoolean();
@@ -763,6 +804,9 @@ abstract final class z {
 
   /// zod `z.transform()`입니다.
   static ZodTransform<T> transform<T>(Object? Function(Object? value) fn) => ZodTransform<T>(fn);
+
+  /// 이슈를 더할 수 있는 zod `z.transform((value, ctx) => …)`입니다. [fn]은 `issues`에 이슈를 더하고 아무 값이나 돌려줍니다.
+  static ZodTransform<T> transformWithIssues<T>(ZodCheckFn fn) => ZodTransform<T>._raw(fn);
 
   /// zod `z.lazy()`입니다.
   static ZodLazy<T> lazy<T>(ZodType<T> Function() getter) => ZodLazy<T>(getter);
@@ -840,3 +884,35 @@ Map<String, Object?> compact(Map<String, Object?> fields) => {
 
 /// JS 참·거짓 판정(`!!value`)이다(SDK 내부용) — null·false·0·빈 문자열이 거짓이다
 bool truthy(Object? value) => !(value == null || value == false || value == 0 || value == '' || value == absent);
+
+/// 모델이면 그 JSON, 맵이면 그 맵이다(SDK 내부용) — JS에서 객체를 맵처럼 읽는 검사(`Object.keys`·`in`)에 쓴다
+Map<String, Object?> jsMap(Object? value) =>
+    value is ParsedObject ? value._json : (value as Map).cast<String, Object?>();
+
+/// JS `Object.keys(value).length`다(SDK 내부용)
+int keyCount(Object? value) => jsMap(value).length;
+
+/// JS `Date.parse(value)`다(SDK 내부용). 읽을 수 없으면 NaN이다
+double jsDateParse(String value) => DateTime.tryParse(value)?.millisecondsSinceEpoch.toDouble() ?? double.nan;
+
+/// JS `Number(value)`다 — 문자열은 앞뒤 공백을 지우고 읽고(빈 문자열은 0), 참거짓은 1·0, null은 0, 읽을 수 없으면 NaN이다
+num _jsNumber(Object? value) {
+  if (value is num) return value;
+  if (value == null) return 0;
+  if (value is bool) return value ? 1 : 0;
+  if (value is List)
+    return value.isEmpty
+        ? 0
+        : (value.length == 1 ? _jsNumber(value.first is List ? value.first : '${value.first ?? ''}') : double.nan);
+  if (value is! String) return double.nan;
+  final t = value.trim();
+  if (t.isEmpty) return 0;
+  final radix = RegExp(r'^0([xob])([0-9a-f]+)$', caseSensitive: false).firstMatch(t);
+  if (radix != null) {
+    final base = switch (radix.group(1)!.toLowerCase()) { 'x' => 16, 'o' => 8, _ => 2 };
+    return int.tryParse(radix.group(2)!, radix: base) ?? double.nan;
+  }
+  if (RegExp(r'^[+-]?Infinity$').hasMatch(t)) return t.startsWith('-') ? double.negativeInfinity : double.infinity;
+  if (!RegExp(r'^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$', caseSensitive: false).hasMatch(t)) return double.nan;
+  return num.tryParse(t) ?? double.tryParse(t) ?? double.nan;
+}
