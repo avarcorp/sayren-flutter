@@ -1,0 +1,510 @@
+{
+  "$comment": "createStorefrontAuth 시나리오. 무작위 PKCE 값은 러너가 가리고 길이·S256 관계만 비교한다.",
+  "defaults": {
+    "baseUrl": "https://api.example.test/storefront/v1",
+    "storeCode": "demo"
+  },
+  "scenarios": [
+    {
+      "name": "anonymous",
+      "method": "anonymous",
+      "args": [],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "cartToken": "cart-1",
+              "expiresAt": "2026-02-01T00:00:00.000Z"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "session",
+      "method": "session",
+      "args": [
+        {
+          "email": "buyer@example.test",
+          "password": "pw",
+          "cartToken": "cart-1"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "accessToken": "access-1",
+              "refreshToken": "refresh-1",
+              "expiresIn": 900
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "session 401",
+      "method": "session",
+      "args": [
+        {
+          "email": "buyer@example.test",
+          "password": "pw"
+        }
+      ],
+      "responses": [
+        {
+          "status": 401,
+          "body": {
+            "meta": {
+              "status": 401,
+              "code": "INVALID_CREDENTIALS",
+              "message": "INVALID_CREDENTIALS",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "INVALID_CREDENTIALS",
+              "message": "INVALID_CREDENTIALS",
+              "details": {
+                "reason": "x"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "signUp",
+      "method": "signUp",
+      "args": [
+        {
+          "email": "new@example.test",
+          "password": "Passw0rd!2026x",
+          "name": "새 구매자",
+          "agreements": {
+            "terms": true,
+            "privacy": true
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "accessToken": "access-1",
+              "refreshToken": "refresh-1",
+              "expiresIn": 900
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "idp 동의 없음",
+      "method": "idp",
+      "args": [
+        "kakao",
+        {
+          "redirectUri": "https://shop.example.com/auth/callback"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "url": "https://kauth.example.test/authorize"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "idp 동의 있음",
+      "method": "idp",
+      "args": [
+        "naver",
+        {
+          "redirectUri": "https://shop.example.com/auth/callback",
+          "agreements": {
+            "terms": true,
+            "privacy": true
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "url": "https://nid.example.test/authorize"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "idpCallback 성공",
+      "method": "idpCallback",
+      "args": [
+        {
+          "code": "c1",
+          "state": "s1",
+          "expectedState": "s1",
+          "codeVerifier": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+          "cartToken": "cart-1"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "accessToken": "access-1",
+              "refreshToken": "refresh-1",
+              "expiresIn": 900
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "idpCallback 취소",
+      "method": "idpCallback",
+      "args": [
+        {
+          "code": null,
+          "state": "s1",
+          "expectedState": "s1",
+          "codeVerifier": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
+          "error": "access_denied"
+        }
+      ],
+      "responses": []
+    },
+    {
+      "name": "idpCallback state 불일치",
+      "method": "idpCallback",
+      "args": [
+        {
+          "code": "c1",
+          "state": "s2",
+          "expectedState": "s1",
+          "codeVerifier": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+        }
+      ],
+      "responses": []
+    },
+    {
+      "name": "idpCallback code 없음",
+      "method": "idpCallback",
+      "args": [
+        {
+          "code": null,
+          "state": "s1",
+          "expectedState": "s1",
+          "codeVerifier": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+        }
+      ],
+      "responses": []
+    },
+    {
+      "name": "identities",
+      "method": "identities",
+      "args": [
+        "access-1"
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "hasPassword": true,
+              "hasExternalAuth": true,
+              "identities": [
+                {
+                  "provider": "kakao",
+                "email": "buyer@example.test",
+                  "linkedAt": "2026-01-01T00:00:00.000Z"
+                }
+              ]
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "linkIdp",
+      "method": "linkIdp",
+      "args": [
+        "access-1",
+        "google",
+        {
+          "redirectUri": "https://shop.example.com/auth/link"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "url": "https://accounts.example.test/o"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "linkIdpCallback",
+      "method": "linkIdpCallback",
+      "args": [
+        "access-1",
+        "google",
+        {
+          "code": "c1",
+          "state": "s1",
+          "expectedState": "s1",
+          "codeVerifier": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "hasPassword": true,
+              "hasExternalAuth": true,
+              "identities": [
+                {
+                  "provider": "kakao",
+                "email": "buyer@example.test",
+                  "linkedAt": "2026-01-01T00:00:00.000Z"
+                }
+              ]
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "unlinkIdp 409",
+      "method": "unlinkIdp",
+      "args": [
+        "access-1",
+        "google"
+      ],
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "meta": {
+              "status": 409,
+              "code": "LAST_LOGIN_METHOD",
+              "message": "LAST_LOGIN_METHOD",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "LAST_LOGIN_METHOD",
+              "message": "LAST_LOGIN_METHOD",
+              "details": {
+                "reason": "x"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "refresh",
+      "method": "refresh",
+      "args": [
+        "refresh-1"
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "accessToken": "access-1",
+              "refreshToken": "refresh-1",
+              "expiresIn": 900
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "signOut",
+      "method": "signOut",
+      "args": [
+        "access-1"
+      ],
+      "responses": [
+        {
+          "status": 204
+        }
+      ]
+    },
+    {
+      "name": "signOut 401은 성공",
+      "method": "signOut",
+      "args": [
+        "access-1"
+      ],
+      "responses": [
+        {
+          "status": 401,
+          "body": {
+            "meta": {
+              "status": 401,
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED",
+              "details": {
+                "reason": "x"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "signOut 500은 실패",
+      "method": "signOut",
+      "args": [
+        "access-1"
+      ],
+      "responses": [
+        {
+          "status": 500,
+          "body": {
+            "meta": {
+              "status": 500,
+              "code": "INTERNAL",
+              "message": "INTERNAL",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "INTERNAL",
+              "message": "INTERNAL",
+              "details": {
+                "reason": "x"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdraw 409",
+      "method": "withdraw",
+      "args": [
+        "access-1",
+        {
+          "password": "pw"
+        }
+      ],
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "meta": {
+              "status": 409,
+              "code": "WITHDRAWAL_BLOCKED",
+              "message": "WITHDRAWAL_BLOCKED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "WITHDRAWAL_BLOCKED",
+              "message": "WITHDRAWAL_BLOCKED",
+              "details": {
+                "reason": "x"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

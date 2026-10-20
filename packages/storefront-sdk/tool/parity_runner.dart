@@ -2,7 +2,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:http/http.dart' as http;
+import 'package:sayren_storefront_sdk/auth.dart'
+    show createStorefrontAuth, StorefrontAuth, StorefrontAuthOptions, IdpCallbackError, IdpStart;
 import 'package:sayren_storefront_sdk/sayren_storefront_sdk.dart';
 
 import 'parity_generated.dart';
@@ -105,8 +108,121 @@ Future<void> main(List<String> argv) async {
       }(),
   ];
   final sessionResults = await runSessions(readJson(dir, 'session-scenarios.json') as Map<String, Object?>);
-  stdout.writeln(const JsonEncoder.withIndent('  ')
-      .convert({'scenarios': scenarioResults, 'schemaCases': schemaResults, 'sessions': sessionResults}));
+  final authResults = await runAuth(readJson(dir, 'auth-scenarios.json') as Map<String, Object?>);
+  stdout.writeln(const JsonEncoder.withIndent('  ').convert(
+      {'scenarios': scenarioResults, 'schemaCases': schemaResults, 'sessions': sessionResults, 'auth': authResults}));
+}
+
+String _s256(String v) => base64Url.encode(crypto.sha256.convert(utf8.encode(v)).bytes).replaceAll('=', '');
+
+Map<String, Object?> _m(Object? v) => (v as Map).cast<String, Object?>();
+
+/// createStorefrontAuth 시나리오의 메서드 → 타입 있는 호출
+final Map<String, Future<Object?> Function(StorefrontAuth auth, List<Object?> a)> authCalls = {
+  'anonymous': (x, a) => x.anonymous(),
+  'session': (x, a) => x.session(LoginRequest.fromJson(_m(a[0]))),
+  'signUp': (x, a) => x.signUp(SignupRequest.fromJson(_m(a[0]))),
+  'idp': (x, a) {
+    final o = _m(a[1]);
+    final agreements = o['agreements'] as Map?;
+    return x.idp(a[0] as String,
+        redirectUri: o['redirectUri'] as String,
+        agreements: agreements == null
+            ? null
+            : (
+                terms: agreements['terms'] as bool,
+                privacy: agreements['privacy'] as bool,
+                marketing: agreements['marketing'] as bool?
+              ));
+  },
+  'idpCallback': (x, a) {
+    final o = _m(a[0]);
+    return x.idpCallback(
+        code: o['code'] as String?,
+        state: o['state'] as String?,
+        expectedState: o['expectedState'] as String,
+        codeVerifier: o['codeVerifier'] as String,
+        cartToken: o['cartToken'] as String?,
+        error: o['error'] as String?);
+  },
+  'identities': (x, a) => x.identities(a[0] as String),
+  'linkIdp': (x, a) => x.linkIdp(a[0] as String, a[1] as String, redirectUri: _m(a[2])['redirectUri'] as String),
+  'linkIdpCallback': (x, a) {
+    final o = _m(a[2]);
+    return x.linkIdpCallback(a[0] as String, a[1] as String,
+        code: o['code'] as String?,
+        state: o['state'] as String?,
+        expectedState: o['expectedState'] as String,
+        codeVerifier: o['codeVerifier'] as String,
+        error: o['error'] as String?);
+  },
+  'unlinkIdp': (x, a) => x.unlinkIdp(a[0] as String, a[1] as String),
+  'refresh': (x, a) => x.refresh(a[0] as String),
+  'signOut': (x, a) => x.signOut(a[0] as String).then((_) => null),
+  'withdraw': (x, a) => x.withdraw(a[0] as String, WithdrawRequest.fromJson(_m(a[1]))).then((_) => null),
+};
+
+Future<List<Object?>> runAuth(Map<String, Object?> spec) async {
+  final defaults = spec['defaults'] as Map;
+  final results = <Object?>[];
+  for (final s in (spec['scenarios'] as List).cast<Map<String, Object?>>()) {
+    final queue = [...(s['responses'] as List).cast<Map<String, Object?>>()];
+    final requests = <Map<String, Object?>>[];
+    Future<http.Response> fetch(http.Request req) async {
+      final headers = req.headers.map((k, v) => MapEntry(k.toLowerCase(), v));
+      requests.add({
+        'method': req.method,
+        'url': req.url.toString(),
+        'headers': Map.fromEntries(headers.entries.toList()..sort((a, b) => a.key.compareTo(b.key))),
+        'body': req.bodyBytes.isEmpty ? null : jsonDecode(utf8.decode(req.bodyBytes)),
+      });
+      final r = queue.isEmpty ? <String, Object?>{'status': 500, 'body': null} : queue.removeAt(0);
+      return http.Response.bytes(r['status'] == 204 ? <int>[] : utf8.encode(jsonEncode(r['body'])), r['status'] as int,
+          headers: {'content-type': 'application/json'});
+    }
+
+    final auth = createStorefrontAuth(StorefrontAuthOptions(
+        baseUrl: defaults['baseUrl'] as String, storeCode: defaults['storeCode'] as String, fetch: fetch));
+    Map<String, Object?> outcome;
+    Object? value;
+    try {
+      value = await authCalls[s['method']]!(auth, (s['args'] as List).cast<Object?>());
+      outcome = {'ok': true, 'value': value is IdpStart ? null : encode(value)};
+    } on IdpCallbackError catch (error) {
+      outcome = {
+        'ok': false,
+        'error': {'type': 'IdpCallbackError', 'reason': error.reason, 'message': error.message},
+      };
+    } catch (error) {
+      outcome = {'ok': false, 'error': describeError(error)};
+    }
+    var shownRequests = requests;
+    if (value is IdpStart) {
+      final body = (requests.first['body'] as Map?) ?? const {};
+      outcome = {
+        'ok': true,
+        'value': {
+          'url': value.url,
+          'pkce': {
+            'stateLength': value.state.length,
+            'verifierLength': value.codeVerifier.length,
+            'stateSent': body['state'] == value.state,
+            'challengeIsS256': body['codeChallenge'] == _s256(value.codeVerifier),
+          },
+        },
+      };
+      shownRequests = [
+        for (final r in requests)
+          {
+            ...r,
+            'body':
+                r['body'] == null ? null : {...(r['body'] as Map), 'state': '<state>', 'codeChallenge': '<challenge>'},
+          },
+      ];
+    }
+    results.add({'name': s['name'], 'requests': shownRequests, 'outcome': outcome});
+  }
+  return results;
 }
 
 class _MapStorage implements SessionStorage {

@@ -112,4 +112,47 @@ for (const s of sessionSpec.scenarios) {
   sessionResults.push({ name: s.name, requests, steps });
 }
 
-process.stdout.write(`${JSON.stringify({ scenarios: scenarioResults, schemaCases: schemaResults, sessions: sessionResults }, null, 2)}\n`);
+// createStorefrontAuth 시나리오 — 무작위 PKCE 값은 가리고 길이·S256 관계만 남긴다
+const { createStorefrontAuth } = await import("@sayren/storefront-sdk/auth");
+const { createHash } = await import("node:crypto");
+const s256 = (v) => createHash("sha256").update(v).digest("base64url");
+const authSpec = read("./auth-scenarios.json");
+const authResults = [];
+for (const s of authSpec.scenarios) {
+  const queue = [...s.responses];
+  const requests = [];
+  const fetch = async (url, init) => {
+    requests.push({
+      method: init.method ?? "GET",
+      url,
+      headers: Object.fromEntries(Object.entries(init.headers ?? {}).map(([k, v]) => [k.toLowerCase(), v]).sort()),
+      body: init.body === undefined ? null : JSON.parse(init.body),
+    });
+    const r = queue.shift() ?? { status: 500, body: null };
+    return new Response(r.status === 204 ? null : JSON.stringify(r.body), { status: r.status, headers: { "content-type": "application/json" } });
+  };
+  const auth = createStorefrontAuth({ ...authSpec.defaults, fetch });
+  let outcome;
+  try {
+    outcome = { ok: true, value: json(await auth[s.method](...s.args)) };
+  } catch (error) {
+    outcome = error?.name === "IdpCallbackError" ? { ok: false, error: { type: "IdpCallbackError", reason: error.reason, message: error.message } } : { ok: false, error: describeError(error) };
+  }
+  authResults.push({ name: s.name, ...redactPkce(requests, outcome) });
+}
+
+function redactPkce(requests, outcome) {
+  const v = outcome.ok ? outcome.value : null;
+  if (!v || typeof v.codeVerifier !== "string") return { requests, outcome };
+  const body = requests[0]?.body ?? {};
+  const pkce = {
+    stateLength: v.state.length,
+    verifierLength: v.codeVerifier.length,
+    stateSent: body.state === v.state,
+    challengeIsS256: body.codeChallenge === s256(v.codeVerifier),
+  };
+  const redacted = requests.map((r) => ({ ...r, body: r.body && { ...r.body, state: "<state>", codeChallenge: "<challenge>" } }));
+  return { requests: redacted, outcome: { ok: true, value: { url: v.url, pkce } } };
+}
+
+process.stdout.write(`${JSON.stringify({ scenarios: scenarioResults, schemaCases: schemaResults, sessions: sessionResults, auth: authResults }, null, 2)}\n`);

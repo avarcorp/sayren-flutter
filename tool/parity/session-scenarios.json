@@ -372,7 +372,7 @@
           "args": [
             {
               "email": "new@example.test",
-              "password": "Passw0rd!",
+              "password": "Passw0rd!2026x",
               "name": "새 구매자",
               "agreements": {
                 "terms": true,
