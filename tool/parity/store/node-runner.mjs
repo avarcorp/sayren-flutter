@@ -176,6 +176,42 @@ for (const s of sessionSpec.scenarios) {
   sessionResults.push({ name: s.name, requests: mask(requests), steps });
 }
 
+// 서버 엔트리포인트 — 웹훅 서명·파싱·검증, 구매자 위임
+const server = await import("@sayren/store-sdk/server");
+const serverSpec = read("./server-scenarios.json");
+const serverResults = [];
+for (const s of serverSpec.scenarios) {
+  const a = s.args;
+  const queue = [...(s.responses ?? [])];
+  const requests = [];
+  const fetch = async (url, init = {}) => {
+    recordRequest(requests, url, init, (x) => x);
+    const r = queue.shift() ?? { status: 500, body: null };
+    return "raw" in r ? new Response(r.raw, { status: r.status }) : toResponse(r);
+  };
+  let outcome;
+  try {
+    let value;
+    switch (s.op) {
+      case "sign": value = await server.signWebhookPayload(a); break;
+      case "parse": value = server.parseWebhookSignatureHeader(a.header); break;
+      case "verify": value = await server.verifyWebhookSignature({ ...a, now: new Date(a.now) }); break;
+      case "roundtrip": {
+        const header = await server.signWebhookPayload({ payload: a.payload, secret: a.signSecret, timestamp: a.timestamp });
+        value = await server.verifyWebhookSignature({ payload: a.verifyPayload ?? a.payload, header, secret: a.verifySecret, toleranceSec: a.toleranceSec, now: new Date(a.now) });
+        break;
+      }
+      case "delegate": value = await server.delegateMember({ ...a, ...(a.authenticatedAt ? { authenticatedAt: new Date(a.authenticatedAt) } : {}), fetch }); break;
+    }
+    outcome = { ok: true, value: json(value) };
+  } catch (error) {
+    outcome = error instanceof server.MemberDelegationError
+      ? { ok: false, error: { type: "MemberDelegationError", error: error.error, description: error.description, status: error.status, message: error.message } }
+      : { ok: false, error: { type: "Error", message: error?.message ?? null } };
+  }
+  serverResults.push({ name: s.name, requests, outcome });
+}
+
 process.stdout.write(
-  JSON.stringify({ schemaCases: schemaResults, functions: functionResults, scenarios: scenarioResults, sessions: sessionResults }),
+  JSON.stringify({ schemaCases: schemaResults, functions: functionResults, scenarios: scenarioResults, sessions: sessionResults, server: serverResults }),
 );

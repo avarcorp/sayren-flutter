@@ -912,11 +912,16 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 
 ### export
 
-총 18개.
+총 18개. `package:sayren_store_sdk/server.dart`로 공개한다.
 
-- [ ] `src/member-delegation.ts` → `lib/src/member-delegation.dart` (3): `DelegatedMemberToken`, `delegateMember`, `MemberDelegationError`
-- [ ] `src/webhook-headers.ts` → `lib/src/webhook-headers.dart` (7): `WEBHOOK_DEFAULT_TOLERANCE_SEC`, `WEBHOOK_DELIVERY_ID_HEADER`, `WEBHOOK_EVENT_ID_HEADER`, `WEBHOOK_EVENT_TYPE_HEADER`, `WEBHOOK_HEADERS`, `WEBHOOK_SIGNATURE_HEADER`, `WEBHOOK_USER_AGENT`
-- [ ] `src/webhook-signature.ts` → `lib/src/webhook-signature.dart` (8): `ParsedWebhookSignature`, `parseWebhookSignatureHeader`, `SignWebhookPayloadOptions`, `signWebhookPayload`, `VerifyWebhookSignatureOptions`, `verifyWebhookSignature`, `WebhookSignatureFailureReason`, `WebhookSignatureVerification`
+- [x] 서명 비교는 WebCrypto `verify` 대신 HMAC-SHA256(`crypto`) 결과를 상수 시간으로 비교한다
+- [x] `secret`(`string | string[]`)은 `Object`로 받는다(`String` 또는 `List<String>`). 시크릿이 비면 `ArgumentError`다
+- [x] `WebhookSignatureVerification`(판별 값 `ok: true/false`)의 하위 클래스는 `WebhookSignatureVerificationOk`·`WebhookSignatureVerificationFailed`다
+- [x] `delegateMember`의 인라인 옵션은 네임드 인자다
+
+- [x] `src/member-delegation.ts` → `lib/src/member-delegation.dart` (3): `DelegatedMemberToken`, `delegateMember`, `MemberDelegationError`
+- [x] `src/webhook-headers.ts` → `lib/src/webhook-headers.dart` (7): `WEBHOOK_DEFAULT_TOLERANCE_SEC`, `WEBHOOK_DELIVERY_ID_HEADER`, `WEBHOOK_EVENT_ID_HEADER`, `WEBHOOK_EVENT_TYPE_HEADER`, `WEBHOOK_HEADERS`, `WEBHOOK_SIGNATURE_HEADER`, `WEBHOOK_USER_AGENT`
+- [x] `src/webhook-signature.ts` → `lib/src/webhook-signature.dart` (8): `ParsedWebhookSignature`, `parseWebhookSignatureHeader`, `SignWebhookPayloadOptions`, `signWebhookPayload`, `VerifyWebhookSignatureOptions`, `verifyWebhookSignature`, `WebhookSignatureFailureReason`, `WebhookSignatureVerification`
 
 ---
 
@@ -945,7 +950,7 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 | Phase 3 | `@sayren/store-sdk` 기본 엔트리포인트 |
 | Phase 4 | `@sayren/store-sdk/server` |
 
-Phase 0·1·2·3은 끝났고 Phase 4가 남았다. `sayren_store_sdk`는 Flutter 의존이 없는 Dart 패키지다(테스트는 `dart test`).
+Phase 0~4가 모두 끝났다. `sayren_store_sdk`는 Flutter 의존이 없는 Dart 패키지다(테스트는 `dart test`).
 
 동작 대조 하네스(`tool/parity`)는 같은 자료를 npm의 `@sayren/storefront-sdk`와 Dart SDK에 넣고 결과를 비교한다.
 
@@ -953,7 +958,8 @@ Phase 0·1·2·3은 끝났고 Phase 4가 남았다. `sayren_store_sdk`는 Flutte
 - 스키마 대조: export 스키마마다 유효 예시·`null`·키 하나 빼기·키 하나 타입 바꾸기(`generated/schema-cases.json`).
 - 세션·인증·분석·결제: `session-scenarios.json`·`auth-scenarios.json`·`analytics-scenarios.json`·`payments-scenarios.json`. 분석·결제는 같은 가짜 env를 양쪽에 넣는다.
 
-- 관리 API(`tool/parity/store`): 생성 예시와 손 시나리오(`scenarios.json`, 오버라이드 메서드·승인 대기·OAuth 오류·업로드), 스키마 대조, 손으로 쓴 함수 대조(`functions/*.json`, Dart 어댑터 `packages/store-sdk/tool/functions/`), 세션·OAuth(`session-scenarios.json`, 무작위 값은 자리표시로 바꿔 비교).
+- 관리 API(`tool/parity/store`): 서버 엔트리포인트(`server-scenarios.json`, 웹훅 서명·파싱·검증과 구매자 위임)도 대조한다.
+- 관리 API 기본: 생성 예시와 손 시나리오(`scenarios.json`, 오버라이드 메서드·승인 대기·OAuth 오류·업로드), 스키마 대조, 손으로 쓴 함수 대조(`functions/*.json`, Dart 어댑터 `packages/store-sdk/tool/functions/`), 세션·OAuth(`session-scenarios.json`, 무작위 값은 자리표시로 바꿔 비교).
 
 실행은 `tool/parity`에서 `npm install` 후 `node compare.mjs`(`--verbose`면 모든 항목, `node compare.mjs store`면 대상 하나)다. 대조로 볼 수 없는 Dart 쪽 동작(getter 캐스트, Future 오류 전달, `fromJson` 검증, 모델 생성자, `Nullable`)은 각 패키지 `test`가 확인한다.
 

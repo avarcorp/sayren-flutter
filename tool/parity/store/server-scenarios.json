@@ -1,0 +1,418 @@
+{
+  "$comment": "서버 엔트리포인트(@sayren/store-sdk/server) 대조 — 웹훅 서명·파싱·검증, 구매자 위임",
+  "scenarios": [
+    {
+      "name": "서명 — 시크릿 하나",
+      "op": "sign",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "secret": "whsec_a",
+        "timestamp": 1767225600
+      }
+    },
+    {
+      "name": "서명 — 시크릿 여러 개(빈 값 제외)",
+      "op": "sign",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "secret": [
+          "whsec_new",
+          "",
+          "whsec_old"
+        ],
+        "timestamp": 1767225600
+      }
+    },
+    {
+      "name": "서명 — 한글 본문",
+      "op": "sign",
+      "args": {
+        "payload": "{\"name\":\"상점 🔑\"}",
+        "secret": "비밀",
+        "timestamp": 0
+      }
+    },
+    {
+      "name": "서명 — 시크릿 없음",
+      "op": "sign",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "secret": [],
+        "timestamp": 1
+      }
+    },
+    {
+      "name": "서명 — 음수 시각",
+      "op": "sign",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "secret": "s",
+        "timestamp": -1
+      }
+    },
+    {
+      "name": "파싱 — 't=1767225600,v1=abc'",
+      "op": "parse",
+      "args": {
+        "header": "t=1767225600,v1=abc"
+      }
+    },
+    {
+      "name": "파싱 — 't=1,v1=a,v1=b,v2=c'",
+      "op": "parse",
+      "args": {
+        "header": "t=1,v1=a,v1=b,v2=c"
+      }
+    },
+    {
+      "name": "파싱 — ' t=1 , v1=x '",
+      "op": "parse",
+      "args": {
+        "header": " t=1 , v1=x "
+      }
+    },
+    {
+      "name": "파싱 — 't=1,t=2,v1=a'",
+      "op": "parse",
+      "args": {
+        "header": "t=1,t=2,v1=a"
+      }
+    },
+    {
+      "name": "파싱 — 't=abc,v1=a'",
+      "op": "parse",
+      "args": {
+        "header": "t=abc,v1=a"
+      }
+    },
+    {
+      "name": "파싱 — 't=1'",
+      "op": "parse",
+      "args": {
+        "header": "t=1"
+      }
+    },
+    {
+      "name": "파싱 — 'v1=a'",
+      "op": "parse",
+      "args": {
+        "header": "v1=a"
+      }
+    },
+    {
+      "name": "파싱 — 't=1,v1='",
+      "op": "parse",
+      "args": {
+        "header": "t=1,v1="
+      }
+    },
+    {
+      "name": "파싱 — '=1,v1=a'",
+      "op": "parse",
+      "args": {
+        "header": "=1,v1=a"
+      }
+    },
+    {
+      "name": "파싱 — 't=1,v1=a,garbage'",
+      "op": "parse",
+      "args": {
+        "header": "t=1,v1=a,garbage"
+      }
+    },
+    {
+      "name": "파싱 — ''",
+      "op": "parse",
+      "args": {
+        "header": ""
+      }
+    },
+    {
+      "name": "파싱 — 't=1234567890123456,v1=a'",
+      "op": "parse",
+      "args": {
+        "header": "t=1234567890123456,v1=a"
+      }
+    },
+    {
+      "name": "파싱 — 't=00012,v1=a'",
+      "op": "parse",
+      "args": {
+        "header": "t=00012,v1=a"
+      }
+    },
+    {
+      "name": "파싱 — null",
+      "op": "parse",
+      "args": {
+        "header": null
+      }
+    },
+    {
+      "name": "검증 — 통과",
+      "op": "roundtrip",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "signSecret": "whsec_a",
+        "verifySecret": "whsec_a",
+        "timestamp": 1767225600,
+        "now": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "검증 — 이전 시크릿으로 통과",
+      "op": "roundtrip",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "signSecret": [
+          "whsec_old"
+        ],
+        "verifySecret": [
+          "whsec_new",
+          "whsec_old"
+        ],
+        "timestamp": 1767225600,
+        "now": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "검증 — 본문 변조",
+      "op": "roundtrip",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "verifyPayload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"} ",
+        "signSecret": "a",
+        "verifySecret": "a",
+        "timestamp": 1767225600,
+        "now": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "검증 — 시크릿 불일치",
+      "op": "roundtrip",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "signSecret": "a",
+        "verifySecret": "b",
+        "timestamp": 1767225600,
+        "now": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "검증 — 허용 오차 밖",
+      "op": "roundtrip",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "signSecret": "a",
+        "verifySecret": "a",
+        "timestamp": 1767225000,
+        "now": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "검증 — 허용 오차 경계(300초)",
+      "op": "roundtrip",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "signSecret": "a",
+        "verifySecret": "a",
+        "timestamp": 1767225300,
+        "now": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "검증 — 허용 오차 지정",
+      "op": "roundtrip",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "signSecret": "a",
+        "verifySecret": "a",
+        "timestamp": 1767225000,
+        "now": "2026-01-01T00:00:00.000Z",
+        "toleranceSec": 1000
+      }
+    },
+    {
+      "name": "검증 — 헤더 없음",
+      "op": "verify",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "header": null,
+        "secret": "a",
+        "now": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "검증 — 빈 헤더",
+      "op": "verify",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "header": "",
+        "secret": "a",
+        "now": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "검증 — 형식 오류",
+      "op": "verify",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "header": "v1=a",
+        "secret": "a",
+        "now": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "검증 — hex가 아닌 v1",
+      "op": "verify",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "header": "t=1767225600,v1=zz",
+        "secret": "a",
+        "now": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "검증 — 시크릿 없음",
+      "op": "verify",
+      "args": {
+        "payload": "{\"id\":\"evt_1\",\"type\":\"ORDER.PAID\"}",
+        "header": "t=1,v1=a",
+        "secret": "",
+        "now": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "위임 — uid",
+      "op": "delegate",
+      "args": {
+        "baseUrl": "https://api.example.test//",
+        "accessToken": "pat",
+        "storeId": "st_1",
+        "uid": "u1",
+        "name": "김",
+        "authenticatedAt": "2026-01-01T09:00:00.123Z"
+      },
+      "responses": [
+        {
+          "status": 201,
+          "body": {
+            "meta": {
+              "status": 201,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "accessToken": "m-tok",
+              "expiresIn": 1800,
+              "memberId": "mem_1"
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "위임 — email, 빈 uid는 싣지 않음",
+      "op": "delegate",
+      "args": {
+        "baseUrl": "https://api.example.test",
+        "accessToken": "pat",
+        "storeId": "st_1",
+        "uid": "",
+        "email": "a@example.test"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "accessToken": "m-tok",
+              "expiresIn": "1800",
+              "memberId": 7
+            },
+            "error": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "위임 — 오류 엔벨로프",
+      "op": "delegate",
+      "args": {
+        "baseUrl": "https://api.example.test",
+        "accessToken": "pat",
+        "storeId": "st_1",
+        "uid": "u1"
+      },
+      "responses": [
+        {
+          "status": 403,
+          "body": {
+            "meta": {
+              "status": 403,
+              "code": "INSUFFICIENT_SCOPE",
+              "message": "m",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "INSUFFICIENT_SCOPE",
+              "message": "customer:rw가 필요합니다"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "위임 — 본문 없는 오류",
+      "op": "delegate",
+      "args": {
+        "baseUrl": "https://api.example.test",
+        "accessToken": "pat",
+        "storeId": "st_1",
+        "uid": "u1"
+      },
+      "responses": [
+        {
+          "status": 502,
+          "raw": "bad gateway"
+        }
+      ]
+    },
+    {
+      "name": "위임 — 200인데 토큰 없음",
+      "op": "delegate",
+      "args": {
+        "baseUrl": "https://api.example.test",
+        "accessToken": "pat",
+        "storeId": "st_1",
+        "uid": "u1"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "memberId": "m"
+            },
+            "error": null
+          }
+        }
+      ]
+    }
+  ]
+}

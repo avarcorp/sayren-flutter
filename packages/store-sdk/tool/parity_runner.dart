@@ -5,6 +5,15 @@ import 'dart:io';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:http/http.dart' as http;
 import 'package:sayren_store_sdk/sayren_store_sdk.dart';
+import 'package:sayren_store_sdk/server.dart'
+    show
+        MemberDelegationError,
+        SignWebhookPayloadOptions,
+        VerifyWebhookSignatureOptions,
+        delegateMember,
+        parseWebhookSignatureHeader,
+        signWebhookPayload,
+        verifyWebhookSignature;
 import 'package:sayren_store_sdk/src/zod.dart' show ParsedObject;
 
 import 'functions/all.dart';
@@ -106,6 +115,7 @@ Future<void> main(List<String> argv) async {
     'functions': functionResults,
     'scenarios': scenarioResults,
     'sessions': sessionResults,
+    'server': await runServer(dir),
   }));
 }
 
@@ -343,4 +353,81 @@ class _MapStorage implements SessionStorage {
 
   @override
   void remove(String key) => _values.remove(key);
+}
+
+/// 서버 엔트리포인트 — 웹훅 서명·파싱·검증, 구매자 위임
+Future<List<Object?>> runServer(String dir) async {
+  final spec = readJson('$dir/store/server-scenarios.json') as Map<String, Object?>;
+  final results = <Object?>[];
+  for (final s in (spec['scenarios'] as List).cast<Map<String, Object?>>()) {
+    final a = (s['args'] as Map).cast<String, Object?>();
+    final queue = ((s['responses'] as List?) ?? const []).cast<Map<String, Object?>>().toList();
+    final requests = <Object?>[];
+    Future<http.Response> fetch(http.Request req) async {
+      requests.add(recordRequest(req));
+      final r = queue.isEmpty ? <String, Object?>{'status': 500, 'body': null} : queue.removeAt(0);
+      return r.containsKey('raw') ? http.Response(r['raw'] as String, r['status'] as int) : toResponse(r);
+    }
+
+    Object secret(Object? v) => v is List ? v.cast<String>() : v as String;
+    Map<String, Object?> outcome;
+    try {
+      Object? value;
+      switch (s['op']) {
+        case 'sign':
+          value = await signWebhookPayload(SignWebhookPayloadOptions(
+              payload: a['payload'] as String, secret: secret(a['secret']), timestamp: a['timestamp'] as int?));
+        case 'parse':
+          value = parseWebhookSignatureHeader(a['header'] as String?);
+        case 'verify':
+          value = await verifyWebhookSignature(VerifyWebhookSignatureOptions(
+            payload: a['payload'] as String,
+            header: a['header'] as String?,
+            secret: secret(a['secret']),
+            toleranceSec: a['toleranceSec'] as int?,
+            now: DateTime.parse(a['now'] as String),
+          ));
+        case 'roundtrip':
+          final header = await signWebhookPayload(SignWebhookPayloadOptions(
+              payload: a['payload'] as String, secret: secret(a['signSecret']), timestamp: a['timestamp'] as int?));
+          value = await verifyWebhookSignature(VerifyWebhookSignatureOptions(
+            payload: (a['verifyPayload'] ?? a['payload']) as String,
+            header: header,
+            secret: secret(a['verifySecret']),
+            toleranceSec: a['toleranceSec'] as int?,
+            now: DateTime.parse(a['now'] as String),
+          ));
+        case 'delegate':
+          value = await delegateMember(
+            baseUrl: a['baseUrl'] as String,
+            accessToken: a['accessToken'] as String,
+            storeId: a['storeId'] as String,
+            uid: a['uid'] as String?,
+            email: a['email'] as String?,
+            name: a['name'] as String?,
+            authenticatedAt: a['authenticatedAt'] == null ? null : DateTime.parse(a['authenticatedAt'] as String),
+            fetch: fetch,
+          );
+      }
+      outcome = {'ok': true, 'value': encode(value)};
+    } on MemberDelegationError catch (e) {
+      outcome = {
+        'ok': false,
+        'error': {
+          'type': 'MemberDelegationError',
+          'error': e.error,
+          'description': e.description,
+          'status': e.status,
+          'message': e.message,
+        },
+      };
+    } on ArgumentError catch (e) {
+      outcome = {
+        'ok': false,
+        'error': {'type': 'Error', 'message': e.message}
+      };
+    }
+    results.add({'name': s['name'], 'requests': requests, 'outcome': outcome});
+  }
+  return results;
 }

@@ -15,6 +15,7 @@ const ENTRIES = [
   { pkg: "@sayren/storefront-sdk", entry: "payments/index.ts", dart: "storefront-sdk/lib/payments.dart" },
   { pkg: "@sayren/storefront-sdk", entry: "analytics/index.ts", dart: "storefront-sdk/lib/analytics.dart" },
   { pkg: "@sayren/store-sdk", entry: "index.ts", dart: "store-sdk/lib/sayren_store_sdk.dart" },
+  { pkg: "@sayren/store-sdk", entry: "server.ts", dart: "store-sdk/lib/server.dart" },
 ];
 /** 만들지 않는 이름 (ROADMAP 「만들지 않는 이름」) */
 const NOT_PORTED = new Set([

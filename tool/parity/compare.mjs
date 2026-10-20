@@ -8,7 +8,7 @@ const run = (cmd, args, cwd) => JSON.parse(execFileSync(cmd, args, { cwd, encodi
 
 const TARGETS = {
   storefront: { runner: "node-runner.mjs", pkg: "storefront-sdk", keys: ["scenarios", "schemaCases", "sessions", "auth", "analytics", "payments"] },
-  store: { runner: "store/node-runner.mjs", pkg: "store-sdk", keys: ["scenarios", "schemaCases", "functions", "sessions"] },
+  store: { runner: "store/node-runner.mjs", pkg: "store-sdk", keys: ["scenarios", "schemaCases", "functions", "sessions", "server"] },
 };
 const only = process.argv.slice(2).find((a) => !a.startsWith("--"));
 let failed = 0;
