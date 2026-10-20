@@ -155,4 +155,61 @@ function redactPkce(requests, outcome) {
   return { requests: redacted, outcome: { ok: true, value: { url: v.url, pkce } } };
 }
 
-process.stdout.write(`${JSON.stringify({ scenarios: scenarioResults, schemaCases: schemaResults, sessions: sessionResults, auth: authResults }, null, 2)}\n`);
+// createAnalyticsWith 시나리오 — 같은 가짜 환경
+const { createAnalyticsWith } = await import("@sayren/storefront-sdk/analytics");
+const analyticsSpec = read("./analytics-scenarios.json");
+const analyticsResults = [];
+for (const s of analyticsSpec.scenarios) {
+  const c = { ...analyticsSpec.defaults, ...s };
+  let now = Date.UTC(2026, 0, 1);
+  let href = c.href;
+  let visible = c.visible;
+  let prerendering = c.prerendering ?? false;
+  let ids = 0;
+  const cookies = new Map(Object.entries(s.cookies ?? {}).map(([k, v]) => [k, [v, Number.MAX_SAFE_INTEGER]]));
+  const sent = [];
+  const listeners = { visibilitychange: new Set(), pagehide: new Set(), prerenderingchange: new Set(), navigate: new Set(), interval: new Set() };
+  const sub = (set, fn) => (set.add(fn), () => set.delete(fn));
+  const emit = (set) => [...set].forEach((fn) => fn());
+  const env = {
+    now: () => now,
+    href: () => href,
+    referrer: () => c.referrer,
+    hostname: () => c.hostname,
+    getCookie: (name) => { const e = cookies.get(name); return e && e[1] > now ? e[0] : null; },
+    setCookie: (name, value, maxAgeSec) => cookies.set(name, [value, now + maxAgeSec * 1000]),
+    send: (url, body) => sent.push({ url, body: JSON.parse(body) }),
+    randomId: () => `rid${String(++ids).padStart(13, "0")}`,
+    visible: () => visible,
+    prerendering: () => prerendering,
+    webdriver: () => c.webdriver ?? false,
+    on: (event, fn) => sub(listeners[event], fn),
+    onNavigate: (fn) => sub(listeners.navigate, fn),
+    setInterval: (fn) => sub(listeners.interval, fn),
+  };
+  const analytics = createAnalyticsWith({ baseUrl: c.baseUrl, storeCode: c.storeCode, ...s.options }, env);
+  const steps = [];
+  for (const step of s.steps) {
+    let value = null;
+    switch (step.op) {
+      case "track": analytics.track(step.input); break;
+      case "page": analytics.page(); break;
+      case "setConsent": analytics.setConsent(step.value); break;
+      case "ids": value = analytics.ids(); break;
+      case "flush": analytics.flush(); break;
+      case "destroy": analytics.destroy(); break;
+      case "advance": now += step.ms; break;
+      case "navigate": href = step.href; emit(listeners.navigate); break;
+      case "visibility": visible = step.visible; emit(listeners.visibilitychange); break;
+      case "pagehide": emit(listeners.pagehide); break;
+      case "prerenderDone": prerendering = false; emit(listeners.prerenderingchange); break;
+      case "interval": emit(listeners.interval); break;
+    }
+    steps.push({ op: step.op, value, sent: sent.length });
+  }
+  const listenerCounts = Object.fromEntries(Object.entries(listeners).map(([k, v]) => [k, v.size]));
+  const cookieValues = Object.fromEntries([...cookies].sort().map(([k, v]) => [k, v[0]]));
+  analyticsResults.push({ name: s.name, steps, sent, cookies: cookieValues, listeners: listenerCounts });
+}
+
+process.stdout.write(`${JSON.stringify({ scenarios: scenarioResults, schemaCases: schemaResults, sessions: sessionResults, auth: authResults, analytics: analyticsResults }, null, 2)}\n`);

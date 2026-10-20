@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:sayren_storefront_sdk/auth.dart'
     show createStorefrontAuth, StorefrontAuth, StorefrontAuthOptions, IdpCallbackError, IdpStart;
 import 'package:sayren_storefront_sdk/sayren_storefront_sdk.dart';
+// Flutter 없이 돌도록 핵심 로직 파일만 불러온다
+import 'package:sayren_storefront_sdk/src/analytics/index.dart';
 
 import 'parity_generated.dart';
 
@@ -109,8 +111,154 @@ Future<void> main(List<String> argv) async {
   ];
   final sessionResults = await runSessions(readJson(dir, 'session-scenarios.json') as Map<String, Object?>);
   final authResults = await runAuth(readJson(dir, 'auth-scenarios.json') as Map<String, Object?>);
-  stdout.writeln(const JsonEncoder.withIndent('  ').convert(
-      {'scenarios': scenarioResults, 'schemaCases': schemaResults, 'sessions': sessionResults, 'auth': authResults}));
+  final analyticsResults = runAnalytics(readJson(dir, 'analytics-scenarios.json') as Map<String, Object?>);
+  stdout.writeln(const JsonEncoder.withIndent('  ').convert({
+    'scenarios': scenarioResults,
+    'schemaCases': schemaResults,
+    'sessions': sessionResults,
+    'auth': authResults,
+    'analytics': analyticsResults,
+  }));
+}
+
+class _FakeAnalyticsEnv implements AnalyticsEnv {
+  _FakeAnalyticsEnv(this.c, Map<String, String> initial)
+      : href_ = c['href'] as String,
+        visible_ = c['visible'] as bool,
+        prerendering_ = (c['prerendering'] as bool?) ?? false {
+    initial.forEach((k, v) => cookies[k] = (v, 1 << 53));
+  }
+
+  final Map<String, Object?> c;
+  int now_ = DateTime.utc(2026).millisecondsSinceEpoch;
+  String href_;
+  bool visible_;
+  bool prerendering_;
+  int ids = 0;
+  final cookies = <String, (String, int)>{};
+  final sent = <Object?>[];
+  final listeners = <String, Set<void Function()>>{
+    for (final k in ['visibilitychange', 'pagehide', 'prerenderingchange', 'navigate', 'interval']) k: {},
+  };
+
+  void Function() sub(String key, void Function() fn) {
+    listeners[key]!.add(fn);
+    return () => listeners[key]!.remove(fn);
+  }
+
+  void emit(String key) {
+    for (final fn in List.of(listeners[key]!)) {
+      fn();
+    }
+  }
+
+  @override
+  int now() => now_;
+  @override
+  String href() => href_;
+  @override
+  String referrer() => c['referrer'] as String;
+  @override
+  String hostname() => c['hostname'] as String;
+  @override
+  String? getCookie(String name) {
+    final e = cookies[name];
+    return e != null && e.$2 > now_ ? e.$1 : null;
+  }
+
+  @override
+  void setCookie(String name, String value, int maxAgeSec, [String? domain]) =>
+      cookies[name] = (value, now_ + maxAgeSec * 1000);
+  @override
+  void send(String url, String body) => sent.add({'url': url, 'body': jsonDecode(body)});
+  @override
+  String randomId() => 'rid${(++ids).toString().padLeft(13, '0')}';
+  @override
+  bool visible() => visible_;
+  @override
+  bool prerendering() => prerendering_;
+  @override
+  bool webdriver() => (c['webdriver'] as bool?) ?? false;
+  @override
+  void Function() on(String event, void Function() fn) => sub(event, fn);
+  @override
+  void Function() onNavigate(void Function() fn) => sub('navigate', fn);
+  @override
+  void Function() setInterval(void Function() fn, int ms) => sub('interval', fn);
+}
+
+AnalyticsTrackInput _trackInput(Map<String, Object?> j) => switch (j['name']) {
+      'product_view' =>
+        AnalyticsTrackInputProductView(productId: j['productId'] as String, variantId: j['variantId'] as String?),
+      'product_list_view' => AnalyticsTrackInputProductListView(
+          listId: j['listId'] as String, productIds: (j['productIds'] as List).cast<String>()),
+      'search' => AnalyticsTrackInputSearch(query: j['query'] as String, resultCount: j['resultCount'] as int),
+      _ => throw StateError('알 수 없는 이벤트 ${j['name']}'),
+    };
+
+List<Object?> runAnalytics(Map<String, Object?> spec) {
+  final defaults = (spec['defaults'] as Map).cast<String, Object?>();
+  final results = <Object?>[];
+  for (final s in (spec['scenarios'] as List).cast<Map<String, Object?>>()) {
+    final c = {...defaults, ...s};
+    final env = _FakeAnalyticsEnv(c, ((s['cookies'] as Map?) ?? const {}).cast<String, String>());
+    final o = (s['options'] as Map).cast<String, Object?>();
+    final analytics = createAnalyticsWith(
+      AnalyticsOptions(
+        baseUrl: c['baseUrl'] as String,
+        storeCode: c['storeCode'] as String,
+        consent: o['consent'] as String?,
+        autoPageViews: o['autoPageViews'] as bool?,
+        debug: o['debug'] as bool?,
+        flushIntervalMs: o['flushIntervalMs'] as int?,
+      ),
+      env,
+    );
+    final steps = <Object?>[];
+    for (final step in (s['steps'] as List).cast<Map<String, Object?>>()) {
+      Object? value;
+      switch (step['op']) {
+        case 'track':
+          analytics.track(_trackInput((step['input'] as Map).cast<String, Object?>()));
+        case 'page':
+          analytics.page();
+        case 'setConsent':
+          analytics.setConsent(step['value'] as String);
+        case 'ids':
+          final ids = analytics.ids();
+          value = ids == null ? null : {'visitorId': ids.visitorId, 'sessionId': ids.sessionId};
+        case 'flush':
+          analytics.flush();
+        case 'destroy':
+          analytics.destroy();
+        case 'advance':
+          env.now_ += step['ms'] as int;
+        case 'navigate':
+          env.href_ = step['href'] as String;
+          env.emit('navigate');
+        case 'visibility':
+          env.visible_ = step['visible'] as bool;
+          env.emit('visibilitychange');
+        case 'pagehide':
+          env.emit('pagehide');
+        case 'prerenderDone':
+          env.prerendering_ = false;
+          env.emit('prerenderingchange');
+        case 'interval':
+          env.emit('interval');
+      }
+      steps.add({'op': step['op'], 'value': value, 'sent': env.sent.length});
+    }
+    final cookieKeys = env.cookies.keys.toList()..sort();
+    results.add({
+      'name': s['name'],
+      'steps': steps,
+      'sent': env.sent,
+      'cookies': {for (final k in cookieKeys) k: env.cookies[k]!.$1},
+      'listeners': {for (final e in env.listeners.entries) e.key: e.value.length},
+    });
+  }
+  return results;
 }
 
 String _s256(String v) => base64Url.encode(crypto.sha256.convert(utf8.encode(v)).bytes).replaceAll('=', '');
