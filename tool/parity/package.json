@@ -1,0 +1,8 @@
+{
+  "name": "sayren-flutter-parity",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@sayren/storefront-sdk": "0.24.0"
+  }
+}

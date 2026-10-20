@@ -47,6 +47,10 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
 - zod 스키마 상수(`productCardSchema`)는 같은 이름의 스키마 상수다. `parse`, `safeParse`(`success`·`data`·`error`), enum 스키마의 `options`, object 스키마의 `shape`를 제공한다.
 - `z.infer` 타입(`ProductCard`)은 같은 이름의 불변 클래스다(`fromJson`·`toJson`).
 
+- Node의 인라인 객체 타입(옵션 필드 `auth: { accessToken? }`, 응답 필드 `StorefrontStore.market` 등)은 같은 필드 이름의 레코드다(`auth: (accessToken: '…')`).
+- 제네릭 익명 타입인 `pageSchema(item)`의 출력은 `Page<T>`(`PageInfo` + `contents`)다.
+- 클라이언트 네임스페이스(`client.catalog` 등)는 비공개 클래스다. 사용자는 타입 이름을 쓰지 않고 `client.catalog.…`로만 부른다.
+
 ### 검증과 오류
 
 - Node처럼 요청 본문은 보내기 전에, 응답은 받은 뒤에 스키마로 검증한다.
@@ -91,11 +95,11 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
 
 #### `store` (1)
 
-- [ ] `store.get` · `GET /storefront/v1/store`
+- [x] `store.get` · `GET /storefront/v1/store`
 
 #### `catalog` (12)
 
-- [ ] `catalog.listCategories` · `GET /storefront/v1/categories`
+- [x] `catalog.listCategories` · `GET /storefront/v1/categories`
 - [ ] `catalog.getPointPolicy` · `GET /storefront/v1/point-policy`
 - [ ] `catalog.searchProducts` · `GET /storefront/v1/products`
 - [ ] `catalog.getProduct` · `GET /storefront/v1/products/{productId}`
@@ -103,7 +107,7 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
 - [ ] `catalog.listProductInquiries` · `GET /storefront/v1/products/{productId}/inquiries`
 - [ ] `catalog.getProductCalendar` · `GET /storefront/v1/products/{productId}/calendar`
 - [ ] `catalog.createInquiry` · `POST /storefront/v1/products/{productId}/inquiries`
-- [ ] `catalog.listCollections` · `GET /storefront/v1/collections`
+- [x] `catalog.listCollections` · `GET /storefront/v1/collections`
 - [ ] `catalog.listCoupons` · `GET /storefront/v1/coupons`
 - [ ] `catalog.getCollection` · `GET /storefront/v1/collections/{slug}`
 - [ ] `catalog.listCollectionProducts` · `GET /storefront/v1/collections/{slug}/products`
@@ -161,7 +165,7 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
 - [ ] `member.listPointHistory` · `GET /storefront/v1/me/points/history`
 - [ ] `member.updateMe` · `PATCH /storefront/v1/me`
 - [ ] `member.consents` · `GET /storefront/v1/me/consents`
-- [ ] `member.updateConsents` · `POST /storefront/v1/me/consents`
+- [x] `member.updateConsents` · `POST /storefront/v1/me/consents`
 - [ ] `member.listAddresses` · `GET /storefront/v1/me/addresses`
 - [ ] `member.createAddress` · `POST /storefront/v1/me/addresses`
 - [ ] `member.updateAddress` · `PUT /storefront/v1/me/addresses/{addressId}`
@@ -890,6 +894,9 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 | Phase 2 | `@sayren/storefront-sdk/auth` · `/payments` · `/analytics` |
 | Phase 3 | `@sayren/store-sdk` 기본 엔트리포인트 |
 | Phase 4 | `@sayren/store-sdk/server` |
+
+동작 대조 하네스(`tool/parity`)는 같은 시나리오(옵션·인자·서버 응답)를 npm의 `@sayren/storefront-sdk`와 Dart SDK에 넣고 요청(메서드·URL·헤더·본문)과 결과(파싱 값·`ApiError`·`ZodError` 이슈 코드와 경로)를 비교한다.
+실행은 `tool/parity`에서 `npm install` 후 `node compare.mjs`다. 메서드를 추가하면 시나리오와 `packages/storefront-sdk/tool/parity_runner.dart`의 호출 표에 함께 넣는다.
 
 목록 대조 스크립트는 Node SDK에서 뽑은 이름 목록과 Dart 패키지의 공개 이름 목록이 같은지 확인한다. 각 Phase는 이 대조를 통과해야 끝난다.
 

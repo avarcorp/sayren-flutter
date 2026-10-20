@@ -1,0 +1,12 @@
+name: sayren_storefront_sdk
+description: sayren 스토어프론트 API SDK. @sayren/storefront-sdk와 같은 이름·사용법을 제공합니다.
+version: 0.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+
+resolution: workspace
+
+dependencies:
+  http: ^1.2.0

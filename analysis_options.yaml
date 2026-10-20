@@ -1,0 +1,9 @@
+# Node SDK와 이름·경로를 같게 두려고 끄는 규칙(ROADMAP 「네이밍 규칙」)
+analyzer:
+  errors:
+    file_names: ignore
+    constant_identifier_names: ignore
+    library_private_types_in_public_api: ignore
+
+formatter:
+  page_width: 120
