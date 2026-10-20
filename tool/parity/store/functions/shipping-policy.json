@@ -1,0 +1,1886 @@
+[
+  {
+    "name": "resolve none",
+    "fn": "resolveShippingPolicy",
+    "args": []
+  },
+  {
+    "name": "resolve patch",
+    "fn": "resolveShippingPolicy",
+    "args": [
+      {
+        "baseDeliveryFee": 2500,
+        "freeThreshold": 50000
+      }
+    ]
+  },
+  {
+    "name": "resolve null threshold",
+    "fn": "resolveShippingPolicy",
+    "args": [
+      {
+        "freeThreshold": null,
+        "jejuSurcharge": 3000
+      }
+    ]
+  },
+  {
+    "name": "resolve currencies KRW",
+    "fn": "resolveShippingPolicy",
+    "args": [
+      {
+        "currencies": {
+          "USD": {
+            "baseDeliveryFee": 800,
+            "freeThreshold": 10000
+          },
+          "JPY": {
+            "baseDeliveryFee": 500,
+            "freeThreshold": null
+          }
+        },
+        "isolatedSurcharge": 5000
+      }
+    ]
+  },
+  {
+    "name": "resolve USD",
+    "fn": "resolveShippingPolicy",
+    "args": [
+      {
+        "currencies": {
+          "USD": {
+            "baseDeliveryFee": 800,
+            "freeThreshold": 10000
+          },
+          "JPY": {
+            "baseDeliveryFee": 500,
+            "freeThreshold": null
+          }
+        },
+        "isolatedSurcharge": 5000
+      },
+      "USD"
+    ]
+  },
+  {
+    "name": "resolve JPY",
+    "fn": "resolveShippingPolicy",
+    "args": [
+      {
+        "currencies": {
+          "USD": {
+            "baseDeliveryFee": 800,
+            "freeThreshold": 10000
+          },
+          "JPY": {
+            "baseDeliveryFee": 500,
+            "freeThreshold": null
+          }
+        }
+      },
+      "JPY"
+    ]
+  },
+  {
+    "name": "resolve EUR none",
+    "fn": "resolveShippingPolicy",
+    "args": [
+      {
+        "currencies": {
+          "USD": {
+            "baseDeliveryFee": 800,
+            "freeThreshold": 10000
+          },
+          "JPY": {
+            "baseDeliveryFee": 500,
+            "freeThreshold": null
+          }
+        }
+      },
+      "EUR"
+    ]
+  },
+  {
+    "name": "resolve EUR no map",
+    "fn": "resolveShippingPolicy",
+    "args": [
+      null,
+      "EUR"
+    ]
+  },
+  {
+    "name": "remoteAreaOf null",
+    "fn": "remoteAreaOf",
+    "args": [
+      null
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf null",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      null
+    ]
+  },
+  {
+    "name": "remoteAreaOf ",
+    "fn": "remoteAreaOf",
+    "args": [
+      ""
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf ",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      ""
+    ]
+  },
+  {
+    "name": "remoteAreaOf 63000",
+    "fn": "remoteAreaOf",
+    "args": [
+      "63000"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 63000",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "63000"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 63644",
+    "fn": "remoteAreaOf",
+    "args": [
+      "63644"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 63644",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "63644"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 63645",
+    "fn": "remoteAreaOf",
+    "args": [
+      "63645"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 63645",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "63645"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 22386",
+    "fn": "remoteAreaOf",
+    "args": [
+      "22386"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 22386",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "22386"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 23003",
+    "fn": "remoteAreaOf",
+    "args": [
+      "23003"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 23003",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "23003"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 23004",
+    "fn": "remoteAreaOf",
+    "args": [
+      "23004"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 23004",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "23004"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 23117",
+    "fn": "remoteAreaOf",
+    "args": [
+      "23117"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 23117",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "23117"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 40200",
+    "fn": "remoteAreaOf",
+    "args": [
+      "40200"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 40200",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "40200"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 59790",
+    "fn": "remoteAreaOf",
+    "args": [
+      "59790"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 59790",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "59790"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 59791",
+    "fn": "remoteAreaOf",
+    "args": [
+      "59791"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 59791",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "59791"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 1234",
+    "fn": "remoteAreaOf",
+    "args": [
+      "1234"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 1234",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "1234"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 123456",
+    "fn": "remoteAreaOf",
+    "args": [
+      "123456"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 123456",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "123456"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 6300a",
+    "fn": "remoteAreaOf",
+    "args": [
+      "6300a"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 6300a",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "6300a"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 00000",
+    "fn": "remoteAreaOf",
+    "args": [
+      "00000"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 00000",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "00000"
+    ]
+  },
+  {
+    "name": "remoteAreaOf 58826",
+    "fn": "remoteAreaOf",
+    "args": [
+      "58826"
+    ]
+  },
+  {
+    "name": "remoteAreaLabelOf 58826",
+    "fn": "remoteAreaLabelOf",
+    "args": [
+      "58826"
+    ]
+  },
+  {
+    "name": "remoteSurchargeOf NONE",
+    "fn": "remoteSurchargeOf",
+    "args": [
+      {
+        "baseDeliveryFee": 3000,
+        "freeThreshold": null,
+        "jejuSurcharge": 3000,
+        "isolatedSurcharge": 5000
+      },
+      "NONE"
+    ]
+  },
+  {
+    "name": "remoteSurchargeOf JEJU",
+    "fn": "remoteSurchargeOf",
+    "args": [
+      {
+        "baseDeliveryFee": 3000,
+        "freeThreshold": null,
+        "jejuSurcharge": 3000,
+        "isolatedSurcharge": 5000
+      },
+      "JEJU"
+    ]
+  },
+  {
+    "name": "remoteSurchargeOf ISOLATED",
+    "fn": "remoteSurchargeOf",
+    "args": [
+      {
+        "baseDeliveryFee": 3000,
+        "freeThreshold": null,
+        "jejuSurcharge": 3000,
+        "isolatedSurcharge": 5000
+      },
+      "ISOLATED"
+    ]
+  },
+  {
+    "name": "deliveryBundleKeyOf {\"deliveryType\":\"PAID\",\"deliveryFee\":3000,\"conditionalFreeAmount\":null}",
+    "fn": "deliveryBundleKeyOf",
+    "args": [
+      {
+        "deliveryType": "PAID",
+        "deliveryFee": 3000,
+        "conditionalFreeAmount": null
+      }
+    ]
+  },
+  {
+    "name": "deliveryBundleKeyOf {\"deliveryType\":\"FREE\",\"deliveryFee\":3000,\"conditionalFreeAmount\":null}",
+    "fn": "deliveryBundleKeyOf",
+    "args": [
+      {
+        "deliveryType": "FREE",
+        "deliveryFee": 3000,
+        "conditionalFreeAmount": null
+      }
+    ]
+  },
+  {
+    "name": "deliveryBundleKeyOf {\"deliveryType\":\"CONDITIONAL_FREE\",\"deliveryFee\":3000,\"conditionalFreeAmount\":50000}",
+    "fn": "deliveryBundleKeyOf",
+    "args": [
+      {
+        "deliveryType": "CONDITIONAL_FREE",
+        "deliveryFee": 3000,
+        "conditionalFreeAmount": 50000
+      }
+    ]
+  },
+  {
+    "name": "deliveryBundleKeyOf {\"deliveryType\":\"CONDITIONAL_FREE\",\"deliveryFee\":3000,\"conditionalFreeAmount\":null}",
+    "fn": "deliveryBundleKeyOf",
+    "args": [
+      {
+        "deliveryType": "CONDITIONAL_FREE",
+        "deliveryFee": 3000,
+        "conditionalFreeAmount": null
+      }
+    ]
+  },
+  {
+    "name": "deliveryBundleKeyOf {\"deliveryType\":\"PAID\",\"deliveryFee\":2500,\"conditionalFreeAmount\":null,\"shippingAddressId\":\"adr_1\"}",
+    "fn": "deliveryBundleKeyOf",
+    "args": [
+      {
+        "deliveryType": "PAID",
+        "deliveryFee": 2500,
+        "conditionalFreeAmount": null,
+        "shippingAddressId": "adr_1"
+      }
+    ]
+  },
+  {
+    "name": "deliveryBundleKeyOf {\"deliveryType\":\"PAID\",\"deliveryFee\":0,\"conditionalFreeAmount\":null,\"shippingAddressId\":null}",
+    "fn": "deliveryBundleKeyOf",
+    "args": [
+      {
+        "deliveryType": "PAID",
+        "deliveryFee": 0,
+        "conditionalFreeAmount": null,
+        "shippingAddressId": null
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery empty",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery one paid",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 10000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery same bundle",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 10000
+          },
+          {
+            "productId": "b",
+            "amount": 5000
+          },
+          {
+            "productId": "a",
+            "amount": 2000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery two origins",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 10000
+          },
+          {
+            "productId": "e",
+            "amount": 5000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery conditional under",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "c",
+            "amount": 20000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery conditional over",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "c",
+            "amount": 20000
+          },
+          {
+            "productId": "c",
+            "amount": 15000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery free product",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "d",
+            "amount": 1000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery store threshold",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 30000
+          },
+          {
+            "productId": "c",
+            "amount": 10000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": 40000,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery store threshold not met",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 30000
+          },
+          {
+            "productId": "c",
+            "amount": 9000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": 40000,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery jeju surcharge",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 10000
+          },
+          {
+            "productId": "e",
+            "amount": 5000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        },
+        "zipCode": "63100"
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery isolated surcharge free",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "d",
+            "amount": 10000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        },
+        "zipCode": "40210"
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery bad zip",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 10000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        },
+        "zipCode": "6310"
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery null zip",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 10000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        },
+        "zipCode": null
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery unknown product",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "zz",
+            "amount": 10000
+          },
+          {
+            "productId": "a",
+            "amount": 1000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery manual product",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "m",
+            "amount": 50000
+          },
+          {
+            "productId": "a",
+            "amount": 1000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": 40000,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery manual only",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "m",
+            "amount": 50000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery line type override shipping",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "m",
+            "amount": 5000,
+            "fulfillmentType": "SHIPPING"
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery line type override manual",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 5000,
+            "fulfillmentType": "MANUAL"
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery pickup method",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 5000,
+            "fulfillmentMethod": "PICKUP"
+          },
+          {
+            "productId": "b",
+            "amount": 3000,
+            "fulfillmentMethod": "CARRIER"
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery unknown method",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 5000,
+            "fulfillmentMethod": "TELEPORT"
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery mixed bundles",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "a",
+            "amount": 1000
+          },
+          {
+            "productId": "c",
+            "amount": 31000
+          },
+          {
+            "productId": "d",
+            "amount": 500
+          },
+          {
+            "productId": "e",
+            "amount": 2000
+          },
+          {
+            "productId": "f",
+            "amount": 19000
+          },
+          {
+            "productId": "f",
+            "amount": 2000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": null,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        },
+        "zipCode": "58800"
+      }
+    ]
+  },
+  {
+    "name": "quoteDelivery threshold with all free",
+    "fn": "quoteDelivery",
+    "args": [
+      {
+        "lines": [
+          {
+            "productId": "d",
+            "amount": 50000
+          }
+        ],
+        "productOf": {
+          "$lookup": {
+            "a": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "b": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null
+            },
+            "c": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": 30000
+            },
+            "d": {
+              "deliveryType": "FREE",
+              "deliveryFee": 2500,
+              "conditionalFreeAmount": null
+            },
+            "e": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "shippingAddressId": "adr_2"
+            },
+            "m": {
+              "deliveryType": "PAID",
+              "deliveryFee": 3000,
+              "conditionalFreeAmount": null,
+              "fulfillmentType": "MANUAL"
+            },
+            "f": {
+              "deliveryType": "CONDITIONAL_FREE",
+              "deliveryFee": 4000,
+              "conditionalFreeAmount": 20000,
+              "shippingAddressId": "adr_2"
+            }
+          }
+        },
+        "policy": {
+          "baseDeliveryFee": 3000,
+          "freeThreshold": 10000,
+          "jejuSurcharge": 3000,
+          "isolatedSurcharge": 5000
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,5 @@
+[
+  { "name": "대문자·공백", "fn": "normalizeCouponCode", "args": ["  welcome-10 "] },
+  { "name": "이미 정규화", "fn": "normalizeCouponCode", "args": ["ABC_123"] },
+  { "name": "빈 문자열", "fn": "normalizeCouponCode", "args": [""] }
+]

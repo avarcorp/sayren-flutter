@@ -1,0 +1,102 @@
+[
+  { "name": "숨김", "fn": "collectionStateOf", "args": [{ "visible": false, "startsAt": null, "endsAt": null }, { "$date": "2026-06-01T00:00:00.000Z" }] },
+  { "name": "노출 중", "fn": "collectionStateOf", "args": [{ "visible": true, "startsAt": null, "endsAt": null }, { "$date": "2026-06-01T00:00:00.000Z" }] },
+  { "name": "예약", "fn": "collectionStateOf", "args": [{ "visible": true, "startsAt": "2026-06-02T00:00:00+09:00", "endsAt": null }, { "$date": "2026-06-01T00:00:00.000Z" }] },
+  { "name": "종료 경계(같은 시각)", "fn": "collectionStateOf", "args": [{ "visible": true, "startsAt": "2026-05-01T00:00:00Z", "endsAt": "2026-06-01T00:00:00.000Z" }, { "$date": "2026-06-01T00:00:00.000Z" }] },
+  { "name": "시작 경계(같은 시각)", "fn": "collectionStateOf", "args": [{ "visible": true, "startsAt": "2026-06-01T00:00:00Z", "endsAt": "2026-07-01T00:00:00Z" }, { "$date": "2026-06-01T00:00:00.000Z" }] },
+  { "name": "빈 문자열 기간", "fn": "collectionStateOf", "args": [{ "visible": true, "startsAt": "", "endsAt": "" }, { "$date": "2026-06-01T00:00:00.000Z" }] },
+  { "name": "읽을 수 없는 시각", "fn": "collectionStateOf", "args": [{ "visible": true, "startsAt": "x", "endsAt": "y" }, { "$date": "2026-06-01T00:00:00.000Z" }] },
+
+  { "name": "하위 카테고리", "fn": "descendantCategoryIdsOf", "args": [["a"], [
+    { "categoryId": "a", "parentId": null },
+    { "categoryId": "b", "parentId": "a" },
+    { "categoryId": "c", "parentId": "b" },
+    { "categoryId": "d", "parentId": "a" },
+    { "categoryId": "e", "parentId": "x" }
+  ]] },
+  { "name": "순환·여러 뿌리", "fn": "descendantCategoryIdsOf", "args": [["b", "x"], [
+    { "categoryId": "a", "parentId": "b" },
+    { "categoryId": "b", "parentId": "a" },
+    { "categoryId": "e", "parentId": "x" },
+    { "categoryId": "f", "parentId": "" }
+  ]] },
+  { "name": "빈 뿌리", "fn": "descendantCategoryIdsOf", "args": [[], [{ "categoryId": "a", "parentId": null }]] },
+
+  { "name": "등록일 통과", "fn": "matchesCollectionRules", "args": [
+    { "createdAt": "2026-05-30T00:00:00Z", "categoryId": null, "salePrice": 1000, "discountedPrice": null },
+    [{ "field": "createdWithinDays", "value": 7 }],
+    { "now": { "$date": "2026-06-01T00:00:00.000Z" }, "categories": [] }
+  ] },
+  { "name": "등록일 실패", "fn": "matchesCollectionRules", "args": [
+    { "createdAt": "2026-05-01T00:00:00Z", "categoryId": null, "salePrice": 1000, "discountedPrice": null },
+    [{ "field": "createdWithinDays", "value": 7 }],
+    { "now": { "$date": "2026-06-01T00:00:00.000Z" }, "categories": [] }
+  ] },
+  { "name": "카테고리 하위 포함", "fn": "matchesCollectionRules", "args": [
+    { "createdAt": "2026-05-01T00:00:00Z", "categoryId": "c", "salePrice": 1000, "discountedPrice": null },
+    [{ "field": "category", "categoryIds": ["a"] }],
+    { "now": { "$date": "2026-06-01T00:00:00.000Z" }, "categories": [{ "categoryId": "b", "parentId": "a" }, { "categoryId": "c", "parentId": "b" }] }
+  ] },
+  { "name": "카테고리 없음", "fn": "matchesCollectionRules", "args": [
+    { "createdAt": "2026-05-01T00:00:00Z", "categoryId": null, "salePrice": 1000, "discountedPrice": null },
+    [{ "field": "category", "categoryIds": ["a"] }],
+    { "now": { "$date": "2026-06-01T00:00:00.000Z" }, "categories": [] }
+  ] },
+  { "name": "가격 범위(할인가)", "fn": "matchesCollectionRules", "args": [
+    { "createdAt": "2026-05-01T00:00:00Z", "categoryId": null, "salePrice": 20000, "discountedPrice": 9000 },
+    [{ "field": "price", "min": 5000, "max": 10000 }],
+    { "now": { "$date": "2026-06-01T00:00:00.000Z" }, "categories": [] }
+  ] },
+  { "name": "가격 최고가만", "fn": "matchesCollectionRules", "args": [
+    { "createdAt": "2026-05-01T00:00:00Z", "categoryId": null, "salePrice": 20000, "discountedPrice": null },
+    [{ "field": "price", "max": 10000 }],
+    { "now": { "$date": "2026-06-01T00:00:00.000Z" }, "categories": [] }
+  ] },
+  { "name": "가격 조건 둘 다 없음(규칙 위반)", "fn": "matchesCollectionRules", "args": [
+    { "createdAt": "2026-05-01T00:00:00Z", "categoryId": null, "salePrice": 20000, "discountedPrice": null },
+    [{ "field": "price" }],
+    { "now": { "$date": "2026-06-01T00:00:00.000Z" }, "categories": [] }
+  ] },
+  { "name": "할인 중", "fn": "matchesCollectionRules", "args": [
+    { "createdAt": "2026-05-01T00:00:00Z", "categoryId": null, "salePrice": 20000, "discountedPrice": 19000 },
+    [{ "field": "discounted", "value": true }, { "field": "bestSelling", "days": 30, "top": 5 }],
+    { "now": { "$date": "2026-06-01T00:00:00.000Z" }, "categories": [] }
+  ] },
+  { "name": "할인가가 판매가 이상", "fn": "matchesCollectionRules", "args": [
+    { "createdAt": "2026-05-01T00:00:00Z", "categoryId": null, "salePrice": 20000, "discountedPrice": 20000 },
+    [{ "field": "discounted", "value": true }],
+    { "now": { "$date": "2026-06-01T00:00:00.000Z" }, "categories": [] }
+  ] },
+  { "name": "모르는 조건", "fn": "matchesCollectionRules", "args": [
+    { "createdAt": "2026-05-01T00:00:00Z", "categoryId": null, "salePrice": 20000, "discountedPrice": null },
+    [{ "field": "rating", "min": 4 }],
+    { "now": { "$date": "2026-06-01T00:00:00.000Z" }, "categories": [] }
+  ] },
+  { "name": "조건 없음", "fn": "matchesCollectionRules", "args": [
+    { "createdAt": "2026-05-01T00:00:00Z", "categoryId": null, "salePrice": 20000, "discountedPrice": null },
+    [],
+    { "now": { "$date": "2026-06-01T00:00:00.000Z" }, "categories": [] }
+  ] },
+
+  { "name": "판매량 조건", "fn": "bestSellingRuleOf", "args": [[{ "field": "price", "min": 1 }, { "field": "bestSelling", "days": 7, "top": 3 }, { "field": "bestSelling", "days": 90, "top": 9 }]] },
+  { "name": "판매량 조건 기간 틀림", "fn": "bestSellingRuleOf", "args": [[{ "field": "bestSelling", "days": 14, "top": 3 }]] },
+  { "name": "판매량 조건 없음", "fn": "bestSellingRuleOf", "args": [[{ "field": "discounted", "value": true }]] },
+
+  { "name": "판매량 순위", "fn": "rankBestSelling", "args": [[
+    { "productId": "p1", "createdAt": "2026-05-01T00:00:00Z" },
+    { "productId": "p2", "createdAt": "2026-05-03T00:00:00Z" },
+    { "productId": "p3", "createdAt": "2026-05-02T00:00:00Z" },
+    { "productId": "p4", "createdAt": "2026-05-02T00:00:00Z" },
+    { "productId": "p0", "createdAt": "2026-05-02T00:00:00Z" },
+    { "productId": "p5", "createdAt": "2026-05-09T00:00:00Z" }
+  ], { "$map": [["p1", 5], ["p2", 5], ["p3", 3], ["p4", 3], ["p0", 3], ["p5", 0]] }, 4] },
+  { "name": "판매량 순위 top 0·음수", "fn": "rankBestSelling", "args": [[{ "productId": "p1", "createdAt": "2026-05-01T00:00:00Z" }], { "$map": [["p1", 5]] }, -1] },
+  { "name": "판매량 순위 같은 상품 두 번", "fn": "rankBestSelling", "args": [[
+    { "productId": "p1", "createdAt": "2026-05-01T00:00:00Z", "tag": "first" },
+    { "productId": "p1", "createdAt": "2026-05-01T00:00:00Z", "tag": "second" },
+    { "productId": "p2", "createdAt": "bad", "tag": "x" },
+    { "productId": "p3", "createdAt": "2026-05-01T00:00:00Z", "tag": "y" }
+  ], { "$map": [["p1", 2], ["p2", 2], ["p3", 2.5]] }, 10] },
+
+  { "name": "참조 카테고리", "fn": "collectionRuleCategoryIds", "args": [[{ "field": "category", "categoryIds": ["a", "b"] }, { "field": "price", "min": 1 }, { "field": "category", "categoryIds": ["c"] }, { "field": "category", "categoryIds": [] }]] }
+]

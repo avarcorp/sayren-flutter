@@ -1,0 +1,121 @@
+[
+ {
+  "name": "isStoreScope [\"product:r\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "product:r"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"product:rw\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "product:rw"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"settlement:r\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "settlement:r"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"settlement:rw\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "settlement:rw"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"audit:rw\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "audit:rw"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"member:r\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "member:r"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"nope:r\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "nope:r"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"product\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "product"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"product:\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "product:"
+  ]
+ },
+ {
+  "name": "isStoreScope [\":r\"]",
+  "fn": "isStoreScope",
+  "args": [
+   ":r"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"product:r:x\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "product:r:x"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"\"]",
+  "fn": "isStoreScope",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "isStoreScope [\"PRODUCT:r\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "PRODUCT:r"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"inventory:rw\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "inventory:rw"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"flow:r\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "flow:r"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"storefront:rw\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "storefront:rw"
+  ]
+ },
+ {
+  "name": "isStoreScope [\"webhook:r\"]",
+  "fn": "isStoreScope",
+  "args": [
+   "webhook:r"
+  ]
+ }
+]

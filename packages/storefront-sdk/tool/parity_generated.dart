@@ -187,66 +187,67 @@ final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)>
   'store.get': (c, a) => c.store.get(),
   'catalog.listCategories': (c, a) => c.catalog.listCategories(),
   'catalog.getPointPolicy': (c, a) => c.catalog.getPointPolicy(),
-  'catalog.searchProducts': (c, a) => c.catalog.searchProducts((a.length > 0 ? a[0] : null) == null
-      ? null
-      : ProductSearchParams(
-          page: ((a.length > 0 ? a[0] : null) as Map)['page'] as int?,
-          size: ((a.length > 0 ? a[0] : null) as Map)['size'] as int?,
-          keyword: ((a.length > 0 ? a[0] : null) as Map)['keyword'] as String?,
-          categoryId: ((a.length > 0 ? a[0] : null) as Map)['categoryId'] as String?,
-          minPrice: ((a.length > 0 ? a[0] : null) as Map)['minPrice'] as int?,
-          maxPrice: ((a.length > 0 ? a[0] : null) as Map)['maxPrice'] as int?,
-          freeShipping: ((a.length > 0 ? a[0] : null) as Map)['freeShipping'] as bool?,
-          sort: ((a.length > 0 ? a[0] : null) as Map)['sort'] as ProductSort?)),
+  'catalog.searchProducts': (c, a) => c.catalog.searchProducts((a.length > 0 && a[0] != null
+      ? ProductSearchParams(
+          page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
+          size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int),
+          keyword: ((a[0] as Map)['keyword'] == null ? null : (a[0] as Map)['keyword'] as String),
+          categoryId: ((a[0] as Map)['categoryId'] == null ? null : (a[0] as Map)['categoryId'] as String),
+          minPrice: ((a[0] as Map)['minPrice'] == null ? null : (a[0] as Map)['minPrice'] as int),
+          maxPrice: ((a[0] as Map)['maxPrice'] == null ? null : (a[0] as Map)['maxPrice'] as int),
+          freeShipping: ((a[0] as Map)['freeShipping'] == null ? null : (a[0] as Map)['freeShipping'] as bool),
+          sort: ((a[0] as Map)['sort'] == null ? null : (a[0] as Map)['sort'] as String))
+      : null)),
   'catalog.getProduct': (c, a) => c.catalog.getProduct(a[0] as String),
   'catalog.listProductReviews': (c, a) => c.catalog.listProductReviews(
       a[0] as String,
-      (a.length > 1 ? a[1] : null) == null
-          ? null
-          : ProductReviewParams(
-              page: ((a.length > 1 ? a[1] : null) as Map)['page'] as int?,
-              size: ((a.length > 1 ? a[1] : null) as Map)['size'] as int?,
-              rating: ((a.length > 1 ? a[1] : null) as Map)['rating'] as int?,
-              hasImage: ((a.length > 1 ? a[1] : null) as Map)['hasImage'] as bool?,
-              variantId: ((a.length > 1 ? a[1] : null) as Map)['variantId'] as String?,
-              sort: ((a.length > 1 ? a[1] : null) as Map)['sort'] as ProductReviewSort?)),
+      (a.length > 1 && a[1] != null
+          ? ProductReviewParams(
+              page: ((a[1] as Map)['page'] == null ? null : (a[1] as Map)['page'] as int),
+              size: ((a[1] as Map)['size'] == null ? null : (a[1] as Map)['size'] as int),
+              rating: ((a[1] as Map)['rating'] == null ? null : (a[1] as Map)['rating'] as int),
+              hasImage: ((a[1] as Map)['hasImage'] == null ? null : (a[1] as Map)['hasImage'] as bool),
+              variantId: ((a[1] as Map)['variantId'] == null ? null : (a[1] as Map)['variantId'] as String),
+              sort: ((a[1] as Map)['sort'] == null ? null : (a[1] as Map)['sort'] as String))
+          : null)),
   'catalog.listProductInquiries': (c, a) => c.catalog.listProductInquiries(
       a[0] as String,
-      (a.length > 1 ? a[1] : null) == null
-          ? null
-          : PageParams(
-              page: ((a.length > 1 ? a[1] : null) as Map)['page'] as int?,
-              size: ((a.length > 1 ? a[1] : null) as Map)['size'] as int?)),
+      (a.length > 1 && a[1] != null
+          ? PageParams(
+              page: ((a[1] as Map)['page'] == null ? null : (a[1] as Map)['page'] as int),
+              size: ((a[1] as Map)['size'] == null ? null : (a[1] as Map)['size'] as int))
+          : null)),
   'catalog.getProductCalendar': (c, a) => c.catalog.getProductCalendar(a[0] as String,
       from: (a[1] as Map)['from'] as String,
       to: (a[1] as Map)['to'] as String,
-      variantId: (a[1] as Map)['variantId'] as String?),
+      variantId: ((a[1] as Map)['variantId'] == null ? null : (a[1] as Map)['variantId'] as String)),
   'catalog.createInquiry': (c, a) =>
       c.catalog.createInquiry(a[0] as String, CreateInquiryRequest.fromJson((a[1] as Map).cast<String, Object?>())),
-  'catalog.listCollections': (c, a) => c.catalog.listCollections((a.length > 0 ? a[0] : null) == null
-      ? null
-      : PageParams(
-          page: ((a.length > 0 ? a[0] : null) as Map)['page'] as int?,
-          size: ((a.length > 0 ? a[0] : null) as Map)['size'] as int?)),
-  'catalog.listCoupons': (c, a) => c.catalog.listCoupons((a.length > 0 ? a[0] : null) == null
-      ? null
-      : StorefrontCouponListParams(
-          productId: ((a.length > 0 ? a[0] : null) as Map)['productId'] as String?,
-          page: ((a.length > 0 ? a[0] : null) as Map)['page'] as int?,
-          size: ((a.length > 0 ? a[0] : null) as Map)['size'] as int?)),
+  'catalog.listCollections': (c, a) => c.catalog.listCollections((a.length > 0 && a[0] != null
+      ? PageParams(
+          page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
+          size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int))
+      : null)),
+  'catalog.listCoupons': (c, a) => c.catalog.listCoupons((a.length > 0 && a[0] != null
+      ? StorefrontCouponListParams(
+          productId: ((a[0] as Map)['productId'] == null ? null : (a[0] as Map)['productId'] as String),
+          page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
+          size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int))
+      : null)),
   'catalog.getCollection': (c, a) => c.catalog.getCollection(a[0] as String),
   'catalog.listCollectionProducts': (c, a) => c.catalog.listCollectionProducts(
       a[0] as String,
-      (a.length > 1 ? a[1] : null) == null
-          ? null
-          : CollectionProductParams(
-              page: ((a.length > 1 ? a[1] : null) as Map)['page'] as int?,
-              size: ((a.length > 1 ? a[1] : null) as Map)['size'] as int?,
-              sort: ((a.length > 1 ? a[1] : null) as Map)['sort'] as CollectionProductSortParam?,
-              minPrice: ((a.length > 1 ? a[1] : null) as Map)['minPrice'] as int?,
-              maxPrice: ((a.length > 1 ? a[1] : null) as Map)['maxPrice'] as int?)),
-  'pickupLocations.list': (c, a) => c.pickupLocations
-      .list(productId: (a[0] as Map)['productId'] as String?, optionId: (a[0] as Map)['optionId'] as String?),
+      (a.length > 1 && a[1] != null
+          ? CollectionProductParams(
+              page: ((a[1] as Map)['page'] == null ? null : (a[1] as Map)['page'] as int),
+              size: ((a[1] as Map)['size'] == null ? null : (a[1] as Map)['size'] as int),
+              sort: ((a[1] as Map)['sort'] == null ? null : (a[1] as Map)['sort'] as String),
+              minPrice: ((a[1] as Map)['minPrice'] == null ? null : (a[1] as Map)['minPrice'] as int),
+              maxPrice: ((a[1] as Map)['maxPrice'] == null ? null : (a[1] as Map)['maxPrice'] as int))
+          : null)),
+  'pickupLocations.list': (c, a) => c.pickupLocations.list(
+      productId: ((a[0] as Map)['productId'] == null ? null : (a[0] as Map)['productId'] as String),
+      optionId: ((a[0] as Map)['optionId'] == null ? null : (a[0] as Map)['optionId'] as String)),
   'cart.get': (c, a) => c.cart.get(),
   'cart.addItem': (c, a) => c.cart.addItem(AddCartItemRequest.fromJson((a[0] as Map).cast<String, Object?>())),
   'cart.updateItem': (c, a) =>
@@ -270,10 +271,10 @@ final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)>
   'payments.reportFailure': (c, a) => c.payments
       .reportFailure(a[0] as String, ReportPaymentFailureRequest.fromJson((a[1] as Map).cast<String, Object?>())),
   'myOrders.list': (c, a) => c.myOrders.list(
-      page: (a[0] as Map)['page'] as int?,
-      size: (a[0] as Map)['size'] as int?,
-      status: (a[0] as Map)['status'] as OrderItemStatus?,
-      from: (a[0] as Map)['from'] as String?),
+      page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
+      size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int),
+      status: ((a[0] as Map)['status'] == null ? null : (a[0] as Map)['status'] as String),
+      from: ((a[0] as Map)['from'] == null ? null : (a[0] as Map)['from'] as String)),
   'myOrders.get': (c, a) => c.myOrders.get(a[0] as String),
   'myOrders.getGuestOrder': (c, a) => c.myOrders.getGuestOrder(a[0] as String,
       phone: (a[1] as Map)['phone'] as String, orderPassword: (a[1] as Map)['orderPassword'] as String),
@@ -283,29 +284,29 @@ final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)>
   'myOrders.guestAct': (c, a) => c.myOrders.guestAct(a[0] as String, a[1] as String, a[2] as String,
       phone: (a[3] as Map)['phone'] as String,
       orderPassword: (a[3] as Map)['orderPassword'] as String,
-      input: (a[3] as Map)['input'] as Map<String, Object?>?),
+      input: ((a[3] as Map)['input'] == null ? null : ((a[3] as Map)['input'] as Map).cast<String, Object?>())),
   'myOrders.actOnOrder': (c, a) =>
       c.myOrders.actOnOrder(a[0] as String, a[1] as String, (a[2] as Map).cast<String, Object?>()),
   'myOrders.guestActOnOrder': (c, a) => c.myOrders.guestActOnOrder(a[0] as String, a[1] as String,
       phone: (a[2] as Map)['phone'] as String,
       orderPassword: (a[2] as Map)['orderPassword'] as String,
-      input: (a[2] as Map)['input'] as Map<String, Object?>?),
+      input: ((a[2] as Map)['input'] == null ? null : ((a[2] as Map)['input'] as Map).cast<String, Object?>())),
   'myClaims.create': (c, a) =>
       c.myClaims.create(a[0] as String, CreateClaimRequest.fromJson((a[1] as Map).cast<String, Object?>())),
   'myClaims.preview': (c, a) =>
       c.myClaims.preview(a[0] as String, CreateClaimRequest.fromJson((a[1] as Map).cast<String, Object?>())),
   'myClaims.list': (c, a) => c.myClaims.list(
-      page: (a[0] as Map)['page'] as int?,
-      size: (a[0] as Map)['size'] as int?,
-      status: (a[0] as Map)['status'] as ClaimStatus?),
+      page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
+      size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int),
+      status: ((a[0] as Map)['status'] == null ? null : (a[0] as Map)['status'] as String)),
   'myClaims.withdraw': (c, a) => c.myClaims.withdraw(a[0] as String),
   'member.me': (c, a) => c.member.me(),
   'member.getPoints': (c, a) => c.member.getPoints(),
-  'member.listPointHistory': (c, a) => c.member.listPointHistory((a.length > 0 ? a[0] : null) == null
-      ? null
-      : PageParams(
-          page: ((a.length > 0 ? a[0] : null) as Map)['page'] as int?,
-          size: ((a.length > 0 ? a[0] : null) as Map)['size'] as int?)),
+  'member.listPointHistory': (c, a) => c.member.listPointHistory((a.length > 0 && a[0] != null
+      ? PageParams(
+          page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
+          size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int))
+      : null)),
   'member.updateMe': (c, a) => c.member.updateMe(UpdateProfileRequest.fromJson((a[0] as Map).cast<String, Object?>())),
   'member.consents': (c, a) => c.member.consents(),
   'member.updateConsents': (c, a) =>
@@ -316,18 +317,18 @@ final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)>
   'member.updateAddress': (c, a) =>
       c.member.updateAddress(a[0] as String, MemberAddressWrite.fromJson((a[1] as Map).cast<String, Object?>())),
   'member.deleteAddress': (c, a) => c.member.deleteAddress(a[0] as String),
-  'member.listWishlist': (c, a) => c.member.listWishlist((a.length > 0 ? a[0] : null) == null
-      ? null
-      : PageParams(
-          page: ((a.length > 0 ? a[0] : null) as Map)['page'] as int?,
-          size: ((a.length > 0 ? a[0] : null) as Map)['size'] as int?)),
+  'member.listWishlist': (c, a) => c.member.listWishlist((a.length > 0 && a[0] != null
+      ? PageParams(
+          page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
+          size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int))
+      : null)),
   'member.addWishlist': (c, a) => c.member.addWishlist(a[0] as String),
   'member.removeWishlist': (c, a) => c.member.removeWishlist(a[0] as String),
-  'reviews.listMine': (c, a) => c.reviews.listMine((a.length > 0 ? a[0] : null) == null
-      ? null
-      : PageParams(
-          page: ((a.length > 0 ? a[0] : null) as Map)['page'] as int?,
-          size: ((a.length > 0 ? a[0] : null) as Map)['size'] as int?)),
+  'reviews.listMine': (c, a) => c.reviews.listMine((a.length > 0 && a[0] != null
+      ? PageParams(
+          page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
+          size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int))
+      : null)),
   'reviews.listWritable': (c, a) => c.reviews.listWritable(),
   'reviews.createImageUpload': (c, a) =>
       c.reviews.createImageUpload(ReviewImageUploadRequest.fromJson((a[0] as Map).cast<String, Object?>())),
@@ -337,17 +338,18 @@ final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)>
       c.reviews.update(a[0] as String, UpdateReviewRequest.fromJson((a[1] as Map).cast<String, Object?>())),
   'reviews.remove': (c, a) => c.reviews.remove(a[0] as String),
   'inquiries.listMine': (c, a) => c.inquiries.listMine(
-      page: (a[0] as Map)['page'] as int?,
-      size: (a[0] as Map)['size'] as int?,
-      answered: (a[0] as Map)['answered'] as bool?),
-  'me.coupons': (c, a) => c.me.coupons(status: (a[0] as Map)['status'] as String?),
+      page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
+      size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int),
+      answered: ((a[0] as Map)['answered'] == null ? null : (a[0] as Map)['answered'] as bool)),
+  'me.coupons': (c, a) =>
+      c.me.coupons(status: ((a[0] as Map)['status'] == null ? null : (a[0] as Map)['status'] as String)),
   'me.downloadCoupon': (c, a) => c.me.downloadCoupon(a[0] as String),
   'me.customerInquiries.create': (c, a) =>
       c.me.customerInquiries.create(CreateCustomerInquiryRequest.fromJson((a[0] as Map).cast<String, Object?>())),
   'me.customerInquiries.list': (c, a) => c.me.customerInquiries.list(
-      page: (a[0] as Map)['page'] as int?,
-      size: (a[0] as Map)['size'] as int?,
-      answered: (a[0] as Map)['answered'] as bool?,
-      category: (a[0] as Map)['category'] as CustomerInquiryCategory?),
+      page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
+      size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int),
+      answered: ((a[0] as Map)['answered'] == null ? null : (a[0] as Map)['answered'] as bool),
+      category: ((a[0] as Map)['category'] == null ? null : (a[0] as Map)['category'] as String)),
   'me.customerInquiries.get': (c, a) => c.me.customerInquiries.get(a[0] as String),
 };

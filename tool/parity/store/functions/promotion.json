@@ -1,0 +1,5311 @@
+[
+  {
+    "name": "couponDiscountOf RATE 10 12345",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "RATE",
+        "value": 10,
+        "maxDiscountAmount": null
+      },
+      12345
+    ]
+  },
+  {
+    "name": "couponDiscountOf RATE 10 0",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "RATE",
+        "value": 10,
+        "maxDiscountAmount": null
+      },
+      0
+    ]
+  },
+  {
+    "name": "couponDiscountOf RATE 10 -5",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "RATE",
+        "value": 10,
+        "maxDiscountAmount": null
+      },
+      -5
+    ]
+  },
+  {
+    "name": "couponDiscountOf RATE 33 999",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "RATE",
+        "value": 33,
+        "maxDiscountAmount": null
+      },
+      999
+    ]
+  },
+  {
+    "name": "couponDiscountOf RATE 100 5000",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "RATE",
+        "value": 100,
+        "maxDiscountAmount": null
+      },
+      5000
+    ]
+  },
+  {
+    "name": "couponDiscountOf RATE 50 5000",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "RATE",
+        "value": 50,
+        "maxDiscountAmount": 1000
+      },
+      5000
+    ]
+  },
+  {
+    "name": "couponDiscountOf RATE 50 5000",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "RATE",
+        "value": 50,
+        "maxDiscountAmount": 100000
+      },
+      5000
+    ]
+  },
+  {
+    "name": "couponDiscountOf AMOUNT 3000 2000",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "AMOUNT",
+        "value": 3000,
+        "maxDiscountAmount": null
+      },
+      2000
+    ]
+  },
+  {
+    "name": "couponDiscountOf AMOUNT 3000 5000",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "AMOUNT",
+        "value": 3000,
+        "maxDiscountAmount": null
+      },
+      5000
+    ]
+  },
+  {
+    "name": "couponDiscountOf RATE 7 1",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "RATE",
+        "value": 7,
+        "maxDiscountAmount": null
+      },
+      1
+    ]
+  },
+  {
+    "name": "couponDiscountOf RATE 15 99999999",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "RATE",
+        "value": 15,
+        "maxDiscountAmount": null
+      },
+      99999999
+    ]
+  },
+  {
+    "name": "couponDiscountOf USD",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "RATE",
+        "value": 15,
+        "maxDiscountAmount": null
+      },
+      1999,
+      {
+        "currency": "USD",
+        "saleUnit": 1,
+        "minPayment": 50,
+        "maxOrderAmount": 99999999
+      }
+    ]
+  },
+  {
+    "name": "couponDiscountOf TWD",
+    "fn": "couponDiscountOf",
+    "args": [
+      {
+        "type": "RATE",
+        "value": 15,
+        "maxDiscountAmount": null
+      },
+      199900,
+      {
+        "currency": "TWD",
+        "saleUnit": 100,
+        "minPayment": 2000,
+        "maxOrderAmount": 99999999
+      }
+    ]
+  },
+  {
+    "name": "allocateByWeight 100 [1,1,1]",
+    "fn": "allocateByWeight",
+    "args": [
+      100,
+      [
+        1,
+        1,
+        1
+      ]
+    ]
+  },
+  {
+    "name": "allocateByWeight 10 [3,3,4]",
+    "fn": "allocateByWeight",
+    "args": [
+      10,
+      [
+        3,
+        3,
+        4
+      ]
+    ]
+  },
+  {
+    "name": "allocateByWeight 7 [1,2,3,4]",
+    "fn": "allocateByWeight",
+    "args": [
+      7,
+      [
+        1,
+        2,
+        3,
+        4
+      ]
+    ]
+  },
+  {
+    "name": "allocateByWeight 0 [1,2]",
+    "fn": "allocateByWeight",
+    "args": [
+      0,
+      [
+        1,
+        2
+      ]
+    ]
+  },
+  {
+    "name": "allocateByWeight 100 [0,0]",
+    "fn": "allocateByWeight",
+    "args": [
+      100,
+      [
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "name": "allocateByWeight 100 [-5,10]",
+    "fn": "allocateByWeight",
+    "args": [
+      100,
+      [
+        -5,
+        10
+      ]
+    ]
+  },
+  {
+    "name": "allocateByWeight 1000 []",
+    "fn": "allocateByWeight",
+    "args": [
+      1000,
+      []
+    ]
+  },
+  {
+    "name": "allocateByWeight 99999 [33333,33333,33334]",
+    "fn": "allocateByWeight",
+    "args": [
+      99999,
+      [
+        33333,
+        33333,
+        33334
+      ]
+    ]
+  },
+  {
+    "name": "allocateByWeight 5 [1000000,1,1]",
+    "fn": "allocateByWeight",
+    "args": [
+      5,
+      [
+        1000000,
+        1,
+        1
+      ]
+    ]
+  },
+  {
+    "name": "allocateByWeight 9007199254740991 [9007199254740991,1]",
+    "fn": "allocateByWeight",
+    "args": [
+      9007199254740991,
+      [
+        9007199254740991,
+        1
+      ]
+    ]
+  },
+  {
+    "name": "allocateByWeight 10 [1.5]",
+    "fn": "allocateByWeight",
+    "args": [
+      10,
+      [
+        1.5
+      ]
+    ]
+  },
+  {
+    "name": "allocateByWeight -10 [1,2]",
+    "fn": "allocateByWeight",
+    "args": [
+      -10,
+      [
+        1,
+        2
+      ]
+    ]
+  },
+  {
+    "name": "isCouponTargetLine all",
+    "fn": "isCouponTargetLine",
+    "args": [
+      {
+        "couponId": "c1",
+        "name": "c1",
+        "kind": "ORDER",
+        "benefit": {
+          "maxDiscountAmount": null,
+          "type": "RATE",
+          "value": 10
+        },
+        "conditions": {
+          "minOrderAmount": 0,
+          "firstOrderOnly": false,
+          "memberOnly": false,
+          "stackWithInstantDiscount": true
+        },
+        "target": {
+          "includeProductIds": [],
+          "includeCategoryIds": [],
+          "excludeProductIds": [],
+          "excludeCategoryIds": []
+        },
+        "startsAt": null,
+        "endsAt": null
+      },
+      {
+        "lineId": "1",
+        "productId": "p1",
+        "quantity": 1,
+        "baseAmount": 1000,
+        "amount": 1000
+      }
+    ]
+  },
+  {
+    "name": "isCouponTargetLine exclude product",
+    "fn": "isCouponTargetLine",
+    "args": [
+      {
+        "couponId": "c",
+        "name": "c",
+        "kind": "ORDER",
+        "benefit": {
+          "maxDiscountAmount": null,
+          "type": "RATE",
+          "value": 10
+        },
+        "conditions": {
+          "minOrderAmount": 0,
+          "firstOrderOnly": false,
+          "memberOnly": false,
+          "stackWithInstantDiscount": true
+        },
+        "target": {
+          "includeProductIds": [],
+          "includeCategoryIds": [],
+          "excludeProductIds": [
+            "p1"
+          ],
+          "excludeCategoryIds": []
+        },
+        "startsAt": null,
+        "endsAt": null
+      },
+      {
+        "lineId": "1",
+        "productId": "p1",
+        "quantity": 1,
+        "baseAmount": 1000,
+        "amount": 1000
+      }
+    ]
+  },
+  {
+    "name": "isCouponTargetLine include category",
+    "fn": "isCouponTargetLine",
+    "args": [
+      {
+        "couponId": "c",
+        "name": "c",
+        "kind": "ORDER",
+        "benefit": {
+          "maxDiscountAmount": null,
+          "type": "RATE",
+          "value": 10
+        },
+        "conditions": {
+          "minOrderAmount": 0,
+          "firstOrderOnly": false,
+          "memberOnly": false,
+          "stackWithInstantDiscount": true
+        },
+        "target": {
+          "includeProductIds": [],
+          "includeCategoryIds": [
+            "cat2"
+          ],
+          "excludeProductIds": [],
+          "excludeCategoryIds": []
+        },
+        "startsAt": null,
+        "endsAt": null
+      },
+      {
+        "lineId": "1",
+        "productId": "p1",
+        "quantity": 1,
+        "baseAmount": 1000,
+        "amount": 1000,
+        "categoryPath": "/cat1/cat2/cat3/"
+      }
+    ]
+  },
+  {
+    "name": "isCouponTargetLine include category miss",
+    "fn": "isCouponTargetLine",
+    "args": [
+      {
+        "couponId": "c",
+        "name": "c",
+        "kind": "ORDER",
+        "benefit": {
+          "maxDiscountAmount": null,
+          "type": "RATE",
+          "value": 10
+        },
+        "conditions": {
+          "minOrderAmount": 0,
+          "firstOrderOnly": false,
+          "memberOnly": false,
+          "stackWithInstantDiscount": true
+        },
+        "target": {
+          "includeProductIds": [],
+          "includeCategoryIds": [
+            "cat9"
+          ],
+          "excludeProductIds": [],
+          "excludeCategoryIds": []
+        },
+        "startsAt": null,
+        "endsAt": null
+      },
+      {
+        "lineId": "1",
+        "productId": "p1",
+        "quantity": 1,
+        "baseAmount": 1000,
+        "amount": 1000,
+        "categoryPath": "/cat1/cat2/"
+      }
+    ]
+  },
+  {
+    "name": "isCouponTargetLine exclude category",
+    "fn": "isCouponTargetLine",
+    "args": [
+      {
+        "couponId": "c",
+        "name": "c",
+        "kind": "ORDER",
+        "benefit": {
+          "maxDiscountAmount": null,
+          "type": "RATE",
+          "value": 10
+        },
+        "conditions": {
+          "minOrderAmount": 0,
+          "firstOrderOnly": false,
+          "memberOnly": false,
+          "stackWithInstantDiscount": true
+        },
+        "target": {
+          "includeProductIds": [
+            "p1"
+          ],
+          "includeCategoryIds": [],
+          "excludeProductIds": [],
+          "excludeCategoryIds": [
+            "cat1"
+          ]
+        },
+        "startsAt": null,
+        "endsAt": null
+      },
+      {
+        "lineId": "1",
+        "productId": "p1",
+        "quantity": 1,
+        "baseAmount": 1000,
+        "amount": 1000,
+        "categoryPath": "/cat1/"
+      }
+    ]
+  },
+  {
+    "name": "isCouponTargetLine no categoryPath",
+    "fn": "isCouponTargetLine",
+    "args": [
+      {
+        "couponId": "c",
+        "name": "c",
+        "kind": "ORDER",
+        "benefit": {
+          "maxDiscountAmount": null,
+          "type": "RATE",
+          "value": 10
+        },
+        "conditions": {
+          "minOrderAmount": 0,
+          "firstOrderOnly": false,
+          "memberOnly": false,
+          "stackWithInstantDiscount": true
+        },
+        "target": {
+          "includeProductIds": [],
+          "includeCategoryIds": [
+            "cat1"
+          ],
+          "excludeProductIds": [],
+          "excludeCategoryIds": []
+        },
+        "startsAt": null,
+        "endsAt": null
+      },
+      {
+        "lineId": "1",
+        "productId": "p1",
+        "quantity": 1,
+        "baseAmount": 1000,
+        "amount": 1000,
+        "categoryPath": null
+      }
+    ]
+  },
+  {
+    "name": "isCouponTargetLine instant discount blocked",
+    "fn": "isCouponTargetLine",
+    "args": [
+      {
+        "couponId": "c",
+        "name": "c",
+        "kind": "ORDER",
+        "benefit": {
+          "maxDiscountAmount": null,
+          "type": "RATE",
+          "value": 10
+        },
+        "conditions": {
+          "minOrderAmount": 0,
+          "firstOrderOnly": false,
+          "memberOnly": false,
+          "stackWithInstantDiscount": false
+        },
+        "target": {
+          "includeProductIds": [],
+          "includeCategoryIds": [],
+          "excludeProductIds": [],
+          "excludeCategoryIds": []
+        },
+        "startsAt": null,
+        "endsAt": null
+      },
+      {
+        "lineId": "1",
+        "productId": "p1",
+        "quantity": 1,
+        "baseAmount": 1000,
+        "amount": 900
+      }
+    ]
+  },
+  {
+    "name": "isCouponTargetLine include product",
+    "fn": "isCouponTargetLine",
+    "args": [
+      {
+        "couponId": "c",
+        "name": "c",
+        "kind": "ORDER",
+        "benefit": {
+          "maxDiscountAmount": null,
+          "type": "RATE",
+          "value": 10
+        },
+        "conditions": {
+          "minOrderAmount": 0,
+          "firstOrderOnly": false,
+          "memberOnly": false,
+          "stackWithInstantDiscount": true
+        },
+        "target": {
+          "includeProductIds": [
+            "p2"
+          ],
+          "includeCategoryIds": [],
+          "excludeProductIds": [],
+          "excludeCategoryIds": []
+        },
+        "startsAt": null,
+        "endsAt": null
+      },
+      {
+        "lineId": "1",
+        "productId": "p2",
+        "quantity": 1,
+        "baseAmount": 900,
+        "amount": 900
+      }
+    ]
+  },
+  {
+    "name": "isCouponTargetLine empty categoryPath",
+    "fn": "isCouponTargetLine",
+    "args": [
+      {
+        "couponId": "c",
+        "name": "c",
+        "kind": "ORDER",
+        "benefit": {
+          "maxDiscountAmount": null,
+          "type": "RATE",
+          "value": 10
+        },
+        "conditions": {
+          "minOrderAmount": 0,
+          "firstOrderOnly": false,
+          "memberOnly": false,
+          "stackWithInstantDiscount": true
+        },
+        "target": {
+          "includeProductIds": [],
+          "includeCategoryIds": [
+            "x"
+          ],
+          "excludeProductIds": [],
+          "excludeCategoryIds": []
+        },
+        "startsAt": null,
+        "endsAt": null
+      },
+      {
+        "lineId": "1",
+        "productId": "p2",
+        "quantity": 1,
+        "baseAmount": 900,
+        "amount": 900,
+        "categoryPath": ""
+      }
+    ]
+  },
+  {
+    "name": "quotePricing no coupons",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing order rate",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing order amount over base",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 1000,
+            "amount": 1000
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 5000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing order rate cap",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": 2000,
+                "type": "RATE",
+                "value": 30
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing two order coupons stack",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          },
+          {
+            "rule": {
+              "couponId": "o2",
+              "name": "o2",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 1000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing order min amount fallthrough",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 100000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          },
+          {
+            "rule": {
+              "couponId": "o2",
+              "name": "o2",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 1000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing duplicate coupon id",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "couponKey": "k1"
+          },
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "couponKey": "k2"
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing expired then valid copy",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "couponKey": "k1",
+            "validUntil": "2026-05-01T00:00:00+09:00"
+          },
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "couponKey": "k2",
+            "validUntil": "2026-07-01T00:00:00+09:00"
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing not started",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": "2026-07-01T00:00:00+09:00",
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing expired by rule",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": "2026-06-01T00:00:00.000Z"
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing valid window inclusive start",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": "2026-06-01T00:00:00Z",
+              "endsAt": "2026-06-01T00:00:01Z"
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing bad date fail closed",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "validFrom": "not-a-date"
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing member only guest",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": true,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": false,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing first order only",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": true,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing first order ok",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": true,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": true,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing ignore eligibility",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": true,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": "2020-01-01T00:00:00Z"
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": false,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "ignoreEligibility": true
+      }
+    ]
+  },
+  {
+    "name": "quotePricing no eligible items",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [
+                  "zz"
+                ],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing instant discount excluded",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": false
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing product coupon auto pick",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "p1c",
+              "name": "p1c",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 20
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing product coupon pinned line",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "p1c",
+              "name": "p1c",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 20
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": "1"
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing product coupon pinned not eligible",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "p1c",
+              "name": "p1c",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 20
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [
+                  "p2"
+                ],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": "1"
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing product coupons narrow first",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "wide",
+              "name": "wide",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          },
+          {
+            "rule": {
+              "couponId": "narrow",
+              "name": "narrow",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 1000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [
+                  "p2"
+                ],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing product coupon stack limit pinned",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "a",
+              "name": "a",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 100
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": "2"
+          },
+          {
+            "rule": {
+              "couponId": "b",
+              "name": "b",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 200
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": "2"
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing product coupons exhaust lines",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 1000,
+            "amount": 1000
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "a",
+              "name": "a",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 100
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          },
+          {
+            "rule": {
+              "couponId": "b",
+              "name": "b",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 100
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing product coupon tie first line",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 5000,
+            "amount": 5000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 5000,
+            "amount": 5000
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "a",
+              "name": "a",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing product coupon no discount",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 5,
+            "amount": 5
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "a",
+              "name": "a",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing product + order",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          },
+          {
+            "rule": {
+              "couponId": "p1c",
+              "name": "p1c",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 2000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing pinned eligibleLineIds empty",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "eligibleLineIds": []
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing pinned eligibleLineIds",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [
+                  "zz"
+                ],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "eligibleLineIds": [
+              "3",
+              "1"
+            ]
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing delivery coupon",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "d1",
+              "name": "d1",
+              "kind": "DELIVERY",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "delivery": {
+          "bundles": [
+            {
+              "bundleKey": "b1",
+              "fee": 3000,
+              "remoteSurcharge": 0
+            },
+            {
+              "bundleKey": "b2",
+              "fee": 2500,
+              "remoteSurcharge": 3000
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing delivery coupon rate",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "d1",
+              "name": "d1",
+              "kind": "DELIVERY",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 50
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "delivery": {
+          "bundles": [
+            {
+              "bundleKey": "b1",
+              "fee": 3000,
+              "remoteSurcharge": 0
+            },
+            {
+              "bundleKey": "b2",
+              "fee": 2500,
+              "remoteSurcharge": 3000
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing delivery coupon no delivery",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "d1",
+              "name": "d1",
+              "kind": "DELIVERY",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing two delivery coupons",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "d1",
+              "name": "d1",
+              "kind": "DELIVERY",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 1000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          },
+          {
+            "rule": {
+              "couponId": "d2",
+              "name": "d2",
+              "kind": "DELIVERY",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 1000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "delivery": {
+          "bundles": [
+            {
+              "bundleKey": "b1",
+              "fee": 3000,
+              "remoteSurcharge": 0
+            },
+            {
+              "bundleKey": "b2",
+              "fee": 2500,
+              "remoteSurcharge": 3000
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing all kinds",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "d1",
+              "name": "d1",
+              "kind": "DELIVERY",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 1000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          },
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 5
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          },
+          {
+            "rule": {
+              "couponId": "p1",
+              "name": "p1",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 500
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "delivery": {
+          "bundles": [
+            {
+              "bundleKey": "b1",
+              "fee": 3000,
+              "remoteSurcharge": 0
+            },
+            {
+              "bundleKey": "b2",
+              "fee": 2500,
+              "remoteSurcharge": 3000
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points simple",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 5000,
+          "balance": 10000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 0,
+            "unit": 10,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points all",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 38333,
+          "balance": 50000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 0,
+            "unit": 10,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points all with delivery",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 1000000,
+          "balance": 1000000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 0,
+            "unit": 10,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": true
+          }
+        },
+        "delivery": {
+          "bundles": [
+            {
+              "bundleKey": "b1",
+              "fee": 3000,
+              "remoteSurcharge": 0
+            },
+            {
+              "bundleKey": "b2",
+              "fee": 2500,
+              "remoteSurcharge": 3000
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points min payment adjust",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 38300,
+          "balance": 50000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 0,
+            "unit": 1,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points over delivery excluded",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 100000,
+          "balance": 100000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 0,
+            "unit": 10,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": false
+          }
+        },
+        "delivery": {
+          "bundles": [
+            {
+              "bundleKey": "b1",
+              "fee": 3000,
+              "remoteSurcharge": 0
+            },
+            {
+              "bundleKey": "b2",
+              "fee": 2500,
+              "remoteSurcharge": 3000
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points ratio",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 100000,
+          "balance": 100000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 0,
+            "unit": 10,
+            "maxRatioBp": 1234,
+            "includeDeliveryFee": true
+          }
+        },
+        "delivery": {
+          "bundles": [
+            {
+              "bundleKey": "b1",
+              "fee": 3000,
+              "remoteSurcharge": 0
+            },
+            {
+              "bundleKey": "b2",
+              "fee": 2500,
+              "remoteSurcharge": 3000
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points min balance",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 1000,
+          "balance": 500,
+          "rules": {
+            "minBalance": 1000,
+            "minAmount": 0,
+            "unit": 10,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points min amount",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 500,
+          "balance": 5000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 1000,
+            "unit": 10,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points zero request",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 0,
+          "balance": 5000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 0,
+            "unit": 10,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points unit 100",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 1234,
+          "balance": 5000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 0,
+            "unit": 100,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points with coupons",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 10000,
+            "amount": 10000
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 25000,
+            "amount": 25000,
+            "categoryPath": "/a/b/"
+          },
+          {
+            "lineId": "3",
+            "productId": "p3",
+            "quantity": 1,
+            "baseAmount": 4000,
+            "amount": 3333
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          },
+          {
+            "rule": {
+              "couponId": "d1",
+              "name": "d1",
+              "kind": "DELIVERY",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 1000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 30000,
+          "balance": 30000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 0,
+            "unit": 10,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": true
+          }
+        },
+        "delivery": {
+          "bundles": [
+            {
+              "bundleKey": "b1",
+              "fee": 3000,
+              "remoteSurcharge": 0
+            },
+            {
+              "bundleKey": "b2",
+              "fee": 2500,
+              "remoteSurcharge": 3000
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing points into bundles",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 1000,
+            "amount": 1000
+          }
+        ],
+        "coupons": [],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "points": {
+          "requested": 4000,
+          "balance": 9000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 0,
+            "unit": 1,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": true
+          }
+        },
+        "delivery": {
+          "bundles": [
+            {
+              "bundleKey": "b1",
+              "fee": 3000,
+              "remoteSurcharge": 0
+            },
+            {
+              "bundleKey": "b2",
+              "fee": 2500,
+              "remoteSurcharge": 3000
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing usd rules",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 1999,
+            "amount": 1999
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 2999,
+            "amount": 2999
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 15
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        },
+        "moneyRules": {
+          "currency": "USD",
+          "saleUnit": 1,
+          "minPayment": 50,
+          "maxOrderAmount": 99999999
+        },
+        "points": {
+          "requested": 4950,
+          "balance": 9000,
+          "rules": {
+            "minBalance": 0,
+            "minAmount": 0,
+            "unit": 1,
+            "maxRatioBp": 10000,
+            "includeDeliveryFee": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing duplicate line ids",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 1000,
+            "amount": 1000
+          },
+          {
+            "lineId": "1",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 2000,
+            "amount": 2000
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "RATE",
+                "value": 10
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          },
+          {
+            "rule": {
+              "couponId": "p",
+              "name": "p",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 100
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "quotePricing zero amount line",
+    "fn": "quotePricing",
+    "args": [
+      {
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 1,
+            "baseAmount": 0,
+            "amount": 0
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "baseAmount": 1000,
+            "amount": 1000
+          }
+        ],
+        "coupons": [
+          {
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 500
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            }
+          }
+        ],
+        "firstOrder": false,
+        "isMember": true,
+        "now": {
+          "$date": "2026-06-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf undefined {\"productPaid\":1000,\"deliveryPaid\":0,\"total\":1000}",
+    "fn": "pointUseOf",
+    "args": [
+      null,
+      {
+        "productPaid": 1000,
+        "deliveryPaid": 0,
+        "total": 1000
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 500 {\"productPaid\":1000,\"deliveryPaid\":0,\"total\":1000}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 500,
+        "balance": 1000,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 1000,
+        "deliveryPaid": 0,
+        "total": 1000
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 950 {\"productPaid\":1000,\"deliveryPaid\":0,\"total\":1000}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 950,
+        "balance": 1000,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 1,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 1000,
+        "deliveryPaid": 0,
+        "total": 1000
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 999 {\"productPaid\":1000,\"deliveryPaid\":0,\"total\":1000}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 999,
+        "balance": 1000,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 1,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 1000,
+        "deliveryPaid": 0,
+        "total": 1000
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 1000 {\"productPaid\":1000,\"deliveryPaid\":0,\"total\":1000}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 1000,
+        "balance": 1000,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 1000,
+        "deliveryPaid": 0,
+        "total": 1000
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 1000 {\"productPaid\":1000,\"deliveryPaid\":3000,\"total\":4000}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 1000,
+        "balance": 1000,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 1000,
+        "deliveryPaid": 3000,
+        "total": 4000
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 5000 {\"productPaid\":1000,\"deliveryPaid\":3000,\"total\":4000}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 5000,
+        "balance": 5000,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": false
+        }
+      },
+      {
+        "productPaid": 1000,
+        "deliveryPaid": 3000,
+        "total": 4000
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 5000 {\"productPaid\":1000,\"deliveryPaid\":3000,\"total\":4000}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 5000,
+        "balance": 5000,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 5000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 1000,
+        "deliveryPaid": 3000,
+        "total": 4000
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 50 {\"productPaid\":120,\"deliveryPaid\":0,\"total\":120}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 50,
+        "balance": 5000,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 120,
+        "deliveryPaid": 0,
+        "total": 120
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf -5 {\"productPaid\":120,\"deliveryPaid\":0,\"total\":120}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": -5,
+        "balance": 5000,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 120,
+        "deliveryPaid": 0,
+        "total": 120
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 100 {\"productPaid\":0,\"deliveryPaid\":0,\"total\":0}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 100,
+        "balance": 0,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 0,
+        "deliveryPaid": 0,
+        "total": 0
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 100 {\"productPaid\":1000,\"deliveryPaid\":0,\"total\":1000}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 100,
+        "balance": 100,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 0,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 1000,
+        "deliveryPaid": 0,
+        "total": 1000
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 60 {\"productPaid\":120,\"deliveryPaid\":0,\"total\":120}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 60,
+        "balance": 5000,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 1,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 120,
+        "deliveryPaid": 0,
+        "total": 120
+      },
+      {
+        "currency": "USD",
+        "saleUnit": 1,
+        "minPayment": 50,
+        "maxOrderAmount": 99999999
+      }
+    ]
+  },
+  {
+    "name": "pointUseOf 30 {\"productPaid\":120,\"deliveryPaid\":0,\"total\":120}",
+    "fn": "pointUseOf",
+    "args": [
+      {
+        "requested": 30,
+        "balance": 5000,
+        "rules": {
+          "minBalance": 0,
+          "minAmount": 50,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        }
+      },
+      {
+        "productPaid": 120,
+        "deliveryPaid": 0,
+        "total": 120
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall no coupons",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {},
+        "shortfallCharge": true,
+        "sellerFault": false,
+        "chargeableAmount": 100000,
+        "coupons": [],
+        "lines": []
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall delivery only",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {},
+        "shortfallCharge": true,
+        "sellerFault": false,
+        "chargeableAmount": 100000,
+        "coupons": [
+          {
+            "couponKey": "d",
+            "rule": {
+              "couponId": "d",
+              "name": "d",
+              "kind": "DELIVERY",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 1000
+              },
+              "conditions": {
+                "minOrderAmount": 0,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": null,
+            "eligibleLineIds": [],
+            "discount": 1000
+          }
+        ],
+        "lines": []
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall still applied",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {},
+        "shortfallCharge": true,
+        "sellerFault": false,
+        "chargeableAmount": 100000,
+        "coupons": [
+          {
+            "couponKey": "o1",
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 30000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": null,
+            "eligibleLineIds": [
+              "1",
+              "2"
+            ],
+            "discount": 3000
+          }
+        ],
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 2,
+            "activeQuantity": 2,
+            "totalPrice": 20000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 2000
+              }
+            ]
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "activeQuantity": 1,
+            "totalPrice": 10000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 1000
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall lost condition charge",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {},
+        "shortfallCharge": true,
+        "sellerFault": false,
+        "chargeableAmount": 100000,
+        "coupons": [
+          {
+            "couponKey": "o1",
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 30000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": null,
+            "eligibleLineIds": [
+              "1",
+              "2"
+            ],
+            "discount": 3000
+          }
+        ],
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 2,
+            "activeQuantity": 1,
+            "totalPrice": 20000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 2000
+              }
+            ]
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "activeQuantity": 1,
+            "totalPrice": 10000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 1000
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall lost condition seller fault",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {},
+        "shortfallCharge": true,
+        "sellerFault": true,
+        "chargeableAmount": 100000,
+        "coupons": [
+          {
+            "couponKey": "o1",
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 30000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": null,
+            "eligibleLineIds": [
+              "1",
+              "2"
+            ],
+            "discount": 3000
+          }
+        ],
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 2,
+            "activeQuantity": 1,
+            "totalPrice": 20000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 2000
+              }
+            ]
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "activeQuantity": 1,
+            "totalPrice": 10000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 1000
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall lost condition policy off",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {},
+        "shortfallCharge": false,
+        "sellerFault": false,
+        "chargeableAmount": 100000,
+        "coupons": [
+          {
+            "couponKey": "o1",
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 30000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": null,
+            "eligibleLineIds": [
+              "1",
+              "2"
+            ],
+            "discount": 3000
+          }
+        ],
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 2,
+            "activeQuantity": 1,
+            "totalPrice": 20000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 2000
+              }
+            ]
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "activeQuantity": 1,
+            "totalPrice": 10000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 1000
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall capacity cap",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {},
+        "shortfallCharge": true,
+        "sellerFault": false,
+        "chargeableAmount": 500,
+        "coupons": [
+          {
+            "couponKey": "o1",
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 30000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": null,
+            "eligibleLineIds": [
+              "1",
+              "2"
+            ],
+            "discount": 3000
+          }
+        ],
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 2,
+            "activeQuantity": 1,
+            "totalPrice": 20000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 2000
+              }
+            ]
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "activeQuantity": 1,
+            "totalPrice": 10000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 1000
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall all cancelled refund back",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {
+          "o1": {
+            "charged": 2000,
+            "waived": 0
+          }
+        },
+        "shortfallCharge": true,
+        "sellerFault": false,
+        "chargeableAmount": 0,
+        "coupons": [
+          {
+            "couponKey": "o1",
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 30000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": null,
+            "eligibleLineIds": [
+              "1",
+              "2"
+            ],
+            "discount": 3000
+          }
+        ],
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 2,
+            "activeQuantity": 0,
+            "totalPrice": 20000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 2000
+              }
+            ]
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 1,
+            "activeQuantity": 0,
+            "totalPrice": 10000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 1000
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall waived reduce",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {
+          "o1": {
+            "charged": 500,
+            "waived": 1500
+          }
+        },
+        "shortfallCharge": true,
+        "sellerFault": false,
+        "chargeableAmount": 100000,
+        "coupons": [
+          {
+            "couponKey": "o1",
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 30000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": null,
+            "eligibleLineIds": [
+              "1"
+            ],
+            "discount": 3000
+          }
+        ],
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 3,
+            "activeQuantity": 1,
+            "totalPrice": 30000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 3000
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall partial state",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {
+          "o1": {
+            "charged": 300
+          },
+          "other": null
+        },
+        "shortfallCharge": true,
+        "sellerFault": false,
+        "chargeableAmount": 100000,
+        "coupons": [
+          {
+            "couponKey": "o1",
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 30000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": null,
+            "eligibleLineIds": [
+              "1"
+            ],
+            "discount": 3000
+          }
+        ],
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 3,
+            "activeQuantity": 2,
+            "totalPrice": 30000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 3000
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall product coupon",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {},
+        "shortfallCharge": true,
+        "sellerFault": false,
+        "chargeableAmount": 100000,
+        "coupons": [
+          {
+            "couponKey": "p1",
+            "rule": {
+              "couponId": "p1",
+              "name": "p1",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 500
+              },
+              "conditions": {
+                "minOrderAmount": 5000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": "1",
+            "eligibleLineIds": [
+              "1"
+            ],
+            "discount": 500
+          }
+        ],
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 3,
+            "activeQuantity": 1,
+            "totalPrice": 9000,
+            "allocations": [
+              {
+                "couponKey": "p1",
+                "amount": 500
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "settleCouponShortfall two coupons",
+    "fn": "settleCouponShortfall",
+    "args": [
+      {
+        "settlements": {},
+        "shortfallCharge": true,
+        "sellerFault": false,
+        "chargeableAmount": 1500,
+        "coupons": [
+          {
+            "couponKey": "o1",
+            "rule": {
+              "couponId": "o1",
+              "name": "o1",
+              "kind": "ORDER",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 3000
+              },
+              "conditions": {
+                "minOrderAmount": 30000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": null,
+            "eligibleLineIds": [
+              "1",
+              "2"
+            ],
+            "discount": 3000
+          },
+          {
+            "couponKey": "p1",
+            "rule": {
+              "couponId": "p1",
+              "name": "p1",
+              "kind": "PRODUCT",
+              "benefit": {
+                "maxDiscountAmount": null,
+                "type": "AMOUNT",
+                "value": 500
+              },
+              "conditions": {
+                "minOrderAmount": 15000,
+                "firstOrderOnly": false,
+                "memberOnly": false,
+                "stackWithInstantDiscount": true
+              },
+              "target": {
+                "includeProductIds": [],
+                "includeCategoryIds": [],
+                "excludeProductIds": [],
+                "excludeCategoryIds": []
+              },
+              "startsAt": null,
+              "endsAt": null
+            },
+            "lineId": "2",
+            "eligibleLineIds": [
+              "2"
+            ],
+            "discount": 500
+          }
+        ],
+        "lines": [
+          {
+            "lineId": "1",
+            "productId": "p1",
+            "quantity": 2,
+            "activeQuantity": 1,
+            "totalPrice": 20000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 2000
+              }
+            ]
+          },
+          {
+            "lineId": "2",
+            "productId": "p2",
+            "quantity": 2,
+            "activeQuantity": 1,
+            "totalPrice": 20000,
+            "allocations": [
+              {
+                "couponKey": "o1",
+                "amount": 1000
+              },
+              {
+                "couponKey": "p1",
+                "amount": 500
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "proratedPaidRefundBase {\"totalPrice\":3,\"couponDiscountAmount\":2,\"quantity\":5} 2 1",
+    "fn": "proratedPaidRefundBase",
+    "args": [
+      {
+        "totalPrice": 3,
+        "couponDiscountAmount": 2,
+        "quantity": 5
+      },
+      2,
+      1
+    ]
+  },
+  {
+    "name": "proratedPaidRefundBase {\"totalPrice\":10000,\"couponDiscountAmount\":null,\"quantity\":3} 0 1",
+    "fn": "proratedPaidRefundBase",
+    "args": [
+      {
+        "totalPrice": 10000,
+        "couponDiscountAmount": null,
+        "quantity": 3
+      },
+      0,
+      1
+    ]
+  },
+  {
+    "name": "proratedPaidRefundBase {\"totalPrice\":10000,\"couponDiscountAmount\":1000,\"pointAllocation\":500,\"quantity\":3} 1 2",
+    "fn": "proratedPaidRefundBase",
+    "args": [
+      {
+        "totalPrice": 10000,
+        "couponDiscountAmount": 1000,
+        "pointAllocation": 500,
+        "quantity": 3
+      },
+      1,
+      2
+    ]
+  },
+  {
+    "name": "proratedPaidRefundBase {\"totalPrice\":1000,\"couponDiscountAmount\":2000,\"quantity\":1} 0 1",
+    "fn": "proratedPaidRefundBase",
+    "args": [
+      {
+        "totalPrice": 1000,
+        "couponDiscountAmount": 2000,
+        "quantity": 1
+      },
+      0,
+      1
+    ]
+  },
+  {
+    "name": "proratedPaidRefundBase {\"totalPrice\":1000,\"quantity\":0} 0 1",
+    "fn": "proratedPaidRefundBase",
+    "args": [
+      {
+        "totalPrice": 1000,
+        "quantity": 0
+      },
+      0,
+      1
+    ]
+  },
+  {
+    "name": "proratedPaidRefundBase {\"totalPrice\":1000,\"quantity\":4} 0 0",
+    "fn": "proratedPaidRefundBase",
+    "args": [
+      {
+        "totalPrice": 1000,
+        "quantity": 4
+      },
+      0,
+      0
+    ]
+  },
+  {
+    "name": "proratedPointRefund {\"pointAllocation\":1000,\"quantity\":3} 0 1",
+    "fn": "proratedPointRefund",
+    "args": [
+      {
+        "pointAllocation": 1000,
+        "quantity": 3
+      },
+      0,
+      1
+    ]
+  },
+  {
+    "name": "proratedPointRefund {\"pointAllocation\":1000,\"quantity\":3} 1 2",
+    "fn": "proratedPointRefund",
+    "args": [
+      {
+        "pointAllocation": 1000,
+        "quantity": 3
+      },
+      1,
+      2
+    ]
+  },
+  {
+    "name": "proratedPointRefund {\"quantity\":3} 0 3",
+    "fn": "proratedPointRefund",
+    "args": [
+      {
+        "quantity": 3
+      },
+      0,
+      3
+    ]
+  },
+  {
+    "name": "proratedPointRefund {\"pointAllocation\":null,\"quantity\":2} 0 1",
+    "fn": "proratedPointRefund",
+    "args": [
+      {
+        "pointAllocation": null,
+        "quantity": 2
+      },
+      0,
+      1
+    ]
+  }
+]

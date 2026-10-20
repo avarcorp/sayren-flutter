@@ -1,0 +1,47 @@
+[
+  { "name": "모두 번역", "fn": "productLocalizationNeedsTranslation", "args": [
+    { "locale": "en", "name": "Shirt", "description": "<p>x</p>", "descriptionJson": null, "images": null,
+      "optionGroups": [{ "groupId": "g1", "name": "Color", "values": [{ "valueId": "v1", "name": "Red" }] }],
+      "addonGroups": [], "customInputs": [{ "inputId": "i1", "label": "Engraving", "placeholder": null }],
+      "notice": [{ "key": "material", "label": "소재", "value": "Cotton" }], "updatedAt": "2026-01-01T00:00:00Z" },
+    { "description": "<p>본문</p>" }
+  ] },
+  { "name": "상품명 없음", "fn": "productLocalizationNeedsTranslation", "args": [
+    { "locale": "en", "name": "", "description": null, "descriptionJson": null, "images": null,
+      "optionGroups": [], "addonGroups": [], "customInputs": [], "notice": [], "updatedAt": "2026-01-01T00:00:00Z" },
+    {}
+  ] },
+  { "name": "기본 본문 있고 번역 없음", "fn": "productLocalizationNeedsTranslation", "args": [
+    { "locale": "en", "name": "Shirt", "description": null, "descriptionJson": null, "images": null,
+      "optionGroups": [], "addonGroups": [], "customInputs": [], "notice": [], "updatedAt": "2026-01-01T00:00:00Z" },
+    { "description": "  본문  " }
+  ] },
+  { "name": "기본 본문 공백뿐", "fn": "productLocalizationNeedsTranslation", "args": [
+    { "locale": "en", "name": "Shirt", "description": null, "descriptionJson": null, "images": null,
+      "optionGroups": [], "addonGroups": [], "customInputs": [], "notice": [], "updatedAt": "2026-01-01T00:00:00Z" },
+    { "description": "   " }
+  ] },
+  { "name": "추가 선택 값 이름 없음", "fn": "productLocalizationNeedsTranslation", "args": [
+    { "locale": "en", "name": "Shirt", "description": null, "descriptionJson": null, "images": null,
+      "optionGroups": [], "addonGroups": [{ "groupId": "g1", "name": "Wrap", "values": [{ "valueId": "v1", "name": null }] }],
+      "customInputs": [], "notice": [], "updatedAt": "2026-01-01T00:00:00Z" },
+    { "description": null }
+  ] },
+  { "name": "직접 입력 항목명 없음", "fn": "productLocalizationNeedsTranslation", "args": [
+    { "locale": "en", "name": "Shirt", "description": null, "descriptionJson": null, "images": null,
+      "optionGroups": [], "addonGroups": [], "customInputs": [{ "inputId": "i1", "label": null, "placeholder": "x" }],
+      "notice": [], "updatedAt": "2026-01-01T00:00:00Z" },
+    {}
+  ] },
+  { "name": "고시 칸 비어 있음", "fn": "productLocalizationNeedsTranslation", "args": [
+    { "locale": "en", "name": "Shirt", "description": null, "descriptionJson": null, "images": null,
+      "optionGroups": [], "addonGroups": [], "customInputs": [],
+      "notice": [{ "key": "material", "label": "소재", "value": null }], "updatedAt": "2026-01-01T00:00:00Z" },
+    {}
+  ] },
+  { "name": "고시 생략", "fn": "productLocalizationNeedsTranslation", "args": [
+    { "locale": "en", "name": "Shirt", "description": null, "descriptionJson": null, "images": null,
+      "optionGroups": [], "addonGroups": [], "customInputs": [], "updatedAt": "2026-01-01T00:00:00Z" },
+    {}
+  ] }
+]

@@ -1,0 +1,8 @@
+[
+  { "name": "2박", "fn": "nightsOf", "args": [{ "checkIn": "2026-03-01", "checkOut": "2026-03-03" }] },
+  { "name": "월 넘김·윤년", "fn": "nightsOf", "args": [{ "checkIn": "2028-02-28", "checkOut": "2028-03-02" }] },
+  { "name": "같은 날", "fn": "nightsOf", "args": [{ "checkIn": "2026-03-01", "checkOut": "2026-03-01" }] },
+  { "name": "거꾸로", "fn": "nightsOf", "args": [{ "checkIn": "2026-03-05", "checkOut": "2026-03-01" }] },
+  { "name": "형식 틀림", "fn": "nightsOf", "args": [{ "checkIn": "x", "checkOut": "2026-03-01" }] },
+  { "name": "없는 날짜(넘김)", "fn": "nightsOf", "args": [{ "checkIn": "2026-02-30", "checkOut": "2026-03-03" }] }
+]

@@ -1,0 +1,698 @@
+{
+  "$comment": "관리 API 세션·OAuth 시나리오. 무작위 값(state·verifier·challenge)은 자리표시로 바꿔 비교한다. \"$state\" 인자는 저장한 PKCE의 state다.",
+  "defaults": {
+    "baseUrl": "https://api.example.test/v1",
+    "authServer": {
+      "authorizeUrl": "https://accounts.example.test/oauth2/authorize",
+      "tokenUrl": "https://accounts.example.test/oauth2/token",
+      "revokeUrl": "https://accounts.example.test/oauth2/revoke",
+      "resource": "https://api.example.test"
+    },
+    "clientId": "seller-app"
+  },
+  "scenarios": [
+    {
+      "name": "authorize → handleCallback — 토큰 저장",
+      "storage": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "access_token": "access-1",
+            "token_type": "Bearer",
+            "expires_in": 900,
+            "refresh_token": "refresh-1"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "authorize",
+          "args": [
+            {
+              "redirectUri": "app://cb",
+              "scope": "openid offline_access",
+              "prompt": "login"
+            }
+          ]
+        },
+        {
+          "op": "handleCallback",
+          "args": [
+            "code-1",
+            "$state"
+          ]
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "handleCallback — state 불일치",
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "authorize",
+          "args": [
+            {
+              "redirectUri": "app://cb"
+            }
+          ]
+        },
+        {
+          "op": "handleCallback",
+          "args": [
+            "code-1",
+            "other"
+          ]
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "handleCallback — PKCE 없음",
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "handleCallback",
+          "args": [
+            "code-1",
+            "s"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "handleCallback — 토큰 교환 실패(OAuth 에러)",
+      "storage": {},
+      "responses": [
+        {
+          "status": 400,
+          "body": {
+            "error": "invalid_grant",
+            "error_description": "code가 만료되었습니다"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "authorize",
+          "args": [
+            {
+              "redirectUri": "app://cb"
+            }
+          ]
+        },
+        {
+          "op": "handleCallback",
+          "args": [
+            "code-1",
+            "$state"
+          ]
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "handleCallback — 교환 실패(본문 없음)",
+      "storage": {},
+      "responses": [
+        {
+          "status": 502,
+          "body": null
+        }
+      ],
+      "steps": [
+        {
+          "op": "authorize",
+          "args": [
+            {
+              "redirectUri": "app://cb"
+            }
+          ]
+        },
+        {
+          "op": "handleCallback",
+          "args": [
+            "code-1",
+            "$state"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "refresh — 회전 저장",
+      "storage": {
+        "sayren.store.session": "access-0",
+        "sayren.store.refresh": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "access_token": "access-1",
+            "token_type": "Bearer",
+            "expires_in": 900,
+            "refresh_token": "refresh-1"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "refresh"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "refresh — 새 refresh 토큰 없으면 기존 유지",
+      "storage": {
+        "sayren.store.session": "access-0",
+        "sayren.store.refresh": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "access_token": "access-1",
+            "token_type": "Bearer",
+            "expires_in": 900
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "refresh"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "refresh — 동시 호출은 한 번",
+      "storage": {
+        "sayren.store.session": "access-0",
+        "sayren.store.refresh": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "access_token": "access-1",
+            "token_type": "Bearer",
+            "expires_in": 900,
+            "refresh_token": "refresh-1"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "refreshTwice"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "refresh — 실패하면 세션을 지운다",
+      "storage": {
+        "sayren.store.session": "access-0",
+        "sayren.store.refresh": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 400,
+          "body": {
+            "error": "invalid_grant"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "refresh"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "refresh — refresh 토큰 없음",
+      "storage": {
+        "sayren.store.session": "access-0"
+      },
+      "responses": [],
+      "steps": [
+        {
+          "op": "refresh"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "logout — refresh·access 폐기 후 지움",
+      "storage": {
+        "sayren.store.session": "access-0",
+        "sayren.store.refresh": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {}
+        },
+        {
+          "status": 200,
+          "body": {}
+        }
+      ],
+      "steps": [
+        {
+          "op": "logout"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "logout — 폐기 실패여도 지움",
+      "storage": {
+        "sayren.store.session": "access-0"
+      },
+      "responses": [
+        {
+          "status": 500,
+          "body": null
+        }
+      ],
+      "steps": [
+        {
+          "op": "logout"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "setTokens·getToken·clear",
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "setTokens",
+          "args": [
+            {
+              "access_token": "a-9",
+              "refresh_token": "r-9"
+            }
+          ]
+        },
+        {
+          "op": "getToken"
+        },
+        {
+          "op": "setTokens",
+          "args": [
+            {
+              "access_token": "a-10"
+            }
+          ]
+        },
+        {
+          "op": "tokens"
+        },
+        {
+          "op": "clear"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "userinfo — 토큰 없으면 요청하지 않음",
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "userinfo"
+        }
+      ]
+    },
+    {
+      "name": "userinfo — GET /me",
+      "storage": {
+        "sayren.store.session": "access-0"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "accountId": "acc_1",
+              "email": "seller@example.test",
+              "name": "셀러"
+            },
+            "error": null
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "userinfo"
+        },
+        {
+          "op": "clientUserinfo"
+        }
+      ]
+    },
+    {
+      "name": "userinfo — 401",
+      "storage": {
+        "sayren.store.session": "access-0"
+      },
+      "responses": [
+        {
+          "status": 401,
+          "body": {
+            "meta": {
+              "status": 401,
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED"
+            }
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "userinfo"
+        }
+      ]
+    },
+    {
+      "name": "클라이언트 401 → 갱신 → 재시도",
+      "storage": {
+        "sayren.store.session": "access-0",
+        "sayren.store.refresh": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 401,
+          "body": {
+            "meta": {
+              "status": 401,
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "access_token": "access-1",
+            "token_type": "Bearer",
+            "expires_in": 900,
+            "refresh_token": "refresh-1"
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": [],
+            "error": null
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "call",
+          "call": "auth.listMyStores",
+          "args": []
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "클라이언트 401 → 갱신 실패 → 세션 지움",
+      "storage": {
+        "sayren.store.session": "access-0",
+        "sayren.store.refresh": "refresh-0"
+      },
+      "responses": [
+        {
+          "status": 401,
+          "body": {
+            "meta": {
+              "status": 401,
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED",
+              "isSuccess": false
+            },
+            "data": null,
+            "error": {
+              "code": "UNAUTHORIZED",
+              "message": "UNAUTHORIZED"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "body": {
+            "error": "invalid_grant"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "call",
+          "call": "auth.me",
+          "args": []
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "클라이언트 authorize 위임",
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "clientAuthorize",
+          "args": [
+            {
+              "redirectUri": "app://cb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "세션 없는 클라이언트 — authorize·userinfo 실패",
+      "noSession": true,
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "clientAuthorize",
+          "args": [
+            {
+              "redirectUri": "app://cb"
+            }
+          ]
+        },
+        {
+          "op": "clientUserinfo"
+        },
+        {
+          "op": "tokens"
+        }
+      ]
+    },
+    {
+      "name": "buildAuthorizeUrl — 기존 쿼리 유지·덮어쓰기",
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "buildAuthorizeUrl",
+          "args": [
+            {
+              "authorizeUrl": "https://accounts.example.test/oauth2/authorize?ui=dark&state=old",
+              "clientId": "c 1",
+              "redirectUri": "app://cb?x=1",
+              "state": "st",
+              "codeChallenge": "ch",
+              "scope": "openid offline_access",
+              "resource": "https://api.example.test",
+              "prompt": "consent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "buildAuthorizeUrl — 선택값 생략·빈 값",
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "buildAuthorizeUrl",
+          "args": [
+            {
+              "authorizeUrl": "https://accounts.example.test",
+              "clientId": "c",
+              "redirectUri": "r",
+              "state": "s",
+              "codeChallenge": "c",
+              "scope": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "exchangeAuthorizationCode — resource",
+      "storage": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "access_token": "a",
+            "token_type": "Bearer",
+            "expires_in": 900,
+            "refresh_token": "r"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "exchangeAuthorizationCode",
+          "args": [
+            {
+              "tokenUrl": "https://accounts.example.test/token",
+              "clientId": "c",
+              "redirectUri": "app://cb",
+              "code": "x y",
+              "codeVerifier": "v",
+              "resource": "https://api.example.test"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "refreshUserToken — 응답 검증 실패",
+      "storage": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "access_token": "a",
+            "token_type": "bearer",
+            "expires_in": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "refreshUserToken",
+          "args": [
+            {
+              "tokenUrl": "https://accounts.example.test/token",
+              "clientId": "c",
+              "refreshToken": "r"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "refreshUserToken — 엔벨로프 응답",
+      "storage": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "access_token": "a",
+              "token_type": "Bearer",
+              "expires_in": 1,
+              "extra": 1
+            },
+            "error": null
+          }
+        }
+      ],
+      "steps": [
+        {
+          "op": "refreshUserToken",
+          "args": [
+            {
+              "tokenUrl": "https://accounts.example.test/token",
+              "clientId": "c",
+              "refreshToken": "r"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "createPkcePair — 길이와 S256",
+      "storage": {},
+      "responses": [],
+      "steps": [
+        {
+          "op": "createPkcePair"
+        }
+      ]
+    }
+  ]
+}

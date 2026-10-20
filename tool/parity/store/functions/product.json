@@ -1,0 +1,20 @@
+[
+  { "name": "금지어 없음", "fn": "customInputLabelForbiddenWord", "args": ["각인 문구"] },
+  { "name": "금지어 연락처", "fn": "customInputLabelForbiddenWord", "args": ["받는 분 연락처"] },
+  { "name": "금지어 공백·기호로 쪼갬", "fn": "customInputLabelForbiddenWord", "args": ["전 화-번.호"] },
+  { "name": "금지어 전각·대문자", "fn": "customInputLabelForbiddenWord", "args": ["ＰＨＯＮＥ number"] },
+  { "name": "금지어 제로폭", "fn": "customInputLabelForbiddenWord", "args": ["e​mail 주소"] },
+  { "name": "금지어 빈 문자열", "fn": "customInputLabelForbiddenWord", "args": [""] },
+
+  { "name": "이미지 통과", "fn": "productImageRejection", "args": ["https://cdn.example.com/a/b.JPG"] },
+  { "name": "이미지 확장자 없음", "fn": "productImageRejection", "args": ["https://cdn.example.com/image/12345"] },
+  { "name": "이미지 경로 없음", "fn": "productImageRejection", "args": ["https://cdn.example.com"] },
+  { "name": "이미지 http", "fn": "productImageRejection", "args": ["http://cdn.example.com/a.png"] },
+  { "name": "이미지 data", "fn": "productImageRejection", "args": ["data:image/png;base64,AAAA"] },
+  { "name": "이미지 svg", "fn": "productImageRejection", "args": ["https://cdn.example.com/a.svg"] },
+  { "name": "이미지 쿼리 확장자 무시", "fn": "productImageRejection", "args": ["https://cdn.example.com/a.png?x=1.svg"] },
+  { "name": "이미지 형식 아님", "fn": "productImageRejection", "args": ["not a url"] },
+  { "name": "이미지 호스트 없음", "fn": "productImageRejection", "args": ["https://"] },
+  { "name": "이미지 앞뒤 공백", "fn": "productImageRejection", "args": ["  https://cdn.example.com/a.webp  "] },
+  { "name": "이미지 너무 긺", "fn": "productImageRejection", "args": ["https://cdn.example.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png"] }
+]

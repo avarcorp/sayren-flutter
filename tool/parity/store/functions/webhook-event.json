@@ -1,0 +1,68 @@
+[
+ {
+  "name": "parseWebhookEvent [{\"type\": \"NEW.THING\", \"eventId\": \"e\", \"data\": {\"x\": 1}}]",
+  "fn": "parseWebhookEvent",
+  "args": [
+   {
+    "type": "NEW.THING",
+    "eventId": "e",
+    "data": {
+     "x": 1
+    }
+   }
+  ]
+ },
+ {
+  "name": "parseWebhookEvent [{\"type\": \"\", \"data\": 1}]",
+  "fn": "parseWebhookEvent",
+  "args": [
+   {
+    "type": "",
+    "data": 1
+   }
+  ]
+ },
+ {
+  "name": "parseWebhookEvent [null]",
+  "fn": "parseWebhookEvent",
+  "args": [
+   null
+  ]
+ },
+ {
+  "name": "parseWebhookEvent [\"ORDER.PAID\"]",
+  "fn": "parseWebhookEvent",
+  "args": [
+   "ORDER.PAID"
+  ]
+ },
+ {
+  "name": "parseWebhookEvent [[1, 2]]",
+  "fn": "parseWebhookEvent",
+  "args": [
+   [
+    1,
+    2
+   ]
+  ]
+ },
+ {
+  "name": "parseWebhookEvent [{\"type\": \"ORDER.PAID\", \"data\": {}}]",
+  "fn": "parseWebhookEvent",
+  "args": [
+   {
+    "type": "ORDER.PAID",
+    "data": {}
+   }
+  ]
+ },
+ {
+  "name": "parseWebhookEvent [{\"type\": 1}]",
+  "fn": "parseWebhookEvent",
+  "args": [
+   {
+    "type": 1
+   }
+  ]
+ }
+]

@@ -6,3 +6,4 @@ environment:
 
 workspace:
   - packages/storefront-sdk
+  - packages/store-sdk

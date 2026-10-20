@@ -1,0 +1,770 @@
+[
+ {
+  "name": "isShowcaseStorefrontSlug [\"demo-shop\"]",
+  "fn": "isShowcaseStorefrontSlug",
+  "args": [
+   "demo-shop"
+  ]
+ },
+ {
+  "name": "isShowcaseStorefrontSlug [\"DEMO-x\"]",
+  "fn": "isShowcaseStorefrontSlug",
+  "args": [
+   "DEMO-x"
+  ]
+ },
+ {
+  "name": "isShowcaseStorefrontSlug [\"demo\"]",
+  "fn": "isShowcaseStorefrontSlug",
+  "args": [
+   "demo"
+  ]
+ },
+ {
+  "name": "isShowcaseStorefrontSlug [\"www\"]",
+  "fn": "isShowcaseStorefrontSlug",
+  "args": [
+   "www"
+  ]
+ },
+ {
+  "name": "isShowcaseStorefrontSlug [\"WWW\"]",
+  "fn": "isShowcaseStorefrontSlug",
+  "args": [
+   "WWW"
+  ]
+ },
+ {
+  "name": "isShowcaseStorefrontSlug [\"sites\"]",
+  "fn": "isShowcaseStorefrontSlug",
+  "args": [
+   "sites"
+  ]
+ },
+ {
+  "name": "isShowcaseStorefrontSlug [\"my-preview\"]",
+  "fn": "isShowcaseStorefrontSlug",
+  "args": [
+   "my-preview"
+  ]
+ },
+ {
+  "name": "isShowcaseStorefrontSlug [\"my-PREVIEW\"]",
+  "fn": "isShowcaseStorefrontSlug",
+  "args": [
+   "my-PREVIEW"
+  ]
+ },
+ {
+  "name": "isShowcaseStorefrontSlug [\"shop\"]",
+  "fn": "isShowcaseStorefrontSlug",
+  "args": [
+   "shop"
+  ]
+ },
+ {
+  "name": "isShowcaseStorefrontSlug [\"myshop\"]",
+  "fn": "isShowcaseStorefrontSlug",
+  "args": [
+   "myshop"
+  ]
+ },
+ {
+  "name": "isShowcaseStorefrontSlug [\"\"]",
+  "fn": "isShowcaseStorefrontSlug",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "isReservedStorefrontSlug [\"demo-shop\"]",
+  "fn": "isReservedStorefrontSlug",
+  "args": [
+   "demo-shop"
+  ]
+ },
+ {
+  "name": "isReservedStorefrontSlug [\"DEMO-x\"]",
+  "fn": "isReservedStorefrontSlug",
+  "args": [
+   "DEMO-x"
+  ]
+ },
+ {
+  "name": "isReservedStorefrontSlug [\"demo\"]",
+  "fn": "isReservedStorefrontSlug",
+  "args": [
+   "demo"
+  ]
+ },
+ {
+  "name": "isReservedStorefrontSlug [\"www\"]",
+  "fn": "isReservedStorefrontSlug",
+  "args": [
+   "www"
+  ]
+ },
+ {
+  "name": "isReservedStorefrontSlug [\"WWW\"]",
+  "fn": "isReservedStorefrontSlug",
+  "args": [
+   "WWW"
+  ]
+ },
+ {
+  "name": "isReservedStorefrontSlug [\"sites\"]",
+  "fn": "isReservedStorefrontSlug",
+  "args": [
+   "sites"
+  ]
+ },
+ {
+  "name": "isReservedStorefrontSlug [\"my-preview\"]",
+  "fn": "isReservedStorefrontSlug",
+  "args": [
+   "my-preview"
+  ]
+ },
+ {
+  "name": "isReservedStorefrontSlug [\"my-PREVIEW\"]",
+  "fn": "isReservedStorefrontSlug",
+  "args": [
+   "my-PREVIEW"
+  ]
+ },
+ {
+  "name": "isReservedStorefrontSlug [\"shop\"]",
+  "fn": "isReservedStorefrontSlug",
+  "args": [
+   "shop"
+  ]
+ },
+ {
+  "name": "isReservedStorefrontSlug [\"myshop\"]",
+  "fn": "isReservedStorefrontSlug",
+  "args": [
+   "myshop"
+  ]
+ },
+ {
+  "name": "isReservedStorefrontSlug [\"\"]",
+  "fn": "isReservedStorefrontSlug",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "storefrontEditPreviewLabelOf [\"sfs_ab12cd34\"]",
+  "fn": "storefrontEditPreviewLabelOf",
+  "args": [
+   "sfs_ab12cd34"
+  ]
+ },
+ {
+  "name": "storefrontEditPreviewLabelOf [\"sfs__x_\"]",
+  "fn": "storefrontEditPreviewLabelOf",
+  "args": [
+   "sfs__x_"
+  ]
+ },
+ {
+  "name": "storefrontEditPreviewLabelOf [\"\"]",
+  "fn": "storefrontEditPreviewLabelOf",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "storefrontEditPreviewLabelOf [\"abc\"]",
+  "fn": "storefrontEditPreviewLabelOf",
+  "args": [
+   "abc"
+  ]
+ },
+ {
+  "name": "storefrontVersionPreviewLabelOf [\"sfs_ab12cd34\", 3]",
+  "fn": "storefrontVersionPreviewLabelOf",
+  "args": [
+   "sfs_ab12cd34",
+   3
+  ]
+ },
+ {
+  "name": "storefrontVersionPreviewLabelOf [\"sfs_x\", 0]",
+  "fn": "storefrontVersionPreviewLabelOf",
+  "args": [
+   "sfs_x",
+   0
+  ]
+ },
+ {
+  "name": "storefrontVersionPreviewLabelOf [\"a_b\", 120]",
+  "fn": "storefrontVersionPreviewLabelOf",
+  "args": [
+   "a_b",
+   120
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"Shop.Example.COM\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "Shop.Example.COM"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\" shop.example.com. \"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   " shop.example.com. "
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"shop.example.com...\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "shop.example.com..."
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"한국.com\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "한국.com"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"한국.COM\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "한국.COM"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"ＥＸＡＭＰＬＥ.com\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "ＥＸＡＭＰＬＥ.com"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"bücher.de\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "bücher.de"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"https://www.a.com/\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "https://www.a.com/"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"a.com:8080\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "a.com:8080"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"a b.com\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "a b.com"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"a@b.com\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "a@b.com"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"   \"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "   "
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"xn--3e0b707e.com\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "xn--3e0b707e.com"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"日本語。jp\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "日本語。jp"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"münchen.DE.\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "münchen.DE."
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"%41.com\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "%41.com"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"a b.com\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "a b.com"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"例え.テスト\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "例え.テスト"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"Ⅻ.com\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "Ⅻ.com"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"faß.de\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "faß.de"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"ı.com\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "ı.com"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontHostname [\"İ.com\"]",
+  "fn": "normalizeStorefrontHostname",
+  "args": [
+   "İ.com"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"shop.brand.com\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "shop.brand.com"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"*.brand.com\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "*.brand.com"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"1.2.3.4\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "1.2.3.4"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"::1\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "::1"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"[::1]\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "[::1]"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"a\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "a"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"a..b\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "a..b"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"-a.com\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "-a.com"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"a-.com\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "a-.com"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"a.c\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "a.c"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"a.com1\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "a.com1"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"a.xn--3e0b707e\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "a.xn--3e0b707e"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"shop.test\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "shop.test"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"x.localhost\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "x.localhost"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"sayren.co\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "sayren.co"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"my.sayren.io\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "my.sayren.io"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"shop.custom.dev\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "shop.custom.dev"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"herokuapp.com\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "herokuapp.com"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"myshopify.com\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "myshopify.com"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"a.myshopify.com\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "a.myshopify.com"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"A.com\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "A.com"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"a_b.com\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "a_b.com"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"shop.mydomain.com\", \"MyDomain.com\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "shop.mydomain.com",
+   "MyDomain.com"
+  ]
+ },
+ {
+  "name": "storefrontCustomHostnameProblem [\"x.example.net\", \"example.net\"]",
+  "fn": "storefrontCustomHostnameProblem",
+  "args": [
+   "x.example.net",
+   "example.net"
+  ]
+ },
+ {
+  "name": "storefrontDomainTxtNameOf [\"shop.brand.com\"]",
+  "fn": "storefrontDomainTxtNameOf",
+  "args": [
+   "shop.brand.com"
+  ]
+ },
+ {
+  "name": "storefrontDomainTxtNameOf [\"\"]",
+  "fn": "storefrontDomainTxtNameOf",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "normalizeStorefrontPath [\"café.ts\"]",
+  "fn": "normalizeStorefrontPath",
+  "args": [
+   "café.ts"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontPath [\"café.ts\"]",
+  "fn": "normalizeStorefrontPath",
+  "args": [
+   "café.ts"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontPath [\"가\"]",
+  "fn": "normalizeStorefrontPath",
+  "args": [
+   "가"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontPath [\"ｶ\"]",
+  "fn": "normalizeStorefrontPath",
+  "args": [
+   "ｶ"
+  ]
+ },
+ {
+  "name": "normalizeStorefrontPath [\"\"]",
+  "fn": "normalizeStorefrontPath",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/routes/index.tsx\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/routes/index.tsx"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/routes/$id.tsx\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/routes/$id.tsx"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/(group)/_layout.tsx\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/(group)/_layout.tsx"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/[.]x\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/[.]x"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"/src/a\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "/src/a"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src//a\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src//a"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/./a\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/./a"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/../a\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/../a"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"node_modules/x\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "node_modules/x"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/dist/a\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/dist/a"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\".env\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   ".env"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/.env.local\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/.env.local"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/.envx\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/.envx"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/a b\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/a b"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/a​b\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/a​b"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/a‮b\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/a‮b"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"café.ts\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "café.ts"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"café.ts\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "café.ts"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/한글.ts\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/한글.ts"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"src/a\\\\b\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "src/a\\b"
+  ]
+ },
+ {
+  "name": "isEditableStorefrontPath [\"public/@x+y=z,w.png\"]",
+  "fn": "isEditableStorefrontPath",
+  "args": [
+   "public/@x+y=z,w.png"
+  ]
+ }
+]

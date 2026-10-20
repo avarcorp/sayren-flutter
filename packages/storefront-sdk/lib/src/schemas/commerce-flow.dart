@@ -179,7 +179,10 @@ final ZodObject<FlowAction> flowActionSchema = z.object<FlowAction>({
   'availableUntil': z.string().optional(),
   'subflow': z.string().optional(),
   'input': z.array<FlowInputField>(flowInputFieldSchema).optional(),
-  'partialQuantity': flowActionPartialQuantitySchema.optional(),
+  'partialQuantity': z.union<Object?>([
+    z.boolean(),
+    z.literal<String>('UNIT'),
+  ]).optional(),
 }, FlowAction._);
 
 /// FlowAction 값입니다.
@@ -267,15 +270,6 @@ class FlowActionDisabled extends ParsedObject {
   /// `message` 값입니다.
   String? get message => _j['message'] as String?;
 }
-
-/// [FlowActionPartialQuantity] 스키마입니다.
-final ZodType<Object?> flowActionPartialQuantitySchema = z.union<Object?>([
-  z.boolean(),
-  z.literal<String>('UNIT'),
-]);
-
-/// FlowActionPartialQuantity 값입니다.
-typedef FlowActionPartialQuantity = Object?;
 
 /// [Object?] 스키마입니다.
 ///

@@ -1,0 +1,135 @@
+[
+ {
+  "name": "describeScope [\"product:r\"]",
+  "fn": "describeScope",
+  "args": [
+   "product:r"
+  ]
+ },
+ {
+  "name": "describeScope [\"product:rw\"]",
+  "fn": "describeScope",
+  "args": [
+   "product:rw"
+  ]
+ },
+ {
+  "name": "describeScope [\"settlement:r\"]",
+  "fn": "describeScope",
+  "args": [
+   "settlement:r"
+  ]
+ },
+ {
+  "name": "describeScope [\"settlement:rw\"]",
+  "fn": "describeScope",
+  "args": [
+   "settlement:rw"
+  ]
+ },
+ {
+  "name": "describeScope [\"audit:rw\"]",
+  "fn": "describeScope",
+  "args": [
+   "audit:rw"
+  ]
+ },
+ {
+  "name": "describeScope [\"member:r\"]",
+  "fn": "describeScope",
+  "args": [
+   "member:r"
+  ]
+ },
+ {
+  "name": "describeScope [\"nope:r\"]",
+  "fn": "describeScope",
+  "args": [
+   "nope:r"
+  ]
+ },
+ {
+  "name": "describeScope [\"product\"]",
+  "fn": "describeScope",
+  "args": [
+   "product"
+  ]
+ },
+ {
+  "name": "describeScope [\"product:\"]",
+  "fn": "describeScope",
+  "args": [
+   "product:"
+  ]
+ },
+ {
+  "name": "describeScope [\":r\"]",
+  "fn": "describeScope",
+  "args": [
+   ":r"
+  ]
+ },
+ {
+  "name": "describeScope [\"product:r:x\"]",
+  "fn": "describeScope",
+  "args": [
+   "product:r:x"
+  ]
+ },
+ {
+  "name": "describeScope [\"\"]",
+  "fn": "describeScope",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "describeScope [\"PRODUCT:r\"]",
+  "fn": "describeScope",
+  "args": [
+   "PRODUCT:r"
+  ]
+ },
+ {
+  "name": "describeScope [\"inventory:rw\"]",
+  "fn": "describeScope",
+  "args": [
+   "inventory:rw"
+  ]
+ },
+ {
+  "name": "describeScope [\"flow:r\"]",
+  "fn": "describeScope",
+  "args": [
+   "flow:r"
+  ]
+ },
+ {
+  "name": "describeScope [\"storefront:rw\"]",
+  "fn": "describeScope",
+  "args": [
+   "storefront:rw"
+  ]
+ },
+ {
+  "name": "describeScope [\"webhook:r\"]",
+  "fn": "describeScope",
+  "args": [
+   "webhook:r"
+  ]
+ },
+ {
+  "name": "describeScope [\"analytics:rw\"]",
+  "fn": "describeScope",
+  "args": [
+   "analytics:rw"
+  ]
+ },
+ {
+  "name": "describeScope [\"store:r:extra\"]",
+  "fn": "describeScope",
+  "args": [
+   "store:r:extra"
+  ]
+ }
+]

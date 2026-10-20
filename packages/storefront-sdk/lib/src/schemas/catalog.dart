@@ -766,16 +766,16 @@ class ProductSearchParams extends PageParams {
 
   /// 쿼리 파라미터로 바꿉니다. null인 값은 뺍니다.
   @override
-  Map<String, Object?> toJson() => compact({
-        'page': page,
-        'size': size,
-        'keyword': keyword,
-        'categoryId': categoryId,
-        'minPrice': minPrice,
-        'maxPrice': maxPrice,
-        'freeShipping': freeShipping,
-        'sort': sort
-      });
+  Map<String, Object?> toJson() => {
+        if (page != null) 'page': page,
+        if (size != null) 'size': size,
+        if (keyword != null) 'keyword': keyword,
+        if (categoryId != null) 'categoryId': categoryId,
+        if (minPrice != null) 'minPrice': minPrice,
+        if (maxPrice != null) 'maxPrice': maxPrice,
+        if (freeShipping != null) 'freeShipping': freeShipping,
+        if (sort != null) 'sort': sort
+      };
 }
 
 /// [ProductFacets] 스키마입니다.
@@ -1097,8 +1097,13 @@ class CollectionProductParams extends PageParams {
 
   /// 쿼리 파라미터로 바꿉니다. null인 값은 뺍니다.
   @override
-  Map<String, Object?> toJson() =>
-      compact({'page': page, 'size': size, 'sort': sort, 'minPrice': minPrice, 'maxPrice': maxPrice});
+  Map<String, Object?> toJson() => {
+        if (page != null) 'page': page,
+        if (size != null) 'size': size,
+        if (sort != null) 'sort': sort,
+        if (minPrice != null) 'minPrice': minPrice,
+        if (maxPrice != null) 'maxPrice': maxPrice
+      };
 }
 
 /// [CollectionProductQuery] 스키마입니다.

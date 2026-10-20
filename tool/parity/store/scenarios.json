@@ -1,0 +1,777 @@
+{
+  "$comment": "관리 API 손 시나리오 — 생성 규칙으로 옮기지 않은 메서드(client-overrides.mjs)와 승인 대기·OAuth 오류. responses는 요청 순서대로 돌려준다. {\"$file\"}은 업로드 파일(Node Blob/File, Dart XFile)이다.",
+  "defaults": {
+    "options": {
+      "baseUrl": "https://api.example.test/v1",
+      "accessToken": "seller-token",
+      "storeId": "st_1"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "승인 대기(202) — ApprovalPendingError",
+      "call": "products.remove",
+      "args": [
+        "p1"
+      ],
+      "response": {
+        "status": 202,
+        "body": {
+          "meta": {
+            "status": 202,
+            "code": "APPROVAL_REQUIRED",
+            "message": "APPROVAL_REQUIRED",
+            "isSuccess": true
+          },
+          "data": {
+            "approvalId": "apr_1",
+            "status": "PENDING",
+            "operationId": "sample",
+            "operationName": "sample",
+            "method": "sample",
+            "path": "sample",
+            "body": "x",
+            "idempotencyKey": "sample",
+            "reason": "sample",
+            "actor": {
+              "type": "USER",
+              "id": "sample",
+              "name": "sample"
+            },
+            "preview": {
+              "operationId": "sample",
+              "method": "sample",
+              "path": "sample",
+              "target": {
+                "type": "sample",
+                "id": "sample"
+              },
+              "targetName": "sample",
+              "changes": [
+                {
+                  "field": "sample",
+                  "before": "x",
+                  "after": "x"
+                }
+              ],
+              "facts": {
+                "key": "sample"
+              }
+            },
+            "createdAt": "sample",
+            "expiresAt": "sample",
+            "decidedAt": "sample",
+            "decidedBy": {
+              "id": "sample",
+              "name": "sample"
+            },
+            "decisionNote": "sample",
+            "executedAt": "sample",
+            "result": {
+              "statusCode": 1,
+              "data": "x",
+              "error": {
+                "code": "sample",
+                "message": "sample"
+              }
+            },
+            "approvalUrl": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "승인 결과 있음(200) — ApprovalPendingError",
+      "call": "products.get",
+      "args": [
+        "p1"
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "APPROVAL_ALREADY_DECIDED",
+            "message": "APPROVAL_ALREADY_DECIDED",
+            "isSuccess": true
+          },
+          "data": {
+            "approvalId": "apr_1",
+            "status": "SUCCEEDED",
+            "operationId": "sample",
+            "operationName": "sample",
+            "method": "sample",
+            "path": "sample",
+            "body": "x",
+            "idempotencyKey": "sample",
+            "reason": "sample",
+            "actor": {
+              "type": "USER",
+              "id": "sample",
+              "name": "sample"
+            },
+            "preview": {
+              "operationId": "sample",
+              "method": "sample",
+              "path": "sample",
+              "target": {
+                "type": "sample",
+                "id": "sample"
+              },
+              "targetName": "sample",
+              "changes": [
+                {
+                  "field": "sample",
+                  "before": "x",
+                  "after": "x"
+                }
+              ],
+              "facts": {
+                "key": "sample"
+              }
+            },
+            "createdAt": "sample",
+            "expiresAt": "sample",
+            "decidedAt": "sample",
+            "decidedBy": {
+              "id": "sample",
+              "name": "sample"
+            },
+            "decisionNote": "sample",
+            "executedAt": "sample",
+            "result": {
+              "statusCode": 1,
+              "data": "x",
+              "error": {
+                "code": "sample",
+                "message": "sample"
+              }
+            },
+            "approvalUrl": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "OAuth 평면 에러 — code=error",
+      "call": "auth.me",
+      "args": [],
+      "response": {
+        "status": 401,
+        "body": {
+          "error": "invalid_token",
+          "error_description": "토큰이 만료되었습니다"
+        }
+      }
+    },
+    {
+      "name": "OAuth 평면 에러 — 설명 없음",
+      "call": "auth.me",
+      "args": [],
+      "response": {
+        "status": 400,
+        "body": {
+          "error": "invalid_request"
+        }
+      }
+    },
+    {
+      "name": "계정 API에는 X-Store-Id를 싣지 않는다",
+      "call": "auth.listMyStores",
+      "args": [],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "범주 삭제 — strategy",
+      "call": "categories.remove",
+      "args": [
+        "c1",
+        {
+          "strategy": "MOVE_TO_PARENT"
+        }
+      ],
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "범주 삭제 — 옵션 없음",
+      "call": "categories.remove",
+      "args": [
+        "c1"
+      ],
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "취소 미리보기 — 수량",
+      "call": "orderItems.cancelPreview",
+      "args": [
+        "oi1",
+        2
+      ],
+      "response": {
+        "status": 200,
+        "body": null
+      }
+    },
+    {
+      "name": "취소 미리보기 — 수량 0은 보내지 않는다",
+      "call": "orderItems.cancelPreview",
+      "args": [
+        "oi1",
+        0
+      ],
+      "response": {
+        "status": 200,
+        "body": null
+      }
+    },
+    {
+      "name": "초안 저장 — If-Match",
+      "call": "commerceFlows.saveDraft",
+      "args": [
+        "f1",
+        {
+          "graph": {
+            "nodes": [],
+            "edges": []
+          }
+        },
+        3
+      ],
+      "response": {
+        "status": 200,
+        "body": null
+      }
+    },
+    {
+      "name": "클레임 목록 — 상태 여러 개",
+      "call": "claims.list",
+      "args": [
+        {
+          "page": 1,
+          "status": [
+            "REQUESTED",
+            "HELD"
+          ]
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 1,
+            "contents": []
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "클레임 목록 — 상태 하나",
+      "call": "claims.list",
+      "args": [
+        {
+          "status": "REQUESTED"
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 1,
+            "contents": []
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "클레임 목록 — 인자 없음",
+      "call": "claims.list",
+      "args": [],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 1,
+            "contents": []
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "클레임 승인 — 차감·보류·멱등키",
+      "call": "claims.approve",
+      "args": [
+        "cl1",
+        500,
+        "idem-1",
+        {
+          "holdRefund": true
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": null
+      }
+    },
+    {
+      "name": "클레임 승인 — 인자 없음",
+      "call": "claims.approve",
+      "args": [
+        "cl1"
+      ],
+      "response": {
+        "status": 200,
+        "body": null
+      }
+    },
+    {
+      "name": "수거 완료 — 본문 없음",
+      "call": "claims.completeCollect",
+      "args": [
+        "cl1"
+      ],
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "교환 재배송 — 위치",
+      "call": "claims.registerRedelivery",
+      "args": [
+        "cl1",
+        "CJ",
+        "123",
+        {
+          "inventoryLocationId": "loc1"
+        }
+      ],
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "교환 재배송 — 위치 빈 문자열",
+      "call": "claims.registerRedelivery",
+      "args": [
+        "cl1",
+        "CJ",
+        "123",
+        {
+          "inventoryLocationId": ""
+        }
+      ],
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "적립금 내역 — 쿼리",
+      "call": "customers.listPointHistory",
+      "args": [
+        "cu1",
+        {
+          "page": 2,
+          "type": "EARN"
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 1,
+            "contents": []
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "회원 목록 — 검색",
+      "call": "customers.list",
+      "args": [
+        {
+          "page": 1,
+          "size": 10,
+          "q": "kim"
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 1,
+            "contents": []
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "쿠폰 목록",
+      "call": "coupons.list",
+      "args": [
+        {
+          "status": "ACTIVE"
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 1,
+            "contents": []
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "샌드박스 모드",
+      "call": "paymentSettings.setSandboxMode",
+      "args": [
+        "tosspayments",
+        true
+      ],
+      "response": {
+        "status": 200,
+        "body": null
+      }
+    },
+    {
+      "name": "PG 확인 — 본문 없음",
+      "call": "paymentSettings.verify",
+      "args": [
+        "tosspayments"
+      ],
+      "response": {
+        "status": 200,
+        "body": null
+      }
+    },
+    {
+      "name": "앱 설치 — 결과 문자열",
+      "call": "apps.installations.install",
+      "args": [
+        "consent-result-1"
+      ],
+      "response": {
+        "status": 200,
+        "body": null
+      }
+    },
+    {
+      "name": "앱 설치 — appId",
+      "call": "apps.installations.install",
+      "args": [
+        {
+          "appId": "app1",
+          "settings": {
+            "k": "v"
+          }
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": null
+      }
+    },
+    {
+      "name": "초대 목록 — 상태",
+      "call": "store.listInvitations",
+      "args": [
+        {
+          "status": "PENDING"
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "달력 저장 — updated",
+      "call": "products.setCalendar",
+      "args": [
+        "p1",
+        {
+          "dates": [
+            "2026-01-01"
+          ],
+          "stock": 1
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "updated": 1
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "발송 일괄",
+      "call": "orderItems.dispatchBulk",
+      "args": [
+        [
+          {
+            "orderItemId": "oi1",
+            "deliveryMethod": "DIRECT"
+          }
+        ],
+        "idem-2"
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "succeeded": [
+              "oi1"
+            ],
+            "failed": []
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "제공 일괄 — 메모",
+      "call": "orderItems.fulfillBulk",
+      "args": [
+        [
+          "oi1"
+        ],
+        {
+          "note": "수령 안내"
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "succeeded": [
+              "oi1"
+            ],
+            "failed": []
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "업로드 — 자리 발급과 PUT",
+      "call": "uploads.upload",
+      "args": [
+        {
+          "$file": {
+            "name": "a.png",
+            "type": "image/png",
+            "bytes": [
+              1,
+              2,
+              3
+            ]
+          }
+        },
+        {
+          "purpose": "description"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "uploadId": "u1",
+              "uploadUrl": "https://cdn.example.test/put/u1",
+              "url": "https://cdn.example.test/u1.png",
+              "expiresAt": "2026-01-01T00:10:00.000Z"
+            },
+            "error": null
+          }
+        },
+        {
+          "status": 200,
+          "body": null
+        }
+      ]
+    },
+    {
+      "name": "업로드 — 빈 파일",
+      "call": "uploads.upload",
+      "args": [
+        {
+          "$file": {
+            "name": "a.png",
+            "type": "image/png",
+            "bytes": []
+          }
+        }
+      ],
+      "responses": []
+    },
+    {
+      "name": "업로드 — 파일명 없음",
+      "call": "uploads.upload",
+      "args": [
+        {
+          "$file": {
+            "name": "",
+            "type": "",
+            "bytes": [
+              1
+            ]
+          }
+        }
+      ],
+      "responses": []
+    },
+    {
+      "name": "업로드 — PUT 실패",
+      "call": "uploads.upload",
+      "args": [
+        {
+          "$file": {
+            "name": "a.png",
+            "type": "",
+            "bytes": [
+              1
+            ]
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "meta": {
+              "status": 200,
+              "code": "OK",
+              "message": "OK",
+              "isSuccess": true
+            },
+            "data": {
+              "uploadId": "u1",
+              "uploadUrl": "https://cdn.example.test/put/u1",
+              "url": "https://cdn.example.test/u1.png",
+              "expiresAt": "2026-01-01T00:10:00.000Z"
+            },
+            "error": null
+          }
+        },
+        {
+          "status": 403,
+          "body": null
+        }
+      ]
+    }
+  ]
+}

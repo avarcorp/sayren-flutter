@@ -6,11 +6,27 @@ import { isDeepStrictEqual } from "node:util";
 const here = new URL(".", import.meta.url).pathname;
 const run = (cmd, args, cwd) => JSON.parse(execFileSync(cmd, args, { cwd, encoding: "utf8", maxBuffer: 256 << 20 }));
 
-const node = run("node", ["node-runner.mjs"], here);
-const dart = run("dart", ["run", "tool/parity_runner.dart", here], `${here}../../packages/storefront-sdk`);
+const TARGETS = {
+  storefront: { runner: "node-runner.mjs", pkg: "storefront-sdk", keys: ["scenarios", "schemaCases", "sessions", "auth", "analytics", "payments"] },
+  store: { runner: "store/node-runner.mjs", pkg: "store-sdk", keys: ["scenarios", "schemaCases", "functions", "sessions"] },
+};
+const only = process.argv.slice(2).find((a) => !a.startsWith("--"));
+let failed = 0;
+for (const [target, t] of Object.entries(TARGETS)) {
+  if (only && only !== target) continue;
+  console.log(`[${target}]`);
+  compare(target, t);
+}
+process.exit(failed ? 1 : 0);
+
+function compare(target, t) {
+const node = run("node", [t.runner], here);
+const dart = run("dart", ["run", "tool/parity_runner.dart", here], `${here}../../packages/${t.pkg}`);
 mkdirSync(`${here}out`, { recursive: true });
-writeFileSync(`${here}out/node.json`, JSON.stringify(node, null, 2));
-writeFileSync(`${here}out/dart.json`, JSON.stringify(dart, null, 2));
+writeFileSync(`${here}out/${target}-node.json`, JSON.stringify(node, null, 2));
+writeFileSync(`${here}out/${target}-dart.json`, JSON.stringify(dart, null, 2));
+
+const verbose = process.argv.includes("--verbose");
 
 function diff(a, b, path = "$", out = []) {
   if (isDeepStrictEqual(a, b)) return out;
@@ -22,10 +38,8 @@ function diff(a, b, path = "$", out = []) {
   return out;
 }
 
-const verbose = process.argv.includes("--verbose");
-let failed = 0;
 let total = 0;
-for (const key of ["scenarios", "schemaCases", "sessions", "auth", "analytics", "payments"]) {
+for (const key of t.keys) {
   let bad = 0;
   for (let i = 0; i < node[key].length; i++) {
     total++;
@@ -39,4 +53,4 @@ for (const key of ["scenarios", "schemaCases", "sessions", "auth", "analytics", 
   }
   console.log(`${key}: ${node[key].length - bad}/${node[key].length} 일치`);
 }
-process.exit(failed ? 1 : 0);
+}

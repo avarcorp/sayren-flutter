@@ -1,0 +1,730 @@
+[
+  {
+    "name": "resolvePointPolicy null",
+    "fn": "resolvePointPolicy",
+    "args": [
+      null
+    ]
+  },
+  {
+    "name": "resolvePointPolicy undefined",
+    "fn": "resolvePointPolicy",
+    "args": []
+  },
+  {
+    "name": "resolvePointPolicy 0",
+    "fn": "resolvePointPolicy",
+    "args": [
+      0
+    ]
+  },
+  {
+    "name": "resolvePointPolicy \"\"",
+    "fn": "resolvePointPolicy",
+    "args": [
+      ""
+    ]
+  },
+  {
+    "name": "resolvePointPolicy \"x\"",
+    "fn": "resolvePointPolicy",
+    "args": [
+      "x"
+    ]
+  },
+  {
+    "name": "resolvePointPolicy 5",
+    "fn": "resolvePointPolicy",
+    "args": [
+      5
+    ]
+  },
+  {
+    "name": "resolvePointPolicy true",
+    "fn": "resolvePointPolicy",
+    "args": [
+      true
+    ]
+  },
+  {
+    "name": "resolvePointPolicy []",
+    "fn": "resolvePointPolicy",
+    "args": [
+      []
+    ]
+  },
+  {
+    "name": "resolvePointPolicy {}",
+    "fn": "resolvePointPolicy",
+    "args": [
+      {}
+    ]
+  },
+  {
+    "name": "resolvePointPolicy {\"reviewReward\":{\"enabled\":true,\"textPoint\":500,\"photoPoint\":1000},\"purchaseEarn\":{\"enabled\":true,\"rateBp\":100},\"use\":{\"enabled\":true,\"minBalance\":0,\"minAmount\":0,\"unit\":10,\"maxRatioBp\":10000,\"includeDeliveryFee\":true},\"expiryDays\":365}",
+    "fn": "resolvePointPolicy",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": true,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": true,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 365
+      }
+    ]
+  },
+  {
+    "name": "resolvePointPolicy {\"reviewReward\":{\"enabled\":true,\"textPoint\":500,\"photoPoint\":1000},\"purchaseEarn\":{\"enabled\":true,\"rateBp\":100},\"use\":{\"enabled\":true,\"minBalance\":0,\"minAmount\":0,\"unit\":10,\"maxRatioBp\":10000,\"includeDeliveryFee\":true},\"expiryDays\":10}",
+    "fn": "resolvePointPolicy",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": true,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": true,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 10
+      }
+    ]
+  },
+  {
+    "name": "resolvePointPolicy {\"reviewReward\":{\"enabled\":true,\"textPoint\":500,\"photoPoint\":1000},\"purchaseEarn\":{\"enabled\":true,\"rateBp\":100},\"use\":{\"enabled\":true},\"expiryDays\":365}",
+    "fn": "resolvePointPolicy",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": true,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": true,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true
+        },
+        "expiryDays": 365
+      }
+    ]
+  },
+  {
+    "name": "resolvePointPolicy {\"reviewReward\":{\"enabled\":true,\"textPoint\":1,\"photoPoint\":2}}",
+    "fn": "resolvePointPolicy",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": true,
+          "textPoint": 1,
+          "photoPoint": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "resolvePointPolicy {\"expiryDays\":30}",
+    "fn": "resolvePointPolicy",
+    "args": [
+      {
+        "expiryDays": 30
+      }
+    ]
+  },
+  {
+    "name": "resolvePointPolicy {\"expiryDays\":1825.5}",
+    "fn": "resolvePointPolicy",
+    "args": [
+      {
+        "expiryDays": 1825.5
+      }
+    ]
+  },
+  {
+    "name": "pointEarningEnabled on",
+    "fn": "pointEarningEnabled",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": true,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": true,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 365
+      }
+    ]
+  },
+  {
+    "name": "pointEarningEnabled off",
+    "fn": "pointEarningEnabled",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": false,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": false,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 365
+      }
+    ]
+  },
+  {
+    "name": "pointEarningEnabled review only",
+    "fn": "pointEarningEnabled",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": true,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": false,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 365
+      }
+    ]
+  },
+  {
+    "name": "purchaseEarnRateOf default",
+    "fn": "purchaseEarnRateOf",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": true,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": true,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 365
+      },
+      null
+    ]
+  },
+  {
+    "name": "purchaseEarnRateOf product",
+    "fn": "purchaseEarnRateOf",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": true,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": true,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 365
+      },
+      250
+    ]
+  },
+  {
+    "name": "purchaseEarnRateOf product zero",
+    "fn": "purchaseEarnRateOf",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": true,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": true,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 365
+      },
+      0
+    ]
+  },
+  {
+    "name": "purchaseEarnRateOf off",
+    "fn": "purchaseEarnRateOf",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": false,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": false,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 365
+      },
+      250
+    ]
+  },
+  {
+    "name": "pointEarnOf {\"paidBase\":12345,\"rateBp\":100}",
+    "fn": "pointEarnOf",
+    "args": [
+      {
+        "paidBase": 12345,
+        "rateBp": 100
+      }
+    ]
+  },
+  {
+    "name": "pointEarnOf {\"paidBase\":0,\"rateBp\":100}",
+    "fn": "pointEarnOf",
+    "args": [
+      {
+        "paidBase": 0,
+        "rateBp": 100
+      }
+    ]
+  },
+  {
+    "name": "pointEarnOf {\"paidBase\":1000,\"rateBp\":0}",
+    "fn": "pointEarnOf",
+    "args": [
+      {
+        "paidBase": 1000,
+        "rateBp": 0
+      }
+    ]
+  },
+  {
+    "name": "pointEarnOf {\"paidBase\":99,\"rateBp\":3000}",
+    "fn": "pointEarnOf",
+    "args": [
+      {
+        "paidBase": 99,
+        "rateBp": 3000
+      }
+    ]
+  },
+  {
+    "name": "pointEarnOf {\"paidBase\":-5,\"rateBp\":10}",
+    "fn": "pointEarnOf",
+    "args": [
+      {
+        "paidBase": -5,
+        "rateBp": 10
+      }
+    ]
+  },
+  {
+    "name": "pointEarnOf {\"paidBase\":9999999,\"rateBp\":3}",
+    "fn": "pointEarnOf",
+    "args": [
+      {
+        "paidBase": 9999999,
+        "rateBp": 3
+      }
+    ]
+  },
+  {
+    "name": "reviewRewardPointOf text",
+    "fn": "reviewRewardPointOf",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": true,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": true,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 365
+      },
+      false
+    ]
+  },
+  {
+    "name": "reviewRewardPointOf photo",
+    "fn": "reviewRewardPointOf",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": true,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": true,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 365
+      },
+      true
+    ]
+  },
+  {
+    "name": "reviewRewardPointOf off",
+    "fn": "reviewRewardPointOf",
+    "args": [
+      {
+        "reviewReward": {
+          "enabled": false,
+          "textPoint": 500,
+          "photoPoint": 1000
+        },
+        "purchaseEarn": {
+          "enabled": false,
+          "rateBp": 100
+        },
+        "use": {
+          "enabled": true,
+          "minBalance": 0,
+          "minAmount": 0,
+          "unit": 10,
+          "maxRatioBp": 10000,
+          "includeDeliveryFee": true
+        },
+        "expiryDays": 365
+      },
+      true
+    ]
+  },
+  {
+    "name": "pointExpiresAtOf 2026-01-01T00:00:00.000Z 30",
+    "fn": "pointExpiresAtOf",
+    "args": [
+      {
+        "$date": "2026-01-01T00:00:00.000Z"
+      },
+      30
+    ]
+  },
+  {
+    "name": "pointExpiresAtOf 2026-01-01T14:59:59.999Z 30",
+    "fn": "pointExpiresAtOf",
+    "args": [
+      {
+        "$date": "2026-01-01T14:59:59.999Z"
+      },
+      30
+    ]
+  },
+  {
+    "name": "pointExpiresAtOf 2026-01-01T15:00:00.000Z 30",
+    "fn": "pointExpiresAtOf",
+    "args": [
+      {
+        "$date": "2026-01-01T15:00:00.000Z"
+      },
+      30
+    ]
+  },
+  {
+    "name": "pointExpiresAtOf 2026-01-01T00:00:00.000Z 0",
+    "fn": "pointExpiresAtOf",
+    "args": [
+      {
+        "$date": "2026-01-01T00:00:00.000Z"
+      },
+      0
+    ]
+  },
+  {
+    "name": "pointExpiresAtOf 2026-01-01T00:00:00.000Z null",
+    "fn": "pointExpiresAtOf",
+    "args": [
+      {
+        "$date": "2026-01-01T00:00:00.000Z"
+      },
+      null
+    ]
+  },
+  {
+    "name": "pointExpiresAtOf 2026-12-31T23:00:00.000Z 1825",
+    "fn": "pointExpiresAtOf",
+    "args": [
+      {
+        "$date": "2026-12-31T23:00:00.000Z"
+      },
+      1825
+    ]
+  },
+  {
+    "name": "pointExpiresAtOf 1969-12-31T00:00:00.000Z 1",
+    "fn": "pointExpiresAtOf",
+    "args": [
+      {
+        "$date": "1969-12-31T00:00:00.000Z"
+      },
+      1
+    ]
+  },
+  {
+    "name": "pointRestoreExpiresAtOf empty",
+    "fn": "pointRestoreExpiresAtOf",
+    "args": [
+      [],
+      {
+        "$date": "2026-06-01T00:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "name": "pointRestoreExpiresAtOf has null",
+    "fn": "pointRestoreExpiresAtOf",
+    "args": [
+      [
+        {
+          "lotId": "lot",
+          "amount": 100,
+          "expiresAt": "2027-01-01T00:00:00Z"
+        },
+        {
+          "lotId": "lot",
+          "amount": 100,
+          "expiresAt": null
+        }
+      ],
+      {
+        "$date": "2026-06-01T00:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "name": "pointRestoreExpiresAtOf future",
+    "fn": "pointRestoreExpiresAtOf",
+    "args": [
+      [
+        {
+          "lotId": "lot",
+          "amount": 100,
+          "expiresAt": "2026-08-01T14:59:59.999Z"
+        },
+        {
+          "lotId": "lot",
+          "amount": 100,
+          "expiresAt": "2026-07-01T00:00:00Z"
+        }
+      ],
+      {
+        "$date": "2026-06-01T00:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "name": "pointRestoreExpiresAtOf past",
+    "fn": "pointRestoreExpiresAtOf",
+    "args": [
+      [
+        {
+          "lotId": "lot",
+          "amount": 100,
+          "expiresAt": "2026-05-01T00:00:00Z"
+        }
+      ],
+      {
+        "$date": "2026-06-01T00:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "name": "pointRestoreExpiresAtOf bad dates",
+    "fn": "pointRestoreExpiresAtOf",
+    "args": [
+      [
+        {
+          "lotId": "lot",
+          "amount": 100,
+          "expiresAt": "nope"
+        }
+      ],
+      {
+        "$date": "2026-06-01T00:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "name": "pointRestoreExpiresAtOf equal now",
+    "fn": "pointRestoreExpiresAtOf",
+    "args": [
+      [
+        {
+          "lotId": "lot",
+          "amount": 100,
+          "expiresAt": "2026-06-01T00:00:00.000Z"
+        }
+      ],
+      {
+        "$date": "2026-06-01T00:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "name": "splitRefund {\"cash\":10000,\"points\":2000,\"charges\":3000}",
+    "fn": "splitRefund",
+    "args": [
+      {
+        "cash": 10000,
+        "points": 2000,
+        "charges": 3000
+      }
+    ]
+  },
+  {
+    "name": "splitRefund {\"cash\":1000,\"points\":2000,\"charges\":2500}",
+    "fn": "splitRefund",
+    "args": [
+      {
+        "cash": 1000,
+        "points": 2000,
+        "charges": 2500
+      }
+    ]
+  },
+  {
+    "name": "splitRefund {\"cash\":1000,\"points\":2000,\"charges\":5000}",
+    "fn": "splitRefund",
+    "args": [
+      {
+        "cash": 1000,
+        "points": 2000,
+        "charges": 5000
+      }
+    ]
+  },
+  {
+    "name": "splitRefund {\"cash\":-5,\"points\":100,\"charges\":50}",
+    "fn": "splitRefund",
+    "args": [
+      {
+        "cash": -5,
+        "points": 100,
+        "charges": 50
+      }
+    ]
+  },
+  {
+    "name": "splitRefund {\"cash\":100,\"points\":100,\"charges\":-1}",
+    "fn": "splitRefund",
+    "args": [
+      {
+        "cash": 100,
+        "points": 100,
+        "charges": -1
+      }
+    ]
+  },
+  {
+    "name": "splitRefund {\"cash\":0,\"points\":0,\"charges\":0}",
+    "fn": "splitRefund",
+    "args": [
+      {
+        "cash": 0,
+        "points": 0,
+        "charges": 0
+      }
+    ]
+  }
+]

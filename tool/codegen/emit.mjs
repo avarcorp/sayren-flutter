@@ -9,7 +9,19 @@ const DART_RESERVED = new Set(
   ),
 );
 
-export const ident = (key) => (DART_RESERVED.has(key) ? `${key}_` : key);
+/** JSON 키 → Dart 식별자. 식별자가 될 수 없는 키(`APP.INSTALLED`, `features.admin_api`)는 lowerCamel로 바꾼다 */
+export const ident = (key) => {
+  let name = key;
+  if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key)) {
+    const parts = key.split(/[^A-Za-z0-9]+/).filter(Boolean);
+    name = parts.map((p, i) => (i === 0 ? p.toLowerCase() : p[0].toUpperCase() + p.slice(1).toLowerCase())).join("");
+    if (/^[0-9]/.test(name)) name = `v${name}`;
+  }
+  return DART_RESERVED.has(name) ? `${name}_` : name;
+};
+
+/** 선택 필드의 Dart 타입 — 이미 nullable이면 그대로 둔다 */
+export const optional = (t, isOptional) => (isOptional && !t.endsWith("?") ? `${t}?` : t);
 
 /** Dart 문자열 리터럴 */
 export function str(s) {
@@ -150,7 +162,7 @@ export class DartEmitter {
         e = "z.string()";
         break;
       case "number":
-        e = "z.number()";
+        e = n.schema._zod.def.coerce ? "z.number(coerce: true)" : "z.number()";
         break;
       case "boolean":
         e = "z.boolean()";
@@ -176,7 +188,7 @@ export class DartEmitter {
         e = `${this.expr(n.inner)}.nullable()`;
         break;
       case "default":
-        e = `${this.expr(n.inner)}.withDefault(${lit(n.value)})`;
+        e = `${this.expr(n.inner)}.withDefault(${this.defaultValue(n)})`;
         break;
       case "catch":
         e = `${this.expr(n.inner)}.catchValue(${lit(n.value)})`;
@@ -194,7 +206,7 @@ export class DartEmitter {
         e = `z.pipe<${this.type(n)}>(${this.expr(n.in)}, ${this.expr(n.out)})`;
         break;
       case "transform":
-        e = `z.transform<${this.type(n)}>(${n.hook.dart})`;
+        e = `z.${n.hook.issues ? "transformWithIssues" : "transform"}<${this.type(n)}>(${n.hook.dart})`;
         break;
       case "object": {
         const cls = this.ir.classes.get(n.className);
@@ -213,7 +225,7 @@ export class DartEmitter {
         break;
       case "union": {
         const cls = this.ir.classes.get(n.className);
-        if (!define && !n.flattened) return this.withChecks(cls.schemaRef ?? cls.privateSchema, []);
+        if (!define && !n.flattened && !n.inline) return this.withChecks(cls.schemaRef ?? cls.privateSchema, []);
         const t = this.type(n);
         const opts = n.options.map((o) => this.expr(o)).join(",\n    ");
         e = n.discriminator
@@ -238,6 +250,9 @@ export class DartEmitter {
           break;
         case "int":
           e += ".int_()";
+          break;
+        case "multipleOf":
+          e += `.multipleOf(${c.value})`;
           break;
         case "gt":
           e += `.greaterThan(${c.value}, inclusive: ${c.inclusive})`;
@@ -271,6 +286,18 @@ export class DartEmitter {
     return e;
   }
 
+  /** 필드가 Node에서 `@deprecated`인가 — describe 또는 TS JSDoc이 `@deprecated`로 시작한다 */
+  deprecatedField(root, field) {
+    let n = field.node;
+    for (;;) {
+      if (n.desc?.trim().startsWith("@deprecated")) return true;
+      if (!n.inner) break;
+      n = n.inner;
+    }
+    const jsdoc = this.scan.get(root)?.propDocs?.[field.propPath.join(".")];
+    return !!jsdoc?.trim().startsWith("@deprecated");
+  }
+
   /** 필드 설명 — 스키마 describe, 없으면 TS JSDoc */
   fieldDoc(root, field) {
     let n = field.node;
@@ -281,6 +308,13 @@ export class DartEmitter {
     }
     if (!desc) desc = this.scan.get(root)?.propDocs?.[field.propPath.join(".")] ?? null;
     return formal(desc);
+  }
+
+  /** 기본값 식 — 모델 타입 기본값(객체)은 모델로 만든다(zod 기본값은 출력 값이다) */
+  defaultValue(n) {
+    const t = this.type(n.inner.k === "optional" ? n.inner.inner : n.inner);
+    if (n.value && typeof n.value === "object" && !Array.isArray(n.value) && this.ir.classes.has(t)) return `${t}.fromJson(${lit(n.value)})`;
+    return lit(n.value);
   }
 
   /** 스키마 상수 타입 */
@@ -294,7 +328,7 @@ export class DartEmitter {
 
   /** 객체 클래스 */
   objectClass(cls, docText) {
-    const fields = cls.fields.map((f) => {
+    const allFields = cls.fields.map((f) => {
       const name = ident(f.key);
       const t = this.type(f.node);
       let n = f.node;
@@ -302,16 +336,23 @@ export class DartEmitter {
       for (;;) {
         if (n.k === "optional") flags.optional = true;
         else if (n.k === "nullable") flags.nullable = true;
-        else if (n.k === "default") flags.def = n.value;
+        else if (n.k === "default") {
+          flags.def = n.value;
+          const dv = this.defaultValue(n);
+          if (dv.endsWith(")") && dv.includes(".fromJson(")) f.modelDefault = dv;
+        }
         else if (n.k === "catch") flags.optional = true;
         else break;
         n = n.inner;
       }
-      return { ...f, name, t, flags };
+      return { ...f, name, t, flags, modelDefault: f.modelDefault };
     });
+    // Node `@deprecated` 선택 필드는 생성자·getter에 내지 않는다. 스키마는 Node처럼 그 키를 받는다
+    const fields = allFields.filter((f) => !(f.flags.optional && this.deprecatedField(cls.root, f)));
     const base = this.unionBases.get(cls.name) ?? { implements: [], overrides: new Set() };
     const params = fields.map((f) => {
       const { optional, nullable: nul, def } = f.flags;
+      if (def !== undefined && f.modelDefault) return `${nullable(f.t)} ${f.name}`;
       if (def !== undefined) return def === null ? `${nullable(f.t)} ${f.name}` : `${f.t} ${f.name} = ${lit(def)}`;
       if (optional && nul) return `Nullable<${f.t.replace(/\?$/, "")}>? ${f.name}`;
       if (optional) return `${nullable(f.t)} ${f.name}`;
@@ -319,6 +360,7 @@ export class DartEmitter {
     });
     const entries = fields.map((f) => {
       const { optional, nullable: nul, def } = f.flags;
+      if (f.modelDefault) return `${str(f.key)}: ${f.name} ?? ${f.modelDefault}`;
       if (def === undefined && optional && nul) return `if (${f.name} != null) ${str(f.key)}: ${f.name}.value`;
       if (def === undefined && optional) return `if (${f.name} != null) ${str(f.key)}: ${f.name}`;
       return `${str(f.key)}: ${f.name}`;
@@ -375,19 +417,104 @@ export function read(t, src) {
   return `${src} as ${t}`;
 }
 
-/** TS 타입 텍스트 → Dart 타입(인터페이스·파라미터용) */
+/** TS 타입 텍스트 → Dart 타입(인터페이스·파라미터용). 인라인 객체 타입은 레코드가 된다 */
 export function tsToDart(text, known) {
-  const t = text.trim().replace(/^readonly\s+/, "");
-  if (t === "string") return "String";
-  if (t === "number") return "int";
-  if (t === "boolean") return "bool";
-  if (t === "unknown" || t === "any") return "Object?";
-  if (/^Record<string,\s*unknown>$/.test(t)) return "Map<String, Object?>";
-  if (/^(".*?"|'.*?')(\s*\|\s*(".*?"|'.*?'))*$/.test(t)) return "String";
-  const arr = /^(.+)\[\]$/.exec(t);
-  if (arr) return `List<${tsToDart(arr[1], known)}>`;
-  if (/^\w+$/.test(t) && known(t)) return known(t);
-  throw new Error(`TS 타입을 Dart로 옮길 수 없습니다: ${t}`);
+  const sf = ts.createSourceFile("t.ts", `type __T = ${text.trim()};`, ts.ScriptTarget.ES2022, true);
+  const alias = sf.statements[0];
+  return tsNodeToDart(alias.type, known, text);
+}
+
+function tsNodeToDart(n, known, whole) {
+  const fail = () => {
+    throw new Error(`TS 타입을 Dart로 옮길 수 없습니다: ${whole}`);
+  };
+  const K = ts.SyntaxKind;
+  switch (n.kind) {
+    case K.StringKeyword:
+      return "String";
+    case K.NumberKeyword:
+      return "int";
+    case K.BooleanKeyword:
+      return "bool";
+    case K.UnknownKeyword:
+    case K.AnyKeyword:
+      return "Object?";
+    case K.NullKeyword:
+    case K.UndefinedKeyword:
+      return "Null";
+    case K.LiteralType: {
+      const l = n.literal;
+      if (l.kind === K.StringLiteral) return "String";
+      if (l.kind === K.NumericLiteral) return Number.isInteger(Number(l.text)) ? "int" : "num";
+      if (l.kind === K.TrueKeyword || l.kind === K.FalseKeyword) return "bool";
+      if (l.kind === K.NullKeyword) return "Null";
+      return fail();
+    }
+    case K.FunctionType: {
+      const ret = n.type.kind === K.VoidKeyword ? "void" : tsNodeToDart(n.type, known, whole);
+      const ps = n.parameters.map((p) => {
+        let t = tsNodeToDart(p.type, known, whole);
+        if (p.questionToken && !t.endsWith("?")) t += "?";
+        return t;
+      });
+      return `${ret} Function(${ps.join(", ")})`;
+    }
+    case K.VoidKeyword:
+      return "void";
+    case K.TemplateLiteralType:
+      return "String";
+    case K.ParenthesizedType:
+      return tsNodeToDart(n.type, known, whole);
+    case K.TypeOperator:
+      return tsNodeToDart(n.type, known, whole); // readonly T[]
+    case K.ArrayType:
+      return `List<${tsNodeToDart(n.elementType, known, whole)}>`;
+    case K.UnionType: {
+      const parts = n.types.map((t) => tsNodeToDart(t, known, whole));
+      const nonNull = [...new Set(parts.filter((p) => p !== "Null"))];
+      const nullable = parts.includes("Null");
+      let base;
+      if (nonNull.length === 1) base = nonNull[0];
+      else if (nonNull.every((p) => p === "int" || p === "num")) base = "num";
+      else return "Object?";
+      return nullable && !base.endsWith("?") ? `${base}?` : base;
+    }
+    case K.TypeLiteral: {
+      const fields = [];
+      for (const m of n.members) {
+        if (!ts.isPropertySignature(m) || !m.type) return fail();
+        let t = tsNodeToDart(m.type, known, whole);
+        if (m.questionToken && !t.endsWith("?")) t += "?";
+        fields.push(`${t} ${ident(m.name.getText().replace(/^["']|["']$/g, ""))}`);
+      }
+      return fields.length ? `({${fields.join(", ")}})` : "Map<String, Object?>";
+    }
+    case K.IndexedAccessType: {
+      // (typeof XS)[number] — 상수 배열의 원소
+      if (ts.isTypeQueryNode(n.objectType.kind === K.ParenthesizedType ? n.objectType.type : n.objectType)) {
+        const q = n.objectType.kind === K.ParenthesizedType ? n.objectType.type : n.objectType;
+        return known(`index:${q.exprName.getText()}`) ?? fail();
+      }
+      return fail();
+    }
+    case K.TypeReference: {
+      const name = n.typeName.getText();
+      const args = n.typeArguments ?? [];
+      if (/^z\.(infer|output|input)$/.test(name) && args.length === 1 && ts.isTypeQueryNode(args[0])) {
+        return known(`schema:${args[0].exprName.getText()}`) ?? fail();
+      }
+      if ((name === "Array" || name === "ReadonlyArray") && args.length === 1) return `List<${tsNodeToDart(args[0], known, whole)}>`;
+      if ((name === "Set" || name === "ReadonlySet") && args.length === 1) return `Set<${tsNodeToDart(args[0], known, whole)}>`;
+      if (name === "Record" && args.length === 2) return `Map<String, ${tsNodeToDart(args[1], known, whole)}>`;
+      if (name === "Date") return "DateTime";
+      if (name === "Readonly" && args.length === 1) return tsNodeToDart(args[0], known, whole);
+      if (name === "Partial" && args.length === 1 && ts.isTypeReferenceNode(args[0])) return known(`partial:${args[0].typeName.getText()}`) ?? fail();
+      if (!args.length && known(name)) return known(name);
+      return fail();
+    }
+    default:
+      return fail();
+  }
 }
 
 export { interfaceMembers, ts };

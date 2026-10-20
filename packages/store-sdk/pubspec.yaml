@@ -1,0 +1,21 @@
+name: sayren_store_sdk
+description: sayren 관리 API SDK. @sayren/store-sdk와 같은 이름·사용법을 제공합니다.
+version: 0.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+
+resolution: workspace
+
+dependencies:
+  # 업로드 파일(Node `Blob`·`File` 자리)
+  cross_file: ^0.3.4+2
+  # PKCE(S256) — OAuth 로그인
+  crypto: ^3.0.7
+  http: ^1.2.0
+  # 직접 입력값 NFC 정규화(Node `String.prototype.normalize`)
+  unorm_dart: 0.3.2
+
+dev_dependencies:
+  test: ^1.25.0

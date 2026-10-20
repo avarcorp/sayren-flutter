@@ -1,0 +1,14 @@
+[
+  { "name": "확장자", "fn": "uploadExtensionOf", "args": ["Photo.JPEG"] },
+  { "name": "여러 점", "fn": "uploadExtensionOf", "args": ["a.tar.gz"] },
+  { "name": "확장자 없음", "fn": "uploadExtensionOf", "args": ["README"] },
+  { "name": "점으로 끝남", "fn": "uploadExtensionOf", "args": ["file."] },
+  { "name": "점으로 시작", "fn": "uploadExtensionOf", "args": [".env"] },
+  { "name": "빈 문자열", "fn": "uploadExtensionOf", "args": [""] },
+  { "name": "통과", "fn": "uploadRejection", "args": ["product-image", "a.png", 1024] },
+  { "name": "크기 생략", "fn": "uploadRejection", "args": ["description", "a.mp4"] },
+  { "name": "형식 거부", "fn": "uploadRejection", "args": ["product-image", "a.svg", 10] },
+  { "name": "크기 초과", "fn": "uploadRejection", "args": ["flow-attachment", "a.pdf", 20971521] },
+  { "name": "크기 경계", "fn": "uploadRejection", "args": ["ai-attachment", "a.gif", 10485760] },
+  { "name": "확장자 없음 거부", "fn": "uploadRejection", "args": ["description", "noext", 1] }
+]

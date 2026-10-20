@@ -110,9 +110,21 @@ export function interfaceMembers(decl) {
       for (const t of h.types) members.push({ extends: t.expression.getText() });
     }
     for (const m of d.members) {
+      if (ts.isMethodSignature(m)) {
+        // 메서드 시그니처는 함수 타입 필드다 — JSON에는 싣지 않는다
+        const params = m.parameters.map((p) => `${p.name.getText()}${p.questionToken ? "?" : ""}: ${p.type?.getText() ?? "unknown"}`);
+        members.push({
+          name: m.name.getText(),
+          optional: !!m.questionToken,
+          type: `(${params.join(", ")}) => ${m.type?.getText() ?? "void"}`,
+          doc: jsdocOf(m)?.text ?? null,
+          method: true,
+        });
+        continue;
+      }
       if (!ts.isPropertySignature(m)) continue;
       members.push({
-        name: m.name.getText(),
+        name: m.name.getText().replace(/^["']|["']$/g, ""),
         optional: !!m.questionToken,
         type: m.type?.getText() ?? "unknown",
         doc: jsdocOf(m)?.text ?? null,

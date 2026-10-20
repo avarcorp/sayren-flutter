@@ -1,0 +1,569 @@
+[
+ {
+  "name": "isWebOrigin [\"https://shop.example.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://shop.example.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://shop.example.com/\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://shop.example.com/"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"http://a.com:8080\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "http://a.com:8080"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com/path\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com/path"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com/?\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com/?"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com/?q=1\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com/?q=1"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com#\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com#"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com#x\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com#x"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://user@a.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://user@a.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://user:pw@a.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://user:pw@a.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://:@a.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://:@a.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"ftp://a.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "ftp://a.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"a.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "a.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://*.a.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://*.a.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"HTTPS://A.COM\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "HTTPS://A.COM"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"  https://a.com  \"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "  https://a.com  "
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https:a.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https:a.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https:\\\\\\\\a.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https:\\\\a.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com/.\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com/."
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com/..\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com/.."
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com/%2e\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com/%2e"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com/./\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com/./"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com//\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com//"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://exa mple.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://exa mple.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com:99999\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com:99999"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com:443\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com:443"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://1.2.3.4\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://1.2.3.4"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://999.1.1.1\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://999.1.1.1"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://0x7f.1\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://0x7f.1"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://[::1]\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://[::1]"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://한국.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://한국.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://xn--3e0b707e.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://xn--3e0b707e.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com:\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com:"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com\\tx\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com\tx"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a%2ecom\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a%2ecom"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com/é\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com/é"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"javascript:alert(1)\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "javascript:alert(1)"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a..b\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a..b"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com?\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com?"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://@a.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://@a.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a@b@c.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a@b@c.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com:80x\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com:80x"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"http://a.com:80\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "http://a.com:80"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://foo.bar.\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://foo.bar."
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://xn--zz.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://xn--zz.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://0300.0250.0.1\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://0300.0250.0.1"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://1.2.3\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://1.2.3"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com:0\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com:0"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://1.2.3.4.5\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://1.2.3.4.5"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://0x.0x.0\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://0x.0x.0"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.b.256\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.b.256"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.1x\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.1x"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://Ⓐ.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://Ⓐ.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com/%2E%2e/\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com/%2E%2e/"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https:///a.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https:///a.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https:\\\\\\\\\\\\\\\\a.com/\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https:\\\\\\\\a.com/"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"HTTP://a.com/?#\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "HTTP://a.com/?#"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a<b.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a<b.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a^b.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a^b.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a_b.com\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a_b.com"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://[1:2:3:4:5:6:7:8]\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://[1:2:3:4:5:6:7:8]"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://[::1\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://[::1"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"https://a.com/x/../\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "https://a.com/x/../"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"http://4294967295\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "http://4294967295"
+  ]
+ },
+ {
+  "name": "isWebOrigin [\"http://4294967296\"]",
+  "fn": "isWebOrigin",
+  "args": [
+   "http://4294967296"
+  ]
+ },
+ {
+  "name": "isReservedStoreCode [\"www\"]",
+  "fn": "isReservedStoreCode",
+  "args": [
+   "www"
+  ]
+ },
+ {
+  "name": "isReservedStoreCode [\"WWW\"]",
+  "fn": "isReservedStoreCode",
+  "args": [
+   "WWW"
+  ]
+ },
+ {
+  "name": "isReservedStoreCode [\"api\"]",
+  "fn": "isReservedStoreCode",
+  "args": [
+   "api"
+  ]
+ },
+ {
+  "name": "isReservedStoreCode [\"shop1\"]",
+  "fn": "isReservedStoreCode",
+  "args": [
+   "shop1"
+  ]
+ },
+ {
+  "name": "isReservedStoreCode [\"admin\"]",
+  "fn": "isReservedStoreCode",
+  "args": [
+   "admin"
+  ]
+ },
+ {
+  "name": "isReservedStoreCode [\"Admin\"]",
+  "fn": "isReservedStoreCode",
+  "args": [
+   "Admin"
+  ]
+ },
+ {
+  "name": "isReservedStoreCode [\"\"]",
+  "fn": "isReservedStoreCode",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "isReservedStoreCode [\"stores\"]",
+  "fn": "isReservedStoreCode",
+  "args": [
+   "stores"
+  ]
+ },
+ {
+  "name": "normalizeBusinessNumber [\"123-45-67890\"]",
+  "fn": "normalizeBusinessNumber",
+  "args": [
+   "123-45-67890"
+  ]
+ },
+ {
+  "name": "normalizeBusinessNumber [\" 12 34 \"]",
+  "fn": "normalizeBusinessNumber",
+  "args": [
+   " 12 34 "
+  ]
+ },
+ {
+  "name": "normalizeBusinessNumber [\"abc\"]",
+  "fn": "normalizeBusinessNumber",
+  "args": [
+   "abc"
+  ]
+ },
+ {
+  "name": "normalizeBusinessNumber [\"\"]",
+  "fn": "normalizeBusinessNumber",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "normalizeBusinessNumber [\"１２３\"]",
+  "fn": "normalizeBusinessNumber",
+  "args": [
+   "１２３"
+  ]
+ },
+ {
+  "name": "normalizeBusinessNumber [\"٣٤\"]",
+  "fn": "normalizeBusinessNumber",
+  "args": [
+   "٣٤"
+  ]
+ }
+]

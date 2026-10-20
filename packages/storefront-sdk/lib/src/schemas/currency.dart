@@ -62,13 +62,13 @@ class CurrencySpec {
   final int maxOrderAmount;
 
   /// JSON으로 바꿉니다.
-  Map<String, Object?> toJson() => compact({
+  Map<String, Object?> toJson() => {
         'code': code,
         'digits': digits,
         'saleUnit': saleUnit,
         'minPayment': minPayment,
         'maxOrderAmount': maxOrderAmount
-      });
+      };
 }
 
 /// CurrencyCode 값입니다.
@@ -121,5 +121,5 @@ class MoneyRules {
 
   /// JSON으로 바꿉니다.
   Map<String, Object?> toJson() =>
-      compact({'currency': currency, 'saleUnit': saleUnit, 'minPayment': minPayment, 'maxOrderAmount': maxOrderAmount});
+      {'currency': currency, 'saleUnit': saleUnit, 'minPayment': minPayment, 'maxOrderAmount': maxOrderAmount};
 }

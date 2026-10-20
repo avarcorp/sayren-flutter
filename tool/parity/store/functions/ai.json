@@ -1,0 +1,128 @@
+[
+ {
+  "name": "isAiAgentNotesPath [\"src/site/agent\"]",
+  "fn": "isAiAgentNotesPath",
+  "args": [
+   "src/site/agent"
+  ]
+ },
+ {
+  "name": "isAiAgentNotesPath [\"src/site/agent/\"]",
+  "fn": "isAiAgentNotesPath",
+  "args": [
+   "src/site/agent/"
+  ]
+ },
+ {
+  "name": "isAiAgentNotesPath [\"src/site/agent/notes.md\"]",
+  "fn": "isAiAgentNotesPath",
+  "args": [
+   "src/site/agent/notes.md"
+  ]
+ },
+ {
+  "name": "isAiAgentNotesPath [\"src/site/agents\"]",
+  "fn": "isAiAgentNotesPath",
+  "args": [
+   "src/site/agents"
+  ]
+ },
+ {
+  "name": "isAiAgentNotesPath [\"src/site/design\"]",
+  "fn": "isAiAgentNotesPath",
+  "args": [
+   "src/site/design"
+  ]
+ },
+ {
+  "name": "isAiAgentNotesPath [\"src/site/design/canvas.json\"]",
+  "fn": "isAiAgentNotesPath",
+  "args": [
+   "src/site/design/canvas.json"
+  ]
+ },
+ {
+  "name": "isAiAgentNotesPath [\"src/site/designs/x\"]",
+  "fn": "isAiAgentNotesPath",
+  "args": [
+   "src/site/designs/x"
+  ]
+ },
+ {
+  "name": "isAiAgentNotesPath [\"\"]",
+  "fn": "isAiAgentNotesPath",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "isAiAgentNotesPath [\"src/site\"]",
+  "fn": "isAiAgentNotesPath",
+  "args": [
+   "src/site"
+  ]
+ },
+ {
+  "name": "isAiDesignPath [\"src/site/agent\"]",
+  "fn": "isAiDesignPath",
+  "args": [
+   "src/site/agent"
+  ]
+ },
+ {
+  "name": "isAiDesignPath [\"src/site/agent/\"]",
+  "fn": "isAiDesignPath",
+  "args": [
+   "src/site/agent/"
+  ]
+ },
+ {
+  "name": "isAiDesignPath [\"src/site/agent/notes.md\"]",
+  "fn": "isAiDesignPath",
+  "args": [
+   "src/site/agent/notes.md"
+  ]
+ },
+ {
+  "name": "isAiDesignPath [\"src/site/agents\"]",
+  "fn": "isAiDesignPath",
+  "args": [
+   "src/site/agents"
+  ]
+ },
+ {
+  "name": "isAiDesignPath [\"src/site/design\"]",
+  "fn": "isAiDesignPath",
+  "args": [
+   "src/site/design"
+  ]
+ },
+ {
+  "name": "isAiDesignPath [\"src/site/design/canvas.json\"]",
+  "fn": "isAiDesignPath",
+  "args": [
+   "src/site/design/canvas.json"
+  ]
+ },
+ {
+  "name": "isAiDesignPath [\"src/site/designs/x\"]",
+  "fn": "isAiDesignPath",
+  "args": [
+   "src/site/designs/x"
+  ]
+ },
+ {
+  "name": "isAiDesignPath [\"\"]",
+  "fn": "isAiDesignPath",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "isAiDesignPath [\"src/site\"]",
+  "fn": "isAiDesignPath",
+  "args": [
+   "src/site"
+  ]
+ }
+]

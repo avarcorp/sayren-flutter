@@ -5,7 +5,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import * as z from "zod";
-import { ident, interfaceMembers, str, tsToDart } from "./emit.mjs";
+import { ident, interfaceMembers, optional, str, tsToDart } from "./emit.mjs";
 
 const STRING_CANDIDATES = [
   "sample",
@@ -122,8 +122,7 @@ function runtimeSchema(expr, runtime) {
   return runtime[expr];
 }
 
-export function generateParity({ runtime, ir, emit, scan, out, here, methods, known }) {
-  const parityDir = path.join(here, "../parity/generated");
+export function generateParity({ runtime, ir, emit, scan, out, parityDir, methods, known, library, clientClass, testImport, typedefs }) {
   mkdirSync(parityDir, { recursive: true });
 
   // 1) 스키마 대조
@@ -151,8 +150,24 @@ export function generateParity({ runtime, ir, emit, scan, out, here, methods, kn
   // 2) 메서드 대조
   const schemaOfType = new Map([...ir.typeOfSchema].map(([s, t]) => [t, s]));
   const argSample = (type) => {
+    if (type.endsWith("?")) return argSample(type.slice(0, -1));
     if (type === "String") return "id-1";
+    if (type === "int" || type === "num") return 1;
+    if (type === "bool") return true;
+    if (type === "Object") return { note: "x" };
+    if (/^List<.+>$/.test(type)) return [argSample(type.slice(5, -1))];
     if (type === "Map<String, Object?>") return { note: "x" };
+    const inputOf = scan.get(type)?.inferOf;
+    if (inputOf?.startsWith("input:")) return sample(runtime[inputOf.slice(6)]);
+    const cls = ir.classes.get(type);
+    if (cls?.schemaRef) return sample(runtime[cls.schemaRef]);
+    const alias = scan.get(type);
+    if (alias?.kind === "type" && !alias.inferOf) {
+      // (typeof XS)[number] — 상수 배열의 첫 값, 그 밖의 문자열 별칭은 임의 문자열
+      const m = /typeof\s+(\w+)/.exec(alias.typeText ?? "");
+      if (m && Array.isArray(runtime[m[1]])) return runtime[m[1]][0];
+      if (known(type) === "String" || tsToDart(type, known) === "String") return "id-1";
+    }
     const schemaName = schemaOfType.get(type);
     if (schemaName) return sample(runtime[schemaName]);
     const iface = scan.get(type);
@@ -161,6 +176,7 @@ export function generateParity({ runtime, ir, emit, scan, out, here, methods, kn
   };
   const fieldSample = (f) => {
     const t = tsToDart(f.type, known);
+    if (process.env.DEBUG_FIELDS) console.error(f.name, f.type, t);
     if (t === "int") return 1;
     if (t === "bool") return true;
     if (t === "String") {
@@ -176,7 +192,8 @@ export function generateParity({ runtime, ir, emit, scan, out, here, methods, kn
   };
   const ifaceSample = (name) => Object.fromEntries(ifaceMembers(name).map((m) => [m.name, fieldSample(m)]));
 
-  const scenarios = methods.map((m) => {
+  const generatedMethods = methods.filter((m) => !m.override);
+  const scenarios = generatedMethods.map((m) => {
     const args = m.params.map((p) =>
       p.kind === "named" ? Object.fromEntries(m.namedFields.map((f) => [f.name, fieldSample(f)])) : p.init === "{}" ? { note: "x" } : argSample(p.type),
     );
@@ -197,25 +214,38 @@ export function generateParity({ runtime, ir, emit, scan, out, here, methods, kn
   writeFileSync(path.join(parityDir, "scenarios.json"), `${JSON.stringify({ scenarios }, null, 2)}\n`);
 
   // 3) Dart 표
-  const conv = (type, src, optional) => {
-    const wrap = (e) => (optional ? `${src} == null ? null : ${e}` : e);
-    if (optional) src = `(a.length > ${/a\[(\d+)\]/.exec(src)[1]} ? ${src} : null)`;
-    if (type === "Map<String, Object?>") return wrap(`(${src} as Map).cast<String, Object?>()`);
-    if (ir.classes.has(type)) return wrap(`${type}.fromJson((${src} as Map).cast<String, Object?>())`);
-    if (scan.get(type)?.kind !== "interface") return `${src} as String${optional ? "?" : ""}`;
+  /** JSON 값 식 → Dart 타입 값 식 */
+  const convValue = (type, src) => {
+    if (type.endsWith("?") && type !== "Object?") return `(${src} == null ? null : ${convValue(type.slice(0, -1), src)})`;
+    if (type === "Object?" || type === "Object") return src;
+    if (type === "Map<String, Object?>") return `(${src} as Map).cast<String, Object?>()`;
+    if (["String", "int", "num", "bool"].includes(type)) return `${src} as ${type}`;
+    const list = /^List<(.+)>$/.exec(type);
+    if (list) return `<${list[1]}>[for (final x in (${src} as List)) ${convValue(list[1], "x")}]`;
+    if (ir.classes.has(type)) return `${type}.fromJson((${src} as Map).cast<String, Object?>())`;
+    const aliasOf = typedefs.get(type);
+    if (aliasOf && aliasOf !== type) return convValue(aliasOf, src);
+    const input = scan.get(type)?.inferOf;
+    if (input?.startsWith("input:")) return convValue(ir.outputName(input.slice(6)), src);
     if (scan.get(type)?.kind === "interface") {
-      const fields = ifaceMembers(type).map((f) => `${f.name}: (${src} as Map)[${str(f.name)}] as ${tsToDart(f.type, known)}?`);
-      return wrap(`${type}(${fields.join(", ")})`);
+      const fields = ifaceMembers(type).map((f) => `${ident(f.name)}: ${convValue(optional(tsToDart(f.type, known), f.optional), `(${src} as Map)[${str(f.name)}]`)}`);
+      return `${type}(${fields.join(", ")})`;
     }
+    if (tsToDart(type, known) === "String") return `${src} as String`;
     throw new Error(`Dart 인자 변환을 만들 수 없습니다: ${type}`);
   };
-  const callLines = methods.map((m) => {
+  const conv = (type, src, isOptional) => {
+    if (!isOptional) return convValue(type, src);
+    const i = /a\[(\d+)\]/.exec(src)[1];
+    return `(a.length > ${i} && ${src} != null ? ${convValue(type.replace(/\?$/, ""), src)} : null)`;
+  };
+  const callLines = generatedMethods.map((m) => {
     const args = [];
     m.params.forEach((p, i) => {
       if (p.kind === "named") {
         for (const f of m.namedFields) {
           const t = tsToDart(f.type, known);
-          args.push(`${f.name}: (a[${i}] as Map)[${str(f.name)}] as ${t}${f.required ? "" : "?"}`);
+          args.push(`${ident(f.name)}: ${convValue(f.required ? t : optional(t, true), `(a[${i}] as Map)[${str(f.name)}]`)}`);
         }
       } else args.push(conv(p.type, `a[${i}]`, p.optional));
     });
@@ -224,7 +254,7 @@ export function generateParity({ runtime, ir, emit, scan, out, here, methods, kn
   const dart = `// GENERATED by tool/codegen/generate.mjs — 대조 하네스(tool/parity)가 쓰는 표.
 // ignore_for_file: type_annotate_public_apis, public_member_api_docs
 
-import 'package:sayren_storefront_sdk/sayren_storefront_sdk.dart';
+import 'package:${library}/${library}.dart';
 
 /// 대조할 export 스키마
 final Map<String, ZodType<Object?>> schemas = {
@@ -232,19 +262,19 @@ ${schemaNames.map((n) => `  ${str(n)}: ${n},`).join("\n")}
 };
 
 /// 시나리오의 \`call\` 이름 → 타입 있는 호출. JSON 인자를 Dart 인자로 바꾼다
-final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)> calls = {
+final Map<String, Future<Object?> Function(${clientClass} c, List<Object?> a)> calls = {
 ${callLines.join("\n")}
 };
 `;
   writeFileSync(path.join(out, "tool/parity_generated.dart"), dart);
-  writeFileSync(path.join(out, "test/getters_test.dart"), gettersTest({ ir, emit, scan, schemaNames, known }));
+  writeFileSync(path.join(out, "test/getters_test.dart"), gettersTest({ ir, emit, scan, schemaNames: schemaNames.filter((n) => runtime[n].safeParse(sample(runtime[n])).success), known, library, testImport, parityDir: path.relative(out, parityDir) }));
 }
 
 /**
  * 모든 클래스의 모든 getter를 읽어 보는 테스트 — 대조 하네스는 toJson만 비교하므로 getter 캐스트(`as int` 등)는 여기서 확인한다.
  * 스키마 예시(schema-cases.json의 sample)를 파싱한 결과에서 시작해 중첩 모델까지 따라간다.
  */
-function gettersTest({ ir, emit, scan, schemaNames, known }) {
+function gettersTest({ ir, emit, scan, schemaNames, known, library, testImport, parityDir }) {
   const isClass = (t) => ir.classes.has(t) || scan.get(t)?.kind === "interface";
   const fn = (t) => `_touch${t}`;
   const touch = (t, e) => {
@@ -262,7 +292,8 @@ function gettersTest({ ir, emit, scan, schemaNames, known }) {
   const funcs = [];
   for (const cls of ir.classes.values()) {
     if (cls.kind === "object") {
-      const lines = cls.fields.map((f) => `  ${touch(emit.type(f.node), `v.${ident(f.key)}`)}`);
+      const shown = cls.fields.filter((f) => !(["optional", "catch"].includes(f.node.k) && emit.deprecatedField(cls.root, f)));
+      const lines = shown.map((f) => `  ${touch(emit.type(f.node), `v.${ident(f.key)}`)}`);
       funcs.push(`void ${fn(cls.name)}(${cls.name} v) {\n  v.toJson();\n${lines.join("\n")}\n}`);
     } else {
       const variants = emit.variantClasses(cls.node);
@@ -284,12 +315,12 @@ function gettersTest({ ir, emit, scan, schemaNames, known }) {
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:sayren_storefront_sdk/sayren_storefront_sdk.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:${library}/${library}.dart';
+import '${testImport}';
 
 void main() {
   final samples = <String, Object?>{
-    for (final c in (jsonDecode(File('../../tool/parity/generated/schema-cases.json').readAsStringSync()) as List)
+    for (final c in (jsonDecode(File('${parityDir}/schema-cases.json').readAsStringSync()) as List)
         .cast<Map<String, Object?>>())
       if (c['label'] == 'sample') c['schema'] as String: c['input'],
   };

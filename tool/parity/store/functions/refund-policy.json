@@ -1,0 +1,349 @@
+[
+  {
+    "name": "resolve none",
+    "fn": "resolveRefundPolicy",
+    "args": []
+  },
+  {
+    "name": "resolve null",
+    "fn": "resolveRefundPolicy",
+    "args": [
+      null,
+      null
+    ]
+  },
+  {
+    "name": "resolve store",
+    "fn": "resolveRefundPolicy",
+    "args": [
+      {
+        "returnDeliveryFee": 3000,
+        "couponShortfallCharge": false
+      }
+    ]
+  },
+  {
+    "name": "resolve product override",
+    "fn": "resolveRefundPolicy",
+    "args": [
+      {
+        "returnDeliveryFee": 3000
+      },
+      {
+        "refundPolicy": {
+          "returnDeliveryFee": 5000,
+          "couponShortfallCharge": true,
+          "sellerFaultFreeShipping": false
+        }
+      }
+    ]
+  },
+  {
+    "name": "resolve product null policy",
+    "fn": "resolveRefundPolicy",
+    "args": [
+      {
+        "returnDeliveryFee": 3000
+      },
+      {
+        "refundPolicy": null
+      }
+    ]
+  },
+  {
+    "name": "resolve merge currencies KRW",
+    "fn": "resolveRefundPolicy",
+    "args": [
+      {
+        "currencies": {
+          "USD": {
+            "returnDeliveryFee": 500,
+            "exchangeDeliveryFee": 700
+          },
+          "JPY": {
+            "returnDeliveryFee": 300,
+            "exchangeDeliveryFee": 300
+          }
+        }
+      },
+      {
+        "refundPolicy": {
+          "currencies": {
+            "USD": {
+              "returnDeliveryFee": 900,
+              "exchangeDeliveryFee": 900
+            },
+            "EUR": {
+              "returnDeliveryFee": 100,
+              "exchangeDeliveryFee": 100
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "resolve only product currencies KRW",
+    "fn": "resolveRefundPolicy",
+    "args": [
+      {},
+      {
+        "refundPolicy": {
+          "currencies": {
+            "USD": {
+              "returnDeliveryFee": 900,
+              "exchangeDeliveryFee": 900
+            },
+            "EUR": {
+              "returnDeliveryFee": 100,
+              "exchangeDeliveryFee": 100
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "resolve USD product first",
+    "fn": "resolveRefundPolicy",
+    "args": [
+      {
+        "currencies": {
+          "USD": {
+            "returnDeliveryFee": 500,
+            "exchangeDeliveryFee": 700
+          },
+          "JPY": {
+            "returnDeliveryFee": 300,
+            "exchangeDeliveryFee": 300
+          }
+        },
+        "returnDeliveryFee": 3000
+      },
+      {
+        "refundPolicy": {
+          "currencies": {
+            "USD": {
+              "returnDeliveryFee": 900,
+              "exchangeDeliveryFee": 900
+            },
+            "EUR": {
+              "returnDeliveryFee": 100,
+              "exchangeDeliveryFee": 100
+            }
+          }
+        }
+      },
+      "USD"
+    ]
+  },
+  {
+    "name": "resolve JPY store",
+    "fn": "resolveRefundPolicy",
+    "args": [
+      {
+        "currencies": {
+          "USD": {
+            "returnDeliveryFee": 500,
+            "exchangeDeliveryFee": 700
+          },
+          "JPY": {
+            "returnDeliveryFee": 300,
+            "exchangeDeliveryFee": 300
+          }
+        }
+      },
+      {
+        "refundPolicy": {
+          "currencies": {
+            "USD": {
+              "returnDeliveryFee": 900,
+              "exchangeDeliveryFee": 900
+            },
+            "EUR": {
+              "returnDeliveryFee": 100,
+              "exchangeDeliveryFee": 100
+            }
+          }
+        }
+      },
+      "JPY"
+    ]
+  },
+  {
+    "name": "resolve GBP none",
+    "fn": "resolveRefundPolicy",
+    "args": [
+      {
+        "currencies": {
+          "USD": {
+            "returnDeliveryFee": 500,
+            "exchangeDeliveryFee": 700
+          },
+          "JPY": {
+            "returnDeliveryFee": 300,
+            "exchangeDeliveryFee": 300
+          }
+        }
+      },
+      null,
+      "GBP"
+    ]
+  },
+  {
+    "name": "resolve KRW explicit",
+    "fn": "resolveRefundPolicy",
+    "args": [
+      {
+        "exchangeDeliveryFee": 2000
+      },
+      null,
+      "KRW"
+    ]
+  },
+  {
+    "name": "override none",
+    "fn": "productRefundPolicyOverride",
+    "args": []
+  },
+  {
+    "name": "override null",
+    "fn": "productRefundPolicyOverride",
+    "args": [
+      {
+        "refundPolicy": null
+      }
+    ]
+  },
+  {
+    "name": "override strips coupon",
+    "fn": "productRefundPolicyOverride",
+    "args": [
+      {
+        "refundPolicy": {
+          "couponShortfallCharge": false,
+          "returnDeliveryFee": 1000
+        }
+      }
+    ]
+  },
+  {
+    "name": "override empty",
+    "fn": "productRefundPolicyOverride",
+    "args": [
+      {
+        "refundPolicy": {}
+      }
+    ]
+  },
+  {
+    "name": "proratedRefundBase 10000,3,0,1",
+    "fn": "proratedRefundBase",
+    "args": [
+      10000,
+      3,
+      0,
+      1
+    ]
+  },
+  {
+    "name": "proratedRefundBase 10000,3,1,1",
+    "fn": "proratedRefundBase",
+    "args": [
+      10000,
+      3,
+      1,
+      1
+    ]
+  },
+  {
+    "name": "proratedRefundBase 10000,3,2,1",
+    "fn": "proratedRefundBase",
+    "args": [
+      10000,
+      3,
+      2,
+      1
+    ]
+  },
+  {
+    "name": "proratedRefundBase 10000,3,0,3",
+    "fn": "proratedRefundBase",
+    "args": [
+      10000,
+      3,
+      0,
+      3
+    ]
+  },
+  {
+    "name": "proratedRefundBase 7,3,1,2",
+    "fn": "proratedRefundBase",
+    "args": [
+      7,
+      3,
+      1,
+      2
+    ]
+  },
+  {
+    "name": "proratedRefundBase 0,5,0,5",
+    "fn": "proratedRefundBase",
+    "args": [
+      0,
+      5,
+      0,
+      5
+    ]
+  },
+  {
+    "name": "proratedRefundBase 100,0,0,1",
+    "fn": "proratedRefundBase",
+    "args": [
+      100,
+      0,
+      0,
+      1
+    ]
+  },
+  {
+    "name": "proratedRefundBase 100,3,0,0",
+    "fn": "proratedRefundBase",
+    "args": [
+      100,
+      3,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "proratedRefundBase 100,3,0,-1",
+    "fn": "proratedRefundBase",
+    "args": [
+      100,
+      3,
+      0,
+      -1
+    ]
+  },
+  {
+    "name": "proratedRefundBase 99999999,7,3,4",
+    "fn": "proratedRefundBase",
+    "args": [
+      99999999,
+      7,
+      3,
+      4
+    ]
+  },
+  {
+    "name": "proratedRefundBase 1000,3,3,1",
+    "fn": "proratedRefundBase",
+    "args": [
+      1000,
+      3,
+      3,
+      1
+    ]
+  }
+]

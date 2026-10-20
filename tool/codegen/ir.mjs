@@ -145,6 +145,9 @@ export class IrBuilder {
         case "greater_than":
           out.push({ k: "gt", value: cd.value, inclusive: cd.inclusive });
           break;
+        case "multiple_of":
+          out.push({ k: "multipleOf", value: cd.value });
+          break;
         case "less_than":
           out.push({ k: "lt", value: cd.value, inclusive: cd.inclusive });
           break;
@@ -242,6 +245,12 @@ export class IrBuilder {
       const node = { k: "union", schema, desc, className: ctx.flattenInto, flattened: true, discriminator: d.discriminator ?? null, checks, options: [] };
       d.options.forEach((option, i) => node.options.push(this.node(option, { ...ctx, flattenInto: null, naming: this.optionNaming(ctx.flattenInto, d, option, i) })));
       return node;
+    }
+    // 값 형태만 있는 익명 union(예: 알려진 enum | 문자열)은 클래스 없이 그 자리에서 정의한다
+    const SCALARS = ["string", "enum", "literal", "number", "boolean", "null"];
+    if (!ctx.isRoot && d.options.every((o) => SCALARS.includes(o._zod.def.type))) {
+      const options = d.options.map((o, i) => this.node(o, { ...ctx, isRoot: false, naming: `${ctx.naming}Option${i + 1}` }));
+      return { k: "union", schema, desc, className: null, inline: true, discriminator: d.discriminator ?? null, checks, options };
     }
     const { name, schemaRef, existing } = this.claim(schema, ctx);
     const node = { k: "union", schema, desc, className: name, discriminator: d.discriminator ?? null, checks, options: [] };

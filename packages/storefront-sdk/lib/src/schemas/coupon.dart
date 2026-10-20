@@ -843,5 +843,6 @@ class StorefrontCouponListParams {
   final int? size;
 
   /// 쿼리 파라미터로 바꿉니다. null인 값은 뺍니다.
-  Map<String, Object?> toJson() => compact({'productId': productId, 'page': page, 'size': size});
+  Map<String, Object?> toJson() =>
+      {if (productId != null) 'productId': productId, if (page != null) 'page': page, if (size != null) 'size': size};
 }

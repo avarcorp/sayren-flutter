@@ -77,7 +77,7 @@ class PageParams {
   final int? size;
 
   /// 쿼리 파라미터로 바꿉니다. null인 값은 뺍니다.
-  Map<String, Object?> toJson() => compact({'page': page, 'size': size});
+  Map<String, Object?> toJson() => {if (page != null) 'page': page, if (size != null) 'size': size};
 }
 
 /// [String] 스키마입니다. 값은 `PAYMENT_WAITING`·`PAID`·`CONFIRMED`·`DISPATCHED`·`DELIVERING`·`DELIVERED`·`PURCHASE_DECIDED`·`CANCELED`입니다.

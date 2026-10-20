@@ -1,0 +1,142 @@
+[
+ {
+  "name": "normalizeLocale [\"ko\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "ko"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"en\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "en"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"en-US\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "en-US"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"en_us\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "en_us"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"EN_us\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "EN_us"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\" zh-hant-tw \"]",
+  "fn": "normalizeLocale",
+  "args": [
+   " zh-hant-tw "
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"zh-Hant-TW\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "zh-Hant-TW"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"zh-hant\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "zh-hant"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"kor\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "kor"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"k\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "k"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"en-USA\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "en-USA"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"en-latn-us-x\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "en-latn-us-x"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"  \"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "  "
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"de-1996\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "de-1996"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"sr_Latn_RS\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "sr_Latn_RS"
+  ]
+ },
+ {
+  "name": "normalizeLocale [null]",
+  "fn": "normalizeLocale",
+  "args": [
+   null
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"ko-kr\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "ko-kr"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"fil-PH\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "fil-PH"
+  ]
+ },
+ {
+  "name": "normalizeLocale [\"ab-Cdef\"]",
+  "fn": "normalizeLocale",
+  "args": [
+   "ab-Cdef"
+  ]
+ }
+]

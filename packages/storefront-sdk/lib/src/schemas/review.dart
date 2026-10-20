@@ -510,8 +510,14 @@ class ProductReviewParams extends PageParams {
 
   /// 쿼리 파라미터로 바꿉니다. null인 값은 뺍니다.
   @override
-  Map<String, Object?> toJson() => compact(
-      {'page': page, 'size': size, 'rating': rating, 'hasImage': hasImage, 'variantId': variantId, 'sort': sort});
+  Map<String, Object?> toJson() => {
+        if (page != null) 'page': page,
+        if (size != null) 'size': size,
+        if (rating != null) 'rating': rating,
+        if (hasImage != null) 'hasImage': hasImage,
+        if (variantId != null) 'variantId': variantId,
+        if (sort != null) 'sort': sort
+      };
 }
 
 /// [ReviewImageUploadRequest] 스키마입니다.

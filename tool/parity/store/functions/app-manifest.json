@@ -1,0 +1,1832 @@
+[
+ {
+  "name": "isInstallableScope [\"product:r\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "product:r"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"product:rw\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "product:rw"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"settlement:r\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "settlement:r"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"settlement:rw\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "settlement:rw"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"audit:rw\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "audit:rw"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"member:r\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "member:r"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"nope:r\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "nope:r"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"product\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "product"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"product:\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "product:"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\":r\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   ":r"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"product:r:x\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "product:r:x"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"PRODUCT:r\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "PRODUCT:r"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"inventory:rw\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "inventory:rw"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"flow:r\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "flow:r"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"storefront:rw\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "storefront:rw"
+  ]
+ },
+ {
+  "name": "isInstallableScope [\"webhook:r\"]",
+  "fn": "isInstallableScope",
+  "args": [
+   "webhook:r"
+  ]
+ },
+ {
+  "name": "scopesCoverEvent [[\"order:r\"], \"ORDER.PAID\"]",
+  "fn": "scopesCoverEvent",
+  "args": [
+   [
+    "order:r"
+   ],
+   "ORDER.PAID"
+  ]
+ },
+ {
+  "name": "scopesCoverEvent [[\"order:rw\"], \"ORDER.PAID\"]",
+  "fn": "scopesCoverEvent",
+  "args": [
+   [
+    "order:rw"
+   ],
+   "ORDER.PAID"
+  ]
+ },
+ {
+  "name": "scopesCoverEvent [[], \"APP.INSTALLED\"]",
+  "fn": "scopesCoverEvent",
+  "args": [
+   [],
+   "APP.INSTALLED"
+  ]
+ },
+ {
+  "name": "scopesCoverEvent [[\"claim:r\"], \"ORDER.PAID\"]",
+  "fn": "scopesCoverEvent",
+  "args": [
+   [
+    "claim:r"
+   ],
+   "ORDER.PAID"
+  ]
+ },
+ {
+  "name": "scopesCoverEvent [[\"inventory:rw\"], \"INVENTORY.CHANGED\"]",
+  "fn": "scopesCoverEvent",
+  "args": [
+   [
+    "inventory:rw"
+   ],
+   "INVENTORY.CHANGED"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"api.example.com\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "api.example.com"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"*.example.com\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "*.example.com"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"*.*.example.com\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "*.*.example.com"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"API.example.com\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "API.example.com"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\" a.com\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   " a.com"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"1.2.3.4\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "1.2.3.4"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"a.com:443\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "a.com:443"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"[::1]\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "[::1]"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"localhost\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "localhost"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"a.local\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "a.local"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"sayren.io\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "sayren.io"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"x.sayren.io\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "x.sayren.io"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"mysayren.io\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "mysayren.io"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"a\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "a"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"a.b\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "a.b"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"a.xn--3e0b707e\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "a.xn--3e0b707e"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"a.c0m\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "a.c0m"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"-a.com\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "-a.com"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"a.com.\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   "a.com."
+  ]
+ },
+ {
+  "name": "appNetworkHostProblem [\"\"]",
+  "fn": "appNetworkHostProblem",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "appHttpKeyMatches [\"GET /track/:id\", \"get\", \"/track/1\"]",
+  "fn": "appHttpKeyMatches",
+  "args": [
+   "GET /track/:id",
+   "get",
+   "/track/1"
+  ]
+ },
+ {
+  "name": "appHttpKeyMatches [\"GET /track/:id\", \"GET\", \"/track/\"]",
+  "fn": "appHttpKeyMatches",
+  "args": [
+   "GET /track/:id",
+   "GET",
+   "/track/"
+  ]
+ },
+ {
+  "name": "appHttpKeyMatches [\"GET /track/:id\", \"GET\", \"/track/1?x=1\"]",
+  "fn": "appHttpKeyMatches",
+  "args": [
+   "GET /track/:id",
+   "GET",
+   "/track/1?x=1"
+  ]
+ },
+ {
+  "name": "appHttpKeyMatches [\"  POST   /a \", \"post\", \"/a\"]",
+  "fn": "appHttpKeyMatches",
+  "args": [
+   "  POST   /a ",
+   "post",
+   "/a"
+  ]
+ },
+ {
+  "name": "appHttpKeyMatches [\"GET /a\", \"POST\", \"/a\"]",
+  "fn": "appHttpKeyMatches",
+  "args": [
+   "GET /a",
+   "POST",
+   "/a"
+  ]
+ },
+ {
+  "name": "appHttpKeyMatches [\"GET /a/b\", \"GET\", \"/a\"]",
+  "fn": "appHttpKeyMatches",
+  "args": [
+   "GET /a/b",
+   "GET",
+   "/a"
+  ]
+ },
+ {
+  "name": "appHttpKeyMatches [\"BAD\", \"GET\", \"/\"]",
+  "fn": "appHttpKeyMatches",
+  "args": [
+   "BAD",
+   "GET",
+   "/"
+  ]
+ },
+ {
+  "name": "appHttpKeyMatches [\"GET /\", \"GET\", \"/\"]",
+  "fn": "appHttpKeyMatches",
+  "args": [
+   "GET /",
+   "GET",
+   "/"
+  ]
+ },
+ {
+  "name": "appHttpKeyMatches [\"GET /:a/:b\", \"GET\", \"/x/y\"]",
+  "fn": "appHttpKeyMatches",
+  "args": [
+   "GET /:a/:b",
+   "GET",
+   "/x/y"
+  ]
+ },
+ {
+  "name": "appScheduleIntervalLabel [\"15m\"]",
+  "fn": "appScheduleIntervalLabel",
+  "args": [
+   "15m"
+  ]
+ },
+ {
+  "name": "appScheduleIntervalLabel [\"30m\"]",
+  "fn": "appScheduleIntervalLabel",
+  "args": [
+   "30m"
+  ]
+ },
+ {
+  "name": "appScheduleIntervalLabel [\"1h\"]",
+  "fn": "appScheduleIntervalLabel",
+  "args": [
+   "1h"
+  ]
+ },
+ {
+  "name": "appScheduleIntervalLabel [\"3h\"]",
+  "fn": "appScheduleIntervalLabel",
+  "args": [
+   "3h"
+  ]
+ },
+ {
+  "name": "appScheduleIntervalLabel [\"6h\"]",
+  "fn": "appScheduleIntervalLabel",
+  "args": [
+   "6h"
+  ]
+ },
+ {
+  "name": "appScheduleIntervalLabel [\"12h\"]",
+  "fn": "appScheduleIntervalLabel",
+  "args": [
+   "12h"
+  ]
+ },
+ {
+  "name": "appScheduleIntervalLabel [\"1d\"]",
+  "fn": "appScheduleIntervalLabel",
+  "args": [
+   "1d"
+  ]
+ },
+ {
+  "name": "appScheduleIntervalLabel [\"x\"]",
+  "fn": "appScheduleIntervalLabel",
+  "args": [
+   "x"
+  ]
+ },
+ {
+  "name": "appScheduleListOf [{\"scopes\": [\"order:r\", \"product:rw\"], \"events\": [\"ORDER.PAID\"], \"networkHosts\":",
+  "fn": "appScheduleListOf",
+  "args": [
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": []
+   }
+  ]
+ },
+ {
+  "name": "appScheduleListOf [{\"scopes\": [\"order:rw\", \"product:r\", \"customer:r\"], \"events\": [\"ORDER.PAID\", \"C",
+  "fn": "appScheduleListOf",
+  "args": [
+   {
+    "scopes": [
+     "order:rw",
+     "product:r",
+     "customer:r"
+    ],
+    "events": [
+     "ORDER.PAID",
+     "CLAIM.COMPLETED"
+    ],
+    "networkHosts": [
+     "a.example.com",
+     "b.example.com"
+    ],
+    "adminPage": true,
+    "publicHttp": [
+     "GET /x"
+    ],
+    "schedules": {
+     "sync": "15m",
+     "daily": "1d"
+    },
+    "externalHost": "dev.example.com",
+    "tools": {
+     "t": {
+      "description": "T",
+      "input": {}
+     }
+    },
+    "requiredSettings": [],
+    "secretSettings": [],
+    "flowNotifications": {
+     "n2": {
+      "label": "N2",
+      "params": {
+       "y": {
+        "type": "boolean",
+        "label": "Y"
+       },
+       "x": {
+        "type": "string",
+        "label": "X",
+        "required": true
+       }
+      }
+     },
+     "n1": {
+      "label": "N1",
+      "params": {}
+     }
+    },
+    "flowEvents": {
+     "E2": {
+      "label": "e2"
+     },
+     "E1": {
+      "label": "e1"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "appScheduleListOf [{\"scopes\": [\"order:rw\"], \"events\": [\"ORDER.PAID\"], \"networkHosts\": [\"a.example.",
+  "fn": "appScheduleListOf",
+  "args": [
+   {
+    "scopes": [
+     "order:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": true,
+    "requiredSettings": [],
+    "secretSettings": [],
+    "schedules": {
+     "sync": "30m",
+     "more": "6h"
+    },
+    "externalHost": "dev.example.com",
+    "publicHttp": [
+     "GET /x"
+    ],
+    "tools": {
+     "t": {
+      "description": "T",
+      "input": {}
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "appFlowSummaryOf [{\"scopes\": [\"order:r\", \"product:rw\"], \"events\": [\"ORDER.PAID\"], \"networkHosts\":",
+  "fn": "appFlowSummaryOf",
+  "args": [
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": []
+   }
+  ]
+ },
+ {
+  "name": "appFlowSummaryOf [{\"scopes\": [\"order:rw\", \"product:r\", \"customer:r\"], \"events\": [\"ORDER.PAID\", \"C",
+  "fn": "appFlowSummaryOf",
+  "args": [
+   {
+    "scopes": [
+     "order:rw",
+     "product:r",
+     "customer:r"
+    ],
+    "events": [
+     "ORDER.PAID",
+     "CLAIM.COMPLETED"
+    ],
+    "networkHosts": [
+     "a.example.com",
+     "b.example.com"
+    ],
+    "adminPage": true,
+    "publicHttp": [
+     "GET /x"
+    ],
+    "schedules": {
+     "sync": "15m",
+     "daily": "1d"
+    },
+    "externalHost": "dev.example.com",
+    "tools": {
+     "t": {
+      "description": "T",
+      "input": {}
+     }
+    },
+    "requiredSettings": [],
+    "secretSettings": [],
+    "flowNotifications": {
+     "n2": {
+      "label": "N2",
+      "params": {
+       "y": {
+        "type": "boolean",
+        "label": "Y"
+       },
+       "x": {
+        "type": "string",
+        "label": "X",
+        "required": true
+       }
+      }
+     },
+     "n1": {
+      "label": "N1",
+      "params": {}
+     }
+    },
+    "flowEvents": {
+     "E2": {
+      "label": "e2"
+     },
+     "E1": {
+      "label": "e1"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "appToolListOf [{\"scopes\": [\"order:r\", \"product:rw\"], \"events\": [\"ORDER.PAID\"], \"networkHosts\":",
+  "fn": "appToolListOf",
+  "args": [
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": []
+   }
+  ]
+ },
+ {
+  "name": "appToolListOf [{\"scopes\": [\"order:rw\", \"product:r\", \"customer:r\"], \"events\": [\"ORDER.PAID\", \"C",
+  "fn": "appToolListOf",
+  "args": [
+   {
+    "scopes": [
+     "order:rw",
+     "product:r",
+     "customer:r"
+    ],
+    "events": [
+     "ORDER.PAID",
+     "CLAIM.COMPLETED"
+    ],
+    "networkHosts": [
+     "a.example.com",
+     "b.example.com"
+    ],
+    "adminPage": true,
+    "publicHttp": [
+     "GET /x"
+    ],
+    "schedules": {
+     "sync": "15m",
+     "daily": "1d"
+    },
+    "externalHost": "dev.example.com",
+    "tools": {
+     "t": {
+      "description": "T",
+      "input": {}
+     }
+    },
+    "requiredSettings": [],
+    "secretSettings": [],
+    "flowNotifications": {
+     "n2": {
+      "label": "N2",
+      "params": {
+       "y": {
+        "type": "boolean",
+        "label": "Y"
+       },
+       "x": {
+        "type": "string",
+        "label": "X",
+        "required": true
+       }
+      }
+     },
+     "n1": {
+      "label": "N1",
+      "params": {}
+     }
+    },
+    "flowEvents": {
+     "E2": {
+      "label": "e2"
+     },
+     "E1": {
+      "label": "e1"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "appManifestWidens [{\"scopes\": [\"order:r\", \"product:rw\"], \"events\": [\"ORDER.PAID\"], \"networkHosts\":",
+  "fn": "appManifestWidens",
+  "args": [
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": []
+   },
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": []
+   }
+  ]
+ },
+ {
+  "name": "appManifestWidens [{\"scopes\": [\"order:r\", \"product:rw\"], \"events\": [\"ORDER.PAID\"], \"networkHosts\":",
+  "fn": "appManifestWidens",
+  "args": [
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": []
+   },
+   {
+    "scopes": [
+     "order:rw",
+     "product:r",
+     "customer:r"
+    ],
+    "events": [
+     "ORDER.PAID",
+     "CLAIM.COMPLETED"
+    ],
+    "networkHosts": [
+     "a.example.com",
+     "b.example.com"
+    ],
+    "adminPage": true,
+    "publicHttp": [
+     "GET /x"
+    ],
+    "schedules": {
+     "sync": "15m",
+     "daily": "1d"
+    },
+    "externalHost": "dev.example.com",
+    "tools": {
+     "t": {
+      "description": "T",
+      "input": {}
+     }
+    },
+    "requiredSettings": [],
+    "secretSettings": [],
+    "flowNotifications": {
+     "n2": {
+      "label": "N2",
+      "params": {
+       "y": {
+        "type": "boolean",
+        "label": "Y"
+       },
+       "x": {
+        "type": "string",
+        "label": "X",
+        "required": true
+       }
+      }
+     },
+     "n1": {
+      "label": "N1",
+      "params": {}
+     }
+    },
+    "flowEvents": {
+     "E2": {
+      "label": "e2"
+     },
+     "E1": {
+      "label": "e1"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "appManifestWidens [{\"scopes\": [\"order:rw\", \"product:r\", \"customer:r\"], \"events\": [\"ORDER.PAID\", \"C",
+  "fn": "appManifestWidens",
+  "args": [
+   {
+    "scopes": [
+     "order:rw",
+     "product:r",
+     "customer:r"
+    ],
+    "events": [
+     "ORDER.PAID",
+     "CLAIM.COMPLETED"
+    ],
+    "networkHosts": [
+     "a.example.com",
+     "b.example.com"
+    ],
+    "adminPage": true,
+    "publicHttp": [
+     "GET /x"
+    ],
+    "schedules": {
+     "sync": "15m",
+     "daily": "1d"
+    },
+    "externalHost": "dev.example.com",
+    "tools": {
+     "t": {
+      "description": "T",
+      "input": {}
+     }
+    },
+    "requiredSettings": [],
+    "secretSettings": [],
+    "flowNotifications": {
+     "n2": {
+      "label": "N2",
+      "params": {
+       "y": {
+        "type": "boolean",
+        "label": "Y"
+       },
+       "x": {
+        "type": "string",
+        "label": "X",
+        "required": true
+       }
+      }
+     },
+     "n1": {
+      "label": "N1",
+      "params": {}
+     }
+    },
+    "flowEvents": {
+     "E2": {
+      "label": "e2"
+     },
+     "E1": {
+      "label": "e1"
+     }
+    }
+   },
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": []
+   }
+  ]
+ },
+ {
+  "name": "appManifestWidens [{\"scopes\": [\"order:r\", \"product:rw\"], \"events\": [\"ORDER.PAID\"], \"networkHosts\":",
+  "fn": "appManifestWidens",
+  "args": [
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": true,
+    "requiredSettings": [],
+    "secretSettings": [],
+    "schedules": {
+     "sync": "1h"
+    },
+    "externalHost": "dev.example.com",
+    "publicHttp": [
+     "GET /x"
+    ],
+    "tools": {
+     "t": {
+      "description": "T",
+      "input": {}
+     }
+    }
+   },
+   {
+    "scopes": [
+     "order:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": true,
+    "requiredSettings": [],
+    "secretSettings": [],
+    "schedules": {
+     "sync": "30m",
+     "more": "6h"
+    },
+    "externalHost": "dev.example.com",
+    "publicHttp": [
+     "GET /x"
+    ],
+    "tools": {
+     "t": {
+      "description": "T",
+      "input": {}
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "appManifestWidens [{\"scopes\": [\"order:rw\"], \"events\": [\"ORDER.PAID\"], \"networkHosts\": [\"a.example.",
+  "fn": "appManifestWidens",
+  "args": [
+   {
+    "scopes": [
+     "order:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": true,
+    "requiredSettings": [],
+    "secretSettings": [],
+    "schedules": {
+     "sync": "30m",
+     "more": "6h"
+    },
+    "externalHost": "dev.example.com",
+    "publicHttp": [
+     "GET /x"
+    ],
+    "tools": {
+     "t": {
+      "description": "T",
+      "input": {}
+     }
+    }
+   },
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": true,
+    "requiredSettings": [],
+    "secretSettings": [],
+    "schedules": {
+     "sync": "1h"
+    },
+    "externalHost": "dev.example.com",
+    "publicHttp": [
+     "GET /x"
+    ],
+    "tools": {
+     "t": {
+      "description": "T",
+      "input": {}
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "appManifestWidens [{\"scopes\": [\"order:r\", \"product:rw\"], \"events\": [\"ORDER.PAID\"], \"networkHosts\":",
+  "fn": "appManifestWidens",
+  "args": [
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": []
+   },
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": [],
+    "schedules": {
+     "sync": "weird"
+    }
+   }
+  ]
+ },
+ {
+  "name": "appManifestWidens [{\"scopes\": [\"order:r\", \"product:rw\"], \"events\": [\"ORDER.PAID\"], \"networkHosts\":",
+  "fn": "appManifestWidens",
+  "args": [
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": [],
+    "schedules": {
+     "sync": "1h"
+    }
+   },
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": [],
+    "schedules": {
+     "sync": "weird"
+    }
+   }
+  ]
+ },
+ {
+  "name": "appManifestWidens [{\"scopes\": [\"order:r\", \"product:rw\"], \"events\": [\"ORDER.PAID\"], \"networkHosts\":",
+  "fn": "appManifestWidens",
+  "args": [
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": [],
+    "schedules": {
+     "sync": "weird"
+    }
+   },
+   {
+    "scopes": [
+     "order:r",
+     "product:rw"
+    ],
+    "events": [
+     "ORDER.PAID"
+    ],
+    "networkHosts": [
+     "a.example.com"
+    ],
+    "adminPage": false,
+    "requiredSettings": [],
+    "secretSettings": [],
+    "schedules": {
+     "sync": "1h"
+    }
+   }
+  ]
+ },
+ {
+  "name": "appManifestProblems [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [], \"networ",
+  "fn": "appManifestProblems",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [],
+    "network": {
+     "hosts": []
+    },
+    "events": [],
+    "schedules": {},
+    "settings": {},
+    "secrets": []
+   }
+  ]
+ },
+ {
+  "name": "appManifestProblems [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [\"order:r\",",
+  "fn": "appManifestProblems",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [
+     "order:r",
+     "order:r",
+     "product:rw"
+    ],
+    "network": {
+     "hosts": [
+      "api.example.com",
+      "api.example.com"
+     ]
+    },
+    "events": [
+     "ORDER.PAID",
+     "CLAIM.COMPLETED",
+     "APP.INSTALLED"
+    ],
+    "schedules": {},
+    "settings": {},
+    "secrets": [
+     "A",
+     "A"
+    ],
+    "http": {
+     "public": [
+      "GET /x",
+      "GET /x"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "appManifestProblems [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"external\", \"scopes\": [], \"ne",
+  "fn": "appManifestProblems",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "external",
+    "scopes": [],
+    "network": {
+     "hosts": []
+    },
+    "events": [],
+    "schedules": {},
+    "settings": {},
+    "secrets": []
+   }
+  ]
+ },
+ {
+  "name": "appManifestProblems [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [], \"networ",
+  "fn": "appManifestProblems",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [],
+    "network": {
+     "hosts": []
+    },
+    "events": [],
+    "schedules": {},
+    "settings": {},
+    "secrets": [],
+    "external": {
+     "url": "https://dev.example.com/hook"
+    }
+   }
+  ]
+ },
+ {
+  "name": "appManifestProblems [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"external\", \"scopes\": [], \"ne",
+  "fn": "appManifestProblems",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "external",
+    "scopes": [],
+    "network": {
+     "hosts": [
+      "a.example.com"
+     ]
+    },
+    "events": [],
+    "schedules": {},
+    "settings": {},
+    "secrets": [],
+    "external": {
+     "url": "https://api.sayren.io/x"
+    }
+   }
+  ]
+ },
+ {
+  "name": "appManifestProblems [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"external\", \"scopes\": [], \"ne",
+  "fn": "appManifestProblems",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "external",
+    "scopes": [],
+    "network": {
+     "hosts": []
+    },
+    "events": [],
+    "schedules": {},
+    "settings": {},
+    "secrets": [],
+    "external": {
+     "url": "https://Dev.Example.com:8443/x"
+    }
+   }
+  ]
+ },
+ {
+  "name": "appManifestProblems [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [\"order:rw\"",
+  "fn": "appManifestProblems",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [
+     "order:rw"
+    ],
+    "network": {
+     "hosts": []
+    },
+    "events": [
+     "ORDER.PAID"
+    ],
+    "schedules": {},
+    "settings": {},
+    "secrets": []
+   }
+  ]
+ },
+ {
+  "name": "appManifestProblems [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [], \"networ",
+  "fn": "appManifestProblems",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [],
+    "network": {
+     "hosts": []
+    },
+    "events": [],
+    "schedules": {},
+    "settings": {
+     "mode": {
+      "type": "select",
+      "label": "Mode"
+     },
+     "key": {
+      "type": "number",
+      "label": "Key",
+      "secret": true,
+      "required": true
+     },
+     "name": {
+      "type": "string",
+      "label": "N",
+      "default": 3
+     },
+     "flag": {
+      "type": "boolean",
+      "label": "F",
+      "default": false,
+      "required": true
+     },
+     "pick": {
+      "type": "select",
+      "label": "P",
+      "options": [
+       {
+        "value": "a",
+        "label": "A"
+       }
+      ],
+      "default": "b"
+     },
+     "pick2": {
+      "type": "select",
+      "label": "P",
+      "options": [
+       {
+        "value": "a",
+        "label": "A"
+       }
+      ],
+      "default": "a",
+      "secret": true
+     },
+     "num": {
+      "type": "number",
+      "label": "n",
+      "default": 1.5
+     }
+    },
+    "secrets": []
+   }
+  ]
+ },
+ {
+  "name": "appManifestProblems [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [\"product:r",
+  "fn": "appManifestProblems",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [
+     "product:r",
+     "order:rw",
+     "customer:r"
+    ],
+    "network": {
+     "hosts": [
+      "b.example.com",
+      "a.example.com"
+     ]
+    },
+    "events": [
+     "ORDER.PAID"
+    ],
+    "schedules": {
+     "zeta": {
+      "every": "1h"
+     },
+     "alpha": {
+      "every": "15m"
+     },
+     "Beta": {
+      "every": "1d"
+     }
+    },
+    "settings": {},
+    "secrets": [],
+    "ui": {
+     "adminPage": {
+      "entry": "ui/index.html"
+     }
+    },
+    "http": {
+     "public": [
+      "POST /hooks",
+      "GET /a/:id"
+     ]
+    },
+    "flow": {
+     "notifications": {
+      "shipped": {
+       "label": "발송",
+       "params": {
+        "b": {
+         "type": "string",
+         "label": "B"
+        },
+        "a": {
+         "type": "number",
+         "label": "A",
+         "required": true
+        }
+       }
+      },
+      "arrived": {
+       "label": "도착",
+       "params": {}
+      }
+     },
+     "events": {
+      "Z_DONE": {
+       "label": "Z"
+      },
+      "A_DONE": {
+       "label": "A",
+       "description": "d"
+      }
+     }
+    },
+    "mcp": {
+     "tools": {
+      "zz": {
+       "description": "Z tool",
+       "input": {}
+      },
+      "aa": {
+       "description": "A tool",
+       "input": {}
+      }
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "appCapabilitiesOf [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [], \"networ",
+  "fn": "appCapabilitiesOf",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [],
+    "network": {
+     "hosts": []
+    },
+    "events": [],
+    "schedules": {},
+    "settings": {},
+    "secrets": []
+   }
+  ]
+ },
+ {
+  "name": "appCapabilitiesOf [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [\"order:r\",",
+  "fn": "appCapabilitiesOf",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [
+     "order:r",
+     "order:r",
+     "product:rw"
+    ],
+    "network": {
+     "hosts": [
+      "api.example.com",
+      "api.example.com"
+     ]
+    },
+    "events": [
+     "ORDER.PAID",
+     "CLAIM.COMPLETED",
+     "APP.INSTALLED"
+    ],
+    "schedules": {},
+    "settings": {},
+    "secrets": [
+     "A",
+     "A"
+    ],
+    "http": {
+     "public": [
+      "GET /x",
+      "GET /x"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "appCapabilitiesOf [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [], \"networ",
+  "fn": "appCapabilitiesOf",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [],
+    "network": {
+     "hosts": []
+    },
+    "events": [],
+    "schedules": {},
+    "settings": {},
+    "secrets": [],
+    "external": {
+     "url": "https://dev.example.com/hook"
+    }
+   }
+  ]
+ },
+ {
+  "name": "appCapabilitiesOf [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"external\", \"scopes\": [], \"ne",
+  "fn": "appCapabilitiesOf",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "external",
+    "scopes": [],
+    "network": {
+     "hosts": [
+      "a.example.com"
+     ]
+    },
+    "events": [],
+    "schedules": {},
+    "settings": {},
+    "secrets": [],
+    "external": {
+     "url": "https://api.sayren.io/x"
+    }
+   }
+  ]
+ },
+ {
+  "name": "appCapabilitiesOf [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"external\", \"scopes\": [], \"ne",
+  "fn": "appCapabilitiesOf",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "external",
+    "scopes": [],
+    "network": {
+     "hosts": []
+    },
+    "events": [],
+    "schedules": {},
+    "settings": {},
+    "secrets": [],
+    "external": {
+     "url": "https://Dev.Example.com:8443/x"
+    }
+   }
+  ]
+ },
+ {
+  "name": "appCapabilitiesOf [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [\"order:rw\"",
+  "fn": "appCapabilitiesOf",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [
+     "order:rw"
+    ],
+    "network": {
+     "hosts": []
+    },
+    "events": [
+     "ORDER.PAID"
+    ],
+    "schedules": {},
+    "settings": {},
+    "secrets": []
+   }
+  ]
+ },
+ {
+  "name": "appCapabilitiesOf [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [], \"networ",
+  "fn": "appCapabilitiesOf",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [],
+    "network": {
+     "hosts": []
+    },
+    "events": [],
+    "schedules": {},
+    "settings": {
+     "mode": {
+      "type": "select",
+      "label": "Mode"
+     },
+     "key": {
+      "type": "number",
+      "label": "Key",
+      "secret": true,
+      "required": true
+     },
+     "name": {
+      "type": "string",
+      "label": "N",
+      "default": 3
+     },
+     "flag": {
+      "type": "boolean",
+      "label": "F",
+      "default": false,
+      "required": true
+     },
+     "pick": {
+      "type": "select",
+      "label": "P",
+      "options": [
+       {
+        "value": "a",
+        "label": "A"
+       }
+      ],
+      "default": "b"
+     },
+     "pick2": {
+      "type": "select",
+      "label": "P",
+      "options": [
+       {
+        "value": "a",
+        "label": "A"
+       }
+      ],
+      "default": "a",
+      "secret": true
+     },
+     "num": {
+      "type": "number",
+      "label": "n",
+      "default": 1.5
+     }
+    },
+    "secrets": []
+   }
+  ]
+ },
+ {
+  "name": "appCapabilitiesOf [{\"handle\": \"my-app\", \"name\": \"My App\", \"runtime\": \"code\", \"scopes\": [\"product:r",
+  "fn": "appCapabilitiesOf",
+  "args": [
+   {
+    "handle": "my-app",
+    "name": "My App",
+    "runtime": "code",
+    "scopes": [
+     "product:r",
+     "order:rw",
+     "customer:r"
+    ],
+    "network": {
+     "hosts": [
+      "b.example.com",
+      "a.example.com"
+     ]
+    },
+    "events": [
+     "ORDER.PAID"
+    ],
+    "schedules": {
+     "zeta": {
+      "every": "1h"
+     },
+     "alpha": {
+      "every": "15m"
+     },
+     "Beta": {
+      "every": "1d"
+     }
+    },
+    "settings": {},
+    "secrets": [],
+    "ui": {
+     "adminPage": {
+      "entry": "ui/index.html"
+     }
+    },
+    "http": {
+     "public": [
+      "POST /hooks",
+      "GET /a/:id"
+     ]
+    },
+    "flow": {
+     "notifications": {
+      "shipped": {
+       "label": "발송",
+       "params": {
+        "b": {
+         "type": "string",
+         "label": "B"
+        },
+        "a": {
+         "type": "number",
+         "label": "A",
+         "required": true
+        }
+       }
+      },
+      "arrived": {
+       "label": "도착",
+       "params": {}
+      }
+     },
+     "events": {
+      "Z_DONE": {
+       "label": "Z"
+      },
+      "A_DONE": {
+       "label": "A",
+       "description": "d"
+      }
+     }
+    },
+    "mcp": {
+     "tools": {
+      "zz": {
+       "description": "Z tool",
+       "input": {}
+      },
+      "aa": {
+       "description": "A tool",
+       "input": {}
+      }
+     }
+    }
+   }
+  ]
+ }
+]

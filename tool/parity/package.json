@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@sayren/store-sdk": "0.36.0",
     "@sayren/storefront-sdk": "0.24.0"
   }
 }
