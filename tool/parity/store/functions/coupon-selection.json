@@ -1,0 +1,735 @@
+[
+ {
+  "name": "maxWeightAssignment 2x3",
+  "fn": "maxWeightAssignment",
+  "args": [
+   [
+    [
+     5,
+     0,
+     3
+    ],
+    [
+     4,
+     4,
+     0
+    ]
+   ]
+  ]
+ },
+ {
+  "name": "maxWeightAssignment 3x1",
+  "fn": "maxWeightAssignment",
+  "args": [
+   [
+    [
+     1
+    ],
+    [
+     2
+    ],
+    [
+     3
+    ]
+   ]
+  ]
+ },
+ {
+  "name": "maxWeightAssignment 빈 행렬",
+  "fn": "maxWeightAssignment",
+  "args": [
+   []
+  ]
+ },
+ {
+  "name": "maxWeightAssignment 0은 배정 안 함",
+  "fn": "maxWeightAssignment",
+  "args": [
+   [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     7
+    ]
+   ]
+  ]
+ },
+ {
+  "name": "bestCouponSelection 전체",
+  "fn": "bestCouponSelection",
+  "args": [
+   {
+    "lines": [
+     {
+      "lineId": "l1",
+      "productId": "p1",
+      "categoryPath": "/cat1/cat2/",
+      "quantity": 3,
+      "baseAmount": 30000,
+      "amount": 27000
+     },
+     {
+      "lineId": "l2",
+      "productId": "p2",
+      "categoryPath": null,
+      "quantity": 1,
+      "baseAmount": 12000,
+      "amount": 12000
+     },
+     {
+      "lineId": "l3",
+      "productId": "p3",
+      "categoryPath": "/cat9/",
+      "quantity": 2,
+      "baseAmount": 4000,
+      "amount": 4000
+     }
+    ],
+    "candidates": [
+     {
+      "rule": {
+       "couponId": "c1",
+       "name": "a",
+       "kind": "PRODUCT",
+       "benefit": {
+        "type": "RATE",
+        "value": 10,
+        "maxDiscountAmount": null
+       },
+       "conditions": {
+        "minOrderAmount": 0,
+        "firstOrderOnly": false,
+        "memberOnly": true,
+        "stackWithInstantDiscount": true
+       },
+       "target": {
+        "includeProductIds": [],
+        "includeCategoryIds": [],
+        "excludeProductIds": [],
+        "excludeCategoryIds": []
+       },
+       "startsAt": null,
+       "endsAt": "2030-01-01T00:00:00Z",
+       "reward": {
+        "type": "BUY_X_GET_Y",
+        "buy": 1,
+        "get": 1,
+        "rate": 100,
+        "shortfallCharge": true
+       }
+      },
+      "couponKey": "c1k"
+     },
+     {
+      "rule": {
+       "couponId": "c2",
+       "name": "b",
+       "kind": "ORDER",
+       "benefit": {
+        "type": "RATE",
+        "value": 10,
+        "maxDiscountAmount": null
+       },
+       "conditions": {
+        "minOrderAmount": 0,
+        "firstOrderOnly": false,
+        "memberOnly": true,
+        "stackWithInstantDiscount": true
+       },
+       "target": {
+        "includeProductIds": [],
+        "includeCategoryIds": [],
+        "excludeProductIds": [],
+        "excludeCategoryIds": []
+       },
+       "startsAt": null,
+       "endsAt": null,
+       "reward": {
+        "type": "TIERED",
+        "tiers": [
+         {
+          "minAmount": 10000,
+          "benefit": {
+           "type": "AMOUNT",
+           "value": 1000,
+           "maxDiscountAmount": null
+          }
+         },
+         {
+          "minAmount": 30000,
+          "benefit": {
+           "type": "RATE",
+           "value": 15,
+           "maxDiscountAmount": 5000
+          }
+         }
+        ],
+        "shortfallCharge": true
+       },
+       "eligibility": {
+        "combinator": "and",
+        "rules": [
+         {
+          "field": "customer.paidOrderCount",
+          "operator": "<=",
+          "value": 3
+         },
+         {
+          "field": "cart.targetSubtotal",
+          "operator": ">=",
+          "value": 5000
+         },
+         {
+          "field": "time.weekday",
+          "operator": "in",
+          "value": [
+           "MON",
+           "TUE",
+           "WED",
+           "THU",
+           "FRI",
+           "SAT",
+           "SUN"
+          ]
+         }
+        ]
+       }
+      },
+      "couponKey": "c2k"
+     },
+     {
+      "rule": {
+       "couponId": "c3",
+       "name": "c",
+       "kind": "ORDER",
+       "benefit": {
+        "type": "AMOUNT",
+        "value": 3000,
+        "maxDiscountAmount": null
+       },
+       "conditions": {
+        "minOrderAmount": 20000,
+        "firstOrderOnly": true,
+        "memberOnly": true,
+        "stackWithInstantDiscount": false
+       },
+       "target": {
+        "includeProductIds": [
+         "p1"
+        ],
+        "includeCategoryIds": [
+         "cat9"
+        ],
+        "excludeProductIds": [],
+        "excludeCategoryIds": []
+       },
+       "startsAt": null,
+       "endsAt": "2029-01-01T00:00:00Z",
+       "stacking": {
+        "combinesWith": {
+         "order": true,
+         "product": false,
+         "delivery": true
+        },
+        "withPoints": false,
+        "perOrderLimit": 1
+       }
+      },
+      "couponKey": "c3k"
+     },
+     {
+      "rule": {
+       "couponId": "c4",
+       "name": "d",
+       "kind": "DELIVERY",
+       "benefit": {
+        "type": "AMOUNT",
+        "value": 3000,
+        "maxDiscountAmount": null
+       },
+       "conditions": {
+        "minOrderAmount": 0,
+        "firstOrderOnly": false,
+        "memberOnly": true,
+        "stackWithInstantDiscount": true
+       },
+       "target": {
+        "includeProductIds": [],
+        "includeCategoryIds": [],
+        "excludeProductIds": [],
+        "excludeCategoryIds": []
+       },
+       "startsAt": null,
+       "endsAt": null
+      },
+      "couponKey": "c4k"
+     },
+     {
+      "rule": {
+       "couponId": "c5",
+       "name": "e",
+       "kind": "PRODUCT",
+       "benefit": {
+        "type": "RATE",
+        "value": 20,
+        "maxDiscountAmount": null
+       },
+       "conditions": {
+        "minOrderAmount": 0,
+        "firstOrderOnly": false,
+        "memberOnly": true,
+        "stackWithInstantDiscount": true
+       },
+       "target": {
+        "includeProductIds": [],
+        "includeCategoryIds": [],
+        "excludeProductIds": [],
+        "excludeCategoryIds": []
+       },
+       "startsAt": null,
+       "endsAt": null,
+       "targetTree": {
+        "include": {
+         "combinator": "and",
+         "rules": [
+          {
+           "field": "line.unitPrice",
+           "operator": ">=",
+           "value": 5000
+          },
+          {
+           "combinator": "or",
+           "rules": [
+            {
+             "field": "line.productId",
+             "operator": "in",
+             "value": [
+              "p2",
+              "p1"
+             ]
+            },
+            {
+             "field": "line.categoryId",
+             "operator": "in",
+             "value": [
+              "cat1"
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "exclude": {
+         "combinator": "or",
+         "rules": []
+        }
+       },
+       "stacking": {
+        "combinesWith": {
+         "order": true,
+         "product": true,
+         "delivery": true
+        },
+        "withPoints": true,
+        "perOrderLimit": 2
+       }
+      },
+      "couponKey": "c5k"
+     },
+     {
+      "rule": {
+       "couponId": "c6",
+       "name": "f",
+       "kind": "ORDER",
+       "benefit": {
+        "type": "RATE",
+        "value": 5,
+        "maxDiscountAmount": null
+       },
+       "conditions": {
+        "minOrderAmount": 0,
+        "firstOrderOnly": false,
+        "memberOnly": true,
+        "stackWithInstantDiscount": true
+       },
+       "target": {
+        "includeProductIds": [],
+        "includeCategoryIds": [],
+        "excludeProductIds": [],
+        "excludeCategoryIds": []
+       },
+       "startsAt": null,
+       "endsAt": null,
+       "reward": {
+        "type": "POINT",
+        "benefit": {
+         "type": "RATE",
+         "value": 5,
+         "maxDiscountAmount": null
+        }
+       }
+      },
+      "couponKey": "c6k"
+     }
+    ],
+    "isMember": true,
+    "now": {
+     "$date": "2026-11-05T15:30:00.000Z"
+    },
+    "facts": {
+     "customer": {
+      "paidOrderCount": 1,
+      "daysSinceJoined": 40
+     }
+    },
+    "delivery": {
+     "bundles": [
+      {
+       "bundleKey": "b1",
+       "fee": 3000,
+       "remoteSurcharge": 0
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "bestCouponSelection 최소 결제 미만은 뺀다",
+  "fn": "bestCouponSelection",
+  "args": [
+   {
+    "lines": [
+     {
+      "lineId": "x",
+      "productId": "p1",
+      "quantity": 1,
+      "baseAmount": 10050,
+      "amount": 10050
+     }
+    ],
+    "candidates": [
+     {
+      "rule": {
+       "couponId": "c5",
+       "name": "e",
+       "kind": "PRODUCT",
+       "benefit": {
+        "type": "RATE",
+        "value": 20,
+        "maxDiscountAmount": null
+       },
+       "conditions": {
+        "minOrderAmount": 0,
+        "firstOrderOnly": false,
+        "memberOnly": true,
+        "stackWithInstantDiscount": true
+       },
+       "target": {
+        "includeProductIds": [],
+        "includeCategoryIds": [],
+        "excludeProductIds": [],
+        "excludeCategoryIds": []
+       },
+       "startsAt": null,
+       "endsAt": null,
+       "targetTree": {
+        "include": {
+         "combinator": "and",
+         "rules": [
+          {
+           "field": "line.unitPrice",
+           "operator": ">=",
+           "value": 5000
+          },
+          {
+           "combinator": "or",
+           "rules": [
+            {
+             "field": "line.productId",
+             "operator": "in",
+             "value": [
+              "p2",
+              "p1"
+             ]
+            },
+            {
+             "field": "line.categoryId",
+             "operator": "in",
+             "value": [
+              "cat1"
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "exclude": {
+         "combinator": "or",
+         "rules": []
+        }
+       },
+       "stacking": {
+        "combinesWith": {
+         "order": true,
+         "product": true,
+         "delivery": true
+        },
+        "withPoints": true,
+        "perOrderLimit": 2
+       }
+      },
+      "couponKey": "c5k"
+     },
+     {
+      "rule": {
+       "couponId": "c4",
+       "name": "d",
+       "kind": "ORDER",
+       "benefit": {
+        "type": "AMOUNT",
+        "value": 8000,
+        "maxDiscountAmount": null
+       },
+       "conditions": {
+        "minOrderAmount": 0,
+        "firstOrderOnly": false,
+        "memberOnly": true,
+        "stackWithInstantDiscount": true
+       },
+       "target": {
+        "includeProductIds": [],
+        "includeCategoryIds": [],
+        "excludeProductIds": [],
+        "excludeCategoryIds": []
+       },
+       "startsAt": null,
+       "endsAt": null
+      },
+      "couponKey": "c4k"
+     }
+    ],
+    "isMember": true,
+    "now": {
+     "$date": "2026-11-05T15:30:00.000Z"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bestCouponSelection 후보 없음",
+  "fn": "bestCouponSelection",
+  "args": [
+   {
+    "lines": [
+     {
+      "lineId": "l1",
+      "productId": "p1",
+      "categoryPath": "/cat1/cat2/",
+      "quantity": 3,
+      "baseAmount": 30000,
+      "amount": 27000
+     },
+     {
+      "lineId": "l2",
+      "productId": "p2",
+      "categoryPath": null,
+      "quantity": 1,
+      "baseAmount": 12000,
+      "amount": 12000
+     },
+     {
+      "lineId": "l3",
+      "productId": "p3",
+      "categoryPath": "/cat9/",
+      "quantity": 2,
+      "baseAmount": 4000,
+      "amount": 4000
+     }
+    ],
+    "candidates": [
+     {
+      "rule": {
+       "couponId": "c4",
+       "name": "d",
+       "kind": "DELIVERY",
+       "benefit": {
+        "type": "AMOUNT",
+        "value": 3000,
+        "maxDiscountAmount": null
+       },
+       "conditions": {
+        "minOrderAmount": 0,
+        "firstOrderOnly": false,
+        "memberOnly": true,
+        "stackWithInstantDiscount": true
+       },
+       "target": {
+        "includeProductIds": [],
+        "includeCategoryIds": [],
+        "excludeProductIds": [],
+        "excludeCategoryIds": []
+       },
+       "startsAt": null,
+       "endsAt": null
+      },
+      "couponKey": "c4k"
+     }
+    ],
+    "isMember": false,
+    "now": {
+     "$date": "2026-11-05T15:30:00.000Z"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bestCouponSelection 상품 쿠폰 혼자",
+  "fn": "bestCouponSelection",
+  "args": [
+   {
+    "lines": [
+     {
+      "lineId": "l1",
+      "productId": "p1",
+      "categoryPath": "/cat1/cat2/",
+      "quantity": 3,
+      "baseAmount": 30000,
+      "amount": 27000
+     },
+     {
+      "lineId": "l2",
+      "productId": "p2",
+      "categoryPath": null,
+      "quantity": 1,
+      "baseAmount": 12000,
+      "amount": 12000
+     },
+     {
+      "lineId": "l3",
+      "productId": "p3",
+      "categoryPath": "/cat9/",
+      "quantity": 2,
+      "baseAmount": 4000,
+      "amount": 4000
+     }
+    ],
+    "candidates": [
+     {
+      "rule": {
+       "couponId": "c5",
+       "name": "e",
+       "kind": "PRODUCT",
+       "benefit": {
+        "type": "RATE",
+        "value": 20,
+        "maxDiscountAmount": null
+       },
+       "conditions": {
+        "minOrderAmount": 0,
+        "firstOrderOnly": false,
+        "memberOnly": true,
+        "stackWithInstantDiscount": true
+       },
+       "target": {
+        "includeProductIds": [],
+        "includeCategoryIds": [],
+        "excludeProductIds": [],
+        "excludeCategoryIds": []
+       },
+       "startsAt": null,
+       "endsAt": null,
+       "targetTree": {
+        "include": {
+         "combinator": "and",
+         "rules": [
+          {
+           "field": "line.unitPrice",
+           "operator": ">=",
+           "value": 5000
+          },
+          {
+           "combinator": "or",
+           "rules": [
+            {
+             "field": "line.productId",
+             "operator": "in",
+             "value": [
+              "p2",
+              "p1"
+             ]
+            },
+            {
+             "field": "line.categoryId",
+             "operator": "in",
+             "value": [
+              "cat1"
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "exclude": {
+         "combinator": "or",
+         "rules": []
+        }
+       },
+       "stacking": {
+        "combinesWith": {
+         "order": true,
+         "product": false,
+         "delivery": true
+        },
+        "withPoints": true,
+        "perOrderLimit": 2
+       }
+      },
+      "couponKey": "c5k"
+     },
+     {
+      "rule": {
+       "couponId": "c1b",
+       "name": "a",
+       "kind": "PRODUCT",
+       "benefit": {
+        "type": "RATE",
+        "value": 10,
+        "maxDiscountAmount": null
+       },
+       "conditions": {
+        "minOrderAmount": 0,
+        "firstOrderOnly": false,
+        "memberOnly": true,
+        "stackWithInstantDiscount": true
+       },
+       "target": {
+        "includeProductIds": [],
+        "includeCategoryIds": [],
+        "excludeProductIds": [],
+        "excludeCategoryIds": []
+       },
+       "startsAt": null,
+       "endsAt": "2030-01-01T00:00:00Z",
+       "reward": {
+        "type": "BUY_X_GET_Y",
+        "buy": 1,
+        "get": 1,
+        "rate": 100,
+        "shortfallCharge": true
+       }
+      },
+      "couponKey": "c1bk"
+     }
+    ],
+    "isMember": true,
+    "now": {
+     "$date": "2026-11-05T15:30:00.000Z"
+    }
+   }
+  ]
+ }
+]

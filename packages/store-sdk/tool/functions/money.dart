@@ -3,6 +3,8 @@
 import 'dart:convert';
 import 'package:sayren_store_sdk/sayren_store_sdk.dart';
 
+import 'coupon.dart' show couponFactsOfJson;
+
 Map<String, Object?> _m(Object? v) => (v as Map).cast<String, Object?>();
 
 Object? _at(List<Object?> a, int i) => i < a.length ? a[i] : null;
@@ -44,6 +46,7 @@ PricingCoupon _pricingCoupon(Object? v) {
     eligibleLineIds: (j['eligibleLineIds'] as List?)?.cast<String>(),
     validFrom: j['validFrom'] as String?,
     validUntil: j['validUntil'] as String?,
+    facts: couponFactsOfJson(j['facts']),
   );
 }
 
@@ -83,9 +86,10 @@ PricingInput _pricingInput(Object? v) {
                 ),
             ],
           ),
-    firstOrder: j['firstOrder'] as bool,
+    firstOrder: j['firstOrder'] as bool?,
     isMember: j['isMember'] as bool,
     now: _date(j['now']),
+    facts: couponFactsOfJson(j['facts']),
     ignoreEligibility: j['ignoreEligibility'] as bool?,
     moneyRules: _moneyRules(j['moneyRules']),
   );
@@ -147,6 +151,7 @@ CouponSettlementInput _settlementInput(Object? v) {
           lineId: _m(c)['lineId'] as String?,
           eligibleLineIds: (_m(c)['eligibleLineIds'] as List).cast<String>(),
           discount: _m(c)['discount'] as int,
+          facts: couponFactsOfJson(_m(c)['facts']),
         ),
     ],
     lines: [
@@ -277,6 +282,35 @@ final Map<String, Object? Function(List<Object?> a)> moneyFunctions = {
     };
   },
   'settleCouponShortfall': (a) => _settlementResult(settleCouponShortfall(_settlementInput(a[0]))),
+  'recomputeOrderCoupons': (a) {
+    final input = _settlementInput({
+      'coupons': a[0],
+      'lines': a[1],
+      'settlements': <String, Object?>{},
+      'shortfallCharge': false,
+      'sellerFault': false,
+      'chargeableAmount': 0,
+    });
+    return _pricingResult(recomputeOrderCoupons(input.coupons, input.lines));
+  },
+  'couponBenefitOfReward': (a) => couponBenefitOfReward(CouponReward.fromJson(_m(a[0]))).toJson(),
+  'couponTierOf': (a) {
+    final tier = couponTierOf(CouponRewardTiered.fromJson(_m(a[0])), a[1] as int);
+    return tier == null ? null : {'index': tier.index, 'benefit': tier.benefit.toJson()};
+  },
+  'couponRuleDiscountOf': (a) {
+    final line = _at(a, 2);
+    return couponRuleDiscountOf(CouponRule.fromJson(_m(a[0])), a[1] as int,
+        line == null ? null : (quantity: _m(line)['quantity'] as int), _moneyRules(_at(a, 3)));
+  },
+  'couponPointRewardOf': (a) {
+    final r =
+        couponPointRewardOf(CouponRewardPoint.fromJson(_m(a[0])), (a[1] as List).cast<int>(), _moneyRules(_at(a, 2)));
+    return {'total': r.total, 'shares': r.shares};
+  },
+  'couponTreesOf': (a) => jsonDecode(jsonEncode(couponTreesOf(CouponRule.fromJson(_m(a[0]))))),
+  'couponStackingOf': (a) => couponStackingOf(CouponRule.fromJson(_m(a[0]))).toJson(),
+  'couponsCombinable': (a) => couponsCombinable(_pricingCoupon(a[0]), _pricingCoupon(a[1])),
   'proratedPaidRefundBase': (a) {
     final item = _m(a[0]);
     return proratedPaidRefundBase(
@@ -339,3 +373,10 @@ final Map<String, Object? Function(List<Object?> a)> moneyFunctions = {
     return {'cashRefund': r.cashRefund, 'pointRefund': r.pointRefund, 'uncollected': r.uncollected};
   },
 };
+
+// coupon.dart(쿠폰 규칙·최대 조합 어댑터)가 같이 쓰는 변환
+PricingLine pricingLineOfJson(Object? v) => _pricingLine(v);
+PricingCoupon pricingCouponOfJson(Object? v) => _pricingCoupon(v);
+Map<String, Object?> pricingResultJson(PricingResult r) => _pricingResult(r);
+MoneyRules? moneyRulesOfJson(Object? v) => _moneyRules(v);
+DateTime dateOfJson(Object? v) => _date(v);

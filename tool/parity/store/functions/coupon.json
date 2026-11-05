@@ -1,5 +1,271 @@
 [
-  { "name": "대문자·공백", "fn": "normalizeCouponCode", "args": ["  welcome-10 "] },
-  { "name": "이미 정규화", "fn": "normalizeCouponCode", "args": ["ABC_123"] },
-  { "name": "빈 문자열", "fn": "normalizeCouponCode", "args": [""] }
+ {
+  "name": "대문자·공백",
+  "fn": "normalizeCouponCode",
+  "args": [
+   "  welcome-10 "
+  ]
+ },
+ {
+  "name": "이미 정규화",
+  "fn": "normalizeCouponCode",
+  "args": [
+   "ABC_123"
+  ]
+ },
+ {
+  "name": "빈 문자열",
+  "fn": "normalizeCouponCode",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "couponRequestRuleIssues 문제 없음",
+  "fn": "couponRequestRuleIssues",
+  "args": [
+   {
+    "name": "n",
+    "kind": "ORDER",
+    "issueMethod": "CODE",
+    "benefit": {
+     "type": "RATE",
+     "value": 10,
+     "maxDiscountAmount": null
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponRequestRuleIssues 혜택 없음·기간·한도",
+  "fn": "couponRequestRuleIssues",
+  "args": [
+   {
+    "kind": "ORDER",
+    "issueMethod": "CODE",
+    "reward": {
+     "type": "BUY_X_GET_Y",
+     "buy": 1,
+     "get": 1,
+     "rate": 100,
+     "shortfallCharge": true
+    },
+    "eligibility": {
+     "combinator": "or",
+     "rules": [
+      {
+       "field": "claims.birthdate",
+       "operator": "ageBetween",
+       "value": [
+        20,
+        29
+       ]
+      },
+      {
+       "combinator": "and",
+       "rules": [
+        {
+         "field": "claims.gender",
+         "operator": "in",
+         "value": [
+          "female"
+         ]
+        },
+        {
+         "field": "time.timeOfDay",
+         "operator": "between",
+         "value": [
+          "22:00",
+          "02:00"
+         ]
+        }
+       ]
+      },
+      {
+       "field": "line.productId",
+       "operator": "in",
+       "value": [
+        "p"
+       ]
+      },
+      {
+       "field": "zzz",
+       "operator": "=",
+       "value": 1
+      },
+      {
+       "field": "customer.daysSinceJoined",
+       "operator": "between",
+       "value": [
+        5,
+        3
+       ]
+      },
+      {
+       "field": "claims.locale",
+       "operator": "in",
+       "value": [
+        "ko-kr",
+        "en"
+       ]
+      },
+      {
+       "field": "claims.address.country",
+       "operator": "in",
+       "value": [
+        "kr"
+       ]
+      }
+     ]
+    },
+    "conditions": {
+     "minOrderAmount": 5,
+     "memberOnly": false
+    },
+    "dailyIssueLimit": 3,
+    "issueStartsAt": "2026-01-02T00:00:00Z",
+    "issueEndsAt": "2026-01-01T00:00:00Z",
+    "endsAt": "2025-12-01T00:00:00Z",
+    "stacking": {
+     "combinesWith": {
+      "order": true,
+      "product": true,
+      "delivery": true
+     },
+     "withPoints": true,
+     "perOrderLimit": 2
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponRequestRuleIssues 충돌·회원가입",
+  "fn": "couponRequestRuleIssues",
+  "args": [
+   {
+    "name": "n",
+    "kind": "ORDER",
+    "issueMethod": "SIGNUP",
+    "benefit": {
+     "type": "RATE",
+     "value": 10,
+     "maxDiscountAmount": null
+    },
+    "audience": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "customer.daysSinceJoined",
+       "operator": ">=",
+       "value": 1
+      }
+     ]
+    },
+    "targetRules": {
+     "include": [],
+     "exclude": []
+    },
+    "target": {
+     "includeProductIds": [
+      "x"
+     ]
+    },
+    "targetTree": {
+     "include": {
+      "combinator": "and",
+      "rules": [
+       {
+        "field": "line.unitPrice",
+        "operator": ">=",
+        "value": 5000
+       },
+       {
+        "combinator": "or",
+        "rules": [
+         {
+          "field": "line.productId",
+          "operator": "in",
+          "value": [
+           "p2",
+           "p1"
+          ]
+         },
+         {
+          "field": "line.categoryId",
+          "operator": "in",
+          "value": [
+           "cat1"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "exclude": {
+      "combinator": "or",
+      "rules": []
+     }
+    },
+    "conditions": {
+     "stackWithInstantDiscount": false
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponRequestRuleIssues 적립금 지급 종류",
+  "fn": "couponRequestRuleIssues",
+  "args": [
+   {
+    "kind": "PRODUCT",
+    "issueMethod": "MANUAL",
+    "reward": {
+     "type": "POINT",
+     "benefit": {
+      "type": "RATE",
+      "value": 5,
+      "maxDiscountAmount": null
+     }
+    },
+    "conditions": {
+     "memberOnly": false
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponRequestRuleIssues 구간 배송비",
+  "fn": "couponRequestRuleIssues",
+  "args": [
+   {
+    "kind": "DELIVERY",
+    "issueMethod": "DOWNLOAD",
+    "reward": {
+     "type": "TIERED",
+     "tiers": [
+      {
+       "minAmount": 10000,
+       "benefit": {
+        "type": "AMOUNT",
+        "value": 1000,
+        "maxDiscountAmount": null
+       }
+      },
+      {
+       "minAmount": 30000,
+       "benefit": {
+        "type": "RATE",
+        "value": 15,
+        "maxDiscountAmount": 5000
+       }
+      }
+     ],
+     "shortfallCharge": true
+    },
+    "issueStartsAt": "2026-01-01T00:00:00Z",
+    "endsAt": "2026-01-01T00:00:00Z",
+    "visibleFrom": "2025-12-01T00:00:00Z"
+   }
+  ]
+ }
 ]

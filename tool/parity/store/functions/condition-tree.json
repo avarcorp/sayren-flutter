@@ -1,0 +1,249 @@
+[
+ {
+  "name": "isConditionGroup group",
+  "fn": "isConditionGroup",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": []
+   }
+  ]
+ },
+ {
+  "name": "isConditionGroup rule",
+  "fn": "isConditionGroup",
+  "args": [
+   {
+    "field": "a",
+    "operator": "=",
+    "value": 1
+   }
+  ]
+ },
+ {
+  "name": "birthdateFactOf 생일 전",
+  "fn": "birthdateFactOf",
+  "args": [
+   "2000-11-06",
+   {
+    "year": 2026,
+    "month": 11,
+    "day": 5
+   }
+  ]
+ },
+ {
+  "name": "birthdateFactOf 생일 당일",
+  "fn": "birthdateFactOf",
+  "args": [
+   "2000-11-05",
+   {
+    "year": 2026,
+    "month": 11,
+    "day": 5
+   }
+  ]
+ },
+ {
+  "name": "birthdateFactOf 연도 모름",
+  "fn": "birthdateFactOf",
+  "args": [
+   "0000-03-01",
+   {
+    "year": 2026,
+    "month": 11,
+    "day": 5
+   }
+  ]
+ },
+ {
+  "name": "birthdateFactOf 미래 생일",
+  "fn": "birthdateFactOf",
+  "args": [
+   "2030-01-01",
+   {
+    "year": 2026,
+    "month": 11,
+    "day": 5
+   }
+  ]
+ },
+ {
+  "name": "birthdateFactOf 형식 틀림",
+  "fn": "birthdateFactOf",
+  "args": [
+   "2000-13-01",
+   {
+    "year": 2026,
+    "month": 11,
+    "day": 5
+   }
+  ]
+ },
+ {
+  "name": "birthdateFactOf null",
+  "fn": "birthdateFactOf",
+  "args": [
+   null,
+   {
+    "year": 2026,
+    "month": 11,
+    "day": 5
+   }
+  ]
+ },
+ {
+  "name": "canonicalizeConditionRule in 정렬·중복",
+  "fn": "canonicalizeConditionRule",
+  "args": [
+   {
+    "field": "line.productId",
+    "operator": "in",
+    "value": [
+     "b",
+     "a",
+     "b",
+     10,
+     null
+    ]
+   }
+  ]
+ },
+ {
+  "name": "canonicalizeConditionRule birthMonthIn",
+  "fn": "canonicalizeConditionRule",
+  "args": [
+   {
+    "field": "claims.birthdate",
+    "operator": "birthMonthIn",
+    "value": [
+     12,
+     3,
+     3,
+     1
+    ]
+   }
+  ]
+ },
+ {
+  "name": "canonicalizeConditionRule 그 밖",
+  "fn": "canonicalizeConditionRule",
+  "args": [
+   {
+    "field": "cart.subtotal",
+    "operator": "between",
+    "value": [
+     5,
+     1
+    ]
+   }
+  ]
+ },
+ {
+  "name": "canonicalizeConditionGroup 중첩",
+  "fn": "canonicalizeConditionGroup",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": [
+     {
+      "field": "x",
+      "operator": "in",
+      "value": [
+       "z",
+       "y"
+      ],
+      "id": "drop"
+     },
+     {
+      "combinator": "or",
+      "rules": [
+       {
+        "field": "y",
+        "operator": "in",
+        "value": [
+         "b",
+         "a"
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "conditionFields",
+  "fn": "conditionFields",
+  "args": [
+   {
+    "combinator": "or",
+    "rules": [
+     {
+      "field": "claims.birthdate",
+      "operator": "ageBetween",
+      "value": [
+       20,
+       29
+      ]
+     },
+     {
+      "combinator": "and",
+      "rules": [
+       {
+        "field": "claims.gender",
+        "operator": "in",
+        "value": [
+         "female"
+        ]
+       },
+       {
+        "field": "time.timeOfDay",
+        "operator": "between",
+        "value": [
+         "22:00",
+         "02:00"
+        ]
+       }
+      ]
+     },
+     {
+      "field": "line.productId",
+      "operator": "in",
+      "value": [
+       "p"
+      ]
+     },
+     {
+      "field": "zzz",
+      "operator": "=",
+      "value": 1
+     },
+     {
+      "field": "customer.daysSinceJoined",
+      "operator": "between",
+      "value": [
+       5,
+       3
+      ]
+     },
+     {
+      "field": "claims.locale",
+      "operator": "in",
+      "value": [
+       "ko-kr",
+       "en"
+      ]
+     },
+     {
+      "field": "claims.address.country",
+      "operator": "in",
+      "value": [
+       "kr"
+      ]
+     }
+    ]
+   }
+  ]
+ }
+]

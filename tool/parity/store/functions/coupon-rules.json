@@ -1,0 +1,2740 @@
+[
+ {
+  "name": "canonicalLocale \"ko-kr\"",
+  "fn": "canonicalLocale",
+  "args": [
+   "ko-kr"
+  ]
+ },
+ {
+  "name": "canonicalLocale \"EN\"",
+  "fn": "canonicalLocale",
+  "args": [
+   "EN"
+  ]
+ },
+ {
+  "name": "canonicalLocale \"zh-hant-tw\"",
+  "fn": "canonicalLocale",
+  "args": [
+   "zh-hant-tw"
+  ]
+ },
+ {
+  "name": "canonicalLocale \"en-US-u-CA-gregory\"",
+  "fn": "canonicalLocale",
+  "args": [
+   "en-US-u-CA-gregory"
+  ]
+ },
+ {
+  "name": "canonicalLocale \"sr-latn\"",
+  "fn": "canonicalLocale",
+  "args": [
+   "sr-latn"
+  ]
+ },
+ {
+  "name": "canonicalLocale \"es-419\"",
+  "fn": "canonicalLocale",
+  "args": [
+   "es-419"
+  ]
+ },
+ {
+  "name": "canonicalLocale \"x\"",
+  "fn": "canonicalLocale",
+  "args": [
+   "x"
+  ]
+ },
+ {
+  "name": "canonicalLocale \"\"",
+  "fn": "canonicalLocale",
+  "args": [
+   ""
+  ]
+ },
+ {
+  "name": "canonicalLocale \"de-DE-1996\"",
+  "fn": "canonicalLocale",
+  "args": [
+   "de-DE-1996"
+  ]
+ },
+ {
+  "name": "canonicalLocale \"en-a-BBB-x-ABC\"",
+  "fn": "canonicalLocale",
+  "args": [
+   "en-a-BBB-x-ABC"
+  ]
+ },
+ {
+  "name": "canonicalLocale null",
+  "fn": "canonicalLocale",
+  "args": [
+   null
+  ]
+ },
+ {
+  "name": "couponClaimFactsOf 전부",
+  "fn": "couponClaimFactsOf",
+  "args": [
+   {
+    "gender": "female",
+    "birthdate": "2000-11-06",
+    "email_verified": true,
+    "phone_number_verified": false,
+    "locale": "en-us",
+    "addressCountry": "kr"
+   },
+   {
+    "$date": "2026-11-05T15:30:00.000Z"
+   }
+  ]
+ },
+ {
+  "name": "couponClaimFactsOf 비움",
+  "fn": "couponClaimFactsOf",
+  "args": [
+   {
+    "gender": "",
+    "birthdate": "0000-11-01",
+    "locale": "bad tag",
+    "addressCountry": null
+   },
+   {
+    "$date": "2026-11-05T15:30:00.000Z"
+   }
+  ]
+ },
+ {
+  "name": "couponTodayAt 한국 날짜 넘김",
+  "fn": "couponTodayAt",
+  "args": [
+   {
+    "$date": "2026-11-05T15:30:00.000Z"
+   }
+  ]
+ },
+ {
+  "name": "couponTimeFactsAt",
+  "fn": "couponTimeFactsAt",
+  "args": [
+   {
+    "$date": "2026-11-05T15:30:00.000Z"
+   }
+  ]
+ },
+ {
+  "name": "couponTimeFactsAt 일요일 자정 전",
+  "fn": "couponTimeFactsAt",
+  "args": [
+   {
+    "$date": "2026-11-08T14:59:00.000Z"
+   }
+  ]
+ },
+ {
+  "name": "daysBetween 날짜",
+  "fn": "daysBetween",
+  "args": [
+   "2026-10-01",
+   {
+    "$date": "2026-11-05T15:30:00.000Z"
+   }
+  ]
+ },
+ {
+  "name": "daysBetween 미래는 0",
+  "fn": "daysBetween",
+  "args": [
+   "2026-11-06T00:00:00Z",
+   {
+    "$date": "2026-11-05T15:30:00.000Z"
+   }
+  ]
+ },
+ {
+  "name": "daysBetween Date",
+  "fn": "daysBetween",
+  "args": [
+   {
+    "$date": "2026-11-01T15:30:00.000Z"
+   },
+   {
+    "$date": "2026-11-05T15:30:00.000Z"
+   }
+  ]
+ },
+ {
+  "name": "daysBetween 읽지 못함",
+  "fn": "daysBetween",
+  "args": [
+   "bad",
+   {
+    "$date": "2026-11-05T15:30:00.000Z"
+   }
+  ]
+ },
+ {
+  "name": "daysBetween null",
+  "fn": "daysBetween",
+  "args": [
+   null,
+   {
+    "$date": "2026-11-05T15:30:00.000Z"
+   }
+  ]
+ },
+ {
+  "name": "couponLineContextOf",
+  "fn": "couponLineContextOf",
+  "args": [
+   {
+    "productId": "p1",
+    "categoryPath": "/a/b/",
+    "quantity": 3,
+    "baseAmount": 3000,
+    "amount": 2900
+   }
+  ]
+ },
+ {
+  "name": "couponLineContextOf 수량 0",
+  "fn": "couponLineContextOf",
+  "args": [
+   {
+    "productId": "p1",
+    "quantity": 0,
+    "baseAmount": 3000,
+    "amount": 3000
+   }
+  ]
+ },
+ {
+  "name": "canonicalizeCouponTargetRules",
+  "fn": "canonicalizeCouponTargetRules",
+  "args": [
+   {
+    "include": [
+     {
+      "field": "line.productId",
+      "operator": "in",
+      "value": [
+       "b",
+       "a"
+      ]
+     }
+    ],
+    "exclude": []
+   }
+  ]
+ },
+ {
+  "name": "canonicalizeCouponTargetTree",
+  "fn": "canonicalizeCouponTargetTree",
+  "args": [
+   {
+    "include": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "line.productId",
+       "operator": "in",
+       "value": [
+        "b",
+        "a",
+        "b"
+       ]
+      },
+      {
+       "combinator": "and",
+       "rules": []
+      }
+     ]
+    },
+    "exclude": {
+     "combinator": "and",
+     "rules": [
+      {
+       "combinator": "and",
+       "rules": [
+        {
+         "field": "line.unitPrice",
+         "operator": ">=",
+         "value": 1
+        }
+       ]
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponTargetTreeFromRules",
+  "fn": "couponTargetTreeFromRules",
+  "args": [
+   {
+    "include": [
+     {
+      "field": "line.productId",
+      "operator": "in",
+      "value": [
+       "a"
+      ]
+     }
+    ],
+    "exclude": [
+     {
+      "field": "line.hasInstantDiscount",
+      "operator": "=",
+      "value": true
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "couponTargetRulesFromTree 평평",
+  "fn": "couponTargetRulesFromTree",
+  "args": [
+   {
+    "include": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "line.productId",
+       "operator": "in",
+       "value": [
+        "a"
+       ]
+      }
+     ]
+    },
+    "exclude": {
+     "combinator": "or",
+     "rules": [
+      {
+       "field": "line.categoryId",
+       "operator": "in",
+       "value": [
+        "c"
+       ]
+      },
+      {
+       "field": "line.hasInstantDiscount",
+       "operator": "=",
+       "value": true
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponTargetRulesFromTree 모두·하위 그룹",
+  "fn": "couponTargetRulesFromTree",
+  "args": [
+   {
+    "include": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "line.unitPrice",
+       "operator": ">=",
+       "value": 5000
+      },
+      {
+       "combinator": "or",
+       "rules": [
+        {
+         "field": "line.productId",
+         "operator": "in",
+         "value": [
+          "p2",
+          "p1"
+         ]
+        },
+        {
+         "field": "line.categoryId",
+         "operator": "in",
+         "value": [
+          "cat1"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "exclude": {
+     "combinator": "or",
+     "rules": []
+    }
+   }
+  ]
+ },
+ {
+  "name": "canonicalizeCouponStacking",
+  "fn": "canonicalizeCouponStacking",
+  "args": [
+   {
+    "perOrderLimit": 2,
+    "withPoints": false,
+    "combinesWith": {
+     "delivery": true,
+     "order": false,
+     "product": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponTargetTreeOf 트리 없음",
+  "fn": "couponTargetTreeOf",
+  "args": [
+   {
+    "eligibility": {
+     "combinator": "and",
+     "rules": []
+    },
+    "targetRules": {
+     "include": [
+      {
+       "field": "line.productId",
+       "operator": "in",
+       "value": [
+        "a"
+       ]
+      }
+     ],
+     "exclude": []
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponRulesFromLegacy",
+  "fn": "couponRulesFromLegacy",
+  "args": [
+   {
+    "minOrderAmount": 20000,
+    "firstOrderOnly": true,
+    "memberOnly": true,
+    "stackWithInstantDiscount": false
+   },
+   {
+    "includeProductIds": [
+     "b",
+     "a",
+     "b"
+    ],
+    "includeCategoryIds": [
+     "c"
+    ],
+    "excludeProductIds": [],
+    "excludeCategoryIds": [
+     "x"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "legacyFromCouponRules 옛 칸",
+  "fn": "legacyFromCouponRules",
+  "args": [
+   {
+    "eligibility": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "customer.paidOrderCount",
+       "operator": "=",
+       "value": 0
+      },
+      {
+       "field": "cart.targetSubtotal",
+       "operator": ">=",
+       "value": 5000
+      }
+     ]
+    },
+    "targetRules": {
+     "include": [
+      {
+       "field": "line.productId",
+       "operator": "in",
+       "value": [
+        "b",
+        "a"
+       ]
+      }
+     ],
+     "exclude": [
+      {
+       "field": "line.hasInstantDiscount",
+       "operator": "=",
+       "value": true
+      },
+      {
+       "field": "line.categoryId",
+       "operator": "in",
+       "value": [
+        "x"
+       ]
+      }
+     ]
+    }
+   },
+   true
+  ]
+ },
+ {
+  "name": "legacyFromCouponRules 트리 전용",
+  "fn": "legacyFromCouponRules",
+  "args": [
+   {
+    "eligibility": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "customer.paidOrderCount",
+       "operator": "<=",
+       "value": 3
+      },
+      {
+       "field": "cart.targetSubtotal",
+       "operator": ">=",
+       "value": 5000
+      },
+      {
+       "field": "time.weekday",
+       "operator": "in",
+       "value": [
+        "MON",
+        "TUE",
+        "WED",
+        "THU",
+        "FRI",
+        "SAT",
+        "SUN"
+       ]
+      }
+     ]
+    },
+    "targetRules": {
+     "include": [],
+     "exclude": []
+    },
+    "targetTree": {
+     "include": {
+      "combinator": "and",
+      "rules": [
+       {
+        "field": "line.unitPrice",
+        "operator": ">=",
+        "value": 5000
+       },
+       {
+        "combinator": "or",
+        "rules": [
+         {
+          "field": "line.productId",
+          "operator": "in",
+          "value": [
+           "p2",
+           "p1"
+          ]
+         },
+         {
+          "field": "line.categoryId",
+          "operator": "in",
+          "value": [
+           "cat1"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "exclude": {
+      "combinator": "or",
+      "rules": []
+     }
+    }
+   },
+   false
+  ]
+ },
+ {
+  "name": "legacyFromCouponRules or 사용 조건",
+  "fn": "legacyFromCouponRules",
+  "args": [
+   {
+    "eligibility": {
+     "combinator": "or",
+     "rules": [
+      {
+       "field": "customer.paidOrderCount",
+       "operator": "=",
+       "value": 0
+      },
+      {
+       "field": "cart.targetSubtotal",
+       "operator": ">=",
+       "value": 5000
+      }
+     ]
+    },
+    "targetRules": {
+     "include": [],
+     "exclude": []
+    },
+    "targetTree": {
+     "include": {
+      "combinator": "or",
+      "rules": []
+     },
+     "exclude": {
+      "combinator": "and",
+      "rules": [
+       {
+        "field": "line.hasInstantDiscount",
+        "operator": "=",
+        "value": true
+       },
+       {
+        "field": "line.unitPrice",
+        "operator": "<=",
+        "value": 100
+       }
+      ]
+     }
+    }
+   },
+   true
+  ]
+ },
+ {
+  "name": "couponTargetTreeMatches 포함",
+  "fn": "couponTargetTreeMatches",
+  "args": [
+   {
+    "include": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "line.unitPrice",
+       "operator": ">=",
+       "value": 5000
+      },
+      {
+       "combinator": "or",
+       "rules": [
+        {
+         "field": "line.productId",
+         "operator": "in",
+         "value": [
+          "p2",
+          "p1"
+         ]
+        },
+        {
+         "field": "line.categoryId",
+         "operator": "in",
+         "value": [
+          "cat1"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "exclude": {
+     "combinator": "or",
+     "rules": []
+    }
+   },
+   {
+    "productId": "p1",
+    "categoryIds": [
+     "cat1",
+     "cat2"
+    ],
+    "hasInstantDiscount": true,
+    "unitPrice": 9000
+   }
+  ]
+ },
+ {
+  "name": "couponTargetTreeMatches 단가 미달",
+  "fn": "couponTargetTreeMatches",
+  "args": [
+   {
+    "include": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "line.unitPrice",
+       "operator": ">=",
+       "value": 5000
+      },
+      {
+       "combinator": "or",
+       "rules": [
+        {
+         "field": "line.productId",
+         "operator": "in",
+         "value": [
+          "p2",
+          "p1"
+         ]
+        },
+        {
+         "field": "line.categoryId",
+         "operator": "in",
+         "value": [
+          "cat1"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "exclude": {
+     "combinator": "or",
+     "rules": []
+    }
+   },
+   {
+    "productId": "p1",
+    "categoryIds": [
+     "cat1",
+     "cat2"
+    ],
+    "hasInstantDiscount": true,
+    "unitPrice": 4000
+   }
+  ]
+ },
+ {
+  "name": "couponTargetTreeMatches 제외 우선",
+  "fn": "couponTargetTreeMatches",
+  "args": [
+   {
+    "include": {
+     "combinator": "or",
+     "rules": []
+    },
+    "exclude": {
+     "combinator": "or",
+     "rules": [
+      {
+       "field": "line.hasInstantDiscount",
+       "operator": "=",
+       "value": true
+      }
+     ]
+    }
+   },
+   {
+    "productId": "p1",
+    "categoryIds": [
+     "cat1",
+     "cat2"
+    ],
+    "hasInstantDiscount": true,
+    "unitPrice": 9000
+   }
+  ]
+ },
+ {
+  "name": "couponTargetTreeMatches 빈 제외",
+  "fn": "couponTargetTreeMatches",
+  "args": [
+   {
+    "include": {
+     "combinator": "or",
+     "rules": []
+    },
+    "exclude": {
+     "combinator": "and",
+     "rules": []
+    }
+   },
+   {
+    "productId": "p9",
+    "categoryIds": [],
+    "hasInstantDiscount": false,
+    "unitPrice": 3000
+   }
+  ]
+ },
+ {
+  "name": "couponLineMatches 카테고리",
+  "fn": "couponLineMatches",
+  "args": [
+   {
+    "include": [
+     {
+      "field": "line.categoryId",
+      "operator": "in",
+      "value": [
+       "cat2"
+      ]
+     }
+    ],
+    "exclude": []
+   },
+   {
+    "productId": "p1",
+    "categoryIds": [
+     "cat1",
+     "cat2"
+    ],
+    "hasInstantDiscount": true,
+    "unitPrice": 9000
+   }
+  ]
+ },
+ {
+  "name": "couponLineMatches 미포함",
+  "fn": "couponLineMatches",
+  "args": [
+   {
+    "include": [
+     {
+      "field": "line.categoryId",
+      "operator": "in",
+      "value": [
+       "cat2"
+      ]
+     }
+    ],
+    "exclude": []
+   },
+   {
+    "productId": "p9",
+    "categoryIds": [],
+    "hasInstantDiscount": false,
+    "unitPrice": 3000
+   }
+  ]
+ },
+ {
+  "name": "evaluateCouponEligibility beforeLines 첫 구매 실패",
+  "fn": "evaluateCouponEligibility",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": [
+     {
+      "field": "customer.paidOrderCount",
+      "operator": "=",
+      "value": 0
+     },
+     {
+      "field": "cart.targetSubtotal",
+      "operator": ">=",
+      "value": 5000
+     }
+    ]
+   },
+   {
+    "facts": {
+     "customer": {
+      "paidOrderCount": 1,
+      "daysSinceJoined": 40
+     }
+    }
+   },
+   "beforeLines"
+  ]
+ },
+ {
+  "name": "evaluateCouponEligibility afterLines 최소 금액",
+  "fn": "evaluateCouponEligibility",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": [
+     {
+      "field": "customer.paidOrderCount",
+      "operator": "=",
+      "value": 0
+     },
+     {
+      "field": "cart.targetSubtotal",
+      "operator": ">=",
+      "value": 5000
+     }
+    ]
+   },
+   {
+    "facts": {
+     "customer": {
+      "paidOrderCount": 1,
+      "daysSinceJoined": 40
+     }
+    },
+    "cart": {
+     "subtotal": 9000,
+     "targetSubtotal": 4000,
+     "targetQuantity": 1
+    }
+   },
+   "afterLines"
+  ]
+ },
+ {
+  "name": "evaluateCouponEligibility or 실패",
+  "fn": "evaluateCouponEligibility",
+  "args": [
+   {
+    "combinator": "or",
+    "rules": [
+     {
+      "field": "customer.paidOrderCount",
+      "operator": "=",
+      "value": 0
+     },
+     {
+      "field": "cart.subtotal",
+      "operator": ">=",
+      "value": 50000
+     }
+    ]
+   },
+   {
+    "facts": {
+     "customer": {
+      "paidOrderCount": 1,
+      "daysSinceJoined": 40
+     }
+    },
+    "cart": {
+     "subtotal": 9000,
+     "targetSubtotal": 4000,
+     "targetQuantity": 1
+    }
+   },
+   "afterLines"
+  ]
+ },
+ {
+  "name": "evaluateCouponEligibility 클레임·시각 통과",
+  "fn": "evaluateCouponEligibility",
+  "args": [
+   {
+    "combinator": "or",
+    "rules": [
+     {
+      "field": "claims.birthdate",
+      "operator": "ageBetween",
+      "value": [
+       20,
+       29
+      ]
+     },
+     {
+      "combinator": "and",
+      "rules": [
+       {
+        "field": "claims.gender",
+        "operator": "in",
+        "value": [
+         "female"
+        ]
+       },
+       {
+        "field": "time.timeOfDay",
+        "operator": "between",
+        "value": [
+         "22:00",
+         "02:00"
+        ]
+       }
+      ]
+     },
+     {
+      "field": "line.productId",
+      "operator": "in",
+      "value": [
+       "p"
+      ]
+     },
+     {
+      "field": "zzz",
+      "operator": "=",
+      "value": 1
+     },
+     {
+      "field": "customer.daysSinceJoined",
+      "operator": "between",
+      "value": [
+       5,
+       3
+      ]
+     },
+     {
+      "field": "claims.locale",
+      "operator": "in",
+      "value": [
+       "ko-kr",
+       "en"
+      ]
+     },
+     {
+      "field": "claims.address.country",
+      "operator": "in",
+      "value": [
+       "kr"
+      ]
+     }
+    ]
+   },
+   {
+    "facts": {
+     "customer": {
+      "paidOrderCount": 0,
+      "daysSinceJoined": 10,
+      "claims": {
+       "gender": "female",
+       "birthdate": {
+        "age": 25,
+        "month": 11,
+        "isCurrentMonth": true
+       },
+       "locale": [
+        "en-US",
+        "en"
+       ]
+      }
+     },
+     "time": {
+      "weekday": "THU",
+      "timeOfDay": "23:15"
+     }
+    }
+   },
+   "afterLines"
+  ]
+ },
+ {
+  "name": "evaluateCouponEligibility 생일 달·나이",
+  "fn": "evaluateCouponEligibility",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": [
+     {
+      "field": "claims.birthdate",
+      "operator": "birthMonthIsCurrent",
+      "value": true
+     },
+     {
+      "field": "claims.birthdate",
+      "operator": "age>=",
+      "value": 20
+     },
+     {
+      "field": "claims.locale",
+      "operator": "in",
+      "value": [
+       "en"
+      ]
+     },
+     {
+      "field": "time.weekday",
+      "operator": "in",
+      "value": [
+       "THU"
+      ]
+     }
+    ]
+   },
+   {
+    "facts": {
+     "customer": {
+      "paidOrderCount": 0,
+      "daysSinceJoined": 10,
+      "claims": {
+       "gender": "female",
+       "birthdate": {
+        "age": 25,
+        "month": 11,
+        "isCurrentMonth": true
+       },
+       "locale": [
+        "en-US",
+        "en"
+       ]
+      }
+     },
+     "time": {
+      "weekday": "THU",
+      "timeOfDay": "23:15"
+     }
+    }
+   },
+   "beforeLines"
+  ]
+ },
+ {
+  "name": "evaluateCouponEligibility 사실 없음은 거짓",
+  "fn": "evaluateCouponEligibility",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": [
+     {
+      "field": "customer.daysSinceLastOrder",
+      "operator": "<=",
+      "value": 30
+     }
+    ]
+   },
+   {
+    "facts": {
+     "customer": {
+      "paidOrderCount": 1,
+      "daysSinceJoined": 40
+     }
+    }
+   },
+   "beforeLines"
+  ]
+ },
+ {
+  "name": "assumeCouponFactRules",
+  "fn": "assumeCouponFactRules",
+  "args": [
+   {
+    "combinator": "or",
+    "rules": [
+     {
+      "field": "claims.birthdate",
+      "operator": "ageBetween",
+      "value": [
+       20,
+       29
+      ]
+     },
+     {
+      "combinator": "and",
+      "rules": [
+       {
+        "field": "claims.gender",
+        "operator": "in",
+        "value": [
+         "female"
+        ]
+       },
+       {
+        "field": "time.timeOfDay",
+        "operator": "between",
+        "value": [
+         "22:00",
+         "02:00"
+        ]
+       }
+      ]
+     },
+     {
+      "field": "line.productId",
+      "operator": "in",
+      "value": [
+       "p"
+      ]
+     },
+     {
+      "field": "zzz",
+      "operator": "=",
+      "value": 1
+     },
+     {
+      "field": "customer.daysSinceJoined",
+      "operator": "between",
+      "value": [
+       5,
+       3
+      ]
+     },
+     {
+      "field": "claims.locale",
+      "operator": "in",
+      "value": [
+       "ko-kr",
+       "en"
+      ]
+     },
+     {
+      "field": "claims.address.country",
+      "operator": "in",
+      "value": [
+       "kr"
+      ]
+     }
+    ]
+   },
+   {
+    "customer": {
+     "daysSinceJoined": 3
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponAudienceMatches 통과",
+  "fn": "couponAudienceMatches",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": [
+     {
+      "field": "customer.daysSinceJoined",
+      "operator": ">=",
+      "value": 30
+     }
+    ]
+   },
+   {
+    "customer": {
+     "paidOrderCount": 1,
+     "daysSinceJoined": 40
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponAudienceMatches 실패",
+  "fn": "couponAudienceMatches",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": [
+     {
+      "field": "customer.marketingAgreed",
+      "operator": "=",
+      "value": true
+     }
+    ]
+   },
+   {
+    "customer": {
+     "paidOrderCount": 1,
+     "daysSinceJoined": 40
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponCustomerFactNames",
+  "fn": "couponCustomerFactNames",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": [
+     {
+      "field": "customer.paidOrderCount",
+      "operator": "<=",
+      "value": 3
+     },
+     {
+      "field": "cart.targetSubtotal",
+      "operator": ">=",
+      "value": 5000
+     },
+     {
+      "field": "time.weekday",
+      "operator": "in",
+      "value": [
+       "MON",
+       "TUE",
+       "WED",
+       "THU",
+       "FRI",
+       "SAT",
+       "SUN"
+      ]
+     }
+    ]
+   },
+   {
+    "combinator": "or",
+    "rules": [
+     {
+      "field": "claims.birthdate",
+      "operator": "ageBetween",
+      "value": [
+       20,
+       29
+      ]
+     },
+     {
+      "combinator": "and",
+      "rules": [
+       {
+        "field": "claims.gender",
+        "operator": "in",
+        "value": [
+         "female"
+        ]
+       },
+       {
+        "field": "time.timeOfDay",
+        "operator": "between",
+        "value": [
+         "22:00",
+         "02:00"
+        ]
+       }
+      ]
+     },
+     {
+      "field": "line.productId",
+      "operator": "in",
+      "value": [
+       "p"
+      ]
+     },
+     {
+      "field": "zzz",
+      "operator": "=",
+      "value": 1
+     },
+     {
+      "field": "customer.daysSinceJoined",
+      "operator": "between",
+      "value": [
+       5,
+       3
+      ]
+     },
+     {
+      "field": "claims.locale",
+      "operator": "in",
+      "value": [
+       "ko-kr",
+       "en"
+      ]
+     },
+     {
+      "field": "claims.address.country",
+      "operator": "in",
+      "value": [
+       "kr"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "pickCouponFacts",
+  "fn": "pickCouponFacts",
+  "args": [
+   {
+    "customer": {
+     "paidOrderCount": 2,
+     "daysSinceJoined": 3,
+     "claims": {
+      "gender": "male"
+     }
+    },
+    "time": {
+     "weekday": "MON",
+     "timeOfDay": "10:00"
+    }
+   },
+   {
+    "combinator": "or",
+    "rules": [
+     {
+      "field": "claims.birthdate",
+      "operator": "ageBetween",
+      "value": [
+       20,
+       29
+      ]
+     },
+     {
+      "combinator": "and",
+      "rules": [
+       {
+        "field": "claims.gender",
+        "operator": "in",
+        "value": [
+         "female"
+        ]
+       },
+       {
+        "field": "time.timeOfDay",
+        "operator": "between",
+        "value": [
+         "22:00",
+         "02:00"
+        ]
+       }
+      ]
+     },
+     {
+      "field": "line.productId",
+      "operator": "in",
+      "value": [
+       "p"
+      ]
+     },
+     {
+      "field": "zzz",
+      "operator": "=",
+      "value": 1
+     },
+     {
+      "field": "customer.daysSinceJoined",
+      "operator": "between",
+      "value": [
+       5,
+       3
+      ]
+     },
+     {
+      "field": "claims.locale",
+      "operator": "in",
+      "value": [
+       "ko-kr",
+       "en"
+      ]
+     },
+     {
+      "field": "claims.address.country",
+      "operator": "in",
+      "value": [
+       "kr"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "pickCouponFacts 빈 결과",
+  "fn": "pickCouponFacts",
+  "args": [
+   {
+    "customer": {
+     "paidOrderCount": 1,
+     "daysSinceJoined": 40
+    }
+   },
+   {
+    "combinator": "and",
+    "rules": [
+     {
+      "field": "cart.subtotal",
+      "operator": ">=",
+      "value": 1
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "couponRuleIssues 비회원 코드형·잘못된 필드",
+  "fn": "couponRuleIssues",
+  "args": [
+   {
+    "memberOnly": false,
+    "issueMethod": "CODE",
+    "eligibility": {
+     "combinator": "or",
+     "rules": [
+      {
+       "field": "claims.birthdate",
+       "operator": "ageBetween",
+       "value": [
+        20,
+        29
+       ]
+      },
+      {
+       "combinator": "and",
+       "rules": [
+        {
+         "field": "claims.gender",
+         "operator": "in",
+         "value": [
+          "female"
+         ]
+        },
+        {
+         "field": "time.timeOfDay",
+         "operator": "between",
+         "value": [
+          "22:00",
+          "02:00"
+         ]
+        }
+       ]
+      },
+      {
+       "field": "line.productId",
+       "operator": "in",
+       "value": [
+        "p"
+       ]
+      },
+      {
+       "field": "zzz",
+       "operator": "=",
+       "value": 1
+      },
+      {
+       "field": "customer.daysSinceJoined",
+       "operator": "between",
+       "value": [
+        5,
+        3
+       ]
+      },
+      {
+       "field": "claims.locale",
+       "operator": "in",
+       "value": [
+        "ko-kr",
+        "en"
+       ]
+      },
+      {
+       "field": "claims.address.country",
+       "operator": "in",
+       "value": [
+        "kr"
+       ]
+      }
+     ]
+    },
+    "audience": {
+     "combinator": "or",
+     "rules": [
+      {
+       "field": "claims.birthdate",
+       "operator": "ageBetween",
+       "value": [
+        20,
+        29
+       ]
+      },
+      {
+       "combinator": "and",
+       "rules": [
+        {
+         "field": "claims.gender",
+         "operator": "in",
+         "value": [
+          "female"
+         ]
+        },
+        {
+         "field": "time.timeOfDay",
+         "operator": "between",
+         "value": [
+          "22:00",
+          "02:00"
+         ]
+        }
+       ]
+      },
+      {
+       "field": "line.productId",
+       "operator": "in",
+       "value": [
+        "p"
+       ]
+      },
+      {
+       "field": "zzz",
+       "operator": "=",
+       "value": 1
+      },
+      {
+       "field": "customer.daysSinceJoined",
+       "operator": "between",
+       "value": [
+        5,
+        3
+       ]
+      },
+      {
+       "field": "claims.locale",
+       "operator": "in",
+       "value": [
+        "ko-kr",
+        "en"
+       ]
+      },
+      {
+       "field": "claims.address.country",
+       "operator": "in",
+       "value": [
+        "kr"
+       ]
+      }
+     ]
+    },
+    "targetTree": {
+     "include": {
+      "combinator": "or",
+      "rules": [
+       {
+        "field": "claims.birthdate",
+        "operator": "ageBetween",
+        "value": [
+         20,
+         29
+        ]
+       },
+       {
+        "combinator": "and",
+        "rules": [
+         {
+          "field": "claims.gender",
+          "operator": "in",
+          "value": [
+           "female"
+          ]
+         },
+         {
+          "field": "time.timeOfDay",
+          "operator": "between",
+          "value": [
+           "22:00",
+           "02:00"
+          ]
+         }
+        ]
+       },
+       {
+        "field": "line.productId",
+        "operator": "in",
+        "value": [
+         "p"
+        ]
+       },
+       {
+        "field": "zzz",
+        "operator": "=",
+        "value": 1
+       },
+       {
+        "field": "customer.daysSinceJoined",
+        "operator": "between",
+        "value": [
+         5,
+         3
+        ]
+       },
+       {
+        "field": "claims.locale",
+        "operator": "in",
+        "value": [
+         "ko-kr",
+         "en"
+        ]
+       },
+       {
+        "field": "claims.address.country",
+        "operator": "in",
+        "value": [
+         "kr"
+        ]
+       }
+      ]
+     },
+     "exclude": {
+      "combinator": "or",
+      "rules": []
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponRuleIssues 깊이·코드형 주문 수",
+  "fn": "couponRuleIssues",
+  "args": [
+   {
+    "memberOnly": true,
+    "issueMethod": "CODE",
+    "eligibility": {
+     "combinator": "and",
+     "rules": [
+      {
+       "combinator": "and",
+       "rules": [
+        {
+         "combinator": "and",
+         "rules": [
+          {
+           "combinator": "and",
+           "rules": [
+            {
+             "combinator": "and",
+             "rules": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": "=",
+       "value": 0
+      }
+     ]
+    },
+    "targetRules": {
+     "include": [
+      {
+       "field": "cart.subtotal",
+       "operator": ">=",
+       "value": 1
+      }
+     ],
+     "exclude": [
+      {
+       "field": "line.productId",
+       "operator": "in",
+       "value": []
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponRuleIssues 회원가입 가입 일수",
+  "fn": "couponRuleIssues",
+  "args": [
+   {
+    "memberOnly": true,
+    "issueMethod": "SIGNUP",
+    "audience": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "customer.daysSinceJoined",
+       "operator": ">=",
+       "value": 1
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponRuleIssues 규칙 수 초과",
+  "fn": "couponRuleIssues",
+  "args": [
+   {
+    "memberOnly": true,
+    "issueMethod": "MANUAL",
+    "eligibility": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 0
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 1
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 2
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 3
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 4
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 5
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 6
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 7
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 8
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 9
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 10
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 11
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 12
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 13
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 14
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 15
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 16
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 17
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 18
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 19
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 20
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 21
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 22
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 23
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 24
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 25
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 26
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 27
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 28
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 29
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 30
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 31
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 32
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 33
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 34
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 35
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 36
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 37
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 38
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 39
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 40
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 41
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 42
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 43
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 44
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 45
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 46
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 47
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 48
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 49
+      },
+      {
+       "field": "customer.paidOrderCount",
+       "operator": ">=",
+       "value": 50
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "canonicalizeCouponTrees 트리",
+  "fn": "canonicalizeCouponTrees",
+  "args": [
+   {
+    "eligibility": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "time.weekday",
+       "operator": "in",
+       "value": [
+        "TUE",
+        "MON"
+       ]
+      }
+     ]
+    },
+    "targetRules": {
+     "include": [],
+     "exclude": []
+    },
+    "targetTree": {
+     "include": {
+      "combinator": "and",
+      "rules": [
+       {
+        "field": "line.unitPrice",
+        "operator": ">=",
+        "value": 5000
+       },
+       {
+        "combinator": "or",
+        "rules": [
+         {
+          "field": "line.productId",
+          "operator": "in",
+          "value": [
+           "p2",
+           "p1"
+          ]
+         },
+         {
+          "field": "line.categoryId",
+          "operator": "in",
+          "value": [
+           "cat1"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "exclude": {
+      "combinator": "or",
+      "rules": []
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "canonicalizeCouponTrees 목록",
+  "fn": "canonicalizeCouponTrees",
+  "args": [
+   {
+    "eligibility": {
+     "combinator": "and",
+     "rules": []
+    },
+    "targetRules": {
+     "include": [
+      {
+       "field": "line.productId",
+       "operator": "in",
+       "value": [
+        "b",
+        "a"
+       ]
+      }
+     ],
+     "exclude": []
+    }
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule customer.marketingAgreed = true",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "customer.marketingAgreed",
+    "operator": "=",
+    "value": true
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule line.productId in [\"a\",\"b\"]",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "line.productId",
+    "operator": "in",
+    "value": [
+     "a",
+     "b"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule line.categoryId in [\"a\"]",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "line.categoryId",
+    "operator": "in",
+    "value": [
+     "a"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule line.hasInstantDiscount = false",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "line.hasInstantDiscount",
+    "operator": "=",
+    "value": false
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule time.weekday in [\"MON\",\"XYZ\"]",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "time.weekday",
+    "operator": "in",
+    "value": [
+     "MON",
+     "XYZ"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule time.timeOfDay between [\"22:00\",\"02:00\"]",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "time.timeOfDay",
+    "operator": "between",
+    "value": [
+     "22:00",
+     "02:00"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule claims.gender in [\"female\",\"other\"]",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "claims.gender",
+    "operator": "in",
+    "value": [
+     "female",
+     "other"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule claims.email_verified = true",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "claims.email_verified",
+    "operator": "=",
+    "value": true
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule claims.phone_number_verified = false",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "claims.phone_number_verified",
+    "operator": "=",
+    "value": false
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule claims.locale in [\"ko\",\"en-US\"]",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "claims.locale",
+    "operator": "in",
+    "value": [
+     "ko",
+     "en-US"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule claims.address.country in [\"KR\"]",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "claims.address.country",
+    "operator": "in",
+    "value": [
+     "KR"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule claims.birthdate ageBetween [20,29]",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "claims.birthdate",
+    "operator": "ageBetween",
+    "value": [
+     20,
+     29
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule claims.birthdate age>= 20",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "claims.birthdate",
+    "operator": "age>=",
+    "value": 20
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule claims.birthdate age<= 39",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "claims.birthdate",
+    "operator": "age<=",
+    "value": 39
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule claims.birthdate birthMonthIn [3,1]",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "claims.birthdate",
+    "operator": "birthMonthIn",
+    "value": [
+     3,
+     1
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule claims.birthdate birthMonthIsCurrent true",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "claims.birthdate",
+    "operator": "birthMonthIsCurrent",
+    "value": true
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule customer.paidOrderCount = 0",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "customer.paidOrderCount",
+    "operator": "=",
+    "value": 0
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule customer.paidOrderCount = 2",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "customer.paidOrderCount",
+    "operator": "=",
+    "value": 2
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule customer.daysSinceJoined >= 30",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "customer.daysSinceJoined",
+    "operator": ">=",
+    "value": 30
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule customer.daysSinceLastOrder <= 1000",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "customer.daysSinceLastOrder",
+    "operator": "<=",
+    "value": 1000
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule cart.targetSubtotal between [10000,1234567.5]",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "cart.targetSubtotal",
+    "operator": "between",
+    "value": [
+     10000,
+     1234567.5
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule cart.targetQuantity >= 2",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "cart.targetQuantity",
+    "operator": ">=",
+    "value": 2
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule line.unitPrice <= 50000",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "line.unitPrice",
+    "operator": "<=",
+    "value": 50000
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule unknown.field = 3",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "unknown.field",
+    "operator": "=",
+    "value": 3
+   }
+  ]
+ },
+ {
+  "name": "describeCouponRule formatMoney",
+  "fn": "describeCouponRule",
+  "args": [
+   {
+    "field": "cart.subtotal",
+    "operator": ">=",
+    "value": 50000
+   },
+   {
+    "$lookup": {
+     "50000": "$500.00"
+    }
+   }
+  ]
+ },
+ {
+  "name": "describeCouponGroup",
+  "fn": "describeCouponGroup",
+  "args": [
+   {
+    "combinator": "or",
+    "rules": [
+     {
+      "field": "claims.birthdate",
+      "operator": "ageBetween",
+      "value": [
+       20,
+       29
+      ]
+     },
+     {
+      "combinator": "and",
+      "rules": [
+       {
+        "field": "claims.gender",
+        "operator": "in",
+        "value": [
+         "female"
+        ]
+       },
+       {
+        "field": "time.timeOfDay",
+        "operator": "between",
+        "value": [
+         "22:00",
+         "02:00"
+        ]
+       }
+      ]
+     },
+     {
+      "field": "line.productId",
+      "operator": "in",
+      "value": [
+       "p"
+      ]
+     },
+     {
+      "field": "zzz",
+      "operator": "=",
+      "value": 1
+     },
+     {
+      "field": "customer.daysSinceJoined",
+      "operator": "between",
+      "value": [
+       5,
+       3
+      ]
+     },
+     {
+      "field": "claims.locale",
+      "operator": "in",
+      "value": [
+       "ko-kr",
+       "en"
+      ]
+     },
+     {
+      "field": "claims.address.country",
+      "operator": "in",
+      "value": [
+       "kr"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponTargetRules",
+  "fn": "describeCouponTargetRules",
+  "args": [
+   {
+    "include": [
+     {
+      "field": "line.categoryId",
+      "operator": "in",
+      "value": [
+       "a"
+      ]
+     },
+     {
+      "field": "line.productId",
+      "operator": "in",
+      "value": [
+       "b"
+      ]
+     }
+    ],
+    "exclude": [
+     {
+      "field": "line.hasInstantDiscount",
+      "operator": "=",
+      "value": true
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "describeCouponTargetRules 전 상품",
+  "fn": "describeCouponTargetRules",
+  "args": [
+   {
+    "include": [],
+    "exclude": []
+   }
+  ]
+ },
+ {
+  "name": "describeCouponTargetTree 트리",
+  "fn": "describeCouponTargetTree",
+  "args": [
+   {
+    "include": {
+     "combinator": "and",
+     "rules": [
+      {
+       "field": "line.unitPrice",
+       "operator": ">=",
+       "value": 5000
+      },
+      {
+       "combinator": "or",
+       "rules": [
+        {
+         "field": "line.productId",
+         "operator": "in",
+         "value": [
+          "p2",
+          "p1"
+         ]
+        },
+        {
+         "field": "line.categoryId",
+         "operator": "in",
+         "value": [
+          "cat1"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "exclude": {
+     "combinator": "or",
+     "rules": [
+      {
+       "field": "line.hasInstantDiscount",
+       "operator": "=",
+       "value": true
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "describeCouponTargetTree 평평",
+  "fn": "describeCouponTargetTree",
+  "args": [
+   {
+    "include": {
+     "combinator": "or",
+     "rules": [
+      {
+       "field": "line.productId",
+       "operator": "in",
+       "value": [
+        "a"
+       ]
+      }
+     ]
+    },
+    "exclude": {
+     "combinator": "or",
+     "rules": []
+    }
+   }
+  ]
+ },
+ {
+  "name": "couponRequirementsOf and",
+  "fn": "couponRequirementsOf",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": [
+     {
+      "field": "customer.paidOrderCount",
+      "operator": "<=",
+      "value": 3
+     },
+     {
+      "field": "cart.targetSubtotal",
+      "operator": ">=",
+      "value": 5000
+     },
+     {
+      "field": "time.weekday",
+      "operator": "in",
+      "value": [
+       "MON",
+       "TUE",
+       "WED",
+       "THU",
+       "FRI",
+       "SAT",
+       "SUN"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "couponRequirementsOf or",
+  "fn": "couponRequirementsOf",
+  "args": [
+   {
+    "combinator": "or",
+    "rules": [
+     {
+      "field": "claims.birthdate",
+      "operator": "ageBetween",
+      "value": [
+       20,
+       29
+      ]
+     },
+     {
+      "combinator": "and",
+      "rules": [
+       {
+        "field": "claims.gender",
+        "operator": "in",
+        "value": [
+         "female"
+        ]
+       },
+       {
+        "field": "time.timeOfDay",
+        "operator": "between",
+        "value": [
+         "22:00",
+         "02:00"
+        ]
+       }
+      ]
+     },
+     {
+      "field": "line.productId",
+      "operator": "in",
+      "value": [
+       "p"
+      ]
+     },
+     {
+      "field": "zzz",
+      "operator": "=",
+      "value": 1
+     },
+     {
+      "field": "customer.daysSinceJoined",
+      "operator": "between",
+      "value": [
+       5,
+       3
+      ]
+     },
+     {
+      "field": "claims.locale",
+      "operator": "in",
+      "value": [
+       "ko-kr",
+       "en"
+      ]
+     },
+     {
+      "field": "claims.address.country",
+      "operator": "in",
+      "value": [
+       "kr"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "couponRequirementsOf 하위 그룹",
+  "fn": "couponRequirementsOf",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": [
+     {
+      "field": "customer.paidOrderCount",
+      "operator": "=",
+      "value": 0
+     },
+     {
+      "combinator": "or",
+      "rules": [
+       {
+        "field": "time.weekday",
+        "operator": "in",
+        "value": [
+         "SAT"
+        ]
+       },
+       {
+        "field": "cart.subtotal",
+        "operator": ">=",
+        "value": 30000
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "couponRequirementsOf 빈 트리",
+  "fn": "couponRequirementsOf",
+  "args": [
+   {
+    "combinator": "and",
+    "rules": []
+   }
+  ]
+ }
+]
