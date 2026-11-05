@@ -83,7 +83,7 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
 - 관리 API 요청 스키마(Node `strictRequest`)는 Dart에서도 안쪽 객체까지 모르는 키를 `unrecognized_keys` 이슈로 거른다(`z.looseObject`는 그대로).
   객체 스키마는 `strictRequest: true`, 객체가 아닌 스키마는 `z.strictRequest(...)`로 감싼다. `z.strictObject`는 그 객체만 거르는 `strict: true`다.
   생성기는 Node 로더 훅(`tool/codegen/strict-hooks.mjs`)으로 strictRequest 복제본을 원본 스키마에 이어, 공유 하위 스키마를 같은 클래스로 둔다.
-- Dart에 시간대·로캘 데이터가 없어 `Intl.DateTimeFormat({ timeZone })`·`Intl.getCanonicalLocales` 검사는 형식만 본다(IANA 이름·UTC 오프셋, BCP 47 태그). 있는 시간대인지는 서버가 판정한다.
+- Dart에 시간대·로캘 데이터가 없어 `Intl.DateTimeFormat({ timeZone })`·`Intl.getCanonicalLocales` 검사는 형식만 본다(시간대는 IANA 영역·한 단어 이름·UTC 오프셋, 로캘은 BCP 47 태그). 영역 안에 그 이름이 있는지는 서버가 판정한다.
 
 ### 세션 저장소
 

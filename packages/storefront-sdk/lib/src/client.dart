@@ -38,15 +38,14 @@ import 'zod.dart';
 ///
 /// ```dart
 /// final client = createStorefrontClient(StorefrontClientOptions(
-///   baseUrl: 'https://api.sayren.io/storefront/v1',
 ///   storeCode: 'my-store',
 ///   accessToken: () => tokens.accessToken,
 /// ));
 /// ```
 class StorefrontClientOptions {
-  /// 옵션을 만듭니다. [baseUrl]만 필수입니다.
+  /// 옵션을 만듭니다. 모두 선택입니다.
   const StorefrontClientOptions({
-    required this.baseUrl,
+    this.baseUrl = SAYREN_STOREFRONT_API_BASE_URL,
     this.storeCode,
     this.accessToken,
     this.auth,
@@ -61,7 +60,7 @@ class StorefrontClientOptions {
     this.fetch,
   });
 
-  /// 스토어프론트 API 주소입니다. 예: `https://api.sayren.io/storefront/v1`
+  /// 스토어프론트 API 주소(버전 경로 포함)입니다. 생략하면 운영 주소([SAYREN_STOREFRONT_API_BASE_URL], `https://api.sayren.io/storefront/v1`)이고, 개발·로컬에서만 지정합니다.
   final String baseUrl;
 
   /// 상점 코드입니다. `X-Store-Code` 헤더로 보내 요청할 상점을 지정합니다.

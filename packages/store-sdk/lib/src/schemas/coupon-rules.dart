@@ -59,6 +59,8 @@ import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
+part 'coupon-rules.manual.dart';
+
 /// 요일 — 판정 시각의 Asia/Seoul 달력 요일.
 const COUPON_WEEKDAYS = <String>['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 

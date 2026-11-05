@@ -998,11 +998,29 @@ bool jsIsCalendarDate(String value) {
 
 /// JS `new Intl.DateTimeFormat(…, { timeZone })`이 받는 시간대인가(SDK 내부용).
 ///
-/// Dart에는 시간대 데이터가 없어 IANA 이름(`Asia/Seoul`, 대소문자 무시)과 UTC 오프셋(`+09:00`)의 형식만 봅니다.
-/// 있는 이름인지는 서버가 판정합니다.
-bool jsIsTimeZone(String value) =>
-    RegExp(r'^[A-Za-z][A-Za-z0-9_+\-]*(/[A-Za-z0-9_+\-]+)*$').hasMatch(value) ||
-    RegExp(r'^[+-](?:[01]\d|2[0-3])(?::?[0-5]\d)?$').hasMatch(value);
+/// Dart에는 시간대 데이터가 없어 IANA 이름의 영역(`Asia/…`·`America/…`·`Etc/…`와 옛 별칭 영역 `US/…` 등)과 한 단어 이름(`UTC`·`Japan` 등),
+/// UTC 오프셋(`+09:00`)만 봅니다(대소문자 무시). 영역 안에 그 이름이 있는지는 서버가 판정합니다.
+bool jsIsTimeZone(String value) {
+  if (RegExp(r'^[+-](?:[01]\d|2[0-3])(?::?[0-5]\d)?$').hasMatch(value)) return true;
+  final lower = value.toLowerCase();
+  if (_singleTimeZones.contains(lower)) return true;
+  final parts = lower.split('/');
+  return parts.length > 1 &&
+      _timeZoneAreas.contains(parts.first) &&
+      parts.skip(1).every((p) => RegExp(r'^[a-z0-9_+\-]+$').hasMatch(p));
+}
+
+const _timeZoneAreas = {
+  'africa', 'america', 'antarctica', 'arctic', 'asia', 'atlantic', 'australia', 'europe', 'indian', 'pacific', 'etc', //
+  'us', 'canada', 'brazil', 'chile', 'mexico',
+};
+
+const _singleTimeZones = {
+  'utc', 'uct', 'gmt', 'gmt0', 'gmt+0', 'gmt-0', 'greenwich', 'universal', 'zulu', 'est', 'mst', 'hst', 'est5edt', //
+  'cst6cdt', 'mst7mdt', 'pst8pdt', 'cet', 'eet', 'met', 'wet', 'cuba', 'egypt', 'eire', 'gb', 'gb-eire', 'hongkong',
+  'iceland', 'iran', 'israel', 'jamaica', 'japan', 'kwajalein', 'libya', 'nz', 'nz-chat', 'navajo', 'prc', 'poland',
+  'portugal', 'roc', 'rok', 'singapore', 'turkey', 'w-su',
+};
 
 /// JS `Intl.getCanonicalLocales(value).length === 1` — 형식이 맞는 BCP 47 언어 태그 하나인가(SDK 내부용)
 bool jsIsLocaleTag(String value) => RegExp(

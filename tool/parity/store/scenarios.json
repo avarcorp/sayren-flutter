@@ -269,11 +269,11 @@
             "PAID",
             "PREPARING"
           ],
+          "testPayment": "false",
           "orderItemNos": [
             "26110100000001",
             "26110100000002"
-          ],
-          "testPayment": "false"
+          ]
         }
       ],
       "response": {

@@ -1,5 +1,6 @@
 // 함수 대조 어댑터 — tool/parity/store/functions/*.json의 인자(JSON)를 Dart 인자로 바꿔 부르고 결과를 JSON 값으로 돌려준다.
 // 금액 묶음: promotion·shipping-policy·refund-policy·points.
+import 'dart:convert';
 import 'package:sayren_store_sdk/sayren_store_sdk.dart';
 
 Map<String, Object?> _m(Object? v) => (v as Map).cast<String, Object?>();
@@ -114,12 +115,16 @@ Map<String, Object?> _pricingResult(PricingResult r) => {
             'rejectReason': c.rejectReason,
             'lineId': c.lineId,
             'eligibleLineIds': c.eligibleLineIds,
+            'facts': jsonDecode(jsonEncode(c.facts)),
+            'rewardPoint': c.rewardPoint,
+            'tierIndex': c.tierIndex,
           },
       ],
       'bundles': [
         for (final b in r.bundles)
           {'bundleKey': b.bundleKey, 'couponDiscount': b.couponDiscount, 'pointAllocation': b.pointAllocation},
       ],
+      'rewardPointAmount': r.rewardPointAmount,
       'productAmount': r.productAmount,
       'couponDiscountAmount': r.couponDiscountAmount,
       'deliveryFee': r.deliveryFee,

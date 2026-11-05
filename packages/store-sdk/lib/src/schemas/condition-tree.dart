@@ -59,6 +59,8 @@ import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
+part 'condition-tree.manual.dart';
+
 /// 조건 트리 (이슈 #222) — 규칙(필드 · 연산자 · 값)을 `and`·`or` 그룹으로 묶은 JSON입니다. **도메인을 모릅니다.**
 /// 쓰는 쪽(쿠폰 등)이 필드 카탈로그(`ConditionFieldDef`)와 평가 컨텍스트를 주고, 이 파일은 형식 검증·정규화·평가만 합니다.
 ///

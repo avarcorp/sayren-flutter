@@ -59,6 +59,8 @@ import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
+part 'coupon-selection.manual.dart';
+
 /// 최대 할인 쿠폰 조합 (이슈 #222) — 후보 쿠폰 중 할인 합이 가장 큰 조합을 고르는 **순수 함수**다.
 /// 금액은 고른 조합을 `quotePricing`에 다시 넣어 계산합니다(원천 함수 하나). 상품 상세의 최대 할인·주문서 추천이 이 함수를 지납니다.
 ///
