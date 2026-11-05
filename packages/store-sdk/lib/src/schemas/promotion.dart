@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -34,6 +39,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -95,6 +102,168 @@ class CouponBenefit extends ParsedObject {
   /// 정률 할인의 최대 할인액(원). null이면 상한이 없습니다. 정액 할인에는 쓰지 않습니다(null).
   int? get maxDiscountAmount => _j['maxDiscountAmount'] as int?;
 }
+
+/// 구간 할인의 구간 수 상한.
+const COUPON_REWARD_TIER_MAX = 5;
+
+/// [CouponReward] 스키마입니다.
+///
+/// 확장 혜택(이슈 #222 혜택 확장) — 있으면 계산의 원천이고 `benefit`은 가장 가까운 값입니다.
+/// - `TIERED`: 기준 금액(주문 쿠폰은 상품 쿠폰 차감 뒤 대상 합계, 상품 쿠폰은 그 줄 금액)이 넘은 가장 높은 구간의 할인. 첫 구간 미만이면 `MIN_ORDER_AMOUNT`
+/// - `BUY_X_GET_Y`: 상품 쿠폰만. 걸린 줄 수량을 `buy + get`개 묶음으로 세어 묶음마입니다 `get`개를 `rate`% 할인
+/// - `POINT`: 주문 쿠폰만. 할인 대신 대상 줄 실결제(쿠폰·적립금 뒤)에 `benefit`을 적용한 적립금을 구매확정 때 줍니다.
+final ZodType<CouponReward> couponRewardSchema = z.discriminatedUnion<CouponReward>('type', [
+  couponRewardTieredSchema,
+  couponRewardBuyXGetYSchema,
+  couponRewardPointSchema,
+]).check(_couponRewardCheck);
+
+/// 확장 혜택(이슈 #222 혜택 확장) — 있으면 계산의 원천이고 `benefit`은 가장 가까운 값입니다.
+/// - `TIERED`: 기준 금액(주문 쿠폰은 상품 쿠폰 차감 뒤 대상 합계, 상품 쿠폰은 그 줄 금액)이 넘은 가장 높은 구간의 할인. 첫 구간 미만이면 `MIN_ORDER_AMOUNT`
+/// - `BUY_X_GET_Y`: 상품 쿠폰만. 걸린 줄 수량을 `buy + get`개 묶음으로 세어 묶음마입니다 `get`개를 `rate`% 할인
+/// - `POINT`: 주문 쿠폰만. 할인 대신 대상 줄 실결제(쿠폰·적립금 뒤)에 `benefit`을 적용한 적립금을 구매확정 때 줍니다.
+sealed class CouponReward {
+  /// JSON을 [couponRewardSchema]로 검증해 맞는 형태로 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponReward.fromJson(Map<String, Object?> json) => couponRewardSchema.parse(json);
+
+  /// `type` 값입니다.
+  String get type;
+
+  /// JSON으로 바꿉니다.
+  Map<String, Object?> toJson();
+}
+
+/// [CouponRewardTiered] 스키마입니다.
+final ZodObject<CouponRewardTiered> couponRewardTieredSchema = z.object<CouponRewardTiered>({
+  'type': z.literal<String>('TIERED'),
+  'tiers': z.array<CouponRewardTieredTiersItem>(couponRewardTieredTiersItemSchema).min(2).max(5),
+  'shortfallCharge': z.boolean(),
+}, CouponRewardTiered._);
+
+/// CouponRewardTiered 값입니다.
+class CouponRewardTiered extends ParsedObject implements CouponReward {
+  /// [CouponRewardTiered]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CouponRewardTiered(
+      {required String type, required List<CouponRewardTieredTiersItem> tiers, required bool shortfallCharge})
+      : super({'type': type, 'tiers': tiers, 'shortfallCharge': shortfallCharge});
+
+  CouponRewardTiered._(super.json);
+
+  /// JSON을 [couponRewardTieredSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponRewardTiered.fromJson(Map<String, Object?> json) => couponRewardTieredSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `type` 값입니다.
+  @override
+  String get type => _j['type'] as String;
+
+  /// 구간. 기준 금액 하한 오름차순.
+  List<CouponRewardTieredTiersItem> get tiers => (_j['tiers'] as List).cast<CouponRewardTieredTiersItem>();
+
+  /// 부분 취소로 할인액이 줄면 그 차액을 환불에서 뺍니다. 상점 환불 정책 `couponShortfallCharge`가 꺼져 있거나 판매자 귀책이면 빼지 않습니다.
+  bool get shortfallCharge => _j['shortfallCharge'] as bool;
+}
+
+/// [CouponRewardTieredTiersItem] 스키마입니다.
+final ZodObject<CouponRewardTieredTiersItem> couponRewardTieredTiersItemSchema = z.object<CouponRewardTieredTiersItem>({
+  'minAmount': z.number().int_().greaterThan(0, inclusive: true),
+  'benefit': couponBenefitSchema,
+}, CouponRewardTieredTiersItem._);
+
+/// CouponRewardTieredTiersItem 값입니다.
+class CouponRewardTieredTiersItem extends ParsedObject {
+  /// [CouponRewardTieredTiersItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CouponRewardTieredTiersItem({required int minAmount, required CouponBenefit benefit})
+      : super({'minAmount': minAmount, 'benefit': benefit});
+
+  CouponRewardTieredTiersItem._(super.json);
+
+  /// JSON을 [couponRewardTieredTiersItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponRewardTieredTiersItem.fromJson(Map<String, Object?> json) =>
+      couponRewardTieredTiersItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 이 구간의 기준 금액 하한(원).
+  int get minAmount => _j['minAmount'] as int;
+
+  /// `benefit` 값입니다.
+  CouponBenefit get benefit => _j['benefit'] as CouponBenefit;
+}
+
+/// [CouponRewardBuyXGetY] 스키마입니다.
+final ZodObject<CouponRewardBuyXGetY> couponRewardBuyXGetYSchema = z.object<CouponRewardBuyXGetY>({
+  'type': z.literal<String>('BUY_X_GET_Y'),
+  'buy': z.number().int_().greaterThan(1, inclusive: true).lessThan(99, inclusive: true),
+  'get': z.number().int_().greaterThan(1, inclusive: true).lessThan(99, inclusive: true),
+  'rate': z.number().int_().greaterThan(1, inclusive: true).lessThan(100, inclusive: true),
+  'shortfallCharge': z.boolean(),
+}, CouponRewardBuyXGetY._);
+
+/// CouponRewardBuyXGetY 값입니다.
+class CouponRewardBuyXGetY extends ParsedObject implements CouponReward {
+  /// [CouponRewardBuyXGetY]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CouponRewardBuyXGetY(
+      {required String type, required int buy, required int get, required int rate, required bool shortfallCharge})
+      : super({'type': type, 'buy': buy, 'get': get, 'rate': rate, 'shortfallCharge': shortfallCharge});
+
+  CouponRewardBuyXGetY._(super.json);
+
+  /// JSON을 [couponRewardBuyXGetYSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponRewardBuyXGetY.fromJson(Map<String, Object?> json) => couponRewardBuyXGetYSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `type` 값입니다.
+  @override
+  String get type => _j['type'] as String;
+
+  /// 구매 수량(N+1의 N).
+  int get buy => _j['buy'] as int;
+
+  /// 할인 수량(N+1의 1).
+  int get get => _j['get'] as int;
+
+  /// 할인 수량의 할인율(%). 100이면 무료.
+  int get rate => _j['rate'] as int;
+
+  /// 부분 취소로 할인액이 줄면 그 차액을 환불에서 뺍니다. 상점 환불 정책 `couponShortfallCharge`가 꺼져 있거나 판매자 귀책이면 빼지 않습니다.
+  bool get shortfallCharge => _j['shortfallCharge'] as bool;
+}
+
+/// [CouponRewardPoint] 스키마입니다.
+final ZodObject<CouponRewardPoint> couponRewardPointSchema = z.object<CouponRewardPoint>({
+  'type': z.literal<String>('POINT'),
+  'benefit': couponBenefitSchema,
+}, CouponRewardPoint._);
+
+/// CouponRewardPoint 값입니다.
+class CouponRewardPoint extends ParsedObject implements CouponReward {
+  /// [CouponRewardPoint]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CouponRewardPoint({required String type, required CouponBenefit benefit}) : super({'type': type, 'benefit': benefit});
+
+  CouponRewardPoint._(super.json);
+
+  /// JSON을 [couponRewardPointSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponRewardPoint.fromJson(Map<String, Object?> json) => couponRewardPointSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `type` 값입니다.
+  @override
+  String get type => _j['type'] as String;
+
+  /// 적립 방식. `RATE`=대상 실결제의 %(최대 `maxDiscountAmount`), `AMOUNT`=고정 적립금.
+  CouponBenefit get benefit => _j['benefit'] as CouponBenefit;
+}
+
+/// 확장 혜택을 쓸 수 있는 쿠폰 종류.
+const COUPON_REWARD_KINDS = <String, List<String>>{
+  'TIERED': <String>['ORDER', 'PRODUCT'],
+  'BUY_X_GET_Y': <String>['PRODUCT'],
+  'POINT': <String>['ORDER']
+};
 
 /// [CouponConditions] 스키마입니다.
 ///
@@ -230,6 +399,11 @@ final ZodObject<CouponRule> couponRuleSchema = z.object<CouponRule>({
               r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
           format: 'datetime')
       .nullable(),
+  'eligibility': conditionGroupSchema.optional(),
+  'targetRules': couponTargetRulesSchema.optional(),
+  'targetTree': couponTargetTreeSchema.optional(),
+  'stacking': couponStackingSchema.optional(),
+  'reward': couponRewardSchema.optional(),
 }, CouponRule._);
 
 /// 쿠폰 규칙 스냅샷 — 계산에 필요한 값만 담습니다. 결제 시작이 쿠폰을 읽어 이 형태로 결제 세션에 굳히고,
@@ -244,7 +418,12 @@ class CouponRule extends ParsedObject {
       required CouponConditions conditions,
       required CouponTarget target,
       required String? startsAt,
-      required String? endsAt})
+      required String? endsAt,
+      ConditionGroup? eligibility,
+      CouponTargetRules? targetRules,
+      CouponTargetTree? targetTree,
+      CouponStacking? stacking,
+      CouponReward? reward})
       : super({
           'couponId': couponId,
           'name': name,
@@ -253,7 +432,12 @@ class CouponRule extends ParsedObject {
           'conditions': conditions,
           'target': target,
           'startsAt': startsAt,
-          'endsAt': endsAt
+          'endsAt': endsAt,
+          if (eligibility != null) 'eligibility': eligibility,
+          if (targetRules != null) 'targetRules': targetRules,
+          if (targetTree != null) 'targetTree': targetTree,
+          if (stacking != null) 'stacking': stacking,
+          if (reward != null) 'reward': reward
         });
 
   CouponRule._(super.json);
@@ -286,9 +470,24 @@ class CouponRule extends ParsedObject {
 
   /// 사용 종료 시각(ISO 8601, 시간대 포함, 이 시각부터 못 씁니다). null이면 제한이 없습니다.
   String? get endsAt => _j['endsAt'] as String?;
+
+  /// 사용 조건 트리(이슈 #222). 없으면 `conditions`에서 만듭니다. 있으면 이것이 원천이고 `conditions`는 가장 가까운 옛 값입니다.
+  ConditionGroup? get eligibility => _j['eligibility'] as ConditionGroup?;
+
+  /// 할인 대상 규칙(이슈 #222). 없으면 `target`·`conditions.stackWithInstantDiscount`에서 만듭니다.
+  CouponTargetRules? get targetRules => _j['targetRules'] as CouponTargetRules?;
+
+  /// 할인 대상 트리(이슈 #263). 없으면 `targetRules`(없으면 옛 칸)에서 만듭니다. 있으면 이것이 원천이고 `targetRules`는 가장 가까운 옛 값입니다.
+  CouponTargetTree? get targetTree => _j['targetTree'] as CouponTargetTree?;
+
+  /// 중복 사용 정책(이슈 #222). 없으면 종류별 한 장·서로 결합·적립금과 함께.
+  CouponStacking? get stacking => _j['stacking'] as CouponStacking?;
+
+  /// 확장 혜택(구간 할인·N+1·적립금 지급). 없으면 `benefit`이 혜택입니다.
+  CouponReward? get reward => _j['reward'] as CouponReward?;
 }
 
-/// [String] 스키마입니다. 값은 `DUPLICATE_COUPON`·`STACK_LIMIT`·`NOT_STARTED`·`EXPIRED`·`MEMBER_ONLY`·`FIRST_ORDER_ONLY`·`NO_ELIGIBLE_ITEMS`·`MIN_ORDER_AMOUNT`·`LINE_NOT_ELIGIBLE`·`LINE_AMBIGUOUS`·`NO_DISCOUNT`입니다.
+/// [String] 스키마입니다. 값은 `DUPLICATE_COUPON`·`STACK_LIMIT`·`NOT_STARTED`·`EXPIRED`·`MEMBER_ONLY`·`FIRST_ORDER_ONLY`·`NO_ELIGIBLE_ITEMS`·`MIN_ORDER_AMOUNT`·`LINE_NOT_ELIGIBLE`·`LINE_AMBIGUOUS`·`NO_DISCOUNT`·`CONDITION_NOT_MET`·`NOT_COMBINABLE`입니다.
 ///
 /// 쿠폰을 적용하지 못한 사유.
 final ZodEnum couponRejectReasonSchema = z.enum_([
@@ -302,12 +501,14 @@ final ZodEnum couponRejectReasonSchema = z.enum_([
   'MIN_ORDER_AMOUNT',
   'LINE_NOT_ELIGIBLE',
   'LINE_AMBIGUOUS',
-  'NO_DISCOUNT'
+  'NO_DISCOUNT',
+  'CONDITION_NOT_MET',
+  'NOT_COMBINABLE'
 ]);
 
 /// CouponRejectReason 값입니다.
 ///
-/// 값은 `DUPLICATE_COUPON`·`STACK_LIMIT`·`NOT_STARTED`·`EXPIRED`·`MEMBER_ONLY`·`FIRST_ORDER_ONLY`·`NO_ELIGIBLE_ITEMS`·`MIN_ORDER_AMOUNT`·`LINE_NOT_ELIGIBLE`·`LINE_AMBIGUOUS`·`NO_DISCOUNT`입니다.
+/// 값은 `DUPLICATE_COUPON`·`STACK_LIMIT`·`NOT_STARTED`·`EXPIRED`·`MEMBER_ONLY`·`FIRST_ORDER_ONLY`·`NO_ELIGIBLE_ITEMS`·`MIN_ORDER_AMOUNT`·`LINE_NOT_ELIGIBLE`·`LINE_AMBIGUOUS`·`NO_DISCOUNT`·`CONDITION_NOT_MET`·`NOT_COMBINABLE`입니다.
 typedef CouponRejectReason = String;
 
 /// 쿠폰 적용 뒤 결제 금액의 하한 — 0원 결제 경로가 없어 이보다 작으면 결제를 시작하지 않습니다(400 `PAYMENT_AMOUNT_TOO_LOW`).
@@ -357,7 +558,13 @@ class PricingLine {
 class PricingCoupon {
   /// [PricingCoupon]을 만듭니다.
   const PricingCoupon(
-      {required this.rule, this.couponKey, this.lineId, this.eligibleLineIds, this.validFrom, this.validUntil});
+      {required this.rule,
+      this.couponKey,
+      this.lineId,
+      this.eligibleLineIds,
+      this.validFrom,
+      this.validUntil,
+      this.facts});
 
   /// `rule` 값입니다.
   final CouponRule rule;
@@ -379,6 +586,10 @@ class PricingCoupon {
   /// `validUntil` 값입니다.
   final String? validUntil;
 
+  /// 이 쿠폰을 판정할 사실 값 — 주문 스냅샷의 값(환불 정산). 주어지면 입력의 `facts`보다 우선합니다.
+  /// 결제 시작에서 쓴 구매자·시각 값을 그대로 다시 쓰므로 주문 뒤 바뀐 가입 일수·요일이 결과를 바꾸지 않습니다.
+  final CouponFacts? facts;
+
   /// JSON으로 바꿉니다.
   Map<String, Object?> toJson() => {
         'rule': rule,
@@ -386,7 +597,8 @@ class PricingCoupon {
         if (lineId != null) 'lineId': lineId,
         if (eligibleLineIds != null) 'eligibleLineIds': eligibleLineIds,
         if (validFrom != null) 'validFrom': validFrom,
-        if (validUntil != null) 'validUntil': validUntil
+        if (validUntil != null) 'validUntil': validUntil,
+        if (facts != null) 'facts': facts
       };
 }
 
@@ -433,9 +645,10 @@ class PricingInput {
       this.points,
       required this.coupons,
       this.delivery,
-      required this.firstOrder,
+      this.firstOrder,
       required this.isMember,
       required this.now,
+      this.facts,
       this.ignoreEligibility,
       this.moneyRules});
 
@@ -451,18 +664,23 @@ class PricingInput {
   /// 배송비 견적. 없으면 배송비 0으로 계산하고 배송비 쿠폰은 할인할 금액이 없습니다.
   final PricingDelivery? delivery;
 
-  /// 이 상점에서 결제 완료 주문이 없는 회원인지입니다.
-  final bool firstOrder;
+  /// 이 상점에서 결제 완료 주문이 없는 회원인지입니다 — 옛 입력입니다. `facts.customer.paidOrderCount`가 없을 때 true면 0으로 읽습니다
+  /// (false는 값을 모르는 것으로 둡니다 — 「결제 완료 주문 수 = 0」 규칙은 거짓).
+  final bool? firstOrder;
 
   /// 회원 주문인지입니다.
   final bool isMember;
 
-  /// 사용 기간 판정 시각.
+  /// 사용 기간 판정 시각 — 시각 사실 값(요일·시각)도 여기서 나옵니다.
   final DateTime now;
 
-  /// 사용 기간·회원·첫 구매 조건을 다시 보지 않습니다 — **환불 정산의 재계산 전용입니다.** 그 조건은 결제 시작에서
+  /// 구매자 사실 값(이슈 #222) — 사용 조건 트리가 읽습니다. 시각 값을 주지 않으면 `now`에서 만듭니다.
+  final CouponFacts? facts;
+
+  /// 사용 기간·회원 전용을 다시 보지 않습니다 — **환불 정산의 재계산 전용입니다.** 그 조건은 결제 시작에서
   /// 이미 통과했습니다. 주문 시각(승인 시각)으로 기간을 다시 보면 결제 시작과 승인 사이에 끝난 쿠폰이 조건을 잃은
-  /// 것처럼 보이고, 탈퇴한 회원의 반품이 회원 전용 조건에 떨어집니다. 대상과 최소 금액만 봅니다.
+  /// 것처럼 보이고, 탈퇴한 회원의 반품이 회원 전용 조건에 떨어집니다. 사용 조건 트리는 쿠폰의 스냅샷 사실 값(`PricingCoupon.facts`)으로
+  /// 남은 금액과 함께 다시 평가합니다(트리 일부만 건너뛰면 `or` 트리의 결과가 틀립니다).
   final bool? ignoreEligibility;
 
   /// 주문 통화의 규칙 값(이슈 #130) — 정률 할인 내림 단위(판매가 단위)와 적립금 사용 뒤 남길 최소 결제액. 생략하면 KRW 규칙입니다.
@@ -475,9 +693,10 @@ class PricingInput {
         if (points != null) 'points': points,
         'coupons': coupons,
         if (delivery != null) 'delivery': delivery,
-        'firstOrder': firstOrder,
+        if (firstOrder != null) 'firstOrder': firstOrder,
         'isMember': isMember,
         'now': now,
+        if (facts != null) 'facts': facts,
         if (ignoreEligibility != null) 'ignoreEligibility': ignoreEligibility,
         if (moneyRules != null) 'moneyRules': moneyRules
       };
@@ -544,7 +763,10 @@ class PricingCouponResult {
       required this.discount,
       required this.rejectReason,
       required this.lineId,
-      required this.eligibleLineIds});
+      required this.eligibleLineIds,
+      required this.facts,
+      required this.rewardPoint,
+      required this.tierIndex});
 
   /// `couponKey` 값입니다.
   final String couponKey;
@@ -570,6 +792,15 @@ class PricingCouponResult {
   /// 이 쿠폰의 대상 줄 — 판정에 쓴 순서 그대로입니다. 환불 정산이 주문 시점 대상을 되살리는 데 씁니다.
   final List<String> eligibleLineIds;
 
+  /// 판정에 쓴 사실 값 중 이 쿠폰의 사용 조건이 읽은 것 — 주문 스냅샷에 굳힙니다. 읽은 값이 없으면 빈 객체.
+  final CouponFacts facts;
+
+  /// 적립금 지급 쿠폰이 구매확정 때 줄 적립금(지금 수량 기준). 그 밖은 0.
+  final int rewardPoint;
+
+  /// 구간 할인이 적용한 구간 순번. 그 밖은 null — 환불 정산이 구간이 내려갔는지 봅니다.
+  final int? tierIndex;
+
   /// JSON으로 바꿉니다.
   Map<String, Object?> toJson() => {
         'couponKey': couponKey,
@@ -579,7 +810,10 @@ class PricingCouponResult {
         'discount': discount,
         'rejectReason': rejectReason,
         'lineId': lineId,
-        'eligibleLineIds': eligibleLineIds
+        'eligibleLineIds': eligibleLineIds,
+        'facts': facts,
+        'rewardPoint': rewardPoint,
+        'tierIndex': tierIndex
       };
 }
 
@@ -609,6 +843,7 @@ class PricingResult {
       {required this.lines,
       required this.coupons,
       required this.bundles,
+      required this.rewardPointAmount,
       required this.productAmount,
       required this.couponDiscountAmount,
       required this.deliveryFee,
@@ -627,6 +862,9 @@ class PricingResult {
 
   /// 배송비 쿠폰의 묶음별 배분.
   final List<PricingBundleResult> bundles;
+
+  /// 적립금 지급 쿠폰의 적립 예정 합계 — 결제 금액에 영향이 없습니다.
+  final int rewardPointAmount;
 
   /// 상품 금액 합 (즉시할인 반영, 쿠폰 전).
   final int productAmount;
@@ -660,6 +898,7 @@ class PricingResult {
         'lines': lines,
         'coupons': coupons,
         'bundles': bundles,
+        'rewardPointAmount': rewardPointAmount,
         'productAmount': productAmount,
         'couponDiscountAmount': couponDiscountAmount,
         'deliveryFee': deliveryFee,
@@ -681,7 +920,8 @@ class AppliedCouponSnapshot {
       required this.rule,
       required this.lineId,
       required this.eligibleLineIds,
-      required this.discount});
+      required this.discount,
+      this.facts});
 
   /// `couponKey` 값입니다.
   final String couponKey;
@@ -698,13 +938,17 @@ class AppliedCouponSnapshot {
   /// 주문 시점 할인액.
   final int discount;
 
+  /// 주문 시점 사실 값(이슈 #222) — 사용 조건 트리가 읽은 구매자·시각 값. 없으면 빈 값(옛 주문).
+  final CouponFacts? facts;
+
   /// JSON으로 바꿉니다.
   Map<String, Object?> toJson() => {
         'couponKey': couponKey,
         'rule': rule,
         'lineId': lineId,
         'eligibleLineIds': eligibleLineIds,
-        'discount': discount
+        'discount': discount,
+        if (facts != null) 'facts': facts
       };
 }
 
@@ -826,7 +1070,7 @@ class CouponSettlementEntry {
   /// 남은 주문상품으로 다시 계산한 할인 — 쿠폰 조건을 잃었으면 0.
   final int recomputed;
 
-  /// 누적 미달분 목표 = 조건을 잃었으면 `allocatedRemaining`, 아니면 0.
+  /// 누적 미달분 목표 = 조건을 잃었으면 `allocatedRemaining`, 차액 정산 쿠폰은 `allocatedRemaining − recomputed`(음수면 더 돌려줍니다), 아니면 0.
   final int target;
 
   /// `charge` 값입니다.

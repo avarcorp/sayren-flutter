@@ -28,6 +28,7 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 /// [StorefrontPointPolicy] 스키마입니다.
 ///
@@ -217,7 +218,7 @@ class MemberPointEntry extends ParsedObject {
   /// `entryId` 값입니다.
   String get entryId => _j['entryId'] as String;
 
-  /// 유형. `EARN_REVIEW` 리뷰 적립 · `REVOKE_REVIEW` 리뷰 삭제 회수 · `EARN_PURCHASE` 구매 적립 · `EXPIRE` 소멸 · `ADJUST` 상점 지급·차감 · `OPENING` 기존 적립금 · `USE_RESERVE` 결제 사용 · `USE_RELEASE` 결제가 실패·만료되어 되돌림 · `REFUND_RESTORE` 취소·반품 환불로 반환. 값이 추가될 수 있어 문자열로 받습니다.
+  /// 유형. `EARN_REVIEW` 리뷰 적립 · `REVOKE_REVIEW` 리뷰 삭제 회수 · `EARN_PURCHASE` 구매 적립 · `EXPIRE` 소멸 · `ADJUST` 상점 지급·차감 · `OPENING` 기존 적립금 · `USE_RESERVE` 결제 사용 · `USE_RELEASE` 결제가 실패·만료되어 되돌림 · `REFUND_RESTORE` 취소·반품 환불로 반환 · `EARN_COUPON` 적립금 지급 쿠폰. 값이 추가될 수 있어 문자열로 받습니다.
   String get type => _j['type'] as String;
 
   /// 변동액. 적립 +, 회수·차감·소멸 −.

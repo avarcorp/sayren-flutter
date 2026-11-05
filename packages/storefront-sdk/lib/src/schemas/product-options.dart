@@ -29,6 +29,7 @@ import 'points.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 part 'product-options.manual.dart';
 

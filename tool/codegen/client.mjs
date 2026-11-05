@@ -118,6 +118,19 @@ export function generateClient({ src, scan, ir, emit, known, lib, schemaFiles, c
       }
       return { dart: `'${dart}'`, shown };
     }
+    // 태그 없는 템플릿 — 조각마다 `encodeURIComponent(String(x))`면 path`…`와 같다
+    if (ts.isTemplateExpression(node)) {
+      let dart = esc(node.head.text);
+      let shown = node.head.text;
+      for (const span of node.templateSpans) {
+        const m = /^encodeURIComponent\((?:String\((\w+)\)|(\w+))\)$/.exec(span.expression.getText());
+        if (!m) throw new Error(`경로 식을 옮길 수 없습니다: ${node.getText()}`);
+        const id = m[1] ?? m[2];
+        dart += `\${encodeURIComponent('$${id}')}${esc(span.literal.text)}`;
+        shown += `{${id}}${span.literal.text}`;
+      }
+      return { dart: `'${dart}'`, shown };
+    }
     throw new Error(`경로 식을 옮길 수 없습니다: ${node.getText()}`);
   }
 
@@ -145,6 +158,23 @@ export function generateClient({ src, scan, ir, emit, known, lib, schemaFiles, c
         return `${str(key)}: ${v}`;
       });
       return `{${entries.join(", ")}}`;
+    }
+    // `x === undefined ? undefined : 식` — 생략한 인자면 보내지 않는다
+    if (ts.isConditionalExpression(node)) {
+      const c = node.condition;
+      if (
+        ts.isBinaryExpression(c) &&
+        c.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken &&
+        ts.isIdentifier(c.left) &&
+        c.right.getText() === "undefined" &&
+        node.whenTrue.getText() === "undefined"
+      ) {
+        return `${valueOf(c.left, params)} == null ? null : ${valueOf(node.whenFalse, params)}`;
+      }
+    }
+    // `String(x)` — 숫자 인자를 헤더 문자열로
+    if (ts.isCallExpression(node) && node.expression.getText() === "String" && ts.isIdentifier(node.arguments[0])) {
+      return `'\${${valueOf(node.arguments[0], params)}}'`;
     }
     if (ts.isCallExpression(node) && node.expression.getText() === "idempotency") {
       return `_idempotency(${valueOf(node.arguments[0], params)})`;

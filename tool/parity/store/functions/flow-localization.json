@@ -1,0 +1,71 @@
+[
+ {
+  "name": "flowLocalizationNeedsTranslation [[{\"key\": \"a\", \"text\": \"문구\"}, {\"key\": \"b\", \"text\": \"문구\"}], {\"a\": \"x\", \"b\": \"y\"}]",
+  "fn": "flowLocalizationNeedsTranslation",
+  "args": [
+   [
+    {
+     "key": "a",
+     "text": "문구"
+    },
+    {
+     "key": "b",
+     "text": "문구"
+    }
+   ],
+   {
+    "a": "x",
+    "b": "y"
+   }
+  ]
+ },
+ {
+  "name": "flowLocalizationNeedsTranslation [[{\"key\": \"a\", \"text\": \"문구\"}], {\"a\": \"  \"}]",
+  "fn": "flowLocalizationNeedsTranslation",
+  "args": [
+   [
+    {
+     "key": "a",
+     "text": "문구"
+    }
+   ],
+   {
+    "a": "  "
+   }
+  ]
+ },
+ {
+  "name": "flowLocalizationNeedsTranslation [[{\"key\": \"a\", \"text\": \"문구\"}], null]",
+  "fn": "flowLocalizationNeedsTranslation",
+  "args": [
+   [
+    {
+     "key": "a",
+     "text": "문구"
+    }
+   ],
+   null
+  ]
+ },
+ {
+  "name": "flowLocalizationNeedsTranslation [[], null]",
+  "fn": "flowLocalizationNeedsTranslation",
+  "args": [
+   [],
+   null
+  ]
+ },
+ {
+  "name": "flowLocalizationNeedsTranslation [[{\"key\": \"a\", \"text\": \"문구\"}], {}]",
+  "fn": "flowLocalizationNeedsTranslation",
+  "args": [
+   [
+    {
+     "key": "a",
+     "text": "문구"
+    }
+   ],
+   {}
+  ]
+ }
+]

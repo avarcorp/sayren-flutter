@@ -1,9 +1,6 @@
 // 손으로 쓴 부분 — storefront-hosting.ts의 슬러그·도메인·경로 함수.
 part of 'storefront-hosting.dart';
 
-/// 공식 쇼케이스 슬러그(`demo-{템플릿 id}`)인지 판정합니다(대소문자 무시).
-bool isShowcaseStorefrontSlug(String slug) => slug.toLowerCase().startsWith(STOREFRONT_SHOWCASE_SLUG_PREFIX);
-
 /// 호스팅 도메인에서 플랫폼이 쓰는 이름이거나 편집 미리보기 주소 모양(`-preview`로 끝남)이라 슬러그로 쓸 수 없는지 판정합니다.
 bool isReservedStorefrontSlug(String slug) {
   final lower = slug.toLowerCase();
@@ -103,4 +100,23 @@ bool isEditableStorefrontPath(String path) {
     if (segment.startsWith('.env')) return false;
   }
   return true;
+}
+
+/// env 키의 문제를 돌려줍니다. 문제가 없으면 null입니다(형식·플랫폼이 쓰는 이름).
+String? storefrontSiteVarKeyProblem(String key) {
+  if (!STOREFRONT_SITE_VAR_KEY_PATTERN.hasMatch(key)) return '키는 영문·숫자·_이고 숫자로 시작하지 않습니다(64자까지)';
+  if (key.startsWith(STOREFRONT_SITE_VAR_RESERVED_PREFIX) || STOREFRONT_SITE_VAR_RESERVED_NAMES.contains(key)) {
+    return '플랫폼이 쓰는 이름입니다';
+  }
+  return null;
+}
+
+/// 배포(CLI `sayren deploy`·Git 운영 브랜치 push)가 만든 버전을 바로 게시하는지 판정합니다.
+///
+/// 버전 저장이 없는 요금제([versionHistory]가 false)면 늘 게시합니다. 그 밖에는 사이트 설정([siteSetting])이 있으면 그것,
+/// 없으면 소스의 `sayren.json` `deploy.production`([projectSetting]), 그것도 없으면 저장만 합니다.
+/// CLI `--production`은 이 판정과 무관하게 게시합니다.
+bool resolveStorefrontDeployProduction(bool? siteSetting, bool? projectSetting, [bool? versionHistory]) {
+  if (versionHistory == false) return true;
+  return siteSetting ?? projectSetting ?? false;
 }

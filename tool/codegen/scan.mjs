@@ -107,7 +107,7 @@ export function interfaceMembers(decl) {
   const members = [];
   const collect = (d) => {
     for (const h of d.heritageClauses ?? []) {
-      for (const t of h.types) members.push({ extends: t.expression.getText() });
+      for (const t of h.types) members.push({ extends: t.typeArguments?.length ? t.getText() : t.expression.getText() });
     }
     for (const m of d.members) {
       if (ts.isMethodSignature(m)) {

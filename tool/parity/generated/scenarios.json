@@ -39,7 +39,20 @@
             "privacy": true,
             "marketing": true
           },
-          "cartToken": "sample"
+          "cartToken": "sample",
+          "userinfo": {
+            "given_name": "sample",
+            "family_name": "sample",
+            "middle_name": "sample",
+            "nickname": "sample",
+            "preferred_username": "sample",
+            "profile": "https://example.test/a.png",
+            "picture": "https://example.test/a.png",
+            "website": "https://example.test/a.png",
+            "gender": "sample",
+            "birthdate": "2026-01-01",
+            "locale": "sample"
+          }
         }
       ],
       "options": {
@@ -202,6 +215,23 @@
           },
           "error": null
         }
+      }
+    },
+    {
+      "name": "auth.requestPasswordReset 생성 예시",
+      "call": "auth.requestPasswordReset",
+      "args": [
+        {
+          "email": "buyer@example.test",
+          "successUrl": "https://example.test/a.png"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
       }
     },
     {
@@ -869,6 +899,45 @@
       }
     },
     {
+      "name": "catalog.listSitemapProducts 생성 예시",
+      "call": "catalog.listSitemapProducts",
+      "args": [
+        {
+          "page": 1,
+          "size": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "productId": "sample",
+                "name": "sample",
+                "updatedAt": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
       "name": "catalog.listCollections 생성 예시",
       "call": "catalog.listCollections",
       "args": [
@@ -950,7 +1019,20 @@
                   "value": 1,
                   "maxDiscountAmount": 1
                 },
+                "reward": {
+                  "type": "sample",
+                  "tiers": [],
+                  "buy": 1,
+                  "get": 1,
+                  "rate": 1,
+                  "benefit": {
+                    "type": "sample",
+                    "value": 1,
+                    "maxDiscountAmount": 1
+                  }
+                },
                 "minOrderAmount": 1,
+                "requirements": [],
                 "stackWithInstantDiscount": true,
                 "target": {
                   "allProducts": true,
@@ -962,12 +1044,64 @@
                 "startsAt": "sample",
                 "endsAt": "sample",
                 "validDaysAfterIssue": 1,
+                "issueStartsAt": "sample",
+                "issueEndsAt": "sample",
+                "remainingIssueCount": 1,
+                "remainingTodayCount": 1,
                 "perMemberIssueLimit": 1,
                 "loginRequired": true,
                 "downloaded": true,
                 "downloadable": true
               }
             ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "catalog.getCouponBenefit 생성 예시",
+      "call": "catalog.getCouponBenefit",
+      "args": [
+        "id-1",
+        {
+          "quantity": 1,
+          "optionId": "optionId-1"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "productId": "sample",
+            "currency": "sample",
+            "quantity": 1,
+            "amount": 1,
+            "maxDiscountAmount": 1,
+            "priceAfterDiscount": 1,
+            "coupons": [
+              {
+                "couponId": "sample",
+                "issueId": "sample",
+                "name": "sample",
+                "kind": "sample",
+                "discountAmount": 1,
+                "lineId": "sample",
+                "needsDownload": true
+              }
+            ],
+            "withPoints": true,
+            "loginRequired": true
           },
           "error": null
         }
@@ -1143,8 +1277,7 @@
                 "fulfillment": {
                   "type": "sample",
                   "requiresShipping": true,
-                  "method": "sample",
-                  "withdrawalRestricted": true
+                  "method": "sample"
                 },
                 "purchasable": true,
                 "unpurchasableReason": "SOLD_OUT",
@@ -1226,8 +1359,7 @@
                 "fulfillment": {
                   "type": "sample",
                   "requiresShipping": true,
-                  "method": "sample",
-                  "withdrawalRestricted": true
+                  "method": "sample"
                 },
                 "purchasable": true,
                 "unpurchasableReason": "SOLD_OUT",
@@ -1305,8 +1437,7 @@
                 "fulfillment": {
                   "type": "sample",
                   "requiresShipping": true,
-                  "method": "sample",
-                  "withdrawalRestricted": true
+                  "method": "sample"
                 },
                 "purchasable": true,
                 "unpurchasableReason": "SOLD_OUT",
@@ -1437,8 +1568,7 @@
                 "fulfillment": {
                   "type": "sample",
                   "requiresShipping": true,
-                  "method": "sample",
-                  "withdrawalRestricted": true
+                  "method": "sample"
                 }
               }
             ],
@@ -1458,6 +1588,10 @@
               "minAmount": 1,
               "minBalance": 1
             },
+            "couponsEnabled": true,
+            "additionalPayment": true,
+            "orderPasswordRequired": true,
+            "memberOrder": true,
             "delivery": {
               "baseFee": 1,
               "remoteSurcharge": 1,
@@ -1468,17 +1602,107 @@
               "zipCode": "sample"
             },
             "requiresShipping": true,
-            "withdrawal": {
-              "required": true,
-              "notice": "sample"
-            },
             "expiresAt": "sample",
             "paymentOptions": [
               {
                 "pg": "tosspayments",
                 "method": "CARD",
                 "label": "sample",
-                "pgName": "sample"
+                "pgName": "sample",
+                "logoUrl": "sample"
+              }
+            ],
+            "testPayment": true
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "checkout.get 생성 예시",
+      "call": "checkout.get",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "checkoutId": "sample",
+            "currency": "sample",
+            "items": [
+              {
+                "lineId": "sample",
+                "productId": "sample",
+                "productName": "sample",
+                "thumbnailUrl": "https://example.test/a.png",
+                "optionId": "sample",
+                "optionName": "sample",
+                "optionSelections": [],
+                "customInputs": [],
+                "stay": {
+                  "checkIn": "sample",
+                  "checkOut": "sample",
+                  "nights": []
+                },
+                "quantity": 1,
+                "unitPrice": 1,
+                "totalPrice": 1,
+                "fulfillment": {
+                  "type": "sample",
+                  "requiresShipping": true,
+                  "method": "sample"
+                }
+              }
+            ],
+            "amounts": {
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "totalAmount": 1,
+              "couponDiscountAmount": 1,
+              "deliveryDiscountAmount": 1,
+              "pointAmount": 1
+            },
+            "points": {
+              "enabled": true,
+              "balance": 1,
+              "maxUsable": 1,
+              "unit": 1,
+              "minAmount": 1,
+              "minBalance": 1
+            },
+            "couponsEnabled": true,
+            "additionalPayment": true,
+            "orderPasswordRequired": true,
+            "memberOrder": true,
+            "delivery": {
+              "baseFee": 1,
+              "remoteSurcharge": 1,
+              "remoteArea": "NONE",
+              "remoteAreaLabel": "sample",
+              "bundleCount": 1,
+              "freeByThreshold": true,
+              "zipCode": "sample"
+            },
+            "requiresShipping": true,
+            "expiresAt": "sample",
+            "paymentOptions": [
+              {
+                "pg": "tosspayments",
+                "method": "CARD",
+                "label": "sample",
+                "pgName": "sample",
+                "logoUrl": "sample"
               }
             ],
             "testPayment": true
@@ -1561,6 +1785,7 @@
             "email": "buyer@example.test",
             "orderPassword": "sample"
           },
+          "orderPassword": "sample",
           "cashReceipt": {
             "type": "INCOME_DEDUCTION",
             "identityNumber": "01012345678"
@@ -1592,6 +1817,7 @@
             "paymentId": "sample",
             "status": "sample",
             "orderId": "sample",
+            "orderNo": "sample",
             "attemptId": "sample",
             "option": {
               "pg": "tosspayments",
@@ -1664,6 +1890,7 @@
               "couponDiscountAmount": 1,
               "deliveryDiscountAmount": 1,
               "pointAmount": 1,
+              "rewardPointAmount": 1,
               "totalAmount": 1
             },
             "coupons": [
@@ -1678,8 +1905,21 @@
                   "value": 1,
                   "maxDiscountAmount": 1
                 },
+                "reward": {
+                  "type": "sample",
+                  "tiers": [],
+                  "buy": 1,
+                  "get": 1,
+                  "rate": 1,
+                  "benefit": {
+                    "type": "sample",
+                    "value": 1,
+                    "maxDiscountAmount": 1
+                  }
+                },
                 "applied": true,
                 "discountAmount": 1,
+                "rewardPoint": 1,
                 "rejectReason": "sample",
                 "optionId": "sample",
                 "lineId": "sample"
@@ -1737,13 +1977,79 @@
                 "value": 1,
                 "maxDiscountAmount": 1
               },
+              "reward": {
+                "type": "sample",
+                "tiers": [],
+                "buy": 1,
+                "get": 1,
+                "rate": 1,
+                "benefit": {
+                  "type": "sample",
+                  "value": 1,
+                  "maxDiscountAmount": 1
+                }
+              },
               "minOrderAmount": 1,
+              "requirements": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1,
+                  "label": "sample"
+                }
+              ],
               "validUntil": "sample",
               "applicable": true,
               "expectedDiscountAmount": 1,
               "rejectReason": "sample"
             }
           ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "checkout.bestCoupons 생성 예시",
+      "call": "checkout.bestCoupons",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "applications": [
+              {
+                "code": "sample",
+                "optionId": "sample",
+                "lineId": "sample"
+              }
+            ],
+            "coupons": [
+              {
+                "couponId": "sample",
+                "issueId": "sample",
+                "name": "sample",
+                "kind": "sample",
+                "discountAmount": 1,
+                "lineId": "sample",
+                "needsDownload": true
+              }
+            ],
+            "discountAmount": 1,
+            "totalAmount": 1,
+            "withPoints": true
+          },
           "error": null
         }
       }
@@ -1772,6 +2078,7 @@
             "status": "sample",
             "result": "sample",
             "orderId": "sample",
+            "orderNo": "sample",
             "lastFailure": {
               "attemptId": "sample",
               "category": "sample",
@@ -1820,6 +2127,7 @@
             "paymentId": "sample",
             "status": "sample",
             "orderId": "sample",
+            "orderNo": "sample",
             "attemptId": "sample",
             "option": {
               "pg": "tosspayments",
@@ -1989,7 +2297,8 @@
                   "pointRefundedAmount": 1
                 },
                 "currency": "sample",
-                "testPayment": true
+                "testPayment": true,
+                "payments": []
               }
             ]
           },
@@ -2065,11 +2374,17 @@
                 "reviewWritten": true,
                 "reviewWritable": true,
                 "autoDecisionDate": "sample",
+                "flow": {
+                  "key": "sample",
+                  "version": 1
+                },
                 "flowState": {
                   "key": "sample",
                   "label": "sample",
+                  "labelKey": "sample",
                   "coreStatus": "PAYMENT_WAITING",
                   "message": "sample",
+                  "messageKey": "sample",
                   "enteredAt": "sample",
                   "deadlineAt": "sample",
                   "attachments": [],
@@ -2088,7 +2403,9 @@
                 "step": {
                   "type": "sample",
                   "label": "sample",
+                  "labelKey": "sample",
                   "message": "sample",
+                  "messageKey": "sample",
                   "deadlineAt": "sample",
                   "attachments": [],
                   "earlierAttachments": [],
@@ -2144,7 +2461,18 @@
               "pointRefundedAmount": 1
             },
             "currency": "sample",
-            "testPayment": true
+            "testPayment": true,
+            "payments": [
+              {
+                "paymentId": "sample",
+                "additional": true,
+                "amount": 1,
+                "approvedMethod": "sample",
+                "easyPayProvider": "sample",
+                "paidAt": "sample",
+                "refundedAmount": 1
+              }
+            ]
           },
           "error": null
         }
@@ -2222,11 +2550,17 @@
                 "reviewWritten": true,
                 "reviewWritable": true,
                 "autoDecisionDate": "sample",
+                "flow": {
+                  "key": "sample",
+                  "version": 1
+                },
                 "flowState": {
                   "key": "sample",
                   "label": "sample",
+                  "labelKey": "sample",
                   "coreStatus": "PAYMENT_WAITING",
                   "message": "sample",
+                  "messageKey": "sample",
                   "enteredAt": "sample",
                   "deadlineAt": "sample",
                   "attachments": [],
@@ -2245,7 +2579,9 @@
                 "step": {
                   "type": "sample",
                   "label": "sample",
+                  "labelKey": "sample",
                   "message": "sample",
+                  "messageKey": "sample",
                   "deadlineAt": "sample",
                   "attachments": [],
                   "earlierAttachments": [],
@@ -2301,7 +2637,18 @@
               "pointRefundedAmount": 1
             },
             "currency": "sample",
-            "testPayment": true
+            "testPayment": true,
+            "payments": [
+              {
+                "paymentId": "sample",
+                "additional": true,
+                "amount": 1,
+                "approvedMethod": "sample",
+                "easyPayProvider": "sample",
+                "paidAt": "sample",
+                "refundedAmount": 1
+              }
+            ]
           },
           "error": null
         }
@@ -2388,8 +2735,10 @@
             "flowState": {
               "key": "sample",
               "label": "sample",
+              "labelKey": "sample",
               "coreStatus": "PAYMENT_WAITING",
               "message": "sample",
+              "messageKey": "sample",
               "enteredAt": "sample",
               "deadlineAt": "sample",
               "attachments": [
@@ -2411,6 +2760,7 @@
               {
                 "key": "sample",
                 "label": "sample",
+                "labelKey": "sample",
                 "mode": "INSTANT",
                 "enabled": true,
                 "disabled": {
@@ -2469,8 +2819,10 @@
             "flowState": {
               "key": "sample",
               "label": "sample",
+              "labelKey": "sample",
               "coreStatus": "PAYMENT_WAITING",
               "message": "sample",
+              "messageKey": "sample",
               "enteredAt": "sample",
               "deadlineAt": "sample",
               "attachments": [
@@ -2492,6 +2844,7 @@
               {
                 "key": "sample",
                 "label": "sample",
+                "labelKey": "sample",
                 "mode": "INSTANT",
                 "enabled": true,
                 "disabled": {
@@ -2787,7 +3140,36 @@
             "point": 1,
             "marketingAgreed": true,
             "joinedAt": "sample",
-            "reconsentRequired": true
+            "reconsentRequired": true,
+            "userinfo": {
+              "sub": "sample",
+              "name": "sample",
+              "given_name": "sample",
+              "family_name": "sample",
+              "middle_name": "sample",
+              "nickname": "sample",
+              "preferred_username": "sample",
+              "profile": "sample",
+              "picture": "sample",
+              "website": "sample",
+              "email": "sample",
+              "email_verified": true,
+              "gender": "sample",
+              "birthdate": "sample",
+              "zoneinfo": "sample",
+              "locale": "sample",
+              "phone_number": "sample",
+              "phone_number_verified": true,
+              "address": {
+                "formatted": "sample",
+                "street_address": "sample",
+                "locality": "sample",
+                "region": "sample",
+                "postal_code": "sample",
+                "country": "sample"
+              },
+              "updated_at": 1
+            }
           },
           "error": null
         }
@@ -2866,7 +3248,20 @@
         {
           "name": "sample",
           "phone": "sample",
-          "marketingAgreed": true
+          "marketingAgreed": true,
+          "userinfo": {
+            "given_name": "sample",
+            "family_name": "sample",
+            "middle_name": "sample",
+            "nickname": "sample",
+            "preferred_username": "sample",
+            "profile": "https://example.test/a.png",
+            "picture": "https://example.test/a.png",
+            "website": "https://example.test/a.png",
+            "gender": "sample",
+            "birthdate": "2026-01-01",
+            "locale": "sample"
+          }
         }
       ],
       "options": {
@@ -3429,7 +3824,27 @@
                 "value": 1,
                 "maxDiscountAmount": 1
               },
+              "reward": {
+                "type": "sample",
+                "tiers": [],
+                "buy": 1,
+                "get": 1,
+                "rate": 1,
+                "benefit": {
+                  "type": "sample",
+                  "value": 1,
+                  "maxDiscountAmount": 1
+                }
+              },
               "minOrderAmount": 1,
+              "requirements": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1,
+                  "label": "sample"
+                }
+              ],
               "status": "sample",
               "validFrom": "sample",
               "validUntil": "sample",
@@ -3472,7 +3887,109 @@
               "value": 1,
               "maxDiscountAmount": 1
             },
+            "reward": {
+              "type": "sample",
+              "tiers": [
+                {
+                  "minAmount": 1,
+                  "benefit": {
+                    "type": "sample",
+                    "value": 1,
+                    "maxDiscountAmount": 1
+                  }
+                }
+              ],
+              "buy": 1,
+              "get": 1,
+              "rate": 1,
+              "benefit": {
+                "type": "sample",
+                "value": 1,
+                "maxDiscountAmount": 1
+              }
+            },
             "minOrderAmount": 1,
+            "requirements": [
+              {
+                "field": "sample",
+                "operator": "sample",
+                "value": 1,
+                "label": "sample"
+              }
+            ],
+            "status": "sample",
+            "validFrom": "sample",
+            "validUntil": "sample",
+            "usedOrderId": "sample",
+            "issuedAt": "sample",
+            "source": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "me.registerCoupon 생성 예시",
+      "call": "me.registerCoupon",
+      "args": [
+        {
+          "code": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "issueId": "sample",
+            "couponId": "sample",
+            "name": "sample",
+            "description": "sample",
+            "kind": "sample",
+            "benefit": {
+              "type": "sample",
+              "value": 1,
+              "maxDiscountAmount": 1
+            },
+            "reward": {
+              "type": "sample",
+              "tiers": [
+                {
+                  "minAmount": 1,
+                  "benefit": {
+                    "type": "sample",
+                    "value": 1,
+                    "maxDiscountAmount": 1
+                  }
+                }
+              ],
+              "buy": 1,
+              "get": 1,
+              "rate": 1,
+              "benefit": {
+                "type": "sample",
+                "value": 1,
+                "maxDiscountAmount": 1
+              }
+            },
+            "minOrderAmount": 1,
+            "requirements": [
+              {
+                "field": "sample",
+                "operator": "sample",
+                "value": 1,
+                "label": "sample"
+              }
+            ],
             "status": "sample",
             "validFrom": "sample",
             "validUntil": "sample",

@@ -45,7 +45,7 @@ sealed class PaymentResult {
 /// 결제가 끝나 주문이 만들어졌습니다.
 final class PaymentResultCompleted extends PaymentResult {
   /// 결과를 만듭니다.
-  const PaymentResultCompleted({required this.paymentId, required this.orderId});
+  const PaymentResultCompleted({required this.paymentId, required this.orderId, required this.orderNo});
 
   @override
   String get status => 'COMPLETED';
@@ -56,8 +56,11 @@ final class PaymentResultCompleted extends PaymentResult {
   /// 만들어진 주문 ID입니다. 주문 완료 화면으로 보냅니다.
   final String orderId;
 
+  /// 숫자 주문번호(14자리)입니다. 구매자에게 보이는 번호이고 `formatOrderNo`로 표시합니다. 번호를 싣지 않는 서버면 null입니다.
+  final String? orderNo;
+
   @override
-  Map<String, Object?> toJson() => {'status': status, 'paymentId': paymentId, 'orderId': orderId};
+  Map<String, Object?> toJson() => {'status': status, 'paymentId': paymentId, 'orderId': orderId, 'orderNo': orderNo};
 }
 
 /// 구매자가 결제창을 닫았습니다. 같은 결제를 다른 옵션으로 [Payments.retry]할 수 있습니다.
@@ -192,6 +195,7 @@ class StartOptions {
     this.option,
     this.shippingAddress,
     this.guest,
+    this.orderPassword,
     this.cashReceipt,
     this.coupons,
     this.pointAmount,
@@ -209,6 +213,9 @@ class StartOptions {
 
   /// 비회원 주문 정보입니다.
   final GuestInfo? guest;
+
+  /// 주문 조회 비밀번호입니다. 주문서의 `orderPasswordRequired`가 true(셀러가 만든 비회원 주문의 결제 요청)일 때 보냅니다.
+  final String? orderPassword;
 
   /// 현금영수증 신청입니다. 계좌이체·가상계좌 옵션에서만 보냅니다.
   final CashReceiptRequest? cashReceipt;
@@ -286,7 +293,7 @@ PaymentResult paymentResultOf(PaymentStatus status, {bool popupClosed = false}) 
   if (result == 'COMPLETED') {
     final orderId = status.orderId;
     return orderId != null && orderId.isNotEmpty
-        ? PaymentResultCompleted(paymentId: paymentId, orderId: orderId)
+        ? PaymentResultCompleted(paymentId: paymentId, orderId: orderId, orderNo: status.orderNo)
         : PaymentResultProcessing(paymentId: paymentId);
   }
   if (result == 'CANCELED') {
@@ -416,7 +423,7 @@ class _Payments implements Payments {
   Future<PaymentResult> _settleWithoutWindow(PaymentStart start) async {
     final orderId = start.orderId;
     if (start.status == 'completed' && orderId != null && orderId.isNotEmpty) {
-      return PaymentResultCompleted(paymentId: start.paymentId, orderId: orderId);
+      return PaymentResultCompleted(paymentId: start.paymentId, orderId: orderId, orderNo: start.orderNo);
     }
     return _statusResult(start.paymentId);
   }
@@ -486,6 +493,7 @@ class _Payments implements Payments {
         option: startOptions.option,
         shippingAddress: startOptions.shippingAddress,
         guest: startOptions.guest,
+        orderPassword: (startOptions.orderPassword?.isNotEmpty ?? false) ? startOptions.orderPassword : null,
         cashReceipt: startOptions.cashReceipt,
         coupons: startOptions.coupons,
         pointAmount: (startOptions.pointAmount ?? 0) == 0 ? null : startOptions.pointAmount,

@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'market.dart';
 import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -249,7 +256,7 @@ const POINT_POLICY_DEFAULTS = <String, Map<String, Object?>?>{
 };
 
 /// 적립 묶음 출처 — 같은 출처 id에는 묶음이 하나뿐입니다(DB 부분 유니크).
-const POINT_LOT_SOURCES = <String>['REVIEW', 'PURCHASE', 'ADJUST', 'REFUND_RESTORE', 'OPENING'];
+const POINT_LOT_SOURCES = <String>['REVIEW', 'PURCHASE', 'ADJUST', 'REFUND_RESTORE', 'OPENING', 'COUPON'];
 
 /// PointLotSource 값입니다.
 typedef PointLotSource = String;
@@ -259,12 +266,14 @@ const POINT_ENTRY_TYPES = <String>[
   'EARN_REVIEW',
   'REVOKE_REVIEW',
   'EARN_PURCHASE',
+  'REVOKE_PURCHASE',
   'USE_RESERVE',
   'USE_RELEASE',
   'REFUND_RESTORE',
   'EXPIRE',
   'ADJUST',
-  'OPENING'
+  'OPENING',
+  'EARN_COUPON'
 ];
 
 /// PointEntryType 값입니다.
@@ -371,7 +380,7 @@ final ZodObject<UpdatePointPolicyRequest> updatePointPolicyRequestSchema = z.obj
   'purchaseEarn': purchaseEarnPolicySchema.optional(),
   'use': pointUsePolicySchema.optional(),
   'expiryDays': z.number().int_().greaterThan(30, inclusive: true).lessThan(1825, inclusive: true).optional(),
-}, UpdatePointPolicyRequest._);
+}, UpdatePointPolicyRequest._, strictRequest: true);
 
 /// `PUT /v1/store/point-policy` 본문 — 준 항목만 바꿉니다(생략 = 저장된 값 유지). 리뷰 적립·구매 적립 중 하나라도 켜면 유효 기간이 있어야 합니다
 /// (본문이나 저장된 값, 없으면 400 `POINT_EXPIRY_REQUIRED`).
@@ -414,12 +423,14 @@ final ZodType<String> responsePointEntryTypeSchema = z.union<String>([
     'EARN_REVIEW',
     'REVOKE_REVIEW',
     'EARN_PURCHASE',
+    'REVOKE_PURCHASE',
     'USE_RESERVE',
     'USE_RELEASE',
     'REFUND_RESTORE',
     'EXPIRE',
     'ADJUST',
-    'OPENING'
+    'OPENING',
+    'EARN_COUPON'
   ]),
   z.string(),
 ]);
@@ -483,7 +494,7 @@ class PointEntry extends ParsedObject {
   /// `memberId` 값입니다.
   String get memberId => _j['memberId'] as String;
 
-  /// 유형. `EARN_REVIEW` 리뷰 적립 · `REVOKE_REVIEW` 리뷰 삭제 회수 · `EARN_PURCHASE` 구매 적립 · `EXPIRE` 소멸 · `ADJUST` 셀러 지급·차감 · `OPENING` 기존 잔액 이전 · `USE_RESERVE` 결제 사용(결제 시작 때 빠짐) · `USE_RELEASE` 결제가 실패·만료되어 되돌림 · `REFUND_RESTORE` 취소·반품 환불로 반환. 값이 추가될 수 있어 문자열로 받습니다.
+  /// 유형. `EARN_REVIEW` 리뷰 적립 · `REVOKE_REVIEW` 리뷰 삭제 회수 · `EARN_PURCHASE` 구매 적립 · `REVOKE_PURCHASE` 판매자 취소의 구매 적립 회수 · `EXPIRE` 소멸 · `ADJUST` 셀러 지급·차감 · `OPENING` 기존 잔액 이전 · `USE_RESERVE` 결제 사용(결제 시작 때 빠짐) · `USE_RELEASE` 결제가 실패·만료되어 되돌림 · `REFUND_RESTORE` 취소·반품 환불로 반환 · `EARN_COUPON` 적립금 지급 쿠폰. 값이 추가될 수 있어 문자열로 받습니다.
   String get type => _j['type'] as String;
 
   /// 변동액. 적립 +, 회수·차감·소멸 −.
@@ -514,7 +525,7 @@ class PointEntry extends ParsedObject {
 final ZodObject<PointLot> pointLotSchema = z.object<PointLot>({
   'lotId': z.string(),
   'source': z.union<String>([
-    z.enum_(['REVIEW', 'PURCHASE', 'ADJUST', 'REFUND_RESTORE', 'OPENING']),
+    z.enum_(['REVIEW', 'PURCHASE', 'ADJUST', 'REFUND_RESTORE', 'OPENING', 'COUPON']),
     z.string(),
   ]),
   'amount': z.number().int_(),
@@ -552,7 +563,7 @@ class PointLot extends ParsedObject {
   /// `lotId` 값입니다.
   String get lotId => _j['lotId'] as String;
 
-  /// 출처. `REVIEW`·`PURCHASE`·`ADJUST`·`REFUND_RESTORE`·`OPENING` 등.
+  /// 출처. `REVIEW`·`PURCHASE`·`ADJUST`·`REFUND_RESTORE`·`OPENING`·`COUPON` 등.
   String get source => _j['source'] as String;
 
   /// 적립한 금액.
@@ -686,7 +697,7 @@ final ZodObject<PointAdjustmentRequest> pointAdjustmentRequestSchema = z.object<
               r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
           format: 'datetime')
       .optional(),
-}, PointAdjustmentRequest._).refine((v) {
+}, PointAdjustmentRequest._, strictRequest: true).refine((v) {
   final j = jsonOf(v as ParsedObject);
   return !((j['amount'] as num) < 0 && truthy(j['expiresAt']));
 }, message: '차감에는 소멸 시각을 줄 수 없습니다', path: ['expiresAt']);

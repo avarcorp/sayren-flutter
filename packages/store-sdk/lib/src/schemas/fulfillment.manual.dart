@@ -60,10 +60,11 @@ typedef ProductFulfillmentOf<T extends FulfillmentType> = ProductFulfillment;
 ZodType<Object?> openFulfillmentUnion<T>(ZodType<T> known) => z.union<Object?>([
       known,
       z.pipe<UnknownFulfillment>(
-          z.plainObject({
-            'type': z.string().refine((v) => !_knownFulfillmentTypes.contains(v), message: '알려진 유형은 해당 유형의 모양이어야 합니다'),
-          }, loose: true),
-          z.transform<UnknownFulfillment>(_unknownFulfillment)),
+        z.plainObject({
+          'type': z.string().refine((v) => !_knownFulfillmentTypes.contains(v), message: '알려진 유형은 해당 유형의 모양이어야 합니다'),
+        }, loose: true),
+        z.transform<UnknownFulfillment>(_unknownFulfillment),
+      ),
     ]);
 
 /// 모르는 이행 유형 transform — SDK가 모르는 유형을 `OTHER`로 읽는다

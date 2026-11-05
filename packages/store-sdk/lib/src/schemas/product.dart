@@ -16,16 +16,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -35,6 +40,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'promotion.dart';
@@ -50,6 +56,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -651,7 +658,7 @@ final ZodObject<AddonValueRequest> addonValueRequestSchema = z.object<AddonValue
   'additionalPrice': z.number().int_().greaterThan(0, inclusive: true).withDefault(0),
   'prices': additionalCurrencyPricesSchema.optional(),
   'usable': z.boolean().withDefault(true),
-}, AddonValueRequest._);
+}, AddonValueRequest._, strict: true);
 
 /// AddonValueRequest 값입니다.
 class AddonValueRequest extends ParsedObject {
@@ -699,7 +706,7 @@ final ZodObject<AddonGroupRequest> addonGroupRequestSchema = z.object<AddonGroup
   'name': z.string().trim().min(1).max(50),
   'required': z.boolean().withDefault(false),
   'values': z.array<AddonValueRequest>(addonValueRequestSchema).min(1).max(100),
-}, AddonGroupRequest._);
+}, AddonGroupRequest._, strict: true);
 
 /// AddonGroupRequest 값입니다.
 class AddonGroupRequest extends ParsedObject {
@@ -739,7 +746,7 @@ final ZodObject<CustomInputRequest> customInputRequestSchema = z.object<CustomIn
   'key': z.string().pattern(RegExp(r'^[a-z][a-zA-Z0-9_]{0,39}$')).nullable().optional(),
   'type': z.enum_(['text', 'number', 'select', 'date', 'datetime', 'image']).optional(),
   'options': z.array<String>(z.string().trim().min(1).max(50)).min(1).max(30).nullable().optional(),
-}, CustomInputRequest._);
+}, CustomInputRequest._, strict: true);
 
 /// CustomInputRequest 값입니다.
 class CustomInputRequest extends ParsedObject {
@@ -1215,7 +1222,7 @@ class ProductImageRejection {
 final ZodObject<OptionValueRequest> optionValueRequestSchema = z.object<OptionValueRequest>({
   'valueId': z.string().optional(),
   'name': z.string().min(1).max(50),
-}, OptionValueRequest._);
+}, OptionValueRequest._, strict: true);
 
 /// OptionValueRequest 값입니다.
 class OptionValueRequest extends ParsedObject {
@@ -1242,7 +1249,7 @@ final ZodObject<OptionGroupRequest> optionGroupRequestSchema = z.object<OptionGr
   'groupId': z.string().optional(),
   'name': z.string().min(1).max(50),
   'values': z.array<OptionValueRequest>(optionValueRequestSchema).min(1).max(100),
-}, OptionGroupRequest._);
+}, OptionGroupRequest._, strict: true);
 
 /// OptionGroupRequest 값입니다.
 class OptionGroupRequest extends ParsedObject {
@@ -1282,7 +1289,7 @@ final ZodObject<ProductVariantRequest> productVariantRequestSchema = z.object<Pr
   'usable': z.boolean().withDefault(true),
   'attributes':
       z.record<String>(z.string().max(100)).refine((v) => keyCount(v) <= 10, message: '조합 속성은 10개까지입니다').optional(),
-}, ProductVariantRequest._);
+}, ProductVariantRequest._, strict: true);
 
 /// ProductVariantRequest 값입니다.
 class ProductVariantRequest extends ParsedObject {
@@ -1370,7 +1377,7 @@ final ZodObject<OptionModelRequest> optionModelRequestSchema = z.object<OptionMo
   'addonGroups': z.array<AddonGroupRequest>(addonGroupRequestSchema).max(5).optional(),
   'customInputs': z.array<CustomInputRequest>(customInputRequestSchema).max(5).optional(),
   'optionSort': optionSortSchema.optional(),
-}, OptionModelRequest._);
+}, OptionModelRequest._, strict: true);
 
 /// 축 × 값 → variant 전체 교체 요청 (PUT /products/{productId}/options).
 class OptionModelRequest extends ParsedObject {
@@ -1535,7 +1542,7 @@ class VariantStock extends ParsedObject {
 final ZodObject<ProductCreateRequest> productCreateRequestSchema = z.object<ProductCreateRequest>({
   'name': z.string().min(1).max(100),
   'categoryId': z.string().min(1),
-  'salePrice': z.number().int_().greaterThan(10, inclusive: true).multipleOf(10),
+  'salePrice': z.number().int_().greaterThan(0, inclusive: true).multipleOf(10),
   'originalPrice': z.number().int_().optional(),
   'pointEarnRateBp': pointEarnRateBpSchema.nullable().optional(),
   'prices': productCurrencyPricesSchema.optional(),
@@ -1556,7 +1563,7 @@ final ZodObject<ProductCreateRequest> productCreateRequestSchema = z.object<Prod
   'inventoryMode': inventoryModeSchema.optional(),
   'flowId': z.string().nullable().optional(),
   'fulfillment': productFulfillmentCreateSchema.optional(),
-}, ProductCreateRequest._);
+}, ProductCreateRequest._, strict: true);
 
 /// ProductCreateRequest 값입니다.
 class ProductCreateRequest extends ParsedObject {
@@ -1624,7 +1631,7 @@ class ProductCreateRequest extends ParsedObject {
   /// `categoryId` 값입니다.
   String get categoryId => _j['categoryId'] as String;
 
-  /// 판매가. 원(KRW) 단위 정수, 최소 10원, 10원 단위.
+  /// 판매가. 원(KRW) 단위 정수, 0 또는 10원 단위. 0원 상품만 담은 주문(배송비도 0)은 결제창 없이 결제 시작에서 바로 주문됩니다.
   int get salePrice => _j['salePrice'] as int;
 
   /// 정가(할인 전 표시 가격). 원 단위. 비교용 표시 값이고 결제 금액은 판매가(즉시할인이 있으면 할인 적용가)다. 스토어프론트가 판매가보다 클 때 취소선·할인율로 보입니다. 즉시할인은 `PUT /v1/products/{productId}/discount`로 따로 정합니다.
@@ -1694,7 +1701,7 @@ final ZodObject<ProductCreateRequestAttributesItem> productCreateRequestAttribut
     z.object<ProductCreateRequestAttributesItem>({
   'attributeId': z.string(),
   'value': z.string(),
-}, ProductCreateRequestAttributesItem._);
+}, ProductCreateRequestAttributesItem._, strict: true);
 
 /// ProductCreateRequestAttributesItem 값입니다.
 class ProductCreateRequestAttributesItem extends ParsedObject {
@@ -1726,7 +1733,7 @@ typedef ProductCreateRequestInput = ProductCreateRequest;
 final ZodObject<ProductReplaceRequest> productReplaceRequestSchema = z.object<ProductReplaceRequest>({
   'name': z.string().min(1).max(100),
   'categoryId': z.string().min(1),
-  'salePrice': z.number().int_().greaterThan(10, inclusive: true).multipleOf(10),
+  'salePrice': z.number().int_().greaterThan(0, inclusive: true).multipleOf(10),
   'originalPrice': z.number().int_().optional(),
   'pointEarnRateBp': pointEarnRateBpSchema.nullable().optional(),
   'prices': productCurrencyPricesSchema.optional(),
@@ -1747,7 +1754,7 @@ final ZodObject<ProductReplaceRequest> productReplaceRequestSchema = z.object<Pr
   'inventoryMode': inventoryModeSchema.optional(),
   'flowId': z.string().nullable().optional(),
   'fulfillment': productFulfillmentUpdateSchema.optional(),
-}, ProductReplaceRequest._);
+}, ProductReplaceRequest._, strict: true);
 
 /// 전체 수정(PUT) — 공통 필드는 등록과 같고, 이행은 생략하면 현재 값 유지, 주면 필드가 모두 필수입니다.
 class ProductReplaceRequest extends ParsedObject {
@@ -1815,7 +1822,7 @@ class ProductReplaceRequest extends ParsedObject {
   /// `categoryId` 값입니다.
   String get categoryId => _j['categoryId'] as String;
 
-  /// 판매가. 원(KRW) 단위 정수, 최소 10원, 10원 단위.
+  /// 판매가. 원(KRW) 단위 정수, 0 또는 10원 단위. 0원 상품만 담은 주문(배송비도 0)은 결제창 없이 결제 시작에서 바로 주문됩니다.
   int get salePrice => _j['salePrice'] as int;
 
   /// 정가(할인 전 표시 가격). 원 단위. 비교용 표시 값이고 결제 금액은 판매가(즉시할인이 있으면 할인 적용가)다. 스토어프론트가 판매가보다 클 때 취소선·할인율로 보입니다. 즉시할인은 `PUT /v1/products/{productId}/discount`로 따로 정합니다.
@@ -1894,7 +1901,7 @@ final ZodObject<ProductPatchRequest> productPatchRequestSchema = z.object<Produc
   'prices': productCurrencyPricesSchema.optional(),
   'refundPolicy': productRefundPolicyPatchSchema.nullable().optional(),
   'pointEarnRateBp': pointEarnRateBpSchema.nullable().optional(),
-}, ProductPatchRequest._).refine((v) => jsonOf(v as ParsedObject).isNotEmpty, message: '최소 1개 필드가 필요합니다');
+}, ProductPatchRequest._, strict: true).refine((v) => jsonOf(v as ParsedObject).isNotEmpty, message: '최소 1개 필드가 필요합니다');
 
 /// ProductPatchRequest 값입니다.
 class ProductPatchRequest extends ParsedObject {
@@ -2078,7 +2085,7 @@ final ZodObject<DiscountRequest> discountRequestSchema = z.object<DiscountReques
   'discountValue': z.number().int_().greaterThan(1, inclusive: true),
   'startAt': z.string().optional(),
   'endAt': z.string().optional(),
-}, DiscountRequest._);
+}, DiscountRequest._, strictRequest: true);
 
 /// DiscountRequest 값입니다.
 class DiscountRequest extends ParsedObject {

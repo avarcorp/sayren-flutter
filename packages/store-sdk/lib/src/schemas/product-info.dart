@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -34,6 +39,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-localization.dart';
 import 'product.dart';
 import 'promotion.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -282,7 +289,7 @@ final ZodObject<ProductNoticeRequest> productNoticeRequestSchema = z.object<Prod
   'schemaId': z.string().trim().min(1).max(50),
   'version': z.number().int_().greaterThan(0, inclusive: false).optional(),
   'values': z.record<String>(z.string().max(1500)).withDefault(const {}),
-}, ProductNoticeRequest._);
+}, ProductNoticeRequest._, strict: true);
 
 /// ProductNoticeRequest 값입니다.
 class ProductNoticeRequest extends ParsedObject {
@@ -419,7 +426,7 @@ final ZodObject<ProductCertificationsRequest> productCertificationsRequestSchema
       .array<ProductCertificationsRequestItemsItem>(productCertificationsRequestItemsItemSchema)
       .max(20)
       .withDefault(const []),
-}, ProductCertificationsRequest._);
+}, ProductCertificationsRequest._, strict: true);
 
 /// ProductCertificationsRequest 값입니다.
 class ProductCertificationsRequest extends ParsedObject {
@@ -452,7 +459,7 @@ final ZodObject<ProductCertificationsRequestSubjectsItem> productCertificationsR
   'subject': z.string().trim().min(1).max(50),
   'status': z.enum_(['REQUIRED', 'NOT_REQUIRED', 'EXEMPT']),
   'exemption': z.string().trim().min(1).max(50).nullable().optional(),
-}, ProductCertificationsRequestSubjectsItem._);
+}, ProductCertificationsRequestSubjectsItem._, strict: true);
 
 /// ProductCertificationsRequestSubjectsItem 값입니다.
 class ProductCertificationsRequestSubjectsItem extends ParsedObject {
@@ -485,7 +492,7 @@ final ZodObject<ProductCertificationsRequestItemsItem> productCertificationsRequ
   'kind': z.string().trim().min(1).max(50),
   'agency': z.string().trim().max(100).nullable().optional(),
   'number': z.string().trim().min(1).max(100),
-}, ProductCertificationsRequestItemsItem._);
+}, ProductCertificationsRequestItemsItem._, strict: true);
 
 /// ProductCertificationsRequestItemsItem 값입니다.
 class ProductCertificationsRequestItemsItem extends ParsedObject {
@@ -590,7 +597,7 @@ final ZodObject<InfoSectionRequest> infoSectionRequestSchema = z.object<InfoSect
   'title': z.string().trim().min(1).max(100),
   'body': z.string().withDefault(''),
   'bodyJson': z.string().nullable().optional(),
-}, InfoSectionRequest._);
+}, InfoSectionRequest._, strictRequest: true);
 
 /// InfoSectionRequest 값입니다.
 class InfoSectionRequest extends ParsedObject {
@@ -673,7 +680,7 @@ final ZodObject<InfoSectionLocalizationRequest> infoSectionLocalizationRequestSc
   'title': z.string().trim().min(1).max(100).nullable().optional(),
   'body': z.string().nullable().optional(),
   'bodyJson': z.string().nullable().optional(),
-}, InfoSectionLocalizationRequest._);
+}, InfoSectionLocalizationRequest._, strict: true);
 
 /// `PUT /v1/info-sections/{infoSectionId}/localizations/{locale}` 본문 — 레코드 전체를 바꿉니다. 빠진 칸은 null입니다.
 class InfoSectionLocalizationRequest extends ParsedObject {
@@ -702,3 +709,115 @@ class InfoSectionLocalizationRequest extends ParsedObject {
   /// `bodyJson` 값입니다.
   String? get bodyJson => _j['bodyJson'] as String?;
 }
+
+/// MAX_NOTICE_TEMPLATE_NAME 값입니다.
+const MAX_NOTICE_TEMPLATE_NAME = 100;
+
+/// [NoticeTemplate] 스키마입니다.
+///
+/// 고시 템플릿 (이슈 #250) — 자주 쓰는 고시(품목군 + 칸 값)를 이름 붙여 둡니다. **적용은 복사입니다** — 상품의 `notice`에 같은 값을 실어 저장할 뿐
+/// 상품과 연결하지 않습니다. 템플릿을 고치거나 지워도 적용한 상품의 고시는 바뀌지 않습니다. 이름은 상점 안에서 대소문자·앞뒤 공백을 무시하고 유일합니다.
+final ZodObject<NoticeTemplate> noticeTemplateSchema = z.object<NoticeTemplate>({
+  'templateId': z.string(),
+  'name': z.string(),
+  'schemaId': z.string(),
+  'version': z.number().int_(),
+  'values': z.record<String>(z.string()),
+  'createdAt': z.string(),
+  'updatedAt': z.string(),
+}, NoticeTemplate._);
+
+/// 고시 템플릿 (이슈 #250) — 자주 쓰는 고시(품목군 + 칸 값)를 이름 붙여 둡니다. **적용은 복사입니다** — 상품의 `notice`에 같은 값을 실어 저장할 뿐
+/// 상품과 연결하지 않습니다. 템플릿을 고치거나 지워도 적용한 상품의 고시는 바뀌지 않습니다. 이름은 상점 안에서 대소문자·앞뒤 공백을 무시하고 유일합니다.
+class NoticeTemplate extends ParsedObject {
+  /// [NoticeTemplate]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  NoticeTemplate(
+      {required String templateId,
+      required String name,
+      required String schemaId,
+      required int version,
+      required Map<String, String> values,
+      required String createdAt,
+      required String updatedAt})
+      : super({
+          'templateId': templateId,
+          'name': name,
+          'schemaId': schemaId,
+          'version': version,
+          'values': values,
+          'createdAt': createdAt,
+          'updatedAt': updatedAt
+        });
+
+  NoticeTemplate._(super.json);
+
+  /// JSON을 [noticeTemplateSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory NoticeTemplate.fromJson(Map<String, Object?> json) => noticeTemplateSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `templateId` 값입니다.
+  String get templateId => _j['templateId'] as String;
+
+  /// `name` 값입니다.
+  String get name => _j['name'] as String;
+
+  /// 품목군 코드.
+  String get schemaId => _j['schemaId'] as String;
+
+  /// 품목군 버전.
+  int get version => _j['version'] as int;
+
+  /// 칸 키 → 값. 비운 칸은 없습니다.
+  Map<String, String> get values => (_j['values'] as Map).cast<String, String>();
+
+  /// `createdAt` 값입니다.
+  String get createdAt => _j['createdAt'] as String;
+
+  /// `updatedAt` 값입니다.
+  String get updatedAt => _j['updatedAt'] as String;
+}
+
+/// [NoticeTemplateRequest] 스키마입니다.
+///
+/// `POST /v1/notice-templates`·`PUT /v1/notice-templates/{templateId}` 본문 — 통째로 바꿉니다. 칸 값 규칙은 상품 `notice`와 같습니다
+/// (법정 문구 칸 400 `INVALID_NOTICE_FIELD`, 없는 품목군 400 `INVALID_INFO_CODE`, 길이 초과 400 `NOTICE_VALUE_TOO_LONG`).
+/// 같은 이름이 있으면 409 `NOTICE_TEMPLATE_NAME_TAKEN`.
+final ZodObject<NoticeTemplateRequest> noticeTemplateRequestSchema = z.object<NoticeTemplateRequest>({
+  'name': z.string().trim().min(1).max(100),
+  'schemaId': z.string().trim().min(1).max(50),
+  'version': z.number().int_().greaterThan(0, inclusive: false).optional(),
+  'values': z.record<String>(z.string().max(1500)).withDefault(const {}),
+}, NoticeTemplateRequest._, strictRequest: true);
+
+/// `POST /v1/notice-templates`·`PUT /v1/notice-templates/{templateId}` 본문 — 통째로 바꿉니다. 칸 값 규칙은 상품 `notice`와 같습니다
+/// (법정 문구 칸 400 `INVALID_NOTICE_FIELD`, 없는 품목군 400 `INVALID_INFO_CODE`, 길이 초과 400 `NOTICE_VALUE_TOO_LONG`).
+/// 같은 이름이 있으면 409 `NOTICE_TEMPLATE_NAME_TAKEN`.
+class NoticeTemplateRequest extends ParsedObject {
+  /// [NoticeTemplateRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  NoticeTemplateRequest(
+      {required String name, required String schemaId, int? version, Map<String, String> values = const {}})
+      : super({'name': name, 'schemaId': schemaId, if (version != null) 'version': version, 'values': values});
+
+  NoticeTemplateRequest._(super.json);
+
+  /// JSON을 [noticeTemplateRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory NoticeTemplateRequest.fromJson(Map<String, Object?> json) => noticeTemplateRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `name` 값입니다.
+  String get name => _j['name'] as String;
+
+  /// 품목군 코드(`GET /v1/info-schemas`).
+  String get schemaId => _j['schemaId'] as String;
+
+  /// 품목군 버전. 생략하면 현재 버전.
+  int? get version => _j['version'] as int?;
+
+  /// 칸 키 → 값. 출처가 `legal`인 칸은 받지 않습니다(400). 빈 문자열은 비운 칸으로 저장하지 않습니다. 칸 길이는 스키마 `maxLength`.
+  Map<String, String> get values => (_j['values'] as Map).cast<String, String>();
+}
+
+/// NoticeTemplateRequestInput 값입니다.
+typedef NoticeTemplateRequestInput = NoticeTemplateRequest;

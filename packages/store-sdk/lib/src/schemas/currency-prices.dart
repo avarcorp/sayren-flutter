@@ -15,15 +15,20 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -62,7 +69,7 @@ final ZodType<ProductCurrencyPrice> productCurrencyPriceSchema = z.object<Produc
   'salePrice': z.number().int_(),
   'originalPrice': z.number().int_().greaterThan(0, inclusive: true).nullable().optional(),
   'discountAmount': z.number().int_().greaterThan(0, inclusive: true).nullable().optional(),
-}, ProductCurrencyPrice._).check(_salePriceUnitCheck);
+}, ProductCurrencyPrice._, strict: true).check(_salePriceUnitCheck);
 
 /// [List<ProductCurrencyPrice>] 스키마입니다.
 final ZodType<List<ProductCurrencyPrice>> productCurrencyPricesSchema =
@@ -107,7 +114,7 @@ final ZodObject<ShippingCurrencyPrice> shippingCurrencyPriceSchema = z.object<Sh
   'currency': currencyCodeSchema,
   'deliveryFee': z.number().int_().greaterThan(0, inclusive: true).optional(),
   'conditionalFreeAmount': z.number().int_().greaterThan(1, inclusive: true).nullable().optional(),
-}, ShippingCurrencyPrice._);
+}, ShippingCurrencyPrice._, strict: true);
 
 /// 상품 배송의 외화 값 — 배송비 유형·출고지는 상품 하나입니다.
 class ShippingCurrencyPrice extends ParsedObject {
@@ -222,7 +229,7 @@ class StoredProductCurrencyPrice extends ParsedObject {
 final ZodObject<AdditionalCurrencyPrice> additionalCurrencyPriceSchema = z.object<AdditionalCurrencyPrice>({
   'currency': currencyCodeSchema,
   'additionalPrice': z.number().int_().greaterThan(0, inclusive: true),
-}, AdditionalCurrencyPrice._);
+}, AdditionalCurrencyPrice._, strict: true);
 
 /// [List<AdditionalCurrencyPrice>] 스키마입니다.
 final ZodType<List<AdditionalCurrencyPrice>> additionalCurrencyPricesSchema =

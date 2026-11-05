@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -34,6 +39,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product.dart';
 import 'promotion.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -286,7 +293,7 @@ final ZodObject<ProductLocalizationRequest> productLocalizationRequestSchema = z
   'customInputs':
       z.array<ProductLocalizationRequestCustomInputsItem>(productLocalizationRequestCustomInputsItemSchema).optional(),
   'notice': z.array<ProductLocalizationRequestNoticeItem>(productLocalizationRequestNoticeItemSchema).optional(),
-}, ProductLocalizationRequest._);
+}, ProductLocalizationRequest._, strict: true);
 
 /// `PUT /v1/products/{productId}/localizations/{locale}` 본문 — 레코드 전체를 바꿉니다. 빠진 칸은 null(기본 언어 값으로 대체)입니다.
 /// 옵션은 번역할 id만 보냅니다. 상품에 없는 id는 400 `PRODUCT_LOCALIZATION_TARGET_NOT_FOUND`입니다.
@@ -359,7 +366,7 @@ final ZodObject<ProductLocalizationRequestOptionGroupsItem> productLocalizationR
       .array<ProductLocalizationRequestOptionGroupsItemValuesItem>(
           productLocalizationRequestOptionGroupsItemValuesItemSchema)
       .optional(),
-}, ProductLocalizationRequestOptionGroupsItem._);
+}, ProductLocalizationRequestOptionGroupsItem._, strict: true);
 
 /// ProductLocalizationRequestOptionGroupsItem 값입니다.
 class ProductLocalizationRequestOptionGroupsItem extends ParsedObject {
@@ -395,7 +402,7 @@ final ZodObject<ProductLocalizationRequestOptionGroupsItemValuesItem>
     z.object<ProductLocalizationRequestOptionGroupsItemValuesItem>({
   'valueId': z.string(),
   'name': z.string().trim().min(1).max(50).nullable().optional(),
-}, ProductLocalizationRequestOptionGroupsItemValuesItem._);
+}, ProductLocalizationRequestOptionGroupsItemValuesItem._, strict: true);
 
 /// ProductLocalizationRequestOptionGroupsItemValuesItem 값입니다.
 class ProductLocalizationRequestOptionGroupsItemValuesItem extends ParsedObject {
@@ -424,7 +431,7 @@ final ZodObject<ProductLocalizationRequestCustomInputsItem> productLocalizationR
   'inputId': z.string(),
   'label': z.string().trim().min(1).max(30).nullable().optional(),
   'placeholder': z.string().trim().min(1).max(100).nullable().optional(),
-}, ProductLocalizationRequestCustomInputsItem._);
+}, ProductLocalizationRequestCustomInputsItem._, strict: true);
 
 /// ProductLocalizationRequestCustomInputsItem 값입니다.
 class ProductLocalizationRequestCustomInputsItem extends ParsedObject {
@@ -460,7 +467,7 @@ final ZodObject<ProductLocalizationRequestNoticeItem> productLocalizationRequest
     z.object<ProductLocalizationRequestNoticeItem>({
   'key': z.string(),
   'value': z.string().trim().min(1).max(1500).nullable().optional(),
-}, ProductLocalizationRequestNoticeItem._);
+}, ProductLocalizationRequestNoticeItem._, strict: true);
 
 /// ProductLocalizationRequestNoticeItem 값입니다.
 class ProductLocalizationRequestNoticeItem extends ParsedObject {

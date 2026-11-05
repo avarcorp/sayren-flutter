@@ -28,6 +28,9 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
+
+part 'catalog.manual.dart';
 
 /// [CategoryNode] 스키마입니다.
 final ZodType<CategoryNode> categoryNodeSchema = z.lazy<CategoryNode>(() => z.object<CategoryNode>({
@@ -724,6 +727,52 @@ class ProductDetailCategoryPathItem extends ParsedObject {
   String get name => _j['name'] as String;
 }
 
+/// 상품 가격 표시 — 카드·상세가 같은 규칙으로 가격을 보이게 합니다. 금액은 `currency`의 최소 단위입니다. 통화 표기는 화면이 정합니다
+/// (`minorToMajor` + `Intl.NumberFormat`).
+class PriceView {
+  /// [PriceView]을 만듭니다.
+  const PriceView({required this.price, required this.compareAt, required this.discountRate, required this.currency});
+
+  /// 구매자가 내는 한 개 가격(`discountedPrice ?? salePrice`, 옵션 추가금 제외).
+  final int price;
+
+  /// 취소선 가격. 정가가 낼 가격보다 크면 정가, 아니면 즉시할인 전 판매가. 둘 다 아니면 null(취소선·할인율 없음).
+  final int? compareAt;
+
+  /// `compareAt` 기준 할인율(%). `compareAt`이 null이면 null.
+  final int? discountRate;
+
+  /// `currency` 값입니다.
+  final String currency;
+
+  /// JSON으로 바꿉니다.
+  Map<String, Object?> toJson() =>
+      {'price': price, 'compareAt': compareAt, 'discountRate': discountRate, 'currency': currency};
+}
+
+/// 옵션 값 하나의 상태. `SOLD_OUT`은 이어지는 조합이 모두 품절, `UNAVAILABLE`은 다른 축의 선택과 이어지는 조합이 없습니다.
+typedef OptionValueState = String;
+
+/// OptionChoices 값입니다.
+class OptionChoices {
+  /// [OptionChoices]을 만듭니다.
+  const OptionChoices({required this.groups, required this.variant});
+
+  /// `groups` 값입니다.
+  final List<
+      ({
+        String groupId,
+        String name,
+        List<({String valueId, String name, bool selected, OptionValueState state, int? additionalPrice})> values
+      })> groups;
+
+  /// 지금 선택으로 정해진 조합. 다 고르지 않았으면 null.
+  final ProductVariant? variant;
+
+  /// JSON으로 바꿉니다.
+  Map<String, Object?> toJson() => {'groups': groups, 'variant': variant};
+}
+
 /// [String] 스키마입니다. 값은 `recommend`·`latest`·`priceAsc`·`priceDesc`·`reviewCount`·`ratingDesc`입니다.
 final ZodEnum productSortSchema =
     z.enum_(['recommend', 'latest', 'priceAsc', 'priceDesc', 'reviewCount', 'ratingDesc']);
@@ -915,6 +964,91 @@ class ProductPage extends ParsedObject {
 
   /// `facets` 값입니다.
   ProductFacets? get facets => _j['facets'] as ProductFacets?;
+}
+
+/// [SitemapProduct] 스키마입니다.
+///
+/// 사이트맵용 상품 한 줄 — `GET /sitemap/products`. 상품 검색과 같은 판매 중 상품입니다.
+/// 주소 조립과 XML 변환은 스토어프론트가 합니다(상품 상세 경로는 `productId`를 받습니다).
+final ZodObject<SitemapProduct> sitemapProductSchema = z.object<SitemapProduct>({
+  'productId': z.string(),
+  'name': z.string(),
+  'updatedAt': z.string(),
+}, SitemapProduct._);
+
+/// 사이트맵용 상품 한 줄 — `GET /sitemap/products`. 상품 검색과 같은 판매 중 상품입니다.
+/// 주소 조립과 XML 변환은 스토어프론트가 합니다(상품 상세 경로는 `productId`를 받습니다).
+class SitemapProduct extends ParsedObject {
+  /// [SitemapProduct]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  SitemapProduct({required String productId, required String name, required String updatedAt})
+      : super({'productId': productId, 'name': name, 'updatedAt': updatedAt});
+
+  SitemapProduct._(super.json);
+
+  /// JSON을 [sitemapProductSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory SitemapProduct.fromJson(Map<String, Object?> json) => sitemapProductSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 상품 id(`prod_…`).
+  String get productId => _j['productId'] as String;
+
+  /// 상품명. 요청 언어의 번역이 있으면 그 이름.
+  String get name => _j['name'] as String;
+
+  /// 상품을 마지막으로 고친 시각(ISO 8601). 사이트맵 `<lastmod>`에 씁니다.
+  String get updatedAt => _j['updatedAt'] as String;
+}
+
+/// [SitemapProductPage] 스키마입니다.
+///
+/// `GET /sitemap/products` 응답 — 상품 id 순 페이지.
+final ZodObject<SitemapProductPage> sitemapProductPageSchema = z.object<SitemapProductPage>({
+  'page': z.number().int_(),
+  'size': z.number().int_(),
+  'totalElements': z.number().int_(),
+  'totalPages': z.number().int_(),
+  'contents': z.array<SitemapProduct>(sitemapProductSchema),
+}, SitemapProductPage._);
+
+/// `GET /sitemap/products` 응답 — 상품 id 순 페이지.
+class SitemapProductPage extends ParsedObject {
+  /// [SitemapProductPage]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  SitemapProductPage(
+      {required int page,
+      required int size,
+      required int totalElements,
+      required int totalPages,
+      required List<SitemapProduct> contents})
+      : super({
+          'page': page,
+          'size': size,
+          'totalElements': totalElements,
+          'totalPages': totalPages,
+          'contents': contents
+        });
+
+  SitemapProductPage._(super.json);
+
+  /// JSON을 [sitemapProductPageSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory SitemapProductPage.fromJson(Map<String, Object?> json) => sitemapProductPageSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `page` 값입니다.
+  int get page => _j['page'] as int;
+
+  /// `size` 값입니다.
+  int get size => _j['size'] as int;
+
+  /// `totalElements` 값입니다.
+  int get totalElements => _j['totalElements'] as int;
+
+  /// `totalPages` 값입니다.
+  int get totalPages => _j['totalPages'] as int;
+
+  /// `contents` 값입니다.
+  List<SitemapProduct> get contents => (_j['contents'] as List).cast<SitemapProduct>();
 }
 
 /// [StorefrontCollection] 스키마입니다.

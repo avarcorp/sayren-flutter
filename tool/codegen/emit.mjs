@@ -106,8 +106,13 @@ export class DartEmitter {
         return `List<${this.type(n.el)}>`;
       case "record":
         return `Map<String, ${this.type(n.value)}>`;
+      case "tuple":
+        return `List<${this.tupleItemType(n)}>`;
       case "lazy":
+      case "strict":
         return this.type(n.inner);
+      case "manual":
+        return n.type;
       case "pipe":
         return this.type(n.out);
       case "transform":
@@ -123,6 +128,12 @@ export class DartEmitter {
       default:
         throw new Error(`type ${n.k}`);
     }
+  }
+
+  /** tuple 항목 타입 — 자리마다 같으면 그 타입, 다르면 Object? */
+  tupleItemType(n) {
+    const types = new Set(n.items.map((it) => this.type(it)));
+    return types.size === 1 ? [...types][0] : "Object?";
   }
 
   /** union 형태들의 클래스 이름 — 모델이 아닌 형태가 있으면 null */
@@ -196,8 +207,14 @@ export class DartEmitter {
       case "array":
         e = `z.array<${this.type(n.el)}>(${this.expr(n.el)})`;
         break;
+      case "tuple":
+        e = `z.tuple<${this.tupleItemType(n)}>([${n.items.map((it) => this.expr(it)).join(", ")}])`;
+        break;
       case "record":
         e = `z.record<${this.type(n.value)}>(${this.expr(n.value)})`;
+        break;
+      case "strict":
+        e = `z.strictRequest<${this.type(n)}>(${this.expr(n.inner, define)})`;
         break;
       case "lazy":
         e = `z.lazy<${this.type(n)}>(() => ${this.expr(n.inner, define)})`;
@@ -212,7 +229,7 @@ export class DartEmitter {
         const cls = this.ir.classes.get(n.className);
         if (!define) return this.withChecks(cls.schemaRef ?? cls.privateSchema, []);
         const fields = cls.fields.map((f) => `${str(f.key)}: ${this.expr(f.node)}`).join(",\n    ");
-        e = `z.object<${n.className}>({\n    ${fields},\n  }, ${n.className}._${n.loose ? ", loose: true" : ""})`;
+        e = `z.object<${n.className}>({\n    ${fields},\n  }, ${n.className}._${n.loose ? ", loose: true" : ""}${n.strict ? ", strict: true" : ""}${n.strictRequest ? ", strictRequest: true" : ""})`;
         break;
       }
       case "plainObject": {
@@ -286,6 +303,29 @@ export class DartEmitter {
     return e;
   }
 
+  /** 필드의 선택·nullable·기본값 표시(바깥 래퍼부터 읽는다) */
+  fieldFlags(f) {
+    let n = f.node;
+    const flags = { optional: false, nullable: false, def: undefined, modelDefault: undefined };
+    for (;;) {
+      if (n.k === "optional") flags.optional = true;
+      else if (n.k === "nullable") flags.nullable = true;
+      else if (n.k === "default") {
+        flags.def = n.value;
+        const dv = this.defaultValue(n);
+        if (dv.endsWith(")") && dv.includes(".fromJson(")) flags.modelDefault = dv;
+      } else if (n.k === "catch") flags.optional = true;
+      else break;
+      n = n.inner;
+    }
+    return flags;
+  }
+
+  /** 생성자·getter에 내는 필드 — Node `@deprecated` 선택 필드는 뺀다. 스키마는 Node처럼 그 키를 받는다 */
+  shownFields(cls) {
+    return cls.fields.filter((f) => !(this.fieldFlags(f).optional && this.deprecatedField(cls.root, f)));
+  }
+
   /** 필드가 Node에서 `@deprecated`인가 — describe 또는 TS JSDoc이 `@deprecated`로 시작한다 */
   deprecatedField(root, field) {
     let n = field.node;
@@ -328,27 +368,10 @@ export class DartEmitter {
 
   /** 객체 클래스 */
   objectClass(cls, docText) {
-    const allFields = cls.fields.map((f) => {
-      const name = ident(f.key);
-      const t = this.type(f.node);
-      let n = f.node;
-      const flags = { optional: false, nullable: false, def: undefined };
-      for (;;) {
-        if (n.k === "optional") flags.optional = true;
-        else if (n.k === "nullable") flags.nullable = true;
-        else if (n.k === "default") {
-          flags.def = n.value;
-          const dv = this.defaultValue(n);
-          if (dv.endsWith(")") && dv.includes(".fromJson(")) f.modelDefault = dv;
-        }
-        else if (n.k === "catch") flags.optional = true;
-        else break;
-        n = n.inner;
-      }
-      return { ...f, name, t, flags, modelDefault: f.modelDefault };
+    const fields = this.shownFields(cls).map((f) => {
+      const flags = this.fieldFlags(f);
+      return { ...f, name: ident(f.key), t: this.type(f.node), flags, modelDefault: flags.modelDefault };
     });
-    // Node `@deprecated` 선택 필드는 생성자·getter에 내지 않는다. 스키마는 Node처럼 그 키를 받는다
-    const fields = allFields.filter((f) => !(f.flags.optional && this.deprecatedField(cls.root, f)));
     const base = this.unionBases.get(cls.name) ?? { implements: [], overrides: new Set() };
     const params = fields.map((f) => {
       const { optional, nullable: nul, def } = f.flags;

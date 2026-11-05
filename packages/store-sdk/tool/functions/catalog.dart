@@ -9,9 +9,7 @@ List<Object?> _l(Object? v) => (v as List).cast<Object?>();
 DateTime _date(Object? v) => DateTime.parse(_m(v)[r'$date'] as String);
 
 /// `{ "$map": [[k, v], …] }` → Map
-Map<String, num> _numMap(Object? v) => {
-      for (final e in _l(_m(v)[r'$map'])) (_l(e)[0] as String): _l(e)[1] as num,
-    };
+Map<String, num> _numMap(Object? v) => {for (final e in _l(_m(v)[r'$map'])) (_l(e)[0] as String): _l(e)[1] as num};
 
 List<({String categoryId, String? parentId})> _categories(Object? v) => [
       for (final c in _l(v)) (categoryId: _m(c)['categoryId'] as String, parentId: _m(c)['parentId'] as String?),
@@ -39,10 +37,11 @@ final Map<String, Object? Function(List<Object?> a)> catalogFunctions = {
   // collection
   'collectionStateOf': (a) {
     final c = _m(a[0]);
-    return collectionStateOf(
-      (visible: c['visible'] as bool, startsAt: c['startsAt'] as String?, endsAt: c['endsAt'] as String?),
-      _date(a[1]),
-    );
+    return collectionStateOf((
+      visible: c['visible'] as bool,
+      startsAt: c['startsAt'] as String?,
+      endsAt: c['endsAt'] as String?,
+    ), _date(a[1]));
   },
   'descendantCategoryIdsOf': (a) => descendantCategoryIdsOf(_l(a[0]).cast<String>(), _categories(a[1])),
   'matchesCollectionRules': (a) => matchesCollectionRules(_product(a[0]), _rules(a[1]), _context(a[2])),
@@ -50,20 +49,15 @@ final Map<String, Object? Function(List<Object?> a)> catalogFunctions = {
     final r = bestSellingRuleOf(_rules(a[0]));
     return r == null ? null : {'days': r.days, 'top': r.top};
   },
-  'rankBestSelling': (a) => rankBestSelling<Map<String, Object?>>(
-        [for (final p in _l(a[0])) _m(p)],
-        _numMap(a[1]),
-        a[2] as int,
-      ),
+  'rankBestSelling': (a) =>
+      rankBestSelling<Map<String, Object?>>([for (final p in _l(a[0])) _m(p)], _numMap(a[1]), a[2] as int),
   'collectionRuleCategoryIds': (a) => collectionRuleCategoryIds(_rules(a[0])),
   // fulfillment
   'fulfillmentTypeOf': (a) => fulfillmentTypeOf(_arg(a, 0) as String?),
   'fulfillmentRuleOf': (a) => fulfillmentRuleOf(_arg(a, 0) as String?).toJson(),
   'defaultFulfillmentMethodOf': (a) => defaultFulfillmentMethodOf(_arg(a, 0) as String?),
-  'fulfillmentMethodsOf': (a) => fulfillmentMethodsOf(
-        type: _m(a[0])['type'] as String,
-        methods: (_m(a[0])['methods'] as List?)?.cast<String>(),
-      ),
+  'fulfillmentMethodsOf': (a) =>
+      fulfillmentMethodsOf(type: _m(a[0])['type'] as String, methods: (_m(a[0])['methods'] as List?)?.cast<String>()),
   'fulfillmentMethodOf': (a) => fulfillmentMethodOf(_arg(a, 0) as String?, _arg(a, 1) as String?),
   'requiresShipping': (a) => requiresShipping(_arg(a, 0) as String?, _arg(a, 1) as String?),
   'requiresCollection': (a) => requiresCollection(_arg(a, 0) as String?),

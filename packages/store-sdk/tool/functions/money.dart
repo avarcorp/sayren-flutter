@@ -72,14 +72,16 @@ PricingInput _pricingInput(Object? v) {
     coupons: [for (final c in j['coupons'] as List) _pricingCoupon(c)],
     delivery: delivery == null
         ? null
-        : PricingDelivery(bundles: [
-            for (final b in _m(delivery)['bundles'] as List)
-              (
-                bundleKey: _m(b)['bundleKey'] as String,
-                fee: _m(b)['fee'] as int,
-                remoteSurcharge: _m(b)['remoteSurcharge'] as int,
-              ),
-          ]),
+        : PricingDelivery(
+            bundles: [
+              for (final b in _m(delivery)['bundles'] as List)
+                (
+                  bundleKey: _m(b)['bundleKey'] as String,
+                  fee: _m(b)['fee'] as int,
+                  remoteSurcharge: _m(b)['remoteSurcharge'] as int,
+                ),
+            ],
+          ),
     firstOrder: j['firstOrder'] as bool,
     isMember: j['isMember'] as bool,
     now: _date(j['now']),
@@ -255,19 +257,18 @@ final Map<String, Object? Function(List<Object?> a)> moneyFunctions = {
   'pointUseOf': (a) {
     final amounts = _m(a[1]);
     final r = pointUseOf(
-      _pricingPoints(a[0]),
-      (
-        productPaid: amounts['productPaid'] as int,
-        deliveryPaid: amounts['deliveryPaid'] as int,
-        total: amounts['total'] as int,
-      ),
-      _moneyRules(_at(a, 2)),
-    );
+        _pricingPoints(a[0]),
+        (
+          productPaid: amounts['productPaid'] as int,
+          deliveryPaid: amounts['deliveryPaid'] as int,
+          total: amounts['total'] as int,
+        ),
+        _moneyRules(_at(a, 2)));
     return {
       'amount': r.amount,
       'maxUsable': r.maxUsable,
       'adjustReason': r.adjustReason,
-      'rejectReason': r.rejectReason
+      'rejectReason': r.rejectReason,
     };
   },
   'settleCouponShortfall': (a) => _settlementResult(settleCouponShortfall(_settlementInput(a[0]))),
@@ -317,17 +318,16 @@ final Map<String, Object? Function(List<Object?> a)> moneyFunctions = {
   'pointEarnOf': (a) => pointEarnOf(paidBase: _m(a[0])['paidBase'] as int, rateBp: _m(a[0])['rateBp'] as int),
   'reviewRewardPointOf': (a) => reviewRewardPointOf(_pointPolicy(a[0]), a[1] as bool),
   'pointExpiresAtOf': (a) => _iso(pointExpiresAtOf(_date(a[0]), _at(a, 1) as int?)),
-  'pointRestoreExpiresAtOf': (a) => _iso(pointRestoreExpiresAtOf(
-        [
+  'pointRestoreExpiresAtOf': (a) => _iso(
+        pointRestoreExpiresAtOf([
           for (final u in a[0] as List)
             PointLotUsage(
               lotId: _m(u)['lotId'] as String,
               amount: _m(u)['amount'] as int,
               expiresAt: _m(u)['expiresAt'] as String?,
             ),
-        ],
-        _date(a[1]),
-      )),
+        ], _date(a[1])),
+      ),
   'splitRefund': (a) {
     final j = _m(a[0]);
     final r = splitRefund(cash: j['cash'] as int, points: j['points'] as int, charges: j['charges'] as int);

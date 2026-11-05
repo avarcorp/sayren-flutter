@@ -12,13 +12,17 @@ import 'http.dart';
 import 'zod.dart';
 
 /// [OAuthTokenResponse] 스키마입니다. RFC 6749 §5.1 토큰 응답이고 모르는 키를 남깁니다.
-final ZodObject<OAuthTokenResponse> oauthTokenResponseSchema = z.object<OAuthTokenResponse>({
-  'access_token': z.string(),
-  'token_type': z.literal<String>('Bearer'),
-  'expires_in': z.number().int_(),
-  'scope': z.string().optional(),
-  'refresh_token': z.string().optional(),
-}, OAuthTokenResponse._, loose: true);
+final ZodObject<OAuthTokenResponse> oauthTokenResponseSchema = z.object<OAuthTokenResponse>(
+  {
+    'access_token': z.string(),
+    'token_type': z.literal<String>('Bearer'),
+    'expires_in': z.number().int_(),
+    'scope': z.string().optional(),
+    'refresh_token': z.string().optional(),
+  },
+  OAuthTokenResponse._,
+  loose: true,
+);
 
 /// RFC 6749 §5.1 토큰 응답입니다.
 class OAuthTokenResponse extends ParsedObject {
@@ -143,11 +147,13 @@ Future<OAuthTokenResponse> _tokenRequest(String endpoint, Map<String, String> fo
     final body = json is Map ? json : null;
     final description = body?['error_description'];
     final error = body?['error'];
-    throw Exception(description is String
-        ? description
-        : error is String
-            ? error
-            : 'HTTP ${response.statusCode}');
+    throw Exception(
+      description is String
+          ? description
+          : error is String
+              ? error
+              : 'HTTP ${response.statusCode}',
+    );
   }
   return oauthTokenResponseSchema.parse(unwrapData(json));
 }
@@ -166,17 +172,16 @@ Future<OAuthTokenResponse> exchangeAuthorizationCode({
   Fetch? fetch,
 }) =>
     _tokenRequest(
-      tokenUrl,
-      {
-        'grant_type': 'authorization_code',
-        'code': code,
-        'redirect_uri': redirectUri,
-        'client_id': clientId,
-        'code_verifier': codeVerifier,
-        if (resource != null && resource.isNotEmpty) 'resource': resource,
-      },
-      fetch,
-    );
+        tokenUrl,
+        {
+          'grant_type': 'authorization_code',
+          'code': code,
+          'redirect_uri': redirectUri,
+          'client_id': clientId,
+          'code_verifier': codeVerifier,
+          if (resource != null && resource.isNotEmpty) 'resource': resource,
+        },
+        fetch);
 
 /// 갱신 토큰으로 새 토큰을 받습니다. 응답의 새 `refresh_token`으로 반드시 바꿔 저장하십시오(회전).
 ///
@@ -190,12 +195,11 @@ Future<OAuthTokenResponse> refreshUserToken({
   Fetch? fetch,
 }) =>
     _tokenRequest(
-      tokenUrl,
-      {
-        'grant_type': 'refresh_token',
-        'refresh_token': refreshToken,
-        'client_id': clientId,
-        if (resource != null && resource.isNotEmpty) 'resource': resource,
-      },
-      fetch,
-    );
+        tokenUrl,
+        {
+          'grant_type': 'refresh_token',
+          'refresh_token': refreshToken,
+          'client_id': clientId,
+          if (resource != null && resource.isNotEmpty) 'resource': resource,
+        },
+        fetch);

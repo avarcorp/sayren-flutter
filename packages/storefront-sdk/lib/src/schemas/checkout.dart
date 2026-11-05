@@ -28,6 +28,7 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 part 'checkout.manual.dart';
 
@@ -228,9 +229,12 @@ final ZodObject<CheckoutSession> checkoutSessionSchema = z.object<CheckoutSessio
   'items': z.array<CheckoutSessionItemsItem>(checkoutSessionItemsItemSchema),
   'amounts': checkoutSessionAmountsSchema,
   'points': checkoutSessionPointsSchema.nullable().optional().withDefault(null),
+  'couponsEnabled': z.boolean().optional().withDefault(true),
+  'additionalPayment': z.boolean().optional().withDefault(false),
+  'orderPasswordRequired': z.boolean().optional().withDefault(false),
+  'memberOrder': z.boolean().optional().withDefault(false),
   'delivery': checkoutDeliverySchema,
   'requiresShipping': z.boolean(),
-  'withdrawal': checkoutSessionWithdrawalSchema.optional(),
   'expiresAt': z.string(),
   'paymentOptions': z.lazy<List<AvailablePaymentOption>>(() => paymentOptionListSchema),
   'testPayment': z.boolean(),
@@ -245,9 +249,12 @@ class CheckoutSession extends ParsedObject {
       required List<CheckoutSessionItemsItem> items,
       required CheckoutSessionAmounts amounts,
       CheckoutSessionPoints? points,
+      bool couponsEnabled = true,
+      bool additionalPayment = false,
+      bool orderPasswordRequired = false,
+      bool memberOrder = false,
       required CheckoutDelivery delivery,
       required bool requiresShipping,
-      CheckoutSessionWithdrawal? withdrawal,
       required String expiresAt,
       required List<AvailablePaymentOption> paymentOptions,
       required bool testPayment})
@@ -257,9 +264,12 @@ class CheckoutSession extends ParsedObject {
           'items': items,
           'amounts': amounts,
           'points': points,
+          'couponsEnabled': couponsEnabled,
+          'additionalPayment': additionalPayment,
+          'orderPasswordRequired': orderPasswordRequired,
+          'memberOrder': memberOrder,
           'delivery': delivery,
           'requiresShipping': requiresShipping,
-          if (withdrawal != null) 'withdrawal': withdrawal,
           'expiresAt': expiresAt,
           'paymentOptions': paymentOptions,
           'testPayment': testPayment
@@ -284,17 +294,26 @@ class CheckoutSession extends ParsedObject {
   /// `amounts` 값입니다.
   CheckoutSessionAmounts get amounts => _j['amounts'] as CheckoutSessionAmounts;
 
-  /// 적립금 사용 안내(#93). 비회원이거나 상점이 적립금 사용을 끄면 null.
+  /// 적립금 사용 안내(#93). 비회원이거나 상점·주문서가 적립금 사용을 끄면 null(셀러 작성 주문서는 셀러가 정합니다, 이슈 #116).
   CheckoutSessionPoints? get points => _j['points'] as CheckoutSessionPoints?;
+
+  /// 이 주문서에서 쿠폰을 쓸 수 있는지입니다(이슈 #116). 판매 권역이 쿠폰을 껐거나 셀러 작성 주문서가 쿠폰을 막았으면 false — 쿠폰 입력을 보이지 않습니다. 옛 서버 응답은 true로 읽습니다.
+  bool get couponsEnabled => _j['couponsEnabled'] as bool;
+
+  /// 기존 주문에 대한 추가 결제인지입니다(이슈 #117). true면 결제하면 줄이 그 주문에 붙습니다 — 주문자·배송지는 주문 것을 쓰므로 `guest`·`shippingAddress`를 받지 않습니다. 옛 서버 응답은 false로 읽습니다.
+  bool get additionalPayment => _j['additionalPayment'] as bool;
+
+  /// 결제 시작에 주문 조회 비밀번호(`orderPassword`)가 필요한지입니다(이슈 #117). 셀러가 만든 비회원 주문의 결제 요청이면 true입니다 — 구매자가 결제하며 비밀번호를 정합니다. 옛 서버 응답은 false로 읽습니다.
+  bool get orderPasswordRequired => _j['orderPasswordRequired'] as bool;
+
+  /// 결제하면 생기거나 붙는 주문이 회원 주문인지입니다. 추가 결제(`additionalPayment`)면 그 주문의 회원 여부, 아니면 이 요청의 구매자가 회원인가입니다 — 결제 완료 안내(회원은 마이페이지, 비회원은 주문 조회 비밀번호)를 고르는 데 씁니다. 옛 서버 응답은 false로 읽습니다.
+  bool get memberOrder => _j['memberOrder'] as bool;
 
   /// 배송비 내역. 배송지를 입력하면 금액이 바뀔 수 있습니다 — 최종 금액은 결제 시작 응답의 `amounts`입니다.
   CheckoutDelivery get delivery => _j['delivery'] as CheckoutDelivery;
 
   /// 택배 배송이 필요한 상품이 있는지입니다. false면 배송지를 받지 않습니다 — 결제 시작에 `shippingAddress`를 보내지 않아도 됩니다.
   bool get requiresShipping => _j['requiresShipping'] as bool;
-
-  /// **Deprecated** — 항상 `{ required: false, notice: null }`입니다. 청약철회 제한 고지를 없앴고(이슈 #48) storefront-sdk 0.15 이하 호환으로만 싣습니다. 게시된 스토어프론트가 0.16 이상으로 넘어간 뒤 다음 릴리스에서 뺍니다.
-  CheckoutSessionWithdrawal? get withdrawal => _j['withdrawal'] as CheckoutSessionWithdrawal?;
 
   /// `expiresAt` 값입니다.
   String get expiresAt => _j['expiresAt'] as String;
@@ -511,32 +530,6 @@ class CheckoutSessionPoints extends ParsedObject {
 
   /// 쓸 수 있는 최소 보유액(원).
   int get minBalance => _j['minBalance'] as int;
-}
-
-/// [CheckoutSessionWithdrawal] 스키마입니다.
-final ZodObject<CheckoutSessionWithdrawal> checkoutSessionWithdrawalSchema = z.object<CheckoutSessionWithdrawal>({
-  'required': z.boolean(),
-  'notice': z.string().nullable(),
-}, CheckoutSessionWithdrawal._);
-
-/// CheckoutSessionWithdrawal 값입니다.
-class CheckoutSessionWithdrawal extends ParsedObject {
-  /// [CheckoutSessionWithdrawal]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  CheckoutSessionWithdrawal({required bool required, required String? notice})
-      : super({'required': required, 'notice': notice});
-
-  CheckoutSessionWithdrawal._(super.json);
-
-  /// JSON을 [checkoutSessionWithdrawalSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
-  factory CheckoutSessionWithdrawal.fromJson(Map<String, Object?> json) => checkoutSessionWithdrawalSchema.parse(json);
-
-  Map<String, Object?> get _j => jsonOf(this);
-
-  /// `required` 값입니다.
-  bool get required => _j['required'] as bool;
-
-  /// `notice` 값입니다.
-  String? get notice => _j['notice'] as String?;
 }
 
 /// [DeliveryQuoteRequest] 스키마입니다.
@@ -860,10 +853,10 @@ class PaymentOptionMobile extends ParsedObject implements PaymentOption {
 
 /// [AvailablePaymentOption] 스키마입니다.
 ///
-/// 주문서가 내려주는 결제 옵션 — 결제 옵션 + 표시 이름.
+/// 주문서가 내려주는 결제 옵션 — 결제 옵션 + 표시 이름·로고.
 final ZodType<AvailablePaymentOption> availablePaymentOptionSchema = z.intersection<AvailablePaymentOption>(
     paymentOptionSchema,
-    z.plainObject({'label': z.string(), 'pgName': z.string()}),
+    z.plainObject({'label': z.string(), 'pgName': z.string(), 'logoUrl': z.string().nullable().optional()}),
     z.discriminatedUnion<AvailablePaymentOption>('method', [
       availablePaymentOptionCardSchema,
       availablePaymentOptionEasyPaySchema,
@@ -872,7 +865,7 @@ final ZodType<AvailablePaymentOption> availablePaymentOptionSchema = z.intersect
       availablePaymentOptionMobileSchema,
     ]));
 
-/// 주문서가 내려주는 결제 옵션 — 결제 옵션 + 표시 이름.
+/// 주문서가 내려주는 결제 옵션 — 결제 옵션 + 표시 이름·로고.
 sealed class AvailablePaymentOption {
   /// JSON을 [availablePaymentOptionSchema]로 검증해 맞는 형태로 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
   factory AvailablePaymentOption.fromJson(Map<String, Object?> json) => availablePaymentOptionSchema.parse(json);
@@ -889,6 +882,9 @@ sealed class AvailablePaymentOption {
   /// PG 표시 이름 (예: 토스페이먼츠).
   String get pgName;
 
+  /// 간편결제사 로고 이미지 주소(256px 정사각 PNG). 간편결제가 아니거나 로고가 없으면 null입니다. `?w=48&f=webp`를 붙이면 크기를 줄인 WebP를 받습니다.
+  String? get logoUrl;
+
   /// JSON으로 바꿉니다.
   Map<String, Object?> toJson();
 }
@@ -899,14 +895,25 @@ final ZodObject<AvailablePaymentOptionCard> availablePaymentOptionCardSchema = z
   'method': z.literal<String>('CARD'),
   'label': z.string(),
   'pgName': z.string(),
+  'logoUrl': z.string().nullable().optional(),
 }, AvailablePaymentOptionCard._);
 
 /// AvailablePaymentOptionCard 값입니다.
 class AvailablePaymentOptionCard extends ParsedObject implements AvailablePaymentOption {
   /// [AvailablePaymentOptionCard]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   AvailablePaymentOptionCard(
-      {required String pg, required String method, required String label, required String pgName})
-      : super({'pg': pg, 'method': method, 'label': label, 'pgName': pgName});
+      {required String pg,
+      required String method,
+      required String label,
+      required String pgName,
+      Nullable<String>? logoUrl})
+      : super({
+          'pg': pg,
+          'method': method,
+          'label': label,
+          'pgName': pgName,
+          if (logoUrl != null) 'logoUrl': logoUrl.value
+        });
 
   AvailablePaymentOptionCard._(super.json);
 
@@ -931,6 +938,10 @@ class AvailablePaymentOptionCard extends ParsedObject implements AvailablePaymen
   /// PG 표시 이름 (예: 토스페이먼츠).
   @override
   String get pgName => _j['pgName'] as String;
+
+  /// 간편결제사 로고 이미지 주소(256px 정사각 PNG). 간편결제가 아니거나 로고가 없으면 null입니다. `?w=48&f=webp`를 붙이면 크기를 줄인 WebP를 받습니다.
+  @override
+  String? get logoUrl => _j['logoUrl'] as String?;
 }
 
 /// [AvailablePaymentOptionEasyPay] 스키마입니다.
@@ -941,6 +952,7 @@ final ZodObject<AvailablePaymentOptionEasyPay> availablePaymentOptionEasyPaySche
   'provider': easyPayProviderSchema,
   'label': z.string(),
   'pgName': z.string(),
+  'logoUrl': z.string().nullable().optional(),
 }, AvailablePaymentOptionEasyPay._);
 
 /// AvailablePaymentOptionEasyPay 값입니다.
@@ -951,8 +963,16 @@ class AvailablePaymentOptionEasyPay extends ParsedObject implements AvailablePay
       required String method,
       required String provider,
       required String label,
-      required String pgName})
-      : super({'pg': pg, 'method': method, 'provider': provider, 'label': label, 'pgName': pgName});
+      required String pgName,
+      Nullable<String>? logoUrl})
+      : super({
+          'pg': pg,
+          'method': method,
+          'provider': provider,
+          'label': label,
+          'pgName': pgName,
+          if (logoUrl != null) 'logoUrl': logoUrl.value
+        });
 
   AvailablePaymentOptionEasyPay._(super.json);
 
@@ -980,6 +1000,10 @@ class AvailablePaymentOptionEasyPay extends ParsedObject implements AvailablePay
   /// PG 표시 이름 (예: 토스페이먼츠).
   @override
   String get pgName => _j['pgName'] as String;
+
+  /// 간편결제사 로고 이미지 주소(256px 정사각 PNG). 간편결제가 아니거나 로고가 없으면 null입니다. `?w=48&f=webp`를 붙이면 크기를 줄인 WebP를 받습니다.
+  @override
+  String? get logoUrl => _j['logoUrl'] as String?;
 }
 
 /// [AvailablePaymentOptionBankTransfer] 스키마입니다.
@@ -989,14 +1013,25 @@ final ZodObject<AvailablePaymentOptionBankTransfer> availablePaymentOptionBankTr
   'method': z.literal<String>('BANK_TRANSFER'),
   'label': z.string(),
   'pgName': z.string(),
+  'logoUrl': z.string().nullable().optional(),
 }, AvailablePaymentOptionBankTransfer._);
 
 /// AvailablePaymentOptionBankTransfer 값입니다.
 class AvailablePaymentOptionBankTransfer extends ParsedObject implements AvailablePaymentOption {
   /// [AvailablePaymentOptionBankTransfer]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   AvailablePaymentOptionBankTransfer(
-      {required String pg, required String method, required String label, required String pgName})
-      : super({'pg': pg, 'method': method, 'label': label, 'pgName': pgName});
+      {required String pg,
+      required String method,
+      required String label,
+      required String pgName,
+      Nullable<String>? logoUrl})
+      : super({
+          'pg': pg,
+          'method': method,
+          'label': label,
+          'pgName': pgName,
+          if (logoUrl != null) 'logoUrl': logoUrl.value
+        });
 
   AvailablePaymentOptionBankTransfer._(super.json);
 
@@ -1021,6 +1056,10 @@ class AvailablePaymentOptionBankTransfer extends ParsedObject implements Availab
   /// PG 표시 이름 (예: 토스페이먼츠).
   @override
   String get pgName => _j['pgName'] as String;
+
+  /// 간편결제사 로고 이미지 주소(256px 정사각 PNG). 간편결제가 아니거나 로고가 없으면 null입니다. `?w=48&f=webp`를 붙이면 크기를 줄인 WebP를 받습니다.
+  @override
+  String? get logoUrl => _j['logoUrl'] as String?;
 }
 
 /// [AvailablePaymentOptionVirtualAccount] 스키마입니다.
@@ -1030,14 +1069,25 @@ final ZodObject<AvailablePaymentOptionVirtualAccount> availablePaymentOptionVirt
   'method': z.literal<String>('VIRTUAL_ACCOUNT'),
   'label': z.string(),
   'pgName': z.string(),
+  'logoUrl': z.string().nullable().optional(),
 }, AvailablePaymentOptionVirtualAccount._);
 
 /// AvailablePaymentOptionVirtualAccount 값입니다.
 class AvailablePaymentOptionVirtualAccount extends ParsedObject implements AvailablePaymentOption {
   /// [AvailablePaymentOptionVirtualAccount]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   AvailablePaymentOptionVirtualAccount(
-      {required String pg, required String method, required String label, required String pgName})
-      : super({'pg': pg, 'method': method, 'label': label, 'pgName': pgName});
+      {required String pg,
+      required String method,
+      required String label,
+      required String pgName,
+      Nullable<String>? logoUrl})
+      : super({
+          'pg': pg,
+          'method': method,
+          'label': label,
+          'pgName': pgName,
+          if (logoUrl != null) 'logoUrl': logoUrl.value
+        });
 
   AvailablePaymentOptionVirtualAccount._(super.json);
 
@@ -1062,6 +1112,10 @@ class AvailablePaymentOptionVirtualAccount extends ParsedObject implements Avail
   /// PG 표시 이름 (예: 토스페이먼츠).
   @override
   String get pgName => _j['pgName'] as String;
+
+  /// 간편결제사 로고 이미지 주소(256px 정사각 PNG). 간편결제가 아니거나 로고가 없으면 null입니다. `?w=48&f=webp`를 붙이면 크기를 줄인 WebP를 받습니다.
+  @override
+  String? get logoUrl => _j['logoUrl'] as String?;
 }
 
 /// [AvailablePaymentOptionMobile] 스키마입니다.
@@ -1071,14 +1125,25 @@ final ZodObject<AvailablePaymentOptionMobile> availablePaymentOptionMobileSchema
   'method': z.literal<String>('MOBILE'),
   'label': z.string(),
   'pgName': z.string(),
+  'logoUrl': z.string().nullable().optional(),
 }, AvailablePaymentOptionMobile._);
 
 /// AvailablePaymentOptionMobile 값입니다.
 class AvailablePaymentOptionMobile extends ParsedObject implements AvailablePaymentOption {
   /// [AvailablePaymentOptionMobile]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   AvailablePaymentOptionMobile(
-      {required String pg, required String method, required String label, required String pgName})
-      : super({'pg': pg, 'method': method, 'label': label, 'pgName': pgName});
+      {required String pg,
+      required String method,
+      required String label,
+      required String pgName,
+      Nullable<String>? logoUrl})
+      : super({
+          'pg': pg,
+          'method': method,
+          'label': label,
+          'pgName': pgName,
+          if (logoUrl != null) 'logoUrl': logoUrl.value
+        });
 
   AvailablePaymentOptionMobile._(super.json);
 
@@ -1103,6 +1168,10 @@ class AvailablePaymentOptionMobile extends ParsedObject implements AvailablePaym
   /// PG 표시 이름 (예: 토스페이먼츠).
   @override
   String get pgName => _j['pgName'] as String;
+
+  /// 간편결제사 로고 이미지 주소(256px 정사각 PNG). 간편결제가 아니거나 로고가 없으면 null입니다. `?w=48&f=webp`를 붙이면 크기를 줄인 WebP를 받습니다.
+  @override
+  String? get logoUrl => _j['logoUrl'] as String?;
 }
 
 /// [List<AvailablePaymentOption>] 스키마입니다.
@@ -1394,6 +1463,7 @@ final ZodObject<StartPaymentRequest> startPaymentRequestSchema = z.object<StartP
   'returnUrl': z.string().url().max(2048),
   'shippingAddress': startPaymentRequestShippingAddressSchema.optional(),
   'guest': guestInfoSchema.optional(),
+  'orderPassword': z.string().min(6).max(128).optional(),
   'cashReceipt': cashReceiptRequestSchema.optional(),
   'coupons': couponApplicationListSchema.optional(),
   'pointAmount': z.number().int_().greaterThan(0, inclusive: true).optional(),
@@ -1409,6 +1479,7 @@ class StartPaymentRequest extends ParsedObject {
       required String returnUrl,
       StartPaymentRequestShippingAddress? shippingAddress,
       GuestInfo? guest,
+      String? orderPassword,
       CashReceiptRequest? cashReceipt,
       List<CouponApplication>? coupons,
       int? pointAmount})
@@ -1417,6 +1488,7 @@ class StartPaymentRequest extends ParsedObject {
           'returnUrl': returnUrl,
           if (shippingAddress != null) 'shippingAddress': shippingAddress,
           if (guest != null) 'guest': guest,
+          if (orderPassword != null) 'orderPassword': orderPassword,
           if (cashReceipt != null) 'cashReceipt': cashReceipt,
           if (coupons != null) 'coupons': coupons,
           if (pointAmount != null) 'pointAmount': pointAmount
@@ -1441,6 +1513,9 @@ class StartPaymentRequest extends ParsedObject {
 
   /// `guest` 값입니다.
   GuestInfo? get guest => _j['guest'] as GuestInfo?;
+
+  /// 주문 조회 비밀번호(이슈 #117). 주문서의 `orderPasswordRequired`가 true면 필수이고 없으면 400 `ORDER_PASSWORD_REQUIRED`입니다. 그 밖에는 보내도 버립니다.
+  String? get orderPassword => _j['orderPassword'] as String?;
 
   /// 현금영수증 신청. 계좌이체·가상계좌 옵션에서만 보낼 수 있습니다(그 밖의 옵션이면 400 `CASH_RECEIPT_NOT_AVAILABLE`). 결제가 승인되면 발급합니다.
   CashReceiptRequest? get cashReceipt => _j['cashReceipt'] as CashReceiptRequest?;
@@ -1748,6 +1823,7 @@ final ZodObject<PaymentStart> paymentStartSchema = z.object<PaymentStart>({
   'paymentId': z.string(),
   'status': z.string().optional().withDefault('pending'),
   'orderId': z.string().nullable().optional().withDefault(null),
+  'orderNo': z.string().nullable().optional().withDefault(null),
   'attemptId': z.string().nullable(),
   'option': paymentOptionSchema.nullable(),
   'payUrl': z.string().nullable(),
@@ -1765,6 +1841,7 @@ class PaymentStart extends ParsedObject {
       {required String paymentId,
       String status = 'pending',
       String? orderId,
+      String? orderNo,
       required String? attemptId,
       required PaymentOption? option,
       required String? payUrl,
@@ -1777,6 +1854,7 @@ class PaymentStart extends ParsedObject {
           'paymentId': paymentId,
           'status': status,
           'orderId': orderId,
+          'orderNo': orderNo,
           'attemptId': attemptId,
           'option': option,
           'payUrl': payUrl,
@@ -1802,6 +1880,9 @@ class PaymentStart extends ParsedObject {
 
   /// 만들어진 주문 번호. `status`가 `completed`일 때만 값이 있고 그 밖에는 null.
   String? get orderId => _j['orderId'] as String?;
+
+  /// 만들어진 주문의 숫자 주문번호(14자리, 이슈 #107). `status`가 `completed`일 때만 값이 있습니다. 구매자 화면에는 `formatOrderNo`로 표시합니다.
+  String? get orderNo => _j['orderNo'] as String?;
 
   /// 결제 시도 id. PG 주문번호(토스 orderId, 포트원 paymentId)다. 결제창 없이 끝난 결제(`completed`)는 null.
   String? get attemptId => _j['attemptId'] as String?;
@@ -1857,6 +1938,7 @@ final ZodObject<PaymentStatus> paymentStatusSchema = z.object<PaymentStatus>({
   'status': z.string(),
   'result': z.string(),
   'orderId': z.string().nullable(),
+  'orderNo': z.string().nullable().optional().withDefault(null),
   'lastFailure': paymentStatusLastFailureSchema.nullable(),
   'testPayment': z.boolean(),
   'expiresAt': z.string(),
@@ -1870,6 +1952,7 @@ class PaymentStatus extends ParsedObject {
       required String status,
       required String result,
       required String? orderId,
+      String? orderNo,
       required PaymentStatusLastFailure? lastFailure,
       required bool testPayment,
       required String expiresAt})
@@ -1878,6 +1961,7 @@ class PaymentStatus extends ParsedObject {
           'status': status,
           'result': result,
           'orderId': orderId,
+          'orderNo': orderNo,
           'lastFailure': lastFailure,
           'testPayment': testPayment,
           'expiresAt': expiresAt
@@ -1901,6 +1985,9 @@ class PaymentStatus extends ParsedObject {
 
   /// 결제가 완료됐으면 주문 번호, 그 외에는 null.
   String? get orderId => _j['orderId'] as String?;
+
+  /// 결제가 완료됐으면 숫자 주문번호(14자리, 이슈 #107), 그 외에는 null. 구매자 화면에는 `formatOrderNo`로 표시합니다.
+  String? get orderNo => _j['orderNo'] as String?;
 
   /// 현재 결제 시도가 실패·취소로 끝났으면 그 내용, 아니면 null.
   PaymentStatusLastFailure? get lastFailure => _j['lastFailure'] as PaymentStatusLastFailure?;

@@ -15,15 +15,20 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -231,6 +238,276 @@ class CustomerSummary extends ParsedObject {
 
   /// 최근 주문 시각.
   String? get lastOrderedAt => _j['lastOrderedAt'] as String?;
+}
+
+/// [String] 스키마입니다. 값은 `name`·`email`·`phone`·`joinedAt`·`orderCount`·`totalPaid`·`lastOrderedAt`·`point`·`marketingAgreed`·`marketingUpdatedAt`·`birthdate`·`gender`·`defaultAddress`입니다.
+///
+/// 내보내기에서 고를 수 있는 필드.
+final ZodEnum customerExportFieldSchema = z.enum_([
+  'name',
+  'email',
+  'phone',
+  'joinedAt',
+  'orderCount',
+  'totalPaid',
+  'lastOrderedAt',
+  'point',
+  'marketingAgreed',
+  'marketingUpdatedAt',
+  'birthdate',
+  'gender',
+  'defaultAddress'
+]);
+
+/// CustomerExportField 값입니다.
+///
+/// 값은 `name`·`email`·`phone`·`joinedAt`·`orderCount`·`totalPaid`·`lastOrderedAt`·`point`·`marketingAgreed`·`marketingUpdatedAt`·`birthdate`·`gender`·`defaultAddress`입니다.
+typedef CustomerExportField = String;
+
+/// CUSTOMER_EXPORT_MAX_SIZE 값입니다.
+const CUSTOMER_EXPORT_MAX_SIZE = 500;
+
+/// [CustomerExportQuery] 스키마입니다.
+///
+/// `GET /v1/customers/export` 쿼리 — 목록과 같은 조건 + 내보낼 필드.
+final ZodObject<CustomerExportQuery> customerExportQuerySchema = z.object<CustomerExportQuery>({
+  'q': z.string().optional(),
+  'joinedFrom': z.string().optional(),
+  'joinedTo': z.string().optional(),
+  'marketing': z.enum_(['agreed', 'declined']).optional(),
+  'sort': customerSortSchema.optional(),
+  'page': z.string().optional(),
+  'size': z.string().optional(),
+  'fields': z.string(),
+}, CustomerExportQuery._);
+
+/// `GET /v1/customers/export` 쿼리 — 목록과 같은 조건 + 내보낼 필드.
+class CustomerExportQuery extends ParsedObject {
+  /// [CustomerExportQuery]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CustomerExportQuery(
+      {String? q,
+      String? joinedFrom,
+      String? joinedTo,
+      String? marketing,
+      String? sort,
+      String? page,
+      String? size,
+      required String fields})
+      : super({
+          if (q != null) 'q': q,
+          if (joinedFrom != null) 'joinedFrom': joinedFrom,
+          if (joinedTo != null) 'joinedTo': joinedTo,
+          if (marketing != null) 'marketing': marketing,
+          if (sort != null) 'sort': sort,
+          if (page != null) 'page': page,
+          if (size != null) 'size': size,
+          'fields': fields
+        });
+
+  CustomerExportQuery._(super.json);
+
+  /// JSON을 [customerExportQuerySchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CustomerExportQuery.fromJson(Map<String, Object?> json) => customerExportQuerySchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 검색어 — 이름·이메일(포함). 숫자 4자리면 휴대폰 뒤 4자리로도 찾습니다.
+  String? get q => _j['q'] as String?;
+
+  /// 가입일 시작(YYYY-MM-DD, KST, 포함).
+  String? get joinedFrom => _j['joinedFrom'] as String?;
+
+  /// 가입일 끝(YYYY-MM-DD, KST, 포함).
+  String? get joinedTo => _j['joinedTo'] as String?;
+
+  /// 마케팅 수신 동의 필터. 생략하면 전체.
+  String? get marketing => _j['marketing'] as String?;
+
+  /// 정렬. `joined_desc`(기본, 최근 가입순)·`joined_asc`·`total_paid_desc`(구매 금액순)·`order_count_desc`(주문 수순)·`last_ordered_desc`(최근 주문순).
+  String? get sort => _j['sort'] as String?;
+
+  /// 페이지 번호 (1부터, 기본 1).
+  String? get page => _j['page'] as String?;
+
+  /// 페이지 크기 (기본 100, 최대 500).
+  String? get size => _j['size'] as String?;
+
+  /// 내보낼 필드(쉼표로 구분, 하나 이상). `customerExportFieldSchema`의 값입니다. 모르는 값은 400입니다.
+  String get fields => _j['fields'] as String;
+}
+
+/// [CustomerExportAddress] 스키마입니다.
+///
+/// 내보내기 기본 배송지 — 휴대폰은 `phone`과 같은 규칙으로 가립니다.
+final ZodObject<CustomerExportAddress> customerExportAddressSchema = z.object<CustomerExportAddress>({
+  'receiverName': z.string(),
+  'phone': z.string().nullable(),
+  'zipCode': z.string(),
+  'address1': z.string(),
+  'address2': z.string().nullable(),
+  'countryCode': z.string(),
+  'city': z.string().nullable(),
+  'region': z.string().nullable(),
+}, CustomerExportAddress._);
+
+/// 내보내기 기본 배송지 — 휴대폰은 `phone`과 같은 규칙으로 가립니다.
+class CustomerExportAddress extends ParsedObject {
+  /// [CustomerExportAddress]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CustomerExportAddress(
+      {required String receiverName,
+      required String? phone,
+      required String zipCode,
+      required String address1,
+      required String? address2,
+      required String countryCode,
+      required String? city,
+      required String? region})
+      : super({
+          'receiverName': receiverName,
+          'phone': phone,
+          'zipCode': zipCode,
+          'address1': address1,
+          'address2': address2,
+          'countryCode': countryCode,
+          'city': city,
+          'region': region
+        });
+
+  CustomerExportAddress._(super.json);
+
+  /// JSON을 [customerExportAddressSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CustomerExportAddress.fromJson(Map<String, Object?> json) => customerExportAddressSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `receiverName` 값입니다.
+  String get receiverName => _j['receiverName'] as String;
+
+  /// `phone` 값입니다.
+  String? get phone => _j['phone'] as String?;
+
+  /// `zipCode` 값입니다.
+  String get zipCode => _j['zipCode'] as String;
+
+  /// `address1` 값입니다.
+  String get address1 => _j['address1'] as String;
+
+  /// `address2` 값입니다.
+  String? get address2 => _j['address2'] as String?;
+
+  /// `countryCode` 값입니다.
+  String get countryCode => _j['countryCode'] as String;
+
+  /// `city` 값입니다.
+  String? get city => _j['city'] as String?;
+
+  /// `region` 값입니다.
+  String? get region => _j['region'] as String?;
+}
+
+/// [CustomerExportRow] 스키마입니다.
+///
+/// 내보내기 한 줄 — 고른 필드만 싣습니다.
+final ZodObject<CustomerExportRow> customerExportRowSchema = z.object<CustomerExportRow>({
+  'customerId': z.string(),
+  'name': z.string().optional(),
+  'email': z.string().nullable().optional(),
+  'phone': z.string().nullable().optional(),
+  'joinedAt': z.string().optional(),
+  'orderCount': z.number().int_().optional(),
+  'totalPaid': z.number().int_().optional(),
+  'lastOrderedAt': z.string().nullable().optional(),
+  'point': z.number().int_().optional(),
+  'marketingAgreed': z.boolean().optional(),
+  'marketingUpdatedAt': z.string().nullable().optional(),
+  'birthdate': z.string().nullable().optional(),
+  'gender': z.string().nullable().optional(),
+  'defaultAddress': customerExportAddressSchema.nullable().optional(),
+}, CustomerExportRow._);
+
+/// 내보내기 한 줄 — 고른 필드만 싣습니다.
+class CustomerExportRow extends ParsedObject {
+  /// [CustomerExportRow]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CustomerExportRow(
+      {required String customerId,
+      String? name,
+      Nullable<String>? email,
+      Nullable<String>? phone,
+      String? joinedAt,
+      int? orderCount,
+      int? totalPaid,
+      Nullable<String>? lastOrderedAt,
+      int? point,
+      bool? marketingAgreed,
+      Nullable<String>? marketingUpdatedAt,
+      Nullable<String>? birthdate,
+      Nullable<String>? gender,
+      Nullable<CustomerExportAddress>? defaultAddress})
+      : super({
+          'customerId': customerId,
+          if (name != null) 'name': name,
+          if (email != null) 'email': email.value,
+          if (phone != null) 'phone': phone.value,
+          if (joinedAt != null) 'joinedAt': joinedAt,
+          if (orderCount != null) 'orderCount': orderCount,
+          if (totalPaid != null) 'totalPaid': totalPaid,
+          if (lastOrderedAt != null) 'lastOrderedAt': lastOrderedAt.value,
+          if (point != null) 'point': point,
+          if (marketingAgreed != null) 'marketingAgreed': marketingAgreed,
+          if (marketingUpdatedAt != null) 'marketingUpdatedAt': marketingUpdatedAt.value,
+          if (birthdate != null) 'birthdate': birthdate.value,
+          if (gender != null) 'gender': gender.value,
+          if (defaultAddress != null) 'defaultAddress': defaultAddress.value
+        });
+
+  CustomerExportRow._(super.json);
+
+  /// JSON을 [customerExportRowSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CustomerExportRow.fromJson(Map<String, Object?> json) => customerExportRowSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `customerId` 값입니다.
+  String get customerId => _j['customerId'] as String;
+
+  /// `name` 값입니다.
+  String? get name => _j['name'] as String?;
+
+  /// `email` 값입니다.
+  String? get email => _j['email'] as String?;
+
+  /// 휴대폰. 스코프 `privacy:r`이 있으면 전체 번호, 없으면 가운데를 가린 번호(`010-****-1234`).
+  String? get phone => _j['phone'] as String?;
+
+  /// `joinedAt` 값입니다.
+  String? get joinedAt => _j['joinedAt'] as String?;
+
+  /// `orderCount` 값입니다.
+  int? get orderCount => _j['orderCount'] as int?;
+
+  /// 구매 금액(원) — 목록과 같은 기준.
+  int? get totalPaid => _j['totalPaid'] as int?;
+
+  /// `lastOrderedAt` 값입니다.
+  String? get lastOrderedAt => _j['lastOrderedAt'] as String?;
+
+  /// `point` 값입니다.
+  int? get point => _j['point'] as int?;
+
+  /// `marketingAgreed` 값입니다.
+  bool? get marketingAgreed => _j['marketingAgreed'] as bool?;
+
+  /// `marketingUpdatedAt` 값입니다.
+  String? get marketingUpdatedAt => _j['marketingUpdatedAt'] as String?;
+
+  /// `birthdate` 값입니다.
+  String? get birthdate => _j['birthdate'] as String?;
+
+  /// `gender` 값입니다.
+  String? get gender => _j['gender'] as String?;
+
+  /// `defaultAddress` 값입니다.
+  CustomerExportAddress? get defaultAddress => _j['defaultAddress'] as CustomerExportAddress?;
 }
 
 /// [CustomerAddress] 스키마입니다.
@@ -547,7 +824,8 @@ class CustomerConsentListQuery extends ParsedObject {
 
 /// [CustomerDetail] 스키마입니다.
 ///
-/// 구매자 상세 — 휴대폰 전체를 보여 줍니다.
+/// 구매자 상세 — 휴대폰(구매자·배송지)은 스코프 `privacy:r`이 있으면 전체 번호, 없으면 가린 번호(`010-****-1234`)다(#217).
+/// 가린 경우 `userinfo.phone_number`는 싣지 않습니다.
 final ZodObject<CustomerDetail> customerDetailSchema = z.object<CustomerDetail>({
   'customerId': z.string(),
   'name': z.string(),
@@ -556,13 +834,16 @@ final ZodObject<CustomerDetail> customerDetailSchema = z.object<CustomerDetail>(
   'joinedAt': z.string(),
   'point': z.number().int_(),
   'marketingAgreed': z.boolean(),
+  'lockedUntil': z.string().nullable().optional().withDefault(null),
   'loginMethods': z.array<CustomerDetailLoginMethodsItem>(customerDetailLoginMethodsItemSchema),
   'consents': customerConsentsSchema,
   'addresses': z.array<CustomerAddress>(customerAddressSchema),
+  'userinfo': customerUserinfoSchema.optional(),
   'stats': customerDetailStatsSchema,
 }, CustomerDetail._);
 
-/// 구매자 상세 — 휴대폰 전체를 보여 줍니다.
+/// 구매자 상세 — 휴대폰(구매자·배송지)은 스코프 `privacy:r`이 있으면 전체 번호, 없으면 가린 번호(`010-****-1234`)다(#217).
+/// 가린 경우 `userinfo.phone_number`는 싣지 않습니다.
 class CustomerDetail extends ParsedObject {
   /// [CustomerDetail]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   CustomerDetail(
@@ -573,9 +854,11 @@ class CustomerDetail extends ParsedObject {
       required String joinedAt,
       required int point,
       required bool marketingAgreed,
+      String? lockedUntil,
       required List<CustomerDetailLoginMethodsItem> loginMethods,
       required CustomerConsents consents,
       required List<CustomerAddress> addresses,
+      CustomerUserinfo? userinfo,
       required CustomerDetailStats stats})
       : super({
           'customerId': customerId,
@@ -585,9 +868,11 @@ class CustomerDetail extends ParsedObject {
           'joinedAt': joinedAt,
           'point': point,
           'marketingAgreed': marketingAgreed,
+          'lockedUntil': lockedUntil,
           'loginMethods': loginMethods,
           'consents': consents,
           'addresses': addresses,
+          if (userinfo != null) 'userinfo': userinfo,
           'stats': stats
         });
 
@@ -607,7 +892,7 @@ class CustomerDetail extends ParsedObject {
   /// `email` 값입니다.
   String? get email => _j['email'] as String?;
 
-  /// `phone` 값입니다.
+  /// 휴대폰. `privacy:r`이 있으면 전체 번호, 없으면 가운데를 가린 번호.
   String? get phone => _j['phone'] as String?;
 
   /// `joinedAt` 값입니다.
@@ -619,6 +904,9 @@ class CustomerDetail extends ParsedObject {
   /// `marketingAgreed` 값입니다.
   bool get marketingAgreed => _j['marketingAgreed'] as bool;
 
+  /// 로그인 잠금이 풀리는 시각(ISO 8601). 비밀번호를 5회 연속 틀리면 10분 잠깁니다. 잠겨 있지 않으면 null. `POST /v1/customers/{customerId}/unlock`으로 바로 풀 수 있습니다. 서버는 항상 싣습니다.
+  String? get lockedUntil => _j['lockedUntil'] as String?;
+
   /// 로그인 방법 — 이메일·비밀번호(`password`)와 연결된 소셜 계정.
   List<CustomerDetailLoginMethodsItem> get loginMethods =>
       (_j['loginMethods'] as List).cast<CustomerDetailLoginMethodsItem>();
@@ -628,6 +916,9 @@ class CustomerDetail extends ParsedObject {
 
   /// `addresses` 값입니다.
   List<CustomerAddress> get addresses => (_j['addresses'] as List).cast<CustomerAddress>();
+
+  /// OIDC userinfo 표준 클레임(이슈 #264, 주소는 기본 배송지). 서버는 항상 싣습니다.
+  CustomerUserinfo? get userinfo => _j['userinfo'] as CustomerUserinfo?;
 
   /// `stats` 값입니다.
   CustomerDetailStats get stats => _j['stats'] as CustomerDetailStats;
@@ -828,7 +1119,7 @@ class CustomerOrderItemsItem extends ParsedObject {
 final ZodObject<WithdrawCustomerRequest> withdrawCustomerRequestSchema = z.object<WithdrawCustomerRequest>({
   'reason': z.enum_(['BUYER_REQUEST', 'DORMANT', 'ABUSE', 'OTHER']),
   'memo': z.string().max(200).optional(),
-}, WithdrawCustomerRequest._);
+}, WithdrawCustomerRequest._, strictRequest: true);
 
 /// `POST /v1/customers/{id}/withdraw` 본문.
 class WithdrawCustomerRequest extends ParsedObject {
@@ -887,4 +1178,58 @@ class CustomerWithdrawalBlockedDetails extends ParsedObject {
 
   /// `pendingPayments` 값입니다.
   int get pendingPayments => _j['pendingPayments'] as int;
+}
+
+/// [UpdateCustomerRequest] 스키마입니다.
+///
+/// `PATCH /v1/customers/{id}` 본문(이슈 #267) — 셀러가 구매자 생일을 바꿉니다. 구매자는 생일을 한 번만 입력하므로 바꾸는 쪽은 셀러입니다.
+/// 준 클레임만 바뀌고 `null`은 지웁니다.
+final ZodObject<UpdateCustomerRequest> updateCustomerRequestSchema = z.object<UpdateCustomerRequest>({
+  'userinfo': updateCustomerRequestUserinfoSchema,
+}, UpdateCustomerRequest._, strictRequest: true);
+
+/// `PATCH /v1/customers/{id}` 본문(이슈 #267) — 셀러가 구매자 생일을 바꿉니다. 구매자는 생일을 한 번만 입력하므로 바꾸는 쪽은 셀러입니다.
+/// 준 클레임만 바뀌고 `null`은 지웁니다.
+class UpdateCustomerRequest extends ParsedObject {
+  /// [UpdateCustomerRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  UpdateCustomerRequest({required UpdateCustomerRequestUserinfo userinfo}) : super({'userinfo': userinfo});
+
+  UpdateCustomerRequest._(super.json);
+
+  /// JSON을 [updateCustomerRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory UpdateCustomerRequest.fromJson(Map<String, Object?> json) => updateCustomerRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 바꿀 OIDC 클레임 — 지금은 `birthdate`만 받습니다.
+  UpdateCustomerRequestUserinfo get userinfo => _j['userinfo'] as UpdateCustomerRequestUserinfo;
+}
+
+/// [UpdateCustomerRequestUserinfo] 스키마입니다.
+final ZodObject<UpdateCustomerRequestUserinfo> updateCustomerRequestUserinfoSchema =
+    z.object<UpdateCustomerRequestUserinfo>({
+  'birthdate': z
+      .string()
+      .pattern(RegExp(r'^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'))
+      .refine((v) => jsIsCalendarDate(v as String), message: '없는 날짜입니다')
+      .nullable()
+      .optional(),
+}, UpdateCustomerRequestUserinfo._, strict: true);
+
+/// 바꿀 OIDC 클레임 — 지금은 `birthdate`만 받습니다.
+class UpdateCustomerRequestUserinfo extends ParsedObject {
+  /// [UpdateCustomerRequestUserinfo]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  UpdateCustomerRequestUserinfo({Nullable<String>? birthdate})
+      : super({if (birthdate != null) 'birthdate': birthdate.value});
+
+  UpdateCustomerRequestUserinfo._(super.json);
+
+  /// JSON을 [updateCustomerRequestUserinfoSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory UpdateCustomerRequestUserinfo.fromJson(Map<String, Object?> json) =>
+      updateCustomerRequestUserinfoSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `birthdate` 값입니다.
+  String? get birthdate => _j['birthdate'] as String?;
 }

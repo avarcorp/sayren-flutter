@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -34,6 +39,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -60,7 +67,7 @@ part 'shipping-policy.manual.dart';
 final ZodObject<CurrencyShippingPolicy> currencyShippingPolicySchema = z.object<CurrencyShippingPolicy>({
   'baseDeliveryFee': z.number().int_().greaterThan(0, inclusive: true),
   'freeThreshold': z.number().int_().greaterThan(1, inclusive: true).nullable(),
-}, CurrencyShippingPolicy._);
+}, CurrencyShippingPolicy._, strict: true);
 
 /// 외화 한 통화의 상점 배송 값.
 class CurrencyShippingPolicy extends ParsedObject {
@@ -163,7 +170,7 @@ final ZodObject<ShippingPolicyPatch> shippingPolicyPatchSchema = z.object<Shippi
       .record<CurrencyShippingPolicy>(currencyShippingPolicySchema)
       .refine((v) => !jsMap(v).containsKey('KRW'), message: '기본 통화는 currencies에 넣지 않습니다')
       .optional(),
-}, ShippingPolicyPatch._);
+}, ShippingPolicyPatch._, strict: true);
 
 /// 부분 정책 — `PATCH /v1/store`의 `shippingPolicy`가 씁니다. 준 항목만 바뀝니다.
 ///
@@ -261,7 +268,7 @@ typedef RemoteArea = String;
 /// 도로명주소·건물관리번호 단위 판정은 후속 과제입니다.
 ///
 /// 범위는 **닫힌 구간**(`from` ≤ zip ≤ `to`)이고 겹치지 않습니다. 앞에서부터 처음 맞는 항목을 씁니다.
-/// 순서는 상점 플랫폼 「추가 배송비 지역」 표의 행 순서이기도 합니다(`remoteAreaGroups`). 제주를 먼저 두고
+/// 순서는 docs `guides/shipping-fees.mdx` 「제주·도서산간 추가 배송비」 표의 행 순서이기도 합니다. 제주를 먼저 두고
 /// 도서산간은 우편번호 오름차순으로 둡니다.
 const REMOTE_AREA_ZIP_RANGES = <Map<String, Object?>>[
   <String, Object?>{'area': 'JEJU', 'from': 63000, 'to': 63644, 'label': '제주특별자치도'},

@@ -28,6 +28,7 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 /// [CartItem] 스키마입니다.
 final ZodObject<CartItem> cartItemSchema = z.object<CartItem>({

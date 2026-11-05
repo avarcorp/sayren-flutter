@@ -15,15 +15,20 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -183,7 +190,7 @@ final ZodEnum orderItemStatusSchema = z.enum_(
 /// 값은 `PAYMENT_WAITING`·`PAID`·`CONFIRMED`·`DISPATCHED`·`DELIVERING`·`DELIVERED`·`PURCHASE_DECIDED`·`CANCELED`입니다.
 typedef OrderItemStatus = String;
 
-/// [String] 스키마입니다. 값은 `ORDER.PAID`·`ORDER.CONFIRMED`·`ORDER.DISPATCHED`·`ORDER.DELIVERED`·`ORDER.PURCHASE_DECIDED`·`CLAIM.CANCEL_REQUESTED`·`CLAIM.RETURN_REQUESTED`·`CLAIM.EXCHANGE_REQUESTED`·`CLAIM.COMPLETED`·`ORDER.ADDRESS_CHANGE_REQUESTED`입니다.
+/// [String] 스키마입니다. 값은 `ORDER.PAID`·`ORDER.CONFIRMED`·`ORDER.DISPATCHED`·`ORDER.DELIVERED`·`ORDER.PURCHASE_DECIDED`·`CLAIM.CANCEL_REQUESTED`·`CLAIM.RETURN_REQUESTED`·`CLAIM.EXCHANGE_REQUESTED`·`CLAIM.COMPLETED`·`ORDER.PAYMENT_WAITING`·`ORDER.DELIVERING`·`ORDER.CANCELED`·`ORDER.ADDRESS_CHANGE_REQUESTED`입니다.
 final ZodEnum changeTypeSchema = z.enum_([
   'ORDER.PAID',
   'ORDER.CONFIRMED',
@@ -194,10 +201,13 @@ final ZodEnum changeTypeSchema = z.enum_([
   'CLAIM.RETURN_REQUESTED',
   'CLAIM.EXCHANGE_REQUESTED',
   'CLAIM.COMPLETED',
+  'ORDER.PAYMENT_WAITING',
+  'ORDER.DELIVERING',
+  'ORDER.CANCELED',
   'ORDER.ADDRESS_CHANGE_REQUESTED'
 ]);
 
 /// ChangeType 값입니다.
 ///
-/// 값은 `ORDER.PAID`·`ORDER.CONFIRMED`·`ORDER.DISPATCHED`·`ORDER.DELIVERED`·`ORDER.PURCHASE_DECIDED`·`CLAIM.CANCEL_REQUESTED`·`CLAIM.RETURN_REQUESTED`·`CLAIM.EXCHANGE_REQUESTED`·`CLAIM.COMPLETED`·`ORDER.ADDRESS_CHANGE_REQUESTED`입니다.
+/// 값은 `ORDER.PAID`·`ORDER.CONFIRMED`·`ORDER.DISPATCHED`·`ORDER.DELIVERED`·`ORDER.PURCHASE_DECIDED`·`CLAIM.CANCEL_REQUESTED`·`CLAIM.RETURN_REQUESTED`·`CLAIM.EXCHANGE_REQUESTED`·`CLAIM.COMPLETED`·`ORDER.PAYMENT_WAITING`·`ORDER.DELIVERING`·`ORDER.CANCELED`·`ORDER.ADDRESS_CHANGE_REQUESTED`입니다.
 typedef ChangeType = String;

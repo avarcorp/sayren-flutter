@@ -438,6 +438,64 @@ class ZodArray<T> extends ZodType<List<T>> {
       ]);
 }
 
+/// strictRequest 안을 파싱하는 깊이 — 0보다 크면 객체가 모르는 키를 거른다
+int _strictDepth = 0;
+
+/// 관리 API 요청 스키마입니다(Node `strictRequest`). 안쪽 객체까지 모르는 키를 오류로 냅니다.
+class ZodStrict<T> extends ZodType<T> {
+  /// [inner]를 감쌉니다.
+  const ZodStrict(this.inner, [super.checks]);
+
+  /// 감싼 스키마입니다.
+  final ZodType<T> inner;
+
+  @override
+  ZodStrict<T> withChecks(List<ZodCheckFn> checks) => ZodStrict<T>(inner, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    _strictDepth++;
+    try {
+      return inner.run(input, path, issues);
+    } finally {
+      _strictDepth--;
+    }
+  }
+}
+
+/// 고정 길이 배열 스키마입니다(zod `z.tuple()`). 출력은 항목 타입의 리스트입니다.
+class ZodTuple<T> extends ZodType<List<T>> {
+  /// 자리별 항목 스키마로 만듭니다.
+  const ZodTuple(this.items, [super.checks]);
+
+  /// 자리별 항목 스키마입니다.
+  final List<ZodType<T>> items;
+
+  @override
+  ZodTuple<T> withChecks(List<ZodCheckFn> checks) => ZodTuple<T>(items, checks);
+
+  @override
+  Object? parseType(Object? input, List<Object> path, List<ZodIssue> issues) {
+    if (input is! List) {
+      issues.add(_issue('invalid_type', path, 'Invalid input: expected tuple, received ${_typeName(input)}'));
+      return null;
+    }
+    // zod처럼 짧으면 항목을 보지 않고, 길면 알린 뒤 선언한 자리만 검사한다
+    if (input.length < items.length) {
+      issues.add(_issue('too_small', path, 'Too small: expected array to have >=${items.length} items'));
+      return null;
+    }
+    final from = issues.length;
+    if (input.length > items.length) {
+      issues.add(_issue('too_big', path, 'Too big: expected array to have <=${items.length} items', continuable: true));
+    }
+    final out = [
+      for (var i = 0; i < items.length; i++) items[i].run(input[i], [...path, i], issues)
+    ];
+    return _aborted(issues, from) ? out : List<T>.unmodifiable(out.cast<T>());
+  }
+}
+
 /// 문자열 키 객체 스키마입니다(zod `z.record(z.string(), value)`).
 class ZodRecord<T> extends ZodType<Map<String, T>> {
   /// 값 스키마로 만듭니다.
@@ -469,7 +527,9 @@ class ZodRecord<T> extends ZodType<Map<String, T>> {
 /// 객체 스키마입니다(zod `z.object()`). 선언한 키만 남기고(모르는 키는 버린다) 모델을 만듭니다.
 class ZodObject<T> extends ZodType<T> {
   /// 필드 스키마와 모델 생성 함수로 객체 스키마를 만듭니다.
-  const ZodObject(this.shape, this.create, {this.loose = false, List<ZodCheckFn> checks = const []}) : super(checks);
+  const ZodObject(this.shape, this.create,
+      {this.loose = false, this.strict = false, this.strictRequest = false, List<ZodCheckFn> checks = const []})
+      : super(checks);
 
   /// 필드 이름별 스키마입니다.
   final Map<String, ZodType<Object?>> shape;
@@ -480,12 +540,19 @@ class ZodObject<T> extends ZodType<T> {
   /// 모르는 키도 남기는지입니다(zod `z.looseObject()`).
   final bool loose;
 
+  /// 모르는 키를 오류로 내는지입니다(zod `z.strictObject()`).
+  final bool strict;
+
+  /// 관리 API 요청 스키마(Node `strictRequest`)인지입니다. 안쪽 객체까지 모르는 키를 오류로 냅니다(`loose` 객체는 그대로 둡니다).
+  final bool strictRequest;
+
   @override
-  ZodObject<T> withChecks(List<ZodCheckFn> checks) => ZodObject<T>(shape, create, loose: loose, checks: checks);
+  ZodObject<T> withChecks(List<ZodCheckFn> checks) =>
+      ZodObject<T>(shape, create, loose: loose, strict: strict, strictRequest: strictRequest, checks: checks);
 
   /// 필드를 더한 객체 스키마를 돌려줍니다(zod `.extend()`).
   ZodObject<R> extend<R>(Map<String, ZodType<Object?>> more, R Function(Map<String, Object?> json) create) =>
-      ZodObject<R>({...shape, ...more}, create, loose: loose);
+      ZodObject<R>({...shape, ...more}, create, loose: loose, strict: strict, strictRequest: strictRequest);
 
   @override
   ZodObject<T> refine(bool Function(T value) predicate,
@@ -504,16 +571,34 @@ class ZodObject<T> extends ZodType<T> {
     }
     final from = issues.length;
     final out = <String, Object?>{};
-    shape.forEach((key, schema) {
-      final present = input is Map && input.containsKey(key);
-      final before = issues.length;
-      final value = schema.run(present ? input[key] : absent, [...path, key], issues);
-      // zod v4는 선택이 아닌 키가 없으면, 없음을 받아 주는 스키마(unknown·unknown.nullable 등)여도 실패한다
-      if (!present && value == absent && schema is! _Optional && schema is! _Catch && issues.length == before) {
-        issues.add(_issue('invalid_type', [...path, key], 'Invalid input: expected nonoptional, received undefined'));
+    // strictRequest 안이면 이 객체와 안쪽 객체가 모르는 키를 거른다(파싱은 동기라 깊이 카운터로 충분하다)
+    final strictHere = !loose && (strict || strictRequest || _strictDepth > 0);
+    if (strictRequest) _strictDepth++;
+    try {
+      shape.forEach((key, schema) {
+        final present = input is Map && input.containsKey(key);
+        final before = issues.length;
+        final value = schema.run(present ? input[key] : absent, [...path, key], issues);
+        // zod v4는 선택이 아닌 키가 없으면, 없음을 받아 주는 스키마(unknown·unknown.nullable 등)여도 실패한다
+        if (!present && value == absent && schema is! _Optional && schema is! _Catch && issues.length == before) {
+          issues.add(_issue('invalid_type', [...path, key], 'Invalid input: expected nonoptional, received undefined'));
+        }
+        if (value != absent) out[key] = value;
+      });
+    } finally {
+      if (strictRequest) _strictDepth--;
+    }
+    if (strictHere) {
+      final unknown = [
+        for (final k in input.keys)
+          if (!shape.containsKey(k)) k as String
+      ];
+      if (unknown.isNotEmpty) {
+        final names = unknown.map((k) => '"$k"').join(', ');
+        issues.add(_issue('unrecognized_keys', path, 'Unrecognized key${unknown.length > 1 ? 's' : ''}: $names',
+            continuable: true));
       }
-      if (value != absent) out[key] = value;
-    });
+    }
     if (loose) {
       for (final e in input.entries) {
         if (!shape.containsKey(e.key)) out[e.key as String] = e.value;
@@ -777,13 +862,19 @@ abstract final class z {
   /// zod `z.array()`입니다.
   static ZodArray<T> array<T>(ZodType<T> element) => ZodArray<T>(element);
 
+  /// 관리 API 요청 스키마로 감쌉니다(Node `strictRequest`).
+  static ZodStrict<T> strictRequest<T>(ZodType<T> schema) => ZodStrict<T>(schema);
+
+  /// 고정 길이 배열 스키마를 만듭니다.
+  static ZodTuple<T> tuple<T>(List<ZodType<T>> items) => ZodTuple<T>(items);
+
   /// zod `z.record(z.string(), value)`입니다.
   static ZodRecord<T> record<T>(ZodType<T> value) => ZodRecord<T>(value);
 
   /// zod `z.object()`입니다. 출력은 `create`로 만든 모델입니다.
   static ZodObject<T> object<T>(Map<String, ZodType<Object?>> shape, T Function(Map<String, Object?> json) create,
-          {bool loose = false}) =>
-      ZodObject<T>(shape, create, loose: loose);
+          {bool loose = false, bool strict = false, bool strictRequest = false}) =>
+      ZodObject<T>(shape, create, loose: loose, strict: strict, strictRequest: strictRequest);
 
   /// zod `z.object()`입니다. 출력은 JSON 맵 그대로입니다.
   static ZodObject<Map<String, Object?>> plainObject(Map<String, ZodType<Object?>> shape, {bool loose = false}) =>
@@ -895,6 +986,31 @@ int keyCount(Object? value) => jsMap(value).length;
 
 /// JS `Date.parse(value)`다(SDK 내부용). 읽을 수 없으면 NaN이다
 double jsDateParse(String value) => DateTime.tryParse(value)?.millisecondsSinceEpoch.toDouble() ?? double.nan;
+
+/// 실제로 있는 날짜(`YYYY-MM-DD`)인가(SDK 내부용) — JS `Date.UTC(y, m - 1, d)`로 만든 날의 월·일이 그대로인지 본다
+bool jsIsCalendarDate(String value) {
+  final parts = value.split('-').map(_jsNumber).toList();
+  if (parts.length < 3 || parts.take(3).any((p) => p.isNaN || p.isInfinite)) return false;
+  final y = parts[0].truncate(), m = parts[1].truncate(), d = parts[2].truncate();
+  // JS Date.UTC는 0~99년을 1900년대로 읽는다. 윤년 규칙은 그 범위에서 같아 그레고리력 그대로 판정해도 결과가 같다
+  final day = DateTime.utc(y, m, d);
+  return m >= 1 && m <= 12 && day.month == m && day.day == d;
+}
+
+/// JS `new Intl.DateTimeFormat(…, { timeZone })`이 받는 시간대인가(SDK 내부용).
+///
+/// Dart에는 시간대 데이터가 없어 IANA 이름(`Asia/Seoul`, 대소문자 무시)과 UTC 오프셋(`+09:00`)의 형식만 봅니다.
+/// 있는 이름인지는 서버가 판정합니다.
+bool jsIsTimeZone(String value) =>
+    RegExp(r'^[A-Za-z][A-Za-z0-9_+\-]*(/[A-Za-z0-9_+\-]+)*$').hasMatch(value) ||
+    RegExp(r'^[+-](?:[01]\d|2[0-3])(?::?[0-5]\d)?$').hasMatch(value);
+
+/// JS `Intl.getCanonicalLocales(value).length === 1` — 형식이 맞는 BCP 47 언어 태그 하나인가(SDK 내부용)
+bool jsIsLocaleTag(String value) => RegExp(
+      r'^(?:[a-z]{2,3}|[a-z]{5,8})(?:-[a-z]{4})?(?:-(?:[a-z]{2}|\d{3}))?(?:-(?:[a-z\d]{5,8}|\d[a-z\d]{3}))*'
+      r'(?:-[a-wy-z\d](?:-[a-z\d]{2,8})+)*(?:-x(?:-[a-z\d]{1,8})+)?$',
+      caseSensitive: false,
+    ).hasMatch(value);
 
 /// JS `Number(value)`다 — 문자열은 앞뒤 공백을 지우고 읽고(빈 문자열은 0), 참거짓은 1·0, null은 0, 읽을 수 없으면 NaN이다
 num _jsNumber(Object? value) {

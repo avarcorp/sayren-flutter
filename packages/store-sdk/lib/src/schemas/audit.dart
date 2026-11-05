@@ -14,16 +14,21 @@ import 'app-manifest.dart';
 import 'apps.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -861,7 +868,7 @@ class ApprovalPage extends ParsedObject {
 /// [ApprovalDecisionRequest] 스키마입니다.
 final ZodObject<ApprovalDecisionRequest> approvalDecisionRequestSchema = z.object<ApprovalDecisionRequest>({
   'note': z.string().trim().max(500).optional(),
-}, ApprovalDecisionRequest._);
+}, ApprovalDecisionRequest._, strictRequest: true);
 
 /// ApprovalDecisionRequest 값입니다.
 class ApprovalDecisionRequest extends ParsedObject {

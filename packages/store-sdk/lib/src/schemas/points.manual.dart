@@ -90,7 +90,9 @@ DateTime? pointRestoreExpiresAtOf(List<PointLotUsage> usages, DateTime now) {
     return DateTime.fromMillisecondsSinceEpoch(latest.toInt(), isUtc: true);
   }
   return pointExpiresAtOf(
-      DateTime.fromMillisecondsSinceEpoch(now.millisecondsSinceEpoch + _restoreGraceMs, isUtc: true), 0);
+    DateTime.fromMillisecondsSinceEpoch(now.millisecondsSinceEpoch + _restoreGraceMs, isUtc: true),
+    0,
+  );
 }
 
 /// 환불 금액을 현금 몫·적립금 몫으로 나눕니다. 차감 [charges](반품 배송비·쿠폰 조건 미달·추가 차감)를 **현금에서 먼저** 빼고

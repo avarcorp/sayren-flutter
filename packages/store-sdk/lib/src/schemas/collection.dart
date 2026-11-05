@@ -15,15 +15,20 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -570,7 +577,7 @@ final ZodType<CollectionCreateRequest> collectionCreateRequestSchema = z.object<
   'metaTitle': z.string().trim().max(60).nullable().optional(),
   'metaDescription': z.string().trim().max(160).nullable().optional(),
   'productIds': z.array<String>(z.string().min(1)).max(1000).optional(),
-}, CollectionCreateRequest._).check(_periodCheck);
+}, CollectionCreateRequest._, strictRequest: true).check(_periodCheck);
 
 /// `POST /v1/collections` — 컬렉션을 만듭니다. `slug`를 생략하면 `c-{id 뒤 8자}`로 만듭니다.
 /// 직접 선택(`MANUAL`)은 `productIds`가 처음 담을 상품과 순서입니다. 조건 자동(`AUTOMATIC`)은 `rules`가 있어야 하고 `productIds`를 받지 않습니다.
@@ -695,7 +702,7 @@ final ZodType<CollectionPatchRequest> collectionPatchRequestSchema = z.object<Co
   'metaTitle': z.string().trim().max(60).nullable().optional(),
   'metaDescription': z.string().trim().max(160).nullable().optional(),
   'revision': z.number().int_().greaterThan(0, inclusive: true).optional(),
-}, CollectionPatchRequest._).check(_periodCheck);
+}, CollectionPatchRequest._, strictRequest: true).check(_periodCheck);
 
 /// `PATCH /v1/collections/{collectionId}` — 준 항목만 바뀝니다. `type`을 주면 400 `COLLECTION_TYPE_IMMUTABLE`입니다.
 /// `revision`을 주면 그 번호일 때만 바뀌고, 그 사이 다른 수정이 있었으면 409 `COLLECTION_CHANGED`입니다.
@@ -790,7 +797,7 @@ final ZodObject<CollectionProductsReplaceRequest> collectionProductsReplaceReque
     z.object<CollectionProductsReplaceRequest>({
   'productIds': z.array<String>(z.string().min(1)).max(1000),
   'revision': z.number().int_().greaterThan(0, inclusive: true).optional(),
-}, CollectionProductsReplaceRequest._);
+}, CollectionProductsReplaceRequest._, strictRequest: true);
 
 /// `PUT /v1/collections/{collectionId}/products` — 담긴 상품을 통째로 바꿉니다(순서 포함).
 class CollectionProductsReplaceRequest extends ParsedObject {
@@ -819,7 +826,7 @@ class CollectionProductsReplaceRequest extends ParsedObject {
 final ZodObject<CollectionProductsAddRequest> collectionProductsAddRequestSchema =
     z.object<CollectionProductsAddRequest>({
   'productIds': z.array<String>(z.string().min(1)).min(1).max(500),
-}, CollectionProductsAddRequest._);
+}, CollectionProductsAddRequest._, strictRequest: true);
 
 /// `POST /v1/collections/{collectionId}/products` — 뒤에 붙입니다. 이미 담긴 상품은 그 자리에 둡니다.
 class CollectionProductsAddRequest extends ParsedObject {
@@ -1112,7 +1119,7 @@ class CollectionProductListQuery extends ParsedObject {
 final ZodObject<CollectionPreviewRequest> collectionPreviewRequestSchema = z.object<CollectionPreviewRequest>({
   'rules': collectionRulesSchema,
   'productSort': collectionProductSortRequestSchema.optional(),
-}, CollectionPreviewRequest._);
+}, CollectionPreviewRequest._, strictRequest: true);
 
 /// `POST /v1/collections/preview` — 저장하지 않고 조건으로 나오는 상품을 봅니다.
 class CollectionPreviewRequest extends ParsedObject {
@@ -1234,7 +1241,7 @@ final ZodObject<CollectionLocalizationRequest> collectionLocalizationRequestSche
   'description': z.string().trim().max(500).nullable().optional(),
   'metaTitle': z.string().trim().max(60).nullable().optional(),
   'metaDescription': z.string().trim().max(160).nullable().optional(),
-}, CollectionLocalizationRequest._);
+}, CollectionLocalizationRequest._, strict: true);
 
 /// `PUT /v1/collections/{collectionId}/localizations/{locale}` 본문 — 레코드 전체를 바꿉니다. 빠진 칸은 null(기본 언어 값으로 대체)입니다.
 class CollectionLocalizationRequest extends ParsedObject {

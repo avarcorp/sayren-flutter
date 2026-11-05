@@ -4,15 +4,14 @@
 ///
 /// ```dart
 /// final client = createStoreClient(StoreClientOptions(
-///   baseUrl: 'https://api.sayren.io/v1',
 ///   accessToken: personalAccessToken,
 ///   storeId: storeId,
 /// ));
 /// ```
 class StoreClientOptions {
-  /// 옵션을 만듭니다. [baseUrl]만 필수입니다.
+  /// 옵션을 만듭니다. 모두 선택입니다.
   const StoreClientOptions({
-    required this.baseUrl,
+    this.baseUrl = SAYREN_API_BASE_URL,
     this.accessToken,
     this.storeId,
     this.session,
@@ -21,7 +20,7 @@ class StoreClientOptions {
     this.fetch,
   });
 
-  /// 관리 API 주소입니다. 예: `https://api.sayren.io/v1`
+  /// 관리 API 주소(버전 경로 포함)입니다. 생략하면 운영 주소([SAYREN_API_BASE_URL], `https://api.sayren.io/v1`)이고, 개발·로컬에서만 지정합니다.
   final String baseUrl;
 
   /// 계정 토큰입니다(accounts가 발급한 JWT — 상점 플랫폼 로그인, 개인 액세스 토큰, 연결된 앱의 토큰).

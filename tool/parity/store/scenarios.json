@@ -243,6 +243,60 @@
       }
     },
     {
+      "name": "취소 미리보기 — 귀책·추가 차감(0은 보내지 않는다)",
+      "call": "orderItems.cancelPreview",
+      "args": [
+        "oi1",
+        {
+          "quantity": 1,
+          "responsibility": "BUYER",
+          "deductAmount": 0
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": null
+      }
+    },
+    {
+      "name": "배송 주문상품 — 상태 여러 개·주문상품 번호",
+      "call": "orderItems.listShipping",
+      "args": [
+        {
+          "page": 1,
+          "orderedFrom": "2026-11-01",
+          "status": [
+            "PAID",
+            "PREPARING"
+          ],
+          "orderItemNos": [
+            "26110100000001",
+            "26110100000002"
+          ],
+          "testPayment": "false"
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 1,
+            "contents": []
+          },
+          "error": null
+        }
+      }
+    },
+    {
       "name": "초안 저장 — If-Match",
       "call": "commerceFlows.saveDraft",
       "args": [
@@ -372,6 +426,22 @@
       }
     },
     {
+      "name": "클레임 승인 — 최종 환불액과 차감을 함께 주면 ZodError",
+      "call": "claims.approve",
+      "args": [
+        "cl1",
+        100,
+        null,
+        {
+          "refundAmount": 500
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": null
+      }
+    },
+    {
       "name": "수거 완료 — 본문 없음",
       "call": "claims.completeCollect",
       "args": [
@@ -449,6 +519,40 @@
           "page": 1,
           "size": 10,
           "q": "kim"
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 1,
+            "contents": []
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "회원 내보내기 — 필드",
+      "call": "customers.export",
+      "args": [
+        {
+          "size": 100,
+          "marketing": "agreed",
+          "fields": [
+            "name",
+            "email",
+            "phone"
+          ]
         }
       ],
       "response": {

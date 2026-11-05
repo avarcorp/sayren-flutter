@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'http.dart';
+import 'schemas/userinfo.dart';
 
 /// 위임으로 받은 구매자 토큰입니다. 만료되면 [delegateMember]를 다시 부르십시오.
 class DelegatedMemberToken {
@@ -64,19 +65,21 @@ String _toIsoString(DateTime value) {
 /// [uid](셀러 자체 인증의 사용자 id) 또는 [email]로 지목하고, 처음 보는 사용자면 구매자를 만듭니다.
 /// 실패하면 [MemberDelegationError]를 던집니다.
 ///
-/// - [baseUrl]: API 주소(예: `https://api.sayren.io`)
+/// - [baseUrl]: api 오리진입니다. 생략하면 운영([SAYREN_API_ORIGIN], `https://api.sayren.io`)이고, 개발·로컬에서만 지정합니다.
+/// - [userinfo]: OIDC 클레임입니다. 준 클레임만 바뀌고 null은 지웁니다.
 ///
 /// ```dart
-/// final token = await delegateMember(baseUrl: 'https://api.sayren.io', accessToken: pat, storeId: storeId, uid: user.id);
+/// final token = await delegateMember(accessToken: pat, storeId: storeId, uid: user.id);
 /// ```
 Future<DelegatedMemberToken> delegateMember({
-  required String baseUrl,
+  String baseUrl = SAYREN_API_ORIGIN,
   required String accessToken,
   required String storeId,
   String? uid,
   String? email,
   String? name,
   DateTime? authenticatedAt,
+  CustomerUserinfoInput? userinfo,
   Fetch? fetch,
 }) async {
   final request =
@@ -86,12 +89,15 @@ Future<DelegatedMemberToken> delegateMember({
           'authorization': 'Bearer $accessToken',
           'x-store-id': storeId,
         })
-        ..bodyBytes = utf8.encode(jsonEncode({
-          if (uid != null && uid.isNotEmpty) 'uid': uid,
-          if (email != null && email.isNotEmpty) 'email': email,
-          if (name != null && name.isNotEmpty) 'name': name,
-          if (authenticatedAt != null) 'authenticatedAt': _toIsoString(authenticatedAt),
-        }));
+        ..bodyBytes = utf8.encode(
+          jsonEncode({
+            if (uid != null && uid.isNotEmpty) 'uid': uid,
+            if (email != null && email.isNotEmpty) 'email': email,
+            if (name != null && name.isNotEmpty) 'name': name,
+            if (authenticatedAt != null) 'authenticatedAt': _toIsoString(authenticatedAt),
+            if (userinfo != null) 'userinfo': userinfo.toJson(),
+          }),
+        );
   final response = await (fetch ?? defaultFetch())(request);
   Object? body;
   try {

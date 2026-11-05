@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'market.dart';
 import 'misc.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,8 +55,11 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
+
+part 'order.manual.dart';
 
 /// [OrderSummary] 스키마입니다.
 final ZodObject<OrderSummary> orderSummarySchema = z.object<OrderSummary>({
@@ -217,14 +226,13 @@ final ZodObject<OrderItemFulfillment> orderItemFulfillmentSchema = z.object<Orde
   'status': z.string(),
   'fulfilledAt': z.string(),
   'note': z.string().nullable(),
-  'mode': z.string().optional(),
 }, OrderItemFulfillment._);
 
 /// 배송 없는 주문상품(`MANUAL`)의 제공 기록 (이슈 #48) — 셀러의 제공 처리가 만듭니다.
 class OrderItemFulfillment extends ParsedObject {
   /// [OrderItemFulfillment]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  OrderItemFulfillment({required String status, required String fulfilledAt, required String? note, String? mode})
-      : super({'status': status, 'fulfilledAt': fulfilledAt, 'note': note, if (mode != null) 'mode': mode});
+  OrderItemFulfillment({required String status, required String fulfilledAt, required String? note})
+      : super({'status': status, 'fulfilledAt': fulfilledAt, 'note': note});
 
   OrderItemFulfillment._(super.json);
 
@@ -241,9 +249,6 @@ class OrderItemFulfillment extends ParsedObject {
 
   /// 셀러가 제공 처리 때 남긴 이용 안내. 없으면 null.
   String? get note => _j['note'] as String?;
-
-  /// **Deprecated** — 항상 `MANUAL`입니다. 자동 제공을 없앴고(이슈 #48) store-sdk 0.19 이하 호환으로만 싣습니다. 게시된 연동이 store-sdk 0.20 이상으로 넘어간 뒤 다음 릴리스에서 뺍니다.
-  String? get mode => _j['mode'] as String?;
 }
 
 /// [OrderItem] 스키마입니다.
@@ -251,6 +256,7 @@ final ZodObject<OrderItem> orderItemSchema = z.object<OrderItem>({
   'orderItemId': z.string(),
   'orderItemNo': z.string().nullable().optional().withDefault(null),
   'orderId': z.string(),
+  'paymentId': z.string().nullable().optional().withDefault(null),
   'status': orderItemStatusSchema,
   'claimStatus': z.enum_(['CANCEL_REQUESTED', 'RETURN_REQUESTED', 'EXCHANGE_REQUESTED']).nullable(),
   'productId': z.string(),
@@ -287,6 +293,7 @@ class OrderItem extends ParsedObject {
       {required String orderItemId,
       String? orderItemNo,
       required String orderId,
+      String? paymentId,
       required String status,
       required String? claimStatus,
       required String productId,
@@ -318,6 +325,7 @@ class OrderItem extends ParsedObject {
           'orderItemId': orderItemId,
           'orderItemNo': orderItemNo,
           'orderId': orderId,
+          'paymentId': paymentId,
           'status': status,
           'claimStatus': claimStatus,
           'productId': productId,
@@ -362,6 +370,9 @@ class OrderItem extends ParsedObject {
 
   /// `orderId` 값입니다.
   String get orderId => _j['orderId'] as String;
+
+  /// 이 줄을 결제한 결제(`payments[].paymentId`, 이슈 #117). 줄 하나는 결제 하나가 내고 환불도 그 결제에서 합니다. 서버는 항상 싣습니다(PG 결제가 없는 0원 주문도 결제 id가 있습니다).
+  String? get paymentId => _j['paymentId'] as String?;
 
   /// `status` 값입니다.
   String get status => _j['status'] as String;
@@ -517,6 +528,69 @@ class OrderDiscount extends ParsedObject {
   String? get issueId => _j['issueId'] as String?;
 }
 
+/// [OrderPayment] 스키마입니다.
+///
+/// 주문의 결제 한 건 (이슈 #117) — 주문을 만든 첫 결제와 그 주문에 줄을 붙인 추가 결제.
+final ZodObject<OrderPayment> orderPaymentSchema = z.object<OrderPayment>({
+  'paymentId': z.string(),
+  'additional': z.boolean(),
+  'amount': z.number().int_(),
+  'approvedMethod': z.string().nullable(),
+  'easyPayProvider': easyPayProviderResponseSchema.nullable(),
+  'paidAt': z.string(),
+  'refundedAmount': z.number().int_(),
+}, OrderPayment._);
+
+/// 주문의 결제 한 건 (이슈 #117) — 주문을 만든 첫 결제와 그 주문에 줄을 붙인 추가 결제.
+class OrderPayment extends ParsedObject {
+  /// [OrderPayment]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderPayment(
+      {required String paymentId,
+      required bool additional,
+      required int amount,
+      required String? approvedMethod,
+      required String? easyPayProvider,
+      required String paidAt,
+      required int refundedAmount})
+      : super({
+          'paymentId': paymentId,
+          'additional': additional,
+          'amount': amount,
+          'approvedMethod': approvedMethod,
+          'easyPayProvider': easyPayProvider,
+          'paidAt': paidAt,
+          'refundedAmount': refundedAmount
+        });
+
+  OrderPayment._(super.json);
+
+  /// JSON을 [orderPaymentSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderPayment.fromJson(Map<String, Object?> json) => orderPaymentSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `paymentId` 값입니다.
+  String get paymentId => _j['paymentId'] as String;
+
+  /// 추가 결제인지입니다. false면 주문을 만든 첫 결제(`payment`와 같은 결제)다.
+  bool get additional => _j['additional'] as bool;
+
+  /// 결제(현금) 금액. 적립금·쿠폰으로 낸 몫은 빠집니다.
+  int get amount => _j['amount'] as int;
+
+  /// 실제 결제수단(`payment.approvedMethod`와 같은 값). 0원 결제는 null.
+  String? get approvedMethod => _j['approvedMethod'] as String?;
+
+  /// `easyPayProvider` 값입니다.
+  String? get easyPayProvider => _j['easyPayProvider'] as String?;
+
+  /// `paidAt` 값입니다.
+  String get paidAt => _j['paidAt'] as String;
+
+  /// 이 결제에서 환불이 끝난 금액.
+  int get refundedAmount => _j['refundedAmount'] as int;
+}
+
 /// [Order] 스키마입니다.
 final ZodObject<Order> orderSchema = z.object<Order>({
   'orderId': z.string(),
@@ -526,10 +600,12 @@ final ZodObject<Order> orderSchema = z.object<Order>({
   'orderer': orderOrdererSchema,
   'requiresShipping': z.boolean().optional().withDefault(true),
   'shippingAddress': shippingAddressSchema,
-  'payment': orderPaymentSchema,
+  'payment': orderPaymentFieldSchema,
   'currency': z.string().optional(),
   'testPayment': z.boolean(),
   'locale': z.string().nullable().optional(),
+  'payments': z.array<OrderPayment>(orderPaymentSchema).optional().withDefault(const []),
+  'paymentRequests': z.array<SellerCheckout>(sellerCheckoutSchema).optional().withDefault(const []),
   'items': z.array<OrderItem>(orderItemSchema),
 }, Order._);
 
@@ -544,10 +620,12 @@ class Order extends ParsedObject {
       required OrderOrderer orderer,
       bool requiresShipping = true,
       required ShippingAddress shippingAddress,
-      required OrderPayment payment,
+      required OrderPaymentField payment,
       String? currency,
       required bool testPayment,
       Nullable<String>? locale,
+      List<OrderPayment> payments = const [],
+      List<SellerCheckout> paymentRequests = const [],
       required List<OrderItem> items})
       : super({
           'orderId': orderId,
@@ -561,6 +639,8 @@ class Order extends ParsedObject {
           if (currency != null) 'currency': currency,
           'testPayment': testPayment,
           if (locale != null) 'locale': locale.value,
+          'payments': payments,
+          'paymentRequests': paymentRequests,
           'items': items
         });
 
@@ -593,7 +673,7 @@ class Order extends ParsedObject {
   ShippingAddress get shippingAddress => _j['shippingAddress'] as ShippingAddress;
 
   /// `payment` 값입니다.
-  OrderPayment get payment => _j['payment'] as OrderPayment;
+  OrderPaymentField get payment => _j['payment'] as OrderPaymentField;
 
   /// 주문 통화(ISO 4217, 이슈 #130). 금액 필드는 모두 이 통화의 최소 단위입니다. 외화 주문이 생기면 이 값을 확인합니다. 없으면 KRW입니다. 서버는 항상 싣습니다.
   String? get currency => _j['currency'] as String?;
@@ -603,6 +683,12 @@ class Order extends ParsedObject {
 
   /// 구매 언어(이슈 #134, BCP 47). 주문상품의 상품명·옵션 이름은 구매자가 이 언어로 본 값입니다. null이면 상점 기본 언어입니다(언어 기능 이전 주문 포함).
   String? get locale => _j['locale'] as String?;
+
+  /// 이 주문의 결제(이슈 #117) — 첫 결제와 추가 결제를 결제 순서로 싣습니다. `payment`는 첫 결제의 내역입니다. 서버는 항상 싣습니다.
+  List<OrderPayment> get payments => (_j['payments'] as List).cast<OrderPayment>();
+
+  /// 결제를 기다리는 결제 요청(이슈 #117) — 결제 대기 줄을 낸 요청이고 `checkoutUrl`이 결제 링큽니다. 결제되거나 만료되면 빠집니다. 서버는 항상 싣습니다.
+  List<SellerCheckout> get paymentRequests => (_j['paymentRequests'] as List).cast<SellerCheckout>();
 
   /// `items` 값입니다.
   List<OrderItem> get items => (_j['items'] as List).cast<OrderItem>();
@@ -644,8 +730,8 @@ class OrderOrderer extends ParsedObject {
   String? get email => _j['email'] as String?;
 }
 
-/// [OrderPayment] 스키마입니다.
-final ZodObject<OrderPayment> orderPaymentSchema = z.object<OrderPayment>({
+/// [OrderPaymentField] 스키마입니다.
+final ZodObject<OrderPaymentField> orderPaymentFieldSchema = z.object<OrderPaymentField>({
   'method': z.enum_(['CARD', 'BANK_TRANSFER', 'VIRTUAL_ACCOUNT', 'MOBILE', 'POINT', 'MIXED']),
   'approvedMethod': z.string().nullable().optional().withDefault(null),
   'easyPayProvider': easyPayProviderResponseSchema.nullable().optional().withDefault(null),
@@ -659,12 +745,12 @@ final ZodObject<OrderPayment> orderPaymentSchema = z.object<OrderPayment>({
   'totalAmount': z.number().int_(),
   'paidAt': z.string().nullable(),
   'cashReceipt': cashReceiptSchema.nullable().optional().withDefault(null),
-}, OrderPayment._);
+}, OrderPaymentField._);
 
-/// OrderPayment 값입니다.
-class OrderPayment extends ParsedObject {
-  /// [OrderPayment]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  OrderPayment(
+/// OrderPaymentField 값입니다.
+class OrderPaymentField extends ParsedObject {
+  /// [OrderPaymentField]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderPaymentField(
       {required String method,
       String? approvedMethod,
       String? easyPayProvider,
@@ -694,10 +780,10 @@ class OrderPayment extends ParsedObject {
           'cashReceipt': cashReceipt
         });
 
-  OrderPayment._(super.json);
+  OrderPaymentField._(super.json);
 
-  /// JSON을 [orderPaymentSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
-  factory OrderPayment.fromJson(Map<String, Object?> json) => orderPaymentSchema.parse(json);
+  /// JSON을 [orderPaymentFieldSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderPaymentField.fromJson(Map<String, Object?> json) => orderPaymentFieldSchema.parse(json);
 
   Map<String, Object?> get _j => jsonOf(this);
 
@@ -1086,7 +1172,7 @@ final ZodObject<DispatchRequest> dispatchRequestSchema = z.object<DispatchReques
               r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
           format: 'datetime')
       .optional(),
-}, DispatchRequest._).refine((v) {
+}, DispatchRequest._, strictRequest: true).refine((v) {
   final j = jsonOf(v as ParsedObject);
   final m = j['deliveryMethod'];
   return m == 'DIRECT' || m == 'NOTHING' ? true : truthy(j['carrierCode']) && truthy(j['trackingNumber']);
@@ -1198,6 +1284,408 @@ class DeliveryInfo extends ParsedObject {
 
   /// `deliveredAt` 값입니다.
   String? get deliveredAt => _j['deliveredAt'] as String?;
+}
+
+/// [ShippingOrderItem] 스키마입니다.
+///
+/// 배송 주문상품 한 줄 — `GET /v1/order-items/shipping`(이슈 #208·#209). 발송 작업용으로 주문상품에 주문번호·주문자·배송지·발송 정보를 붙였습니다.
+/// 배송지가 필요한 줄(택배·직접 배달)만 나옵니다.
+final ZodObject<ShippingOrderItem> shippingOrderItemSchema = z.object<ShippingOrderItem>({
+  'orderItemId': z.string(),
+  'orderItemNo': z.string().nullable().optional().withDefault(null),
+  'orderId': z.string(),
+  'paymentId': z.string().nullable().optional().withDefault(null),
+  'status': orderItemStatusSchema,
+  'claimStatus': z.enum_(['CANCEL_REQUESTED', 'RETURN_REQUESTED', 'EXCHANGE_REQUESTED']).nullable(),
+  'productId': z.string(),
+  'productName': z.string(),
+  'optionId': z.string().nullable(),
+  'optionName': z.string().nullable(),
+  'optionSelections': z.array<OptionSelection>(optionSelectionSchema).optional().withDefault(const []),
+  'customInputs': z.array<CustomInputValue>(customInputValueSchema).optional().withDefault(const []),
+  'stay': staySnapshotSchema.optional(),
+  'sellerCode': z.string().nullable(),
+  'fulfillmentSnapshot': orderItemFulfillmentSnapshotResponseSchema,
+  'quantity': z.number().int_(),
+  'canceledQuantity': z.number().int_(),
+  'activeQuantity': z.number().int_(),
+  'unitPrice': z.number().int_(),
+  'discountAmount': z.number().int_(),
+  'totalPrice': z.number().int_(),
+  'couponDiscountAmount': z.number().int_().optional().withDefault(0),
+  'pointAllocation': z.number().int_().optional().withDefault(0),
+  'hold': orderItemHoldSchema.nullable(),
+  'fulfillment': orderItemFulfillmentSchema.nullable().optional().withDefault(null),
+  'autoDecisionDate': z.string().nullable(),
+  'sellerMemo': z.string().nullable(),
+  'orderedAt': z.string(),
+  'lastChangedAt': z.string(),
+  'lastChangedType': changeTypeSchema,
+  'testPayment': z.boolean(),
+  'orderNo': z.string().nullable(),
+  'ordererName': z.string(),
+  'ordererPhone': z.string(),
+  'shippingAddress': shippingAddressSchema,
+  'delivery': deliveryInfoSchema.nullable(),
+  'flowStep': shippingOrderItemFlowStepSchema.nullable().optional().withDefault(null),
+}, ShippingOrderItem._);
+
+/// 배송 주문상품 한 줄 — `GET /v1/order-items/shipping`(이슈 #208·#209). 발송 작업용으로 주문상품에 주문번호·주문자·배송지·발송 정보를 붙였습니다.
+/// 배송지가 필요한 줄(택배·직접 배달)만 나옵니다.
+class ShippingOrderItem extends ParsedObject {
+  /// [ShippingOrderItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ShippingOrderItem(
+      {required String orderItemId,
+      String? orderItemNo,
+      required String orderId,
+      String? paymentId,
+      required String status,
+      required String? claimStatus,
+      required String productId,
+      required String productName,
+      required String? optionId,
+      required String? optionName,
+      List<OptionSelection> optionSelections = const [],
+      List<CustomInputValue> customInputs = const [],
+      StaySnapshot? stay,
+      required String? sellerCode,
+      required OrderItemFulfillmentSnapshotView fulfillmentSnapshot,
+      required int quantity,
+      required int canceledQuantity,
+      required int activeQuantity,
+      required int unitPrice,
+      required int discountAmount,
+      required int totalPrice,
+      int couponDiscountAmount = 0,
+      int pointAllocation = 0,
+      required OrderItemHold? hold,
+      OrderItemFulfillment? fulfillment,
+      required String? autoDecisionDate,
+      required String? sellerMemo,
+      required String orderedAt,
+      required String lastChangedAt,
+      required String lastChangedType,
+      required bool testPayment,
+      required String? orderNo,
+      required String ordererName,
+      required String ordererPhone,
+      required ShippingAddress shippingAddress,
+      required DeliveryInfo? delivery,
+      ShippingOrderItemFlowStep? flowStep})
+      : super({
+          'orderItemId': orderItemId,
+          'orderItemNo': orderItemNo,
+          'orderId': orderId,
+          'paymentId': paymentId,
+          'status': status,
+          'claimStatus': claimStatus,
+          'productId': productId,
+          'productName': productName,
+          'optionId': optionId,
+          'optionName': optionName,
+          'optionSelections': optionSelections,
+          'customInputs': customInputs,
+          if (stay != null) 'stay': stay,
+          'sellerCode': sellerCode,
+          'fulfillmentSnapshot': fulfillmentSnapshot,
+          'quantity': quantity,
+          'canceledQuantity': canceledQuantity,
+          'activeQuantity': activeQuantity,
+          'unitPrice': unitPrice,
+          'discountAmount': discountAmount,
+          'totalPrice': totalPrice,
+          'couponDiscountAmount': couponDiscountAmount,
+          'pointAllocation': pointAllocation,
+          'hold': hold,
+          'fulfillment': fulfillment,
+          'autoDecisionDate': autoDecisionDate,
+          'sellerMemo': sellerMemo,
+          'orderedAt': orderedAt,
+          'lastChangedAt': lastChangedAt,
+          'lastChangedType': lastChangedType,
+          'testPayment': testPayment,
+          'orderNo': orderNo,
+          'ordererName': ordererName,
+          'ordererPhone': ordererPhone,
+          'shippingAddress': shippingAddress,
+          'delivery': delivery,
+          'flowStep': flowStep
+        });
+
+  ShippingOrderItem._(super.json);
+
+  /// JSON을 [shippingOrderItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ShippingOrderItem.fromJson(Map<String, Object?> json) => shippingOrderItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `orderItemId` 값입니다.
+  String get orderItemId => _j['orderItemId'] as String;
+
+  /// 상품주문번호(이슈 #107) — 주문번호 + 줄 순번 2자리(01부터, 100줄부터 3자리). 부분 취소·클레임·송장의 처리 단위 번호이고 생성 후 바뀌지 않습니다.
+  String? get orderItemNo => _j['orderItemNo'] as String?;
+
+  /// `orderId` 값입니다.
+  String get orderId => _j['orderId'] as String;
+
+  /// 이 줄을 결제한 결제(`payments[].paymentId`, 이슈 #117). 줄 하나는 결제 하나가 내고 환불도 그 결제에서 합니다. 서버는 항상 싣습니다(PG 결제가 없는 0원 주문도 결제 id가 있습니다).
+  String? get paymentId => _j['paymentId'] as String?;
+
+  /// `status` 값입니다.
+  String get status => _j['status'] as String;
+
+  /// `claimStatus` 값입니다.
+  String? get claimStatus => _j['claimStatus'] as String?;
+
+  /// `productId` 값입니다.
+  String get productId => _j['productId'] as String;
+
+  /// `productName` 값입니다.
+  String get productName => _j['productName'] as String;
+
+  /// `optionId` 값입니다.
+  String? get optionId => _j['optionId'] as String?;
+
+  /// `optionName` 값입니다.
+  String? get optionName => _j['optionName'] as String?;
+
+  /// 주문 시점 옵션 선택(이슈 #59) — 조합 옵션(옵션명마다 한 칸, 추가금 0)과 추가 선택(값의 추가금). 옵션이 없거나 이 필드 이전 주문은 빈 배열. 서버는 항상 싣습니다.
+  List<OptionSelection> get optionSelections => (_j['optionSelections'] as List).cast<OptionSelection>();
+
+  /// 구매자가 적은 직접 입력값(주문 시점 항목명과 값, 이슈 #59). 없으면 빈 배열. 서버는 항상 싣습니다.
+  List<CustomInputValue> get customInputs => (_j['customInputs'] as List).cast<CustomInputValue>();
+
+  /// 숙박 기간과 박별 가격(날짜별 재고 상품만, 이슈 #118). 없으면 생략.
+  StaySnapshot? get stay => _j['stay'] as StaySnapshot?;
+
+  /// `sellerCode` 값입니다.
+  String? get sellerCode => _j['sellerCode'] as String?;
+
+  /// 주문 시점 이행 스냅샷(이슈 #57). `type`이 주문 시점 상품 유형입니다. 배송 상품이 아니면 발송·배송완료 대신 제공 처리를 하고, `DELIVERED`는 제공 완료입니다. 상품을 나중에 고쳐도 바뀌지 않습니다. 제공 기록은 `fulfillment`에 있습니다.
+  OrderItemFulfillmentSnapshotView get fulfillmentSnapshot =>
+      _j['fulfillmentSnapshot'] as OrderItemFulfillmentSnapshotView;
+
+  /// 주문 수량.
+  int get quantity => _j['quantity'] as int;
+
+  /// 취소·반품으로 환불된 누적 수량. 수량 단위 부분 취소가 없었으면 0입니다.
+  int get canceledQuantity => _j['canceledQuantity'] as int;
+
+  /// 살아 있는 수량 (`quantity` − `canceledQuantity`). 0이면 주문상품이 전량 취소됐습니다.
+  int get activeQuantity => _j['activeQuantity'] as int;
+
+  /// `unitPrice` 값입니다.
+  int get unitPrice => _j['unitPrice'] as int;
+
+  /// `discountAmount` 값입니다.
+  int get discountAmount => _j['discountAmount'] as int;
+
+  /// 주문상품 금액 (즉시할인 반영 단가 × 주문 수량). 쿠폰 할인 전 금액입니다.
+  int get totalPrice => _j['totalPrice'] as int;
+
+  /// 이 주문상품에 배분된 쿠폰 할인 — 상품 쿠폰 + 주문 쿠폰 배분. 실결제 금액은 `totalPrice − couponDiscountAmount`이고 취소·반품 환불은 실결제 금액을 수량 비율로 나눕니다. 쿠폰이 없으면 0. 서버는 항상 싣습니다.
+  int get couponDiscountAmount => _j['couponDiscountAmount'] as int;
+
+  /// 이 주문상품에 배분된 사용 적립금 (원, #93). 현금 실결제는 `totalPrice − couponDiscountAmount − pointAllocation`이고 취소·반품은 현금과 적립금을 따로 수량 비율로 돌려줍니다. 적립금을 쓰지 않았으면 0. 서버는 항상 싣습니다.
+  int get pointAllocation => _j['pointAllocation'] as int;
+
+  /// `hold` 값입니다.
+  OrderItemHold? get hold => _j['hold'] as OrderItemHold?;
+
+  /// 배송 없는 상품의 제공 기록(이슈 #48). 제공 전이거나 배송 상품이면 null입니다. 서버는 항상 싣습니다.
+  OrderItemFulfillment? get fulfillment => _j['fulfillment'] as OrderItemFulfillment?;
+
+  /// `autoDecisionDate` 값입니다.
+  String? get autoDecisionDate => _j['autoDecisionDate'] as String?;
+
+  /// `sellerMemo` 값입니다.
+  String? get sellerMemo => _j['sellerMemo'] as String?;
+
+  /// `orderedAt` 값입니다.
+  String get orderedAt => _j['orderedAt'] as String;
+
+  /// `lastChangedAt` 값입니다.
+  String get lastChangedAt => _j['lastChangedAt'] as String;
+
+  /// `lastChangedType` 값입니다.
+  String get lastChangedType => _j['lastChangedType'] as String;
+
+  /// 소속 주문이 테스트 결제(샌드박스 결제) 주문인지입니다. true면 실제로 돈이 오가지 않았습니다.
+  bool get testPayment => _j['testPayment'] as bool;
+
+  /// 주문번호(숫자 14자리). 이 필드 이전 주문은 null.
+  String? get orderNo => _j['orderNo'] as String?;
+
+  /// `ordererName` 값입니다.
+  String get ordererName => _j['ordererName'] as String;
+
+  /// `ordererPhone` 값입니다.
+  String get ordererPhone => _j['ordererPhone'] as String;
+
+  /// `shippingAddress` 값입니다.
+  ShippingAddress get shippingAddress => _j['shippingAddress'] as ShippingAddress;
+
+  /// 발송 정보. 발송 전이면 null.
+  DeliveryInfo? get delivery => _j['delivery'] as DeliveryInfo?;
+
+  /// 주문 흐름의 지금 단계(`GET /v1/order-items/{orderItemId}/flow`의 `flowState` 키·이름). 같은 상태라도 단계가 발송을 받지 않으면 발송은 409 `INVALID_STATUS`입니다(`acceptsConfirm`·`acceptsDispatch`). 흐름이 없으면 null. 서버는 항상 싣습니다.
+  ShippingOrderItemFlowStep? get flowStep => _j['flowStep'] as ShippingOrderItemFlowStep?;
+}
+
+/// [ShippingOrderItemFlowStep] 스키마입니다.
+final ZodObject<ShippingOrderItemFlowStep> shippingOrderItemFlowStepSchema = z.object<ShippingOrderItemFlowStep>({
+  'key': z.string(),
+  'label': z.string(),
+  'acceptsConfirm': z.boolean().optional().withDefault(true),
+  'acceptsDispatch': z.boolean().optional().withDefault(true),
+}, ShippingOrderItemFlowStep._);
+
+/// ShippingOrderItemFlowStep 값입니다.
+class ShippingOrderItemFlowStep extends ParsedObject {
+  /// [ShippingOrderItemFlowStep]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ShippingOrderItemFlowStep(
+      {required String key, required String label, bool acceptsConfirm = true, bool acceptsDispatch = true})
+      : super({'key': key, 'label': label, 'acceptsConfirm': acceptsConfirm, 'acceptsDispatch': acceptsDispatch});
+
+  ShippingOrderItemFlowStep._(super.json);
+
+  /// JSON을 [shippingOrderItemFlowStepSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ShippingOrderItemFlowStep.fromJson(Map<String, Object?> json) => shippingOrderItemFlowStepSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 주문 흐름 안 단계 키(상점이 정합니다). 화면 분기에 쓰지 않습니다.
+  String get key => _j['key'] as String;
+
+  /// 셀러용 단계 이름.
+  String get label => _j['label'] as String;
+
+  /// 이 단계가 발주 확인(`POST /v1/order-items/{orderItemId}/confirm`)을 받는지입니다. 거짓이면 발주 확인은 409 `INVALID_STATUS`입니다. 연결선 조건식은 실행 때 다시 판정합니다.
+  bool get acceptsConfirm => _j['acceptsConfirm'] as bool;
+
+  /// 이 단계가 발송(`POST /v1/order-items/{orderItemId}/dispatch`)을 받는지입니다. 거짓이면 발송은 409 `INVALID_STATUS`입니다. 연결선 조건식은 실행 때 다시 판정합니다.
+  bool get acceptsDispatch => _j['acceptsDispatch'] as bool;
+}
+
+/// [ShippingOrderItemPage] 스키마입니다.
+final ZodObject<ShippingOrderItemPage> shippingOrderItemPageSchema = z.object<ShippingOrderItemPage>({
+  'page': z.number().int_(),
+  'size': z.number().int_(),
+  'totalElements': z.number().int_(),
+  'totalPages': z.number().int_(),
+  'contents': z.array<ShippingOrderItem>(shippingOrderItemSchema),
+}, ShippingOrderItemPage._);
+
+/// ShippingOrderItemPage 값입니다.
+class ShippingOrderItemPage extends ParsedObject {
+  /// [ShippingOrderItemPage]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ShippingOrderItemPage(
+      {required int page,
+      required int size,
+      required int totalElements,
+      required int totalPages,
+      required List<ShippingOrderItem> contents})
+      : super({
+          'page': page,
+          'size': size,
+          'totalElements': totalElements,
+          'totalPages': totalPages,
+          'contents': contents
+        });
+
+  ShippingOrderItemPage._(super.json);
+
+  /// JSON을 [shippingOrderItemPageSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ShippingOrderItemPage.fromJson(Map<String, Object?> json) => shippingOrderItemPageSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `page` 값입니다.
+  int get page => _j['page'] as int;
+
+  /// `size` 값입니다.
+  int get size => _j['size'] as int;
+
+  /// `totalElements` 값입니다.
+  int get totalElements => _j['totalElements'] as int;
+
+  /// `totalPages` 값입니다.
+  int get totalPages => _j['totalPages'] as int;
+
+  /// `contents` 값입니다.
+  List<ShippingOrderItem> get contents => (_j['contents'] as List).cast<ShippingOrderItem>();
+}
+
+/// [ShippingOrderItemListQuery] 스키마입니다.
+///
+/// `GET /v1/order-items/shipping` 쿼리 — OpenAPI 문서용 형태. `orderedFrom` 누락 400 `MISSING_PARAMETER`, 형식 오류 400
+/// `INVALID_PARAMETER`, 366일 초과 400 `RANGE_TOO_WIDE`, `testPayment` 값 오류 400 `INVALID_PARAMETER`.
+final ZodObject<ShippingOrderItemListQuery> shippingOrderItemListQuerySchema = z.object<ShippingOrderItemListQuery>({
+  'orderedFrom': z.string().optional(),
+  'orderedTo': z.string().optional(),
+  'status': z.string().optional(),
+  'orderItemNos': z.string().optional(),
+  'keyword': z.string().optional(),
+  'testPayment': z.enum_(['true', 'false']).optional(),
+  'page': z.string().optional(),
+  'size': z.string().optional(),
+}, ShippingOrderItemListQuery._);
+
+/// `GET /v1/order-items/shipping` 쿼리 — OpenAPI 문서용 형태. `orderedFrom` 누락 400 `MISSING_PARAMETER`, 형식 오류 400
+/// `INVALID_PARAMETER`, 366일 초과 400 `RANGE_TOO_WIDE`, `testPayment` 값 오류 400 `INVALID_PARAMETER`.
+class ShippingOrderItemListQuery extends ParsedObject {
+  /// [ShippingOrderItemListQuery]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ShippingOrderItemListQuery(
+      {String? orderedFrom,
+      String? orderedTo,
+      String? status,
+      String? orderItemNos,
+      String? keyword,
+      String? testPayment,
+      String? page,
+      String? size})
+      : super({
+          if (orderedFrom != null) 'orderedFrom': orderedFrom,
+          if (orderedTo != null) 'orderedTo': orderedTo,
+          if (status != null) 'status': status,
+          if (orderItemNos != null) 'orderItemNos': orderItemNos,
+          if (keyword != null) 'keyword': keyword,
+          if (testPayment != null) 'testPayment': testPayment,
+          if (page != null) 'page': page,
+          if (size != null) 'size': size
+        });
+
+  ShippingOrderItemListQuery._(super.json);
+
+  /// JSON을 [shippingOrderItemListQuerySchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ShippingOrderItemListQuery.fromJson(Map<String, Object?> json) =>
+      shippingOrderItemListQuerySchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 주문 시각 조회 시작 (ISO 8601 날짜 또는 일시, 포함). `orderItemNos`가 없으면 필수.
+  String? get orderedFrom => _j['orderedFrom'] as String?;
+
+  /// 주문 시각 조회 끝 (ISO 8601, 포함). 생략하면 orderedFrom부터 31일. 기간은 최대 366일.
+  String? get orderedTo => _j['orderedTo'] as String?;
+
+  /// 주문상품 상태 필터. 쉼표로 여러 상태를 받습니다(예: `PAID,CONFIRMED`).
+  String? get status => _j['status'] as String?;
+
+  /// 상품주문번호(하이픈 허용)를 쉼표로 이어 최대 100개. 이 번호의 주문상품만 조회합니다.
+  String? get orderItemNos => _j['orderItemNos'] as String?;
+
+  /// 주문번호·상품주문번호(일치, 하이픈 허용)·주문자명·수령인명·상품명(포함) 검색.
+  String? get keyword => _j['keyword'] as String?;
+
+  /// 테스트 결제(샌드박스 결제) 필터. `true`면 테스트 결제만, `false`면 실결제만, 생략하면 전부입니다.
+  String? get testPayment => _j['testPayment'] as String?;
+
+  /// 페이지 번호 (1부터, 기본 1).
+  String? get page => _j['page'] as String?;
+
+  /// 페이지 크기 (기본 20, 최대 100).
+  String? get size => _j['size'] as String?;
 }
 
 /// [String] 스키마입니다.
@@ -1436,7 +1924,7 @@ final ZodObject<HoldOrderItemRequest> holdOrderItemRequestSchema = z.object<Hold
   'reason': z.enum_(['OUT_OF_STOCK', 'CUSTOMER_REQUEST', 'CUSTOMS', 'ETC']),
   'detail': z.string().max(500).optional(),
   'expectedDispatchDate': z.string(),
-}, HoldOrderItemRequest._);
+}, HoldOrderItemRequest._, strictRequest: true);
 
 /// HoldOrderItemRequest 값입니다.
 class HoldOrderItemRequest extends ParsedObject {
@@ -1467,17 +1955,39 @@ final ZodObject<CancelBySellerRequest> cancelBySellerRequestSchema = z.object<Ca
   'detail': z.string().max(500).optional(),
   'quantity': z.number().int_().greaterThan(1, inclusive: true).optional(),
   'holdRefund': z.boolean().optional(),
-}, CancelBySellerRequest._);
+  'responsibility': z.enum_(['SELLER', 'BUYER']).optional(),
+  'deductAmount': z.number().int_().greaterThan(0, inclusive: true).optional(),
+  'refundAmount': z.number().int_().greaterThan(0, inclusive: true).optional(),
+  'restock': z.boolean().optional(),
+  'reclaimPurchasePoints': z.boolean().optional(),
+}, CancelBySellerRequest._, strict: true, strictRequest: true).refine((v) {
+  final j = jsonOf(v as ParsedObject);
+  return !j.containsKey('refundAmount') || !j.containsKey('deductAmount');
+}, message: 'refundAmount와 deductAmount는 함께 줄 수 없습니다', path: ['refundAmount']);
 
 /// CancelBySellerRequest 값입니다.
 class CancelBySellerRequest extends ParsedObject {
   /// [CancelBySellerRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  CancelBySellerRequest({required String reason, String? detail, int? quantity, bool? holdRefund})
+  CancelBySellerRequest(
+      {required String reason,
+      String? detail,
+      int? quantity,
+      bool? holdRefund,
+      String? responsibility,
+      int? deductAmount,
+      int? refundAmount,
+      bool? restock,
+      bool? reclaimPurchasePoints})
       : super({
           'reason': reason,
           if (detail != null) 'detail': detail,
           if (quantity != null) 'quantity': quantity,
-          if (holdRefund != null) 'holdRefund': holdRefund
+          if (holdRefund != null) 'holdRefund': holdRefund,
+          if (responsibility != null) 'responsibility': responsibility,
+          if (deductAmount != null) 'deductAmount': deductAmount,
+          if (refundAmount != null) 'refundAmount': refundAmount,
+          if (restock != null) 'restock': restock,
+          if (reclaimPurchasePoints != null) 'reclaimPurchasePoints': reclaimPurchasePoints
         });
 
   CancelBySellerRequest._(super.json);
@@ -1498,6 +2008,55 @@ class CancelBySellerRequest extends ParsedObject {
 
   /// true면 주문만 취소하고 결제 환불은 대기로 남깁니다(#115). 정산·재고·적립금 반환은 그대로 하고, PG 환불은 결제 상세의 `POST /v1/payments/refunds/{refundId}/process`로 따로 합니다. 생략하면 취소와 함께 환불합니다.
   bool? get holdRefund => _j['holdRefund'] as bool?;
+
+  /// 귀책(#301). 생략하면 `SELLER`입니다. `SELLER`면 배송비를 판매자가 부담하고(환불 정책 `sellerFaultFreeShipping`) 쿠폰 조건 미달 차감을 하지 않습니다. `BUYER`면 클레임 승인의 구매자 귀책과 같은 규칙입니다(발송 뒤에는 배송비를 돌려주지 않습니다). 반품 배송비는 자동으로 빼지 않습니다 — 필요하면 `deductAmount`로 뺍니다.
+  String? get responsibility => _j['responsibility'] as String?;
+
+  /// 환불액에서 뺄 추가 차감(#301, 원). 생략하면 0입니다. 현금에서 먼저 빼고 모자란 몫만 돌려줄 적립금에서 뺍니다. 환불 원장·`ORDER.CANCELED` 웹훅에 따로 남습니다.
+  int? get deductAmount => _j['deductAmount'] as int?;
+
+  /// 최종 현금 환불액(#365, 원). 생략하면 서버 계산값입니다. 배송비 환불 여부·귀책과 무관하게 판매자가 정합니다. 배송비·쿠폰 정산 기록과 적립금 반환은 계산값대로 하고 현금만 이 값입니다. 결제 잔액(`availableRefundAmount`)을 넘으면 409 `REFUND_EXCEEDS_BALANCE`. `deductAmount`와 함께 주면 400입니다. 응답·웹훅의 `calculatedRefundAmount`가 서버 계산값입니다.
+  int? get refundAmount => _j['refundAmount'] as int?;
+
+  /// 재고를 되돌리는지입니다(#301). 발송 전(결제완료·발주확인, 배송 없는 상품은 제공 완료까지)은 생략하면 true입니다. 그 뒤(발송·배송중·배송완료·구매확정)는 생략하면 400 `RESTOCK_REQUIRED`입니다 — 물건이 돌아왔는지는 판매자가 정합니다.
+  bool? get restock => _j['restock'] as bool?;
+
+  /// 구매확정 때 지급한 구매 적립금 중 이번 수량의 몫을 회수하는지입니다(#301). 지급된 구매 적립금이 없으면 무시합니다. 생략하면 회수하지 않습니다. 회원 잔액이 모자라면 있는 만큼만 회수합니다(리뷰 적립 회수와 같은 규칙).
+  bool? get reclaimPurchasePoints => _j['reclaimPurchasePoints'] as bool?;
+}
+
+/// [SellerRefundRequest] 스키마입니다.
+///
+/// 금액만 환불 요청(#365) — `POST /v1/orders/{orderId}/refunds`. 주문상품 상태·수량·재고·적립금·쿠폰·배송비 정산을 바꾸지 않고
+/// 결제에서 금액만 돌려줍니다. 헤더 `Idempotency-Key`가 필수입니다.
+final ZodObject<SellerRefundRequest> sellerRefundRequestSchema = z.object<SellerRefundRequest>({
+  'amount': z.number().int_().greaterThan(1, inclusive: true),
+  'reason': z.string().trim().min(1).max(500),
+  'paymentId': z.string().optional(),
+}, SellerRefundRequest._, strictRequest: true);
+
+/// 금액만 환불 요청(#365) — `POST /v1/orders/{orderId}/refunds`. 주문상품 상태·수량·재고·적립금·쿠폰·배송비 정산을 바꾸지 않고
+/// 결제에서 금액만 돌려줍니다. 헤더 `Idempotency-Key`가 필수입니다.
+class SellerRefundRequest extends ParsedObject {
+  /// [SellerRefundRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  SellerRefundRequest({required int amount, required String reason, String? paymentId})
+      : super({'amount': amount, 'reason': reason, if (paymentId != null) 'paymentId': paymentId});
+
+  SellerRefundRequest._(super.json);
+
+  /// JSON을 [sellerRefundRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory SellerRefundRequest.fromJson(Map<String, Object?> json) => sellerRefundRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 돌려줄 현금 (원). 결제의 남은 금액(결제 상세 `availableRefundAmount`)을 넘으면 409 `REFUND_EXCEEDS_BALANCE`.
+  int get amount => _j['amount'] as int;
+
+  /// 환불 사유. 감사 로그와 결제 상세 환불 이력에 남습니다.
+  String get reason => _j['reason'] as String;
+
+  /// 환불할 결제(주문 응답 `payments[].paymentId`). 생략하면 주문의 첫 결제입니다. 추가 결제가 있는 주문은 이 값으로 고릅니다.
+  String? get paymentId => _j['paymentId'] as String?;
 }
 
 /// [FulfillRequest] 스키마입니다.
@@ -1506,7 +2065,7 @@ class CancelBySellerRequest extends ParsedObject {
 /// 제공 완료(`DELIVERED`)로 바꿉니다.
 final ZodObject<FulfillRequest> fulfillRequestSchema = z.object<FulfillRequest>({
   'note': z.string().trim().max(1000).optional(),
-}, FulfillRequest._);
+}, FulfillRequest._, strictRequest: true);
 
 /// 제공 처리 요청 (이슈 #48) — `POST /v1/order-items/{orderItemId}/fulfill`. 배송 없는 주문상품(`MANUAL`)을
 /// 제공 완료(`DELIVERED`)로 바꿉니다.
@@ -1531,7 +2090,7 @@ class FulfillRequest extends ParsedObject {
 final ZodObject<FulfillBulkRequest> fulfillBulkRequestSchema = z.object<FulfillBulkRequest>({
   'orderItemIds': z.array<String>(z.string()).min(1).max(100),
   'note': z.string().trim().max(1000).optional(),
-}, FulfillBulkRequest._);
+}, FulfillBulkRequest._, strictRequest: true);
 
 /// 제공 처리 일괄 요청 — `POST /v1/order-items/fulfill`.
 class FulfillBulkRequest extends ParsedObject {
@@ -1559,6 +2118,7 @@ class FulfillBulkRequest extends ParsedObject {
 final ZodObject<CancelBySellerResult> cancelBySellerResultSchema = z.object<CancelBySellerResult>({
   'orderItemId': z.string(),
   'refundAmount': z.number().int_(),
+  'calculatedRefundAmount': z.number().int_().optional(),
   'quantity': z.number().int_(),
   'canceledQuantity': z.number().int_(),
   'deliveryFeeRefundAmount': z.number().int_(),
@@ -1568,6 +2128,9 @@ final ZodObject<CancelBySellerResult> cancelBySellerResultSchema = z.object<Canc
   'pointRefundAmount': z.number().int_().optional().withDefault(0),
   'refundedAt': z.string(),
   'refundHeld': z.boolean().optional().withDefault(false),
+  'refundStatus': z.string().nullable().optional().withDefault(null),
+  'deductAmount': z.number().int_().optional().withDefault(0),
+  'purchasePointReclaimedAmount': z.number().int_().optional().withDefault(0),
 }, CancelBySellerResult._);
 
 /// `POST /v1/order-items/{orderItemId}/cancel` 응답 — 셀러 직권취소 환불 결과.
@@ -1576,6 +2139,7 @@ class CancelBySellerResult extends ParsedObject {
   CancelBySellerResult(
       {required String orderItemId,
       required int refundAmount,
+      int? calculatedRefundAmount,
       required int quantity,
       required int canceledQuantity,
       required int deliveryFeeRefundAmount,
@@ -1584,10 +2148,14 @@ class CancelBySellerResult extends ParsedObject {
       int couponChargeRefundAmount = 0,
       int pointRefundAmount = 0,
       required String refundedAt,
-      bool refundHeld = false})
+      bool refundHeld = false,
+      String? refundStatus,
+      int deductAmount = 0,
+      int purchasePointReclaimedAmount = 0})
       : super({
           'orderItemId': orderItemId,
           'refundAmount': refundAmount,
+          if (calculatedRefundAmount != null) 'calculatedRefundAmount': calculatedRefundAmount,
           'quantity': quantity,
           'canceledQuantity': canceledQuantity,
           'deliveryFeeRefundAmount': deliveryFeeRefundAmount,
@@ -1596,7 +2164,10 @@ class CancelBySellerResult extends ParsedObject {
           'couponChargeRefundAmount': couponChargeRefundAmount,
           'pointRefundAmount': pointRefundAmount,
           'refundedAt': refundedAt,
-          'refundHeld': refundHeld
+          'refundHeld': refundHeld,
+          'refundStatus': refundStatus,
+          'deductAmount': deductAmount,
+          'purchasePointReclaimedAmount': purchasePointReclaimedAmount
         });
 
   CancelBySellerResult._(super.json);
@@ -1609,8 +2180,11 @@ class CancelBySellerResult extends ParsedObject {
   /// `orderItemId` 값입니다.
   String get orderItemId => _j['orderItemId'] as String;
 
-  /// 실제 환불한 금액 — 수량 비율 상품 실결제 금액(쿠폰 배분을 뺀 금액) + 배송비 환불 − 조건부 무료배송 미달 차감 + 되돌린 쿠폰 차감(`couponChargeRefundAmount`).
+  /// 실제 환불한 금액 — 수량 비율 상품 실결제 금액(쿠폰 배분을 뺀 금액) + 배송비 환불 − 조건부 무료배송 미달 차감 − 쿠폰 조건 미달 차감 + 되돌린 쿠폰 차감(`couponChargeRefundAmount`) − 추가 차감(`deductAmount`). 판매자가 `refundAmount`를 정했으면 그 값입니다.
   int get refundAmount => _j['refundAmount'] as int;
+
+  /// 서버가 계산한 현금 환불액(#365). 판매자가 `refundAmount`를 정하지 않았으면 `refundAmount`와 같습니다. 이 필드가 없는 이전 응답은 `refundAmount`와 같다고 읽습니다.
+  int? get calculatedRefundAmount => _j['calculatedRefundAmount'] as int?;
 
   /// 취소한 수량.
   int get quantity => _j['quantity'] as int;
@@ -1624,7 +2198,7 @@ class CancelBySellerResult extends ParsedObject {
   /// 조건부 무료배송 기준 미달로 환불액에서 뺀 배송비. 정책이 꺼져 있으면 항상 0입니다.
   int get deliveryFeeChargeAmount => _j['deliveryFeeChargeAmount'] as int;
 
-  /// 쿠폰 조건 미달 차감. 판매자 취소는 차감하지 않으므로 늘 0입니다. 서버는 항상 싣습니다.
+  /// 쿠폰 조건 미달 차감. 판매자 귀책 취소는 차감하지 않으므로 0이고, 구매자 귀책(`responsibility: BUYER`)이면 생길 수 있습니다. 서버는 항상 싣습니다.
   int get couponChargeAmount => _j['couponChargeAmount'] as int;
 
   /// 환불액에 더한, 앞선 환불에서 뺀 쿠폰 차감을 되돌린 몫. 서버는 항상 싣습니다.
@@ -1638,6 +2212,37 @@ class CancelBySellerResult extends ParsedObject {
 
   /// 결제 환불을 대기로 남겼습니다(`holdRefund`). 결제 상세에서 환불 처리합니다.
   bool get refundHeld => _j['refundHeld'] as bool;
+
+  /// 이번 취소의 결제 환불 원장 상태 — SUCCEEDED 환불됨 · FAILED 실패(결제 상세에서 다시 요청) · PROCESSING 결과 불명(PG 확인 필요) · HELD 환불 대기. 환불할 PG 결제가 없으면(금액 0·적립금 전액) null. 새 값이 추가될 수 있습니다.
+  String? get refundStatus => _j['refundStatus'] as String?;
+
+  /// 환불액에서 뺀 추가 차감(#301). 서버는 항상 싣습니다.
+  int get deductAmount => _j['deductAmount'] as int;
+
+  /// 회수한 구매 적립금(#301, `reclaimPurchasePoints`). 잔액이 모자라면 요청한 몫보다 작습니다. 서버는 항상 싣습니다.
+  int get purchasePointReclaimedAmount => _j['purchasePointReclaimedAmount'] as int;
+}
+
+/// `GET /v1/order-items/{orderItemId}/cancel-preview` 쿼리 — 금액에 영향을 주는 취소 입력(#301). 생략하면 취소의 기본값입니다.
+class SellerCancelPreviewQuery {
+  /// [SellerCancelPreviewQuery]을 만듭니다.
+  const SellerCancelPreviewQuery({this.quantity, this.responsibility, this.deductAmount});
+
+  /// `quantity` 값입니다.
+  final int? quantity;
+
+  /// `responsibility` 값입니다.
+  final String? responsibility;
+
+  /// `deductAmount` 값입니다.
+  final int? deductAmount;
+
+  /// 쿼리 파라미터로 바꿉니다. null인 값은 뺍니다.
+  Map<String, Object?> toJson() => {
+        if (quantity != null) 'quantity': quantity,
+        if (responsibility != null) 'responsibility': responsibility,
+        if (deductAmount != null) 'deductAmount': deductAmount
+      };
 }
 
 /// [SellerCancelPreview] 스키마입니다.
@@ -1651,6 +2256,9 @@ final ZodObject<SellerCancelPreview> sellerCancelPreviewSchema = z.object<Seller
   'pointRefundAmount': z.number().int_(),
   'deliveryFeeRefundAmount': z.number().int_(),
   'deliveryFeeChargeAmount': z.number().int_(),
+  'deductAmount': z.number().int_().optional().withDefault(0),
+  'restockRequired': z.boolean().optional().withDefault(false),
+  'purchasePointAmount': z.number().int_().optional().withDefault(0),
 }, SellerCancelPreview._);
 
 /// `GET /v1/order-items/{orderItemId}/cancel-preview` 응답(#115) — 판매자 취소를 하면 돌려줄 금액. 실제 취소와 같은 계산을
@@ -1663,14 +2271,20 @@ class SellerCancelPreview extends ParsedObject {
       required int refundAmount,
       required int pointRefundAmount,
       required int deliveryFeeRefundAmount,
-      required int deliveryFeeChargeAmount})
+      required int deliveryFeeChargeAmount,
+      int deductAmount = 0,
+      bool restockRequired = false,
+      int purchasePointAmount = 0})
       : super({
           'orderItemId': orderItemId,
           'quantity': quantity,
           'refundAmount': refundAmount,
           'pointRefundAmount': pointRefundAmount,
           'deliveryFeeRefundAmount': deliveryFeeRefundAmount,
-          'deliveryFeeChargeAmount': deliveryFeeChargeAmount
+          'deliveryFeeChargeAmount': deliveryFeeChargeAmount,
+          'deductAmount': deductAmount,
+          'restockRequired': restockRequired,
+          'purchasePointAmount': purchasePointAmount
         });
 
   SellerCancelPreview._(super.json);
@@ -1697,6 +2311,15 @@ class SellerCancelPreview extends ParsedObject {
 
   /// 조건부 무료배송 기준 미달로 뺄 배송비.
   int get deliveryFeeChargeAmount => _j['deliveryFeeChargeAmount'] as int;
+
+  /// 뺄 추가 차감(쿼리 `deductAmount`). 서버는 항상 싣습니다.
+  int get deductAmount => _j['deductAmount'] as int;
+
+  /// 취소 요청에 `restock`이 있어야 하는지입니다(#301) — 발송 뒤 주문상품이면 true입니다. 서버는 항상 싣습니다.
+  bool get restockRequired => _j['restockRequired'] as bool;
+
+  /// 이번 수량에서 회수할 수 있는 구매 적립금(#301). 0이면 회수할 것이 없습니다(`reclaimPurchasePoints`를 묻지 않습니다). 서버는 항상 싣습니다.
+  int get purchasePointAmount => _j['purchasePointAmount'] as int;
 }
 
 /// [OrderItemMemoResult] 스키마입니다.

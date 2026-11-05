@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -34,6 +39,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -86,13 +93,14 @@ const STORE_SCOPE_RESOURCES = <String, List<String>>{
   'promotion': <String>['r', 'rw'],
   'storefront': <String>['r', 'rw'],
   'flow': <String>['r', 'rw'],
-  'inventory': <String>['r', 'rw']
+  'inventory': <String>['r', 'rw'],
+  'privacy': <String>['r']
 };
 
 /// StoreScopeResource 값입니다.
 typedef StoreScopeResource = String;
 
-/// [String] 스키마입니다. 값은 `product`·`category`·`order`·`claim`·`inquiry`·`review`·`settlement`·`analytics`·`webhook`·`store`·`member`·`customer`·`audit`·`promotion`·`storefront`·`flow`·`inventory`입니다.
+/// [String] 스키마입니다. 값은 `product`·`category`·`order`·`claim`·`inquiry`·`review`·`settlement`·`analytics`·`webhook`·`store`·`member`·`customer`·`audit`·`promotion`·`storefront`·`flow`·`inventory`·`privacy`입니다.
 final ZodEnum storeScopeResourceSchema = z.enum_([
   'product',
   'category',
@@ -110,7 +118,8 @@ final ZodEnum storeScopeResourceSchema = z.enum_([
   'promotion',
   'storefront',
   'flow',
-  'inventory'
+  'inventory',
+  'privacy'
 ]);
 
 /// 역할별 자동 부여 스코프 (auth-spec §7).
@@ -133,7 +142,8 @@ const STORE_ROLE_SCOPES = <String, List<String>>{
     'promotion:rw',
     'storefront:rw',
     'flow:rw',
-    'inventory:rw'
+    'inventory:rw',
+    'privacy:r'
   ],
   'ADMIN': <String>[
     'product:rw',
@@ -151,7 +161,8 @@ const STORE_ROLE_SCOPES = <String, List<String>>{
     'promotion:rw',
     'storefront:rw',
     'flow:rw',
-    'inventory:rw'
+    'inventory:rw',
+    'privacy:r'
   ],
   'STAFF': <String>[
     'product:rw',

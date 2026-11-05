@@ -28,6 +28,7 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 /// [FlowInputField] 스키마입니다.
 ///
@@ -173,6 +174,7 @@ class FlowInputFieldWhen extends ParsedObject {
 final ZodObject<FlowAction> flowActionSchema = z.object<FlowAction>({
   'key': z.string(),
   'label': z.string(),
+  'labelKey': z.string().optional(),
   'mode': z.enum_(['INSTANT', 'REQUEST', 'VIEW']),
   'enabled': z.boolean(),
   'disabled': flowActionDisabledSchema.optional(),
@@ -191,6 +193,7 @@ class FlowAction extends ParsedObject {
   FlowAction(
       {required String key,
       required String label,
+      String? labelKey,
       required String mode,
       required bool enabled,
       FlowActionDisabled? disabled,
@@ -201,6 +204,7 @@ class FlowAction extends ParsedObject {
       : super({
           'key': key,
           'label': label,
+          if (labelKey != null) 'labelKey': labelKey,
           'mode': mode,
           'enabled': enabled,
           if (disabled != null) 'disabled': disabled,
@@ -222,6 +226,9 @@ class FlowAction extends ParsedObject {
 
   /// 버튼에 쓸 이름.
   String get label => _j['label'] as String;
+
+  /// 이름이 흐름 문구면 그 문구 key(`<노드>.<행동>.label`, #411). 이름은 요청 언어로 번역된 값입니다. 플랫폼 기본 이름(취소 요청 등)이면 없습니다.
+  String? get labelKey => _j['labelKey'] as String?;
 
   /// `mode` 값입니다.
   String get mode => _j['mode'] as String;
@@ -289,8 +296,10 @@ typedef FlowFieldValue = Object?;
 final ZodObject<FlowState> flowStateSchema = z.object<FlowState>({
   'key': z.string(),
   'label': z.string(),
+  'labelKey': z.string().optional(),
   'coreStatus': orderItemStatusSchema.optional(),
   'message': z.string().optional(),
+  'messageKey': z.string().optional(),
   'enteredAt': z.string(),
   'deadlineAt': z.string().optional(),
   'attachments': z.array<String>(z.string()).optional(),
@@ -306,8 +315,10 @@ class FlowState extends ParsedObject {
   FlowState(
       {required String key,
       required String label,
+      String? labelKey,
       String? coreStatus,
       String? message,
+      String? messageKey,
       required String enteredAt,
       String? deadlineAt,
       List<String>? attachments,
@@ -318,8 +329,10 @@ class FlowState extends ParsedObject {
       : super({
           'key': key,
           'label': label,
+          if (labelKey != null) 'labelKey': labelKey,
           if (coreStatus != null) 'coreStatus': coreStatus,
           if (message != null) 'message': message,
+          if (messageKey != null) 'messageKey': messageKey,
           'enteredAt': enteredAt,
           if (deadlineAt != null) 'deadlineAt': deadlineAt,
           if (attachments != null) 'attachments': attachments,
@@ -342,11 +355,17 @@ class FlowState extends ParsedObject {
   /// 구매자에게 보여 줄 상태 이름.
   String get label => _j['label'] as String;
 
+  /// 상태 이름의 문구 key(`<노드>.label`, #411). 이름은 요청 언어로 번역된 값입니다.
+  String? get labelKey => _j['labelKey'] as String?;
+
   /// `coreStatus` 값입니다.
   String? get coreStatus => _j['coreStatus'] as String?;
 
   /// 구매자 안내문.
   String? get message => _j['message'] as String?;
+
+  /// 안내문의 문구 key(`<노드>.message`, #411).
+  String? get messageKey => _j['messageKey'] as String?;
 
   /// `enteredAt` 값입니다.
   String get enteredAt => _j['enteredAt'] as String;
@@ -462,7 +481,9 @@ const ORDER_STEP_TYPES = <String>[
 final ZodObject<OrderStep> orderStepSchema = z.object<OrderStep>({
   'type': z.string(),
   'label': z.string(),
+  'labelKey': z.string().optional(),
   'message': z.string().optional(),
+  'messageKey': z.string().optional(),
   'deadlineAt': z.string().optional(),
   'attachments': z.array<String>(z.string()).optional(),
   'earlierAttachments': z.array<String>(z.string()).optional(),
@@ -478,7 +499,9 @@ class OrderStep extends ParsedObject {
   OrderStep(
       {required String type,
       required String label,
+      String? labelKey,
       String? message,
+      String? messageKey,
       String? deadlineAt,
       List<String>? attachments,
       List<String>? earlierAttachments,
@@ -489,7 +512,9 @@ class OrderStep extends ParsedObject {
       : super({
           'type': type,
           'label': label,
+          if (labelKey != null) 'labelKey': labelKey,
           if (message != null) 'message': message,
+          if (messageKey != null) 'messageKey': messageKey,
           if (deadlineAt != null) 'deadlineAt': deadlineAt,
           if (attachments != null) 'attachments': attachments,
           if (earlierAttachments != null) 'earlierAttachments': earlierAttachments,
@@ -512,8 +537,14 @@ class OrderStep extends ParsedObject {
   /// 지금 상태 이름(구매자용).
   String get label => _j['label'] as String;
 
+  /// 상태 이름의 문구 key(`flowState.labelKey`와 같습니다, #411).
+  String? get labelKey => _j['labelKey'] as String?;
+
   /// 판매자가 둔 안내문.
   String? get message => _j['message'] as String?;
+
+  /// 안내문의 문구 key(`flowState.messageKey`와 같습니다, #411).
+  String? get messageKey => _j['messageKey'] as String?;
 
   /// 가장 가까운 기한(ISO 8601).
   String? get deadlineAt => _j['deadlineAt'] as String?;

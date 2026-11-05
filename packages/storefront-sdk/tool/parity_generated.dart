@@ -11,6 +11,7 @@ final Map<String, ZodType<Object?>> schemas = {
   'analyticsClientEventSchema': analyticsClientEventSchema,
   'analyticsBatchSchema': analyticsBatchSchema,
   'tokenPairSchema': tokenPairSchema,
+  'buyerPasswordSchema': buyerPasswordSchema,
   'signupRequestSchema': signupRequestSchema,
   'loginRequestSchema': loginRequestSchema,
   'anonymousSessionSchema': anonymousSessionSchema,
@@ -23,6 +24,11 @@ final Map<String, ZodType<Object?>> schemas = {
   'idpTokenRequestSchema': idpTokenRequestSchema,
   'memberIdentitiesSchema': memberIdentitiesSchema,
   'linkIdentityRequestSchema': linkIdentityRequestSchema,
+  'passwordResetRequestSchema': passwordResetRequestSchema,
+  'passwordResetInspectRequestSchema': passwordResetInspectRequestSchema,
+  'passwordResetInspectResponseSchema': passwordResetInspectResponseSchema,
+  'passwordResetConfirmRequestSchema': passwordResetConfirmRequestSchema,
+  'passwordResetConfirmResponseSchema': passwordResetConfirmResponseSchema,
   'cartItemSchema': cartItemSchema,
   'cartSchema': cartSchema,
   'addCartItemRequestSchema': addCartItemRequestSchema,
@@ -36,6 +42,8 @@ final Map<String, ZodType<Object?>> schemas = {
   'productSortSchema': productSortSchema,
   'productFacetsSchema': productFacetsSchema,
   'productPageSchema': productPageSchema,
+  'sitemapProductSchema': sitemapProductSchema,
+  'sitemapProductPageSchema': sitemapProductPageSchema,
   'storefrontCollectionSchema': storefrontCollectionSchema,
   'collectionProductSortSchema': collectionProductSortSchema,
   'storefrontCollectionDetailSchema': storefrontCollectionDetailSchema,
@@ -100,16 +108,23 @@ final Map<String, ZodType<Object?>> schemas = {
   'couponApplicationSchema': couponApplicationSchema,
   'couponApplicationListSchema': couponApplicationListSchema,
   'couponBenefitViewSchema': couponBenefitViewSchema,
+  'couponRewardViewSchema': couponRewardViewSchema,
   'couponResultSchema': couponResultSchema,
   'pricingAmountsSchema': pricingAmountsSchema,
   'checkoutPricingRequestSchema': checkoutPricingRequestSchema,
   'checkoutPricingSchema': checkoutPricingSchema,
+  'couponRequirementSchema': couponRequirementSchema,
   'applicableCouponSchema': applicableCouponSchema,
+  'registerCouponRequestSchema': registerCouponRequestSchema,
   'myCouponSchema': myCouponSchema,
   'myCouponListQuerySchema': myCouponListQuerySchema,
   'storefrontCouponTargetSchema': storefrontCouponTargetSchema,
   'storefrontCouponSchema': storefrontCouponSchema,
   'storefrontCouponListQuerySchema': storefrontCouponListQuerySchema,
+  'bestCouponEntrySchema': bestCouponEntrySchema,
+  'productCouponBenefitSchema': productCouponBenefitSchema,
+  'productCouponBenefitQuerySchema': productCouponBenefitQuerySchema,
+  'checkoutBestCouponsSchema': checkoutBestCouponsSchema,
   'currencyCodeSchema': currencyCodeSchema,
   'customerInquiryCategorySchema': customerInquiryCategorySchema,
   'customerInquirySchema': customerInquirySchema,
@@ -165,6 +180,9 @@ final Map<String, ZodType<Object?>> schemas = {
   'calendarDayViewSchema': calendarDayViewSchema,
   'storefrontMarketSchema': storefrontMarketSchema,
   'storefrontStoreSchema': storefrontStoreSchema,
+  'userinfoAddressSchema': userinfoAddressSchema,
+  'userinfoSchema': userinfoSchema,
+  'userinfoInputSchema': userinfoInputSchema,
 };
 
 /// 시나리오의 `call` 이름 → 타입 있는 호출. JSON 인자를 Dart 인자로 바꾼다
@@ -177,6 +195,8 @@ final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)>
   'auth.idpAuthorize': (c, a) =>
       c.auth.idpAuthorize(a[0] as String, IdpAuthorizeRequest.fromJson((a[1] as Map).cast<String, Object?>())),
   'auth.idpToken': (c, a) => c.auth.idpToken(IdpTokenRequest.fromJson((a[0] as Map).cast<String, Object?>())),
+  'auth.requestPasswordReset': (c, a) =>
+      c.auth.requestPasswordReset(PasswordResetRequest.fromJson((a[0] as Map).cast<String, Object?>())),
   'auth.withdraw': (c, a) => c.auth.withdraw(WithdrawRequest.fromJson((a[0] as Map).cast<String, Object?>())),
   'auth.identities': (c, a) => c.auth.identities(),
   'auth.linkIdentityAuthorize': (c, a) =>
@@ -223,6 +243,11 @@ final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)>
       variantId: ((a[1] as Map)['variantId'] == null ? null : (a[1] as Map)['variantId'] as String)),
   'catalog.createInquiry': (c, a) =>
       c.catalog.createInquiry(a[0] as String, CreateInquiryRequest.fromJson((a[1] as Map).cast<String, Object?>())),
+  'catalog.listSitemapProducts': (c, a) => c.catalog.listSitemapProducts((a.length > 0 && a[0] != null
+      ? PageParams(
+          page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
+          size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int))
+      : null)),
   'catalog.listCollections': (c, a) => c.catalog.listCollections((a.length > 0 && a[0] != null
       ? PageParams(
           page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
@@ -234,6 +259,9 @@ final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)>
           page: ((a[0] as Map)['page'] == null ? null : (a[0] as Map)['page'] as int),
           size: ((a[0] as Map)['size'] == null ? null : (a[0] as Map)['size'] as int))
       : null)),
+  'catalog.getCouponBenefit': (c, a) => c.catalog.getCouponBenefit(a[0] as String,
+      quantity: ((a[1] as Map)['quantity'] == null ? null : (a[1] as Map)['quantity'] as int),
+      optionId: ((a[1] as Map)['optionId'] == null ? null : (a[1] as Map)['optionId'] as String)),
   'catalog.getCollection': (c, a) => c.catalog.getCollection(a[0] as String),
   'catalog.listCollectionProducts': (c, a) => c.catalog.listCollectionProducts(
       a[0] as String,
@@ -256,6 +284,7 @@ final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)>
   'cart.createInputImageUpload': (c, a) =>
       c.cart.createInputImageUpload(OrderInputUploadRequest.fromJson((a[0] as Map).cast<String, Object?>())),
   'checkout.create': (c, a) => c.checkout.create(CreateCheckoutRequest.fromJson((a[0] as Map).cast<String, Object?>())),
+  'checkout.get': (c, a) => c.checkout.get(a[0] as String),
   'checkout.quoteDelivery': (c, a) =>
       c.checkout.quoteDelivery(a[0] as String, DeliveryQuoteRequest.fromJson((a[1] as Map).cast<String, Object?>())),
   'checkout.startPayment': (c, a) =>
@@ -263,6 +292,7 @@ final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)>
   'checkout.pricing': (c, a) =>
       c.checkout.pricing(a[0] as String, CheckoutPricingRequest.fromJson((a[1] as Map).cast<String, Object?>())),
   'checkout.applicableCoupons': (c, a) => c.checkout.applicableCoupons(a[0] as String),
+  'checkout.bestCoupons': (c, a) => c.checkout.bestCoupons(a[0] as String),
   'payments.getStatus': (c, a) => c.payments.getStatus(a[0] as String),
   'payments.retry': (c, a) =>
       c.payments.retry(a[0] as String, RetryPaymentRequest.fromJson((a[1] as Map).cast<String, Object?>())),
@@ -344,6 +374,8 @@ final Map<String, Future<Object?> Function(StorefrontClient c, List<Object?> a)>
   'me.coupons': (c, a) =>
       c.me.coupons(status: ((a[0] as Map)['status'] == null ? null : (a[0] as Map)['status'] as String)),
   'me.downloadCoupon': (c, a) => c.me.downloadCoupon(a[0] as String),
+  'me.registerCoupon': (c, a) =>
+      c.me.registerCoupon(RegisterCouponRequest.fromJson((a[0] as Map).cast<String, Object?>())),
   'me.customerInquiries.create': (c, a) =>
       c.me.customerInquiries.create(CreateCustomerInquiryRequest.fromJson((a[0] as Map).cast<String, Object?>())),
   'me.customerInquiries.list': (c, a) => c.me.customerInquiries.list(

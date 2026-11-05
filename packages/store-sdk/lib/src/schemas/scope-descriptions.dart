@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -34,6 +39,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -73,5 +80,6 @@ const SCOPE_DESCRIPTIONS = <String, Map<String, String>>{
   'promotion': <String, String>{'r': '쿠폰·적립금 설정을 읽습니다', 'rw': '쿠폰을 발급하고 적립금을 지급합니다'},
   'storefront': <String, String>{'r': '스토어프론트 설정을 읽습니다', 'rw': '스토어프론트를 편집하고 발행합니다'},
   'flow': <String, String>{'r': '주문 흐름 설정을 읽습니다', 'rw': '주문 흐름을 만들고 수정합니다'},
-  'inventory': <String, String>{'r': '위치별 재고와 재고 변동 내역을 읽습니다', 'rw': '재고를 조정·실사하고 위치 사이에서 이동합니다'}
+  'inventory': <String, String>{'r': '위치별 재고와 재고 변동 내역을 읽습니다', 'rw': '재고를 조정·실사하고 위치 사이에서 이동합니다'},
+  'privacy': <String, String>{'r': '구매자 개인정보(휴대폰 전체 번호)를 내보냅니다', 'rw': '구매자 개인정보(휴대폰 전체 번호)를 내보냅니다'}
 };

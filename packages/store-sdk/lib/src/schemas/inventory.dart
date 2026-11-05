@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'locale.dart';
 import 'login.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -122,7 +129,7 @@ class InventoryLocation extends ParsedObject {
 final ZodObject<InventoryLocationRequest> inventoryLocationRequestSchema = z.object<InventoryLocationRequest>({
   'name': z.string().trim().min(1).max(50),
   'sortOrder': z.number().int_().greaterThan(0, inclusive: true).lessThan(10000, inclusive: true).optional(),
-}, InventoryLocationRequest._);
+}, InventoryLocationRequest._, strict: true);
 
 /// InventoryLocationRequest 값입니다.
 class InventoryLocationRequest extends ParsedObject {
@@ -525,7 +532,7 @@ final ZodObject<InventoryAdjustmentLine> inventoryAdjustmentLineSchema = z.objec
   'inventoryLocationId': z.string().min(1).optional(),
   'delta': z.number().int_().refine((v) => v != 0, message: 'delta는 0이 아니어야 합니다').optional(),
   'counted': z.number().int_().greaterThan(0, inclusive: true).optional(),
-}, InventoryAdjustmentLine._).refine((v) {
+}, InventoryAdjustmentLine._, strict: true).refine((v) {
   final j = jsonOf(v as ParsedObject);
   return j.containsKey('delta') != j.containsKey('counted');
 }, message: '줄마다 delta와 counted 중 하나만 줍니다');
@@ -567,7 +574,7 @@ final ZodObject<InventoryAdjustmentRequest> inventoryAdjustmentRequestSchema = z
   'reason': inventoryAdjustmentReasonSchema.optional(),
   'note': z.string().trim().max(500).optional(),
   'reference': z.string().trim().max(100).optional(),
-}, InventoryAdjustmentRequest._);
+}, InventoryAdjustmentRequest._, strict: true);
 
 /// InventoryAdjustmentRequest 값입니다.
 class InventoryAdjustmentRequest extends ParsedObject {
@@ -608,7 +615,7 @@ final ZodObject<InventoryTransferRequest> inventoryTransferRequestSchema = z.obj
   'toInventoryLocationId': z.string().min(1),
   'lines': z.array<InventoryTransferRequestLinesItem>(inventoryTransferRequestLinesItemSchema).min(1).max(200),
   'note': z.string().trim().max(500).optional(),
-}, InventoryTransferRequest._);
+}, InventoryTransferRequest._, strict: true);
 
 /// InventoryTransferRequest 값입니다.
 class InventoryTransferRequest extends ParsedObject {
@@ -650,7 +657,7 @@ final ZodObject<InventoryTransferRequestLinesItem> inventoryTransferRequestLines
     z.object<InventoryTransferRequestLinesItem>({
   'variantId': z.string().min(1),
   'quantity': z.number().int_().greaterThan(1, inclusive: true),
-}, InventoryTransferRequestLinesItem._);
+}, InventoryTransferRequestLinesItem._, strict: true);
 
 /// InventoryTransferRequestLinesItem 값입니다.
 class InventoryTransferRequestLinesItem extends ParsedObject {
@@ -758,7 +765,7 @@ class InventoryOperationResultLinesItem extends ParsedObject {
 /// 수거 완료의 재입고 지정(Q3) — 생략하면 조합은 할당 순서(교환 → 판매), 위치는 반품지에 연결된 위치 → 할당 위치입니다.
 final ZodObject<ClaimCollectCompleteRequest> claimCollectCompleteRequestSchema = z.object<ClaimCollectCompleteRequest>({
   'restock': claimCollectCompleteRequestRestockSchema.optional(),
-}, ClaimCollectCompleteRequest._);
+}, ClaimCollectCompleteRequest._, strictRequest: true);
 
 /// 수거 완료의 재입고 지정(Q3) — 생략하면 조합은 할당 순서(교환 → 판매), 위치는 반품지에 연결된 위치 → 할당 위치입니다.
 class ClaimCollectCompleteRequest extends ParsedObject {
@@ -814,7 +821,7 @@ final ZodObject<ClaimRedeliveryRequest> claimRedeliveryRequestSchema = z.object<
   'carrierCode': z.string().min(1),
   'trackingNumber': z.string().min(1),
   'inventoryLocationId': z.string().min(1).optional(),
-}, ClaimRedeliveryRequest._);
+}, ClaimRedeliveryRequest._, strictRequest: true);
 
 /// ClaimRedeliveryRequest 값입니다.
 class ClaimRedeliveryRequest extends ParsedObject {
@@ -841,4 +848,358 @@ class ClaimRedeliveryRequest extends ParsedObject {
 
   /// 교환품을 보낼 재고 위치. 생략하면 그 상품의 기준 위치.
   String? get inventoryLocationId => _j['inventoryLocationId'] as String?;
+}
+
+/// [String] 스키마입니다. 값은 `TOTAL`·`PER_LOCATION`입니다.
+///
+/// 재고 부족 판정 방식 — `TOTAL` 조합의 모든 위치 가용 재고 합계로 판정 · `PER_LOCATION` (조합, 위치)마다 판정.
+/// 위치가 하나인 상점은 결과가 같습니다.
+final ZodEnum lowStockScopeSchema = z.enum_(['TOTAL', 'PER_LOCATION']);
+
+/// LowStockScope 값입니다.
+///
+/// 값은 `TOTAL`·`PER_LOCATION`입니다.
+typedef LowStockScope = String;
+
+/// [LowStockSettings] 스키마입니다.
+final ZodObject<LowStockSettings> lowStockSettingsSchema = z.object<LowStockSettings>({
+  'defaultThreshold': z.number().int_().nullable(),
+  'scope': lowStockScopeSchema,
+}, LowStockSettings._);
+
+/// LowStockSettings 값입니다.
+class LowStockSettings extends ParsedObject {
+  /// [LowStockSettings]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LowStockSettings({required int? defaultThreshold, required String scope})
+      : super({'defaultThreshold': defaultThreshold, 'scope': scope});
+
+  LowStockSettings._(super.json);
+
+  /// JSON을 [lowStockSettingsSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LowStockSettings.fromJson(Map<String, Object?> json) => lowStockSettingsSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 상점 기본 임계값 — 가용 재고가 이 값 이하인 조합이 재고 부족입니다. null이면 조합별 임계값이 있는 조합만 판정합니다.
+  int? get defaultThreshold => _j['defaultThreshold'] as int?;
+
+  /// 재고 부족 판정 방식 — `TOTAL` 위치 합계 · `PER_LOCATION` 위치별 각각.
+  String get scope => _j['scope'] as String;
+}
+
+/// [LowStockSettingsRequest] 스키마입니다.
+final ZodObject<LowStockSettingsRequest> lowStockSettingsRequestSchema = z.object<LowStockSettingsRequest>({
+  'defaultThreshold': z.number().int_().greaterThan(0, inclusive: true).lessThan(1000000, inclusive: true).nullable(),
+  'scope': lowStockScopeSchema,
+}, LowStockSettingsRequest._, strict: true);
+
+/// LowStockSettingsRequest 값입니다.
+class LowStockSettingsRequest extends ParsedObject {
+  /// [LowStockSettingsRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LowStockSettingsRequest({required int? defaultThreshold, required String scope})
+      : super({'defaultThreshold': defaultThreshold, 'scope': scope});
+
+  LowStockSettingsRequest._(super.json);
+
+  /// JSON을 [lowStockSettingsRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LowStockSettingsRequest.fromJson(Map<String, Object?> json) => lowStockSettingsRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `defaultThreshold` 값입니다.
+  int? get defaultThreshold => _j['defaultThreshold'] as int?;
+
+  /// 재고 부족 판정 방식 — `TOTAL` 위치 합계 · `PER_LOCATION` 위치별 각각.
+  String get scope => _j['scope'] as String;
+}
+
+/// [LowStockVariantThreshold] 스키마입니다.
+final ZodObject<LowStockVariantThreshold> lowStockVariantThresholdSchema = z.object<LowStockVariantThreshold>({
+  'productId': z.string(),
+  'variantId': z.string(),
+  'threshold': z.number().int_(),
+}, LowStockVariantThreshold._);
+
+/// LowStockVariantThreshold 값입니다.
+class LowStockVariantThreshold extends ParsedObject {
+  /// [LowStockVariantThreshold]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LowStockVariantThreshold({required String productId, required String variantId, required int threshold})
+      : super({'productId': productId, 'variantId': variantId, 'threshold': threshold});
+
+  LowStockVariantThreshold._(super.json);
+
+  /// JSON을 [lowStockVariantThresholdSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LowStockVariantThreshold.fromJson(Map<String, Object?> json) => lowStockVariantThresholdSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `productId` 값입니다.
+  String get productId => _j['productId'] as String;
+
+  /// `variantId` 값입니다.
+  String get variantId => _j['variantId'] as String;
+
+  /// 이 조합의 임계값(상점 기본 임계값을 덮어씁니다).
+  int get threshold => _j['threshold'] as int;
+}
+
+/// [LowStockThresholdListQuery] 스키마입니다.
+final ZodObject<LowStockThresholdListQuery> lowStockThresholdListQuerySchema = z.object<LowStockThresholdListQuery>({
+  'productId': z.string().optional(),
+  'cursor': z.string().optional(),
+  'limit': z.number(coerce: true).int_().greaterThan(1, inclusive: true).lessThan(200, inclusive: true).optional(),
+}, LowStockThresholdListQuery._);
+
+/// LowStockThresholdListQuery 값입니다.
+class LowStockThresholdListQuery extends ParsedObject {
+  /// [LowStockThresholdListQuery]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LowStockThresholdListQuery({String? productId, String? cursor, int? limit})
+      : super({
+          if (productId != null) 'productId': productId,
+          if (cursor != null) 'cursor': cursor,
+          if (limit != null) 'limit': limit
+        });
+
+  LowStockThresholdListQuery._(super.json);
+
+  /// JSON을 [lowStockThresholdListQuerySchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LowStockThresholdListQuery.fromJson(Map<String, Object?> json) =>
+      lowStockThresholdListQuerySchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `productId` 값입니다.
+  String? get productId => _j['productId'] as String?;
+
+  /// 이전 응답의 `nextCursor`. 생략하면 처음부터.
+  String? get cursor => _j['cursor'] as String?;
+
+  /// 한 쪽 크기(기본 100).
+  int? get limit => _j['limit'] as int?;
+}
+
+/// [LowStockThresholdPage] 스키마입니다.
+final ZodObject<LowStockThresholdPage> lowStockThresholdPageSchema = z.object<LowStockThresholdPage>({
+  'contents': z.array<LowStockVariantThreshold>(lowStockVariantThresholdSchema),
+  'nextCursor': z.string().nullable(),
+}, LowStockThresholdPage._);
+
+/// LowStockThresholdPage 값입니다.
+class LowStockThresholdPage extends ParsedObject {
+  /// [LowStockThresholdPage]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LowStockThresholdPage({required List<LowStockVariantThreshold> contents, required String? nextCursor})
+      : super({'contents': contents, 'nextCursor': nextCursor});
+
+  LowStockThresholdPage._(super.json);
+
+  /// JSON을 [lowStockThresholdPageSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LowStockThresholdPage.fromJson(Map<String, Object?> json) => lowStockThresholdPageSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `contents` 값입니다.
+  List<LowStockVariantThreshold> get contents => (_j['contents'] as List).cast<LowStockVariantThreshold>();
+
+  /// 다음 페이지 커서. 마지막 페이지면 null.
+  String? get nextCursor => _j['nextCursor'] as String?;
+}
+
+/// [LowStockThresholdsRequest] 스키마입니다.
+final ZodObject<LowStockThresholdsRequest> lowStockThresholdsRequestSchema = z.object<LowStockThresholdsRequest>({
+  'lines': z.array<LowStockThresholdsRequestLinesItem>(lowStockThresholdsRequestLinesItemSchema).min(1).max(200),
+}, LowStockThresholdsRequest._, strict: true);
+
+/// LowStockThresholdsRequest 값입니다.
+class LowStockThresholdsRequest extends ParsedObject {
+  /// [LowStockThresholdsRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LowStockThresholdsRequest({required List<LowStockThresholdsRequestLinesItem> lines}) : super({'lines': lines});
+
+  LowStockThresholdsRequest._(super.json);
+
+  /// JSON을 [lowStockThresholdsRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LowStockThresholdsRequest.fromJson(Map<String, Object?> json) => lowStockThresholdsRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `lines` 값입니다.
+  List<LowStockThresholdsRequestLinesItem> get lines =>
+      (_j['lines'] as List).cast<LowStockThresholdsRequestLinesItem>();
+}
+
+/// [LowStockThresholdsRequestLinesItem] 스키마입니다.
+final ZodObject<LowStockThresholdsRequestLinesItem> lowStockThresholdsRequestLinesItemSchema =
+    z.object<LowStockThresholdsRequestLinesItem>({
+  'variantId': z.string().min(1),
+  'threshold': z.number().int_().greaterThan(0, inclusive: true).lessThan(1000000, inclusive: true).nullable(),
+}, LowStockThresholdsRequestLinesItem._, strict: true);
+
+/// LowStockThresholdsRequestLinesItem 값입니다.
+class LowStockThresholdsRequestLinesItem extends ParsedObject {
+  /// [LowStockThresholdsRequestLinesItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LowStockThresholdsRequestLinesItem({required String variantId, required int? threshold})
+      : super({'variantId': variantId, 'threshold': threshold});
+
+  LowStockThresholdsRequestLinesItem._(super.json);
+
+  /// JSON을 [lowStockThresholdsRequestLinesItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LowStockThresholdsRequestLinesItem.fromJson(Map<String, Object?> json) =>
+      lowStockThresholdsRequestLinesItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `variantId` 값입니다.
+  String get variantId => _j['variantId'] as String;
+
+  /// 이 조합의 임계값. null이면 조합별 임계값을 지우고 상점 기본 임계값을 따릅니다.
+  int? get threshold => _j['threshold'] as int?;
+}
+
+/// [List<LowStockThresholdsResultItem>] 스키마입니다.
+final ZodArray<LowStockThresholdsResultItem> lowStockThresholdsResultSchema =
+    z.array<LowStockThresholdsResultItem>(lowStockThresholdsResultItemSchema);
+
+/// LowStockThresholdsResult 값입니다.
+typedef LowStockThresholdsResult = List<LowStockThresholdsResultItem>;
+
+/// [LowStockThresholdsResultItem] 스키마입니다.
+final ZodObject<LowStockThresholdsResultItem> lowStockThresholdsResultItemSchema =
+    z.object<LowStockThresholdsResultItem>({
+  'productId': z.string(),
+  'variantId': z.string(),
+  'threshold': z.number().int_().nullable(),
+}, LowStockThresholdsResultItem._);
+
+/// LowStockThresholdsResultItem 값입니다.
+class LowStockThresholdsResultItem extends ParsedObject {
+  /// [LowStockThresholdsResultItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LowStockThresholdsResultItem({required String productId, required String variantId, required int? threshold})
+      : super({'productId': productId, 'variantId': variantId, 'threshold': threshold});
+
+  LowStockThresholdsResultItem._(super.json);
+
+  /// JSON을 [lowStockThresholdsResultItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LowStockThresholdsResultItem.fromJson(Map<String, Object?> json) =>
+      lowStockThresholdsResultItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `productId` 값입니다.
+  String get productId => _j['productId'] as String;
+
+  /// `variantId` 값입니다.
+  String get variantId => _j['variantId'] as String;
+
+  /// 저장한 조합별 임계값. null이면 상점 기본 임계값을 따릅니다.
+  int? get threshold => _j['threshold'] as int?;
+}
+
+/// [LowStockItem] 스키마입니다.
+final ZodObject<LowStockItem> lowStockItemSchema = z.object<LowStockItem>({
+  'productId': z.string(),
+  'variantId': z.string(),
+  'inventoryLocationId': z.string().nullable(),
+  'available': z.number().int_(),
+  'threshold': z.number().int_(),
+  'thresholdSource': z.enum_(['VARIANT', 'STORE']),
+}, LowStockItem._);
+
+/// LowStockItem 값입니다.
+class LowStockItem extends ParsedObject {
+  /// [LowStockItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LowStockItem(
+      {required String productId,
+      required String variantId,
+      required String? inventoryLocationId,
+      required int available,
+      required int threshold,
+      required String thresholdSource})
+      : super({
+          'productId': productId,
+          'variantId': variantId,
+          'inventoryLocationId': inventoryLocationId,
+          'available': available,
+          'threshold': threshold,
+          'thresholdSource': thresholdSource
+        });
+
+  LowStockItem._(super.json);
+
+  /// JSON을 [lowStockItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LowStockItem.fromJson(Map<String, Object?> json) => lowStockItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `productId` 값입니다.
+  String get productId => _j['productId'] as String;
+
+  /// `variantId` 값입니다.
+  String get variantId => _j['variantId'] as String;
+
+  /// 판정한 위치 — 판정 방식이 `TOTAL`이면 null(모든 위치 합계).
+  String? get inventoryLocationId => _j['inventoryLocationId'] as String?;
+
+  /// 판정한 가용 재고(`TOTAL`이면 모든 위치 합계).
+  int get available => _j['available'] as int;
+
+  /// 적용한 임계값.
+  int get threshold => _j['threshold'] as int;
+
+  /// 임계값 출처 — 조합별 임계값 `VARIANT` · 상점 기본 임계값 `STORE`.
+  String get thresholdSource => _j['thresholdSource'] as String;
+}
+
+/// [LowStockListQuery] 스키마입니다.
+final ZodObject<LowStockListQuery> lowStockListQuerySchema = z.object<LowStockListQuery>({
+  'cursor': z.string().optional(),
+  'limit': z.number(coerce: true).int_().greaterThan(1, inclusive: true).lessThan(200, inclusive: true).optional(),
+}, LowStockListQuery._);
+
+/// LowStockListQuery 값입니다.
+class LowStockListQuery extends ParsedObject {
+  /// [LowStockListQuery]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LowStockListQuery({String? cursor, int? limit})
+      : super({if (cursor != null) 'cursor': cursor, if (limit != null) 'limit': limit});
+
+  LowStockListQuery._(super.json);
+
+  /// JSON을 [lowStockListQuerySchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LowStockListQuery.fromJson(Map<String, Object?> json) => lowStockListQuerySchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 이전 응답의 `nextCursor`. 생략하면 처음부터.
+  String? get cursor => _j['cursor'] as String?;
+
+  /// 한 쪽 크기(기본 100).
+  int? get limit => _j['limit'] as int?;
+}
+
+/// [LowStockPage] 스키마입니다.
+final ZodObject<LowStockPage> lowStockPageSchema = z.object<LowStockPage>({
+  'scope': lowStockScopeSchema,
+  'contents': z.array<LowStockItem>(lowStockItemSchema),
+  'nextCursor': z.string().nullable(),
+}, LowStockPage._);
+
+/// LowStockPage 값입니다.
+class LowStockPage extends ParsedObject {
+  /// [LowStockPage]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LowStockPage({required String scope, required List<LowStockItem> contents, required String? nextCursor})
+      : super({'scope': scope, 'contents': contents, 'nextCursor': nextCursor});
+
+  LowStockPage._(super.json);
+
+  /// JSON을 [lowStockPageSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LowStockPage.fromJson(Map<String, Object?> json) => lowStockPageSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 이 목록을 판정한 방식.
+  String get scope => _j['scope'] as String;
+
+  /// `contents` 값입니다.
+  List<LowStockItem> get contents => (_j['contents'] as List).cast<LowStockItem>();
+
+  /// 다음 페이지 커서. 마지막 페이지면 null.
+  String? get nextCursor => _j['nextCursor'] as String?;
 }

@@ -46,10 +46,7 @@ ProductImageRejection? productImageRejection(String url) {
   final extension = uploadExtensionOf(parsed.path.isEmpty ? '/' : parsed.path);
   final allowed = UPLOAD_PURPOSE_LIMITS['product-image']!['extensions']! as List<String>;
   if (extension.isNotEmpty && !allowed.contains(extension)) {
-    return ProductImageRejection(
-      code: 'UNSUPPORTED_FILE_TYPE',
-      message: '상품 이미지는 ${allowed.join(', ')}만 쓸 수 있습니다',
-    );
+    return ProductImageRejection(code: 'UNSUPPORTED_FILE_TYPE', message: '상품 이미지는 ${allowed.join(', ')}만 쓸 수 있습니다');
   }
   return null;
 }

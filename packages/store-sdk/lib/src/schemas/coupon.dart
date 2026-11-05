@@ -15,15 +15,20 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -64,16 +71,49 @@ final ZodEnum couponStatusSchema = z.enum_(['ACTIVE', 'PAUSED', 'ENDED']);
 /// 값은 `ACTIVE`·`PAUSED`·`ENDED`입니다.
 typedef CouponStatus = String;
 
-/// [String] 스키마입니다. 값은 `CODE`·`MANUAL`·`DOWNLOAD`·`SIGNUP`입니다.
+/// [String] 스키마입니다. 값은 `CODE`·`MANUAL`·`DOWNLOAD`·`SIGNUP`·`FLOW`·`VOUCHER`입니다.
 ///
-/// 발급 방식 — 코드 입력·셀러 지급·다운로드(구매자가 받기)·회원가입 자동 지급(이슈 #110).
+/// 발급 방식 — 코드 입력·셀러 지급·다운로드(구매자가 받기)·회원가입 자동 지급(이슈 #110)·흐름 지급(이슈 #264).
 /// 응답(`couponSchema.issueMethod`)은 값이 늘 수 있어 문자열로 받습니다. 이 enum은 요청 검증용입니다.
-final ZodEnum couponIssueMethodSchema = z.enum_(['CODE', 'MANUAL', 'DOWNLOAD', 'SIGNUP']);
+final ZodEnum couponIssueMethodSchema = z.enum_(['CODE', 'MANUAL', 'DOWNLOAD', 'SIGNUP', 'FLOW', 'VOUCHER']);
 
 /// CouponIssueMethod 값입니다.
 ///
-/// 값은 `CODE`·`MANUAL`·`DOWNLOAD`·`SIGNUP`입니다.
+/// 값은 `CODE`·`MANUAL`·`DOWNLOAD`·`SIGNUP`·`FLOW`·`VOUCHER`입니다.
 typedef CouponIssueMethod = String;
+
+/// 쿠폰 번호 접두어 — 영문·숫자 2~10자, 대문자로 저장합니다. 상점 안에서 유일합니다.
+final VOUCHER_PREFIX_PATTERN = RegExp(r'^[A-Za-z0-9]{2,10}$');
+
+/// 쿠폰 번호 한 쿠폰의 최대 개수.
+const VOUCHER_COUNT_MAX = 100000;
+
+/// [CouponVoucherInput] 스키마입니다.
+///
+/// 쿠폰 번호 설정(`VOUCHER`, 이슈 #264) — 만든 뒤에는 바꿀 수 없습니다.
+final ZodObject<CouponVoucherInput> couponVoucherInputSchema = z.object<CouponVoucherInput>({
+  'prefix': z.string().pattern(RegExp(r'^[A-Za-z0-9]{2,10}$')),
+  'count': z.number().int_().greaterThan(1, inclusive: true).lessThan(100000, inclusive: true),
+}, CouponVoucherInput._, strict: true);
+
+/// 쿠폰 번호 설정(`VOUCHER`, 이슈 #264) — 만든 뒤에는 바꿀 수 없습니다.
+class CouponVoucherInput extends ParsedObject {
+  /// [CouponVoucherInput]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CouponVoucherInput({required String prefix, required int count}) : super({'prefix': prefix, 'count': count});
+
+  CouponVoucherInput._(super.json);
+
+  /// JSON을 [couponVoucherInputSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponVoucherInput.fromJson(Map<String, Object?> json) => couponVoucherInputSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 번호 앞부분(영문·숫자 2~10자).
+  String get prefix => _j['prefix'] as String;
+
+  /// 만들 번호 수(1~100,000).
+  int get count => _j['count'] as int;
+}
 
 /// 코드 형식 — 영문·숫자·`-`·`_` 6~30자. 대소문자를 구분하지 않고 서버가 대문자로 저장합니다.
 final COUPON_CODE_PATTERN = RegExp(r'^[A-Za-z0-9_-]{6,30}$');
@@ -86,7 +126,7 @@ final ZodObject<CouponConditionsInput> couponConditionsInputSchema = z.object<Co
   'firstOrderOnly': z.boolean().optional(),
   'memberOnly': z.boolean().optional(),
   'stackWithInstantDiscount': z.boolean().optional(),
-}, CouponConditionsInput._);
+}, CouponConditionsInput._, strict: true);
 
 /// 조건 입력 — 생략한 항목은 기본값(`COUPON_CONDITIONS_DEFAULTS`)입니다.
 class CouponConditionsInput extends ParsedObject {
@@ -127,7 +167,7 @@ final ZodObject<CouponTargetInput> couponTargetInputSchema = z.object<CouponTarg
   'includeCategoryIds': z.array<String>(z.string().min(1)).max(500).optional(),
   'excludeProductIds': z.array<String>(z.string().min(1)).max(500).optional(),
   'excludeCategoryIds': z.array<String>(z.string().min(1)).max(500).optional(),
-}, CouponTargetInput._);
+}, CouponTargetInput._, strict: true);
 
 /// 대상 입력 — 생략한 목록은 빈 목록입니다(포함 목록이 모두 비면 전 상품).
 class CouponTargetInput extends ParsedObject {
@@ -171,11 +211,12 @@ final ZodType<CreateCouponRequest> createCouponRequestSchema = z.object<CreateCo
   'name': z.string().trim().min(1).max(60),
   'description': z.string().max(300).nullable().optional(),
   'kind': couponKindSchema,
-  'benefit': couponBenefitSchema,
+  'benefit': couponBenefitSchema.optional(),
   'conditions': couponConditionsInputSchema.optional(),
   'target': couponTargetInputSchema.optional(),
   'issueMethod': couponIssueMethodSchema,
   'code': z.string().pattern(RegExp(r'^[A-Za-z0-9_-]{6,30}$')).optional(),
+  'voucher': couponVoucherInputSchema.optional(),
   'startsAt': z
       .string()
       .pattern(
@@ -196,6 +237,8 @@ final ZodType<CreateCouponRequest> createCouponRequestSchema = z.object<CreateCo
       z.number().int_().greaterThan(1, inclusive: true).lessThan(3650, inclusive: true).nullable().optional(),
   'totalIssueLimit':
       z.number().int_().greaterThan(1, inclusive: true).lessThan(10000000, inclusive: true).nullable().optional(),
+  'dailyIssueLimit':
+      z.number().int_().greaterThan(1, inclusive: true).lessThan(10000000, inclusive: true).nullable().optional(),
   'totalUseLimit':
       z.number().int_().greaterThan(1, inclusive: true).lessThan(10000000, inclusive: true).nullable().optional(),
   'perMemberIssueLimit':
@@ -203,7 +246,37 @@ final ZodType<CreateCouponRequest> createCouponRequestSchema = z.object<CreateCo
   'perMemberUseLimit':
       z.number().int_().greaterThan(1, inclusive: true).lessThan(10000000, inclusive: true).nullable().optional(),
   'currency': currencyCodeSchema.optional(),
-}, CreateCouponRequest._).check(_createCouponCheck);
+  'eligibility': conditionGroupSchema.optional(),
+  'targetRules': couponTargetRulesSchema.optional(),
+  'targetTree': couponTargetTreeSchema.optional(),
+  'audience': conditionGroupSchema.optional(),
+  'stacking': couponStackingSchema.optional(),
+  'reward': couponRewardSchema.nullable().optional(),
+  'issueStartsAt': z
+      .string()
+      .pattern(
+          RegExp(
+              r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
+          format: 'datetime')
+      .nullable()
+      .optional(),
+  'issueEndsAt': z
+      .string()
+      .pattern(
+          RegExp(
+              r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
+          format: 'datetime')
+      .nullable()
+      .optional(),
+  'visibleFrom': z
+      .string()
+      .pattern(
+          RegExp(
+              r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
+          format: 'datetime')
+      .nullable()
+      .optional(),
+}, CreateCouponRequest._, strict: true, strictRequest: true).check(_createCouponCheck);
 
 /// `POST /v1/coupons`.
 class CreateCouponRequest extends ParsedObject {
@@ -212,36 +285,58 @@ class CreateCouponRequest extends ParsedObject {
       {required String name,
       Nullable<String>? description,
       required String kind,
-      required CouponBenefit benefit,
+      CouponBenefit? benefit,
       CouponConditionsInput? conditions,
       CouponTargetInput? target,
       required String issueMethod,
       String? code,
+      CouponVoucherInput? voucher,
       Nullable<String>? startsAt,
       Nullable<String>? endsAt,
       Nullable<int>? validDaysAfterIssue,
       Nullable<int>? totalIssueLimit,
+      Nullable<int>? dailyIssueLimit,
       Nullable<int>? totalUseLimit,
       Nullable<int>? perMemberIssueLimit,
       Nullable<int>? perMemberUseLimit,
-      String? currency})
+      String? currency,
+      ConditionGroup? eligibility,
+      CouponTargetRules? targetRules,
+      CouponTargetTree? targetTree,
+      ConditionGroup? audience,
+      CouponStacking? stacking,
+      Nullable<CouponReward>? reward,
+      Nullable<String>? issueStartsAt,
+      Nullable<String>? issueEndsAt,
+      Nullable<String>? visibleFrom})
       : super({
           'name': name,
           if (description != null) 'description': description.value,
           'kind': kind,
-          'benefit': benefit,
+          if (benefit != null) 'benefit': benefit,
           if (conditions != null) 'conditions': conditions,
           if (target != null) 'target': target,
           'issueMethod': issueMethod,
           if (code != null) 'code': code,
+          if (voucher != null) 'voucher': voucher,
           if (startsAt != null) 'startsAt': startsAt.value,
           if (endsAt != null) 'endsAt': endsAt.value,
           if (validDaysAfterIssue != null) 'validDaysAfterIssue': validDaysAfterIssue.value,
           if (totalIssueLimit != null) 'totalIssueLimit': totalIssueLimit.value,
+          if (dailyIssueLimit != null) 'dailyIssueLimit': dailyIssueLimit.value,
           if (totalUseLimit != null) 'totalUseLimit': totalUseLimit.value,
           if (perMemberIssueLimit != null) 'perMemberIssueLimit': perMemberIssueLimit.value,
           if (perMemberUseLimit != null) 'perMemberUseLimit': perMemberUseLimit.value,
-          if (currency != null) 'currency': currency
+          if (currency != null) 'currency': currency,
+          if (eligibility != null) 'eligibility': eligibility,
+          if (targetRules != null) 'targetRules': targetRules,
+          if (targetTree != null) 'targetTree': targetTree,
+          if (audience != null) 'audience': audience,
+          if (stacking != null) 'stacking': stacking,
+          if (reward != null) 'reward': reward.value,
+          if (issueStartsAt != null) 'issueStartsAt': issueStartsAt.value,
+          if (issueEndsAt != null) 'issueEndsAt': issueEndsAt.value,
+          if (visibleFrom != null) 'visibleFrom': visibleFrom.value
         });
 
   CreateCouponRequest._(super.json);
@@ -260,8 +355,8 @@ class CreateCouponRequest extends ParsedObject {
   /// 쿠폰 종류. `ORDER`=주문 쿠폰(대상 상품 합계에서 할인), `PRODUCT`=상품 쿠폰(주문상품 한 줄에서 할인), `DELIVERY`=배송비 쿠폰(기본 배송비에서 할인, 지역 추가 배송비 제외).
   String get kind => _j['kind'] as String;
 
-  /// `benefit` 값입니다.
-  CouponBenefit get benefit => _j['benefit'] as CouponBenefit;
+  /// 혜택. `reward`를 주면 생략합니다.
+  CouponBenefit? get benefit => _j['benefit'] as CouponBenefit?;
 
   /// 사용 조건. 생략한 항목은 기본값(최소 금액 0, 회원 전용, 즉시할인과 중복 가능).
   CouponConditionsInput? get conditions => _j['conditions'] as CouponConditionsInput?;
@@ -269,11 +364,14 @@ class CreateCouponRequest extends ParsedObject {
   /// 대상 상품·카테고리. 생략하면 전 상품.
   CouponTargetInput? get target => _j['target'] as CouponTargetInput?;
 
-  /// 발급 방식. `CODE`=구매자가 주문서에 코드를 입력합니다, `MANUAL`=셀러가 회원을 골라 지급합니다, `DOWNLOAD`=구매자가 스토어프론트에서 받습니다, `SIGNUP`=회원가입 때 자동으로 지급합니다.
+  /// 발급 방식. `CODE`=구매자가 주문서에 코드를 입력합니다, `MANUAL`=셀러가 회원을 골라 지급합니다, `DOWNLOAD`=구매자가 스토어프론트에서 받습니다, `SIGNUP`=회원가입 때 자동으로 지급합니다, `FLOW`=주문 흐름의 쿠폰 지급 단계가 그 주문의 구매자에게 지급합니다, `VOUCHER`=셀러가 1회용 쿠폰 번호를 만들어 나눠 주고 구매자가 번호를 등록하면 지급합니다.
   String get issueMethod => _j['issueMethod'] as String;
 
   /// 쿠폰 코드 — 발급 방식이 `CODE`일 때 필수. 영문·숫자·`-`·`_` 6~30자, 대소문자 구분 없음(대문자로 저장). 상점 안에서 유일합니다.
   String? get code => _j['code'] as String?;
+
+  /// 쿠폰 번호 설정 — 1회용 번호 `count`개를 만듭니다. 번호는 `GET /v1/coupons/{couponId}/voucher-codes`로 받습니다.
+  CouponVoucherInput? get voucher => _j['voucher'] as CouponVoucherInput?;
 
   /// 사용 시작 시각(ISO 8601, 시간대 포함). 생략하면 바로 쓸 수 있습니다.
   String? get startsAt => _j['startsAt'] as String?;
@@ -287,6 +385,9 @@ class CreateCouponRequest extends ParsedObject {
   /// 총 발급 수 한도. 생략하면 무제한. 다운로드·회원가입 쿠폰은 한도에 닿으면 더 발급하지 않습니다.
   int? get totalIssueLimit => _j['totalIssueLimit'] as int?;
 
+  /// 하루 발급 수 한도(이슈 #222) — 한국 시간 0시 기준 하루마다 이 장수까지 발급합니다(받기·회원가입·셀러 지급). 생략하면 없습니다. 코드 입력형에는 두지 않습니다.
+  int? get dailyIssueLimit => _j['dailyIssueLimit'] as int?;
+
   /// 총 사용 수 한도. 결제 중인 예약도 셉니다. 생략하면 무제한.
   int? get totalUseLimit => _j['totalUseLimit'] as int?;
 
@@ -298,6 +399,33 @@ class CreateCouponRequest extends ParsedObject {
 
   /// 쿠폰 통화(이슈 #130). 정액·최대 할인액·최소 주문 금액이 이 통화 값이고 같은 통화 주문서에만 적용됩니다. 생략하면 기본 통화(KRW). 판매 통화여야 하고 만든 뒤에는 바꿀 수 없습니다.
   String? get currency => _j['currency'] as String?;
+
+  /// 사용 조건 트리(이슈 #222) — `{ combinator: and|or, rules: [{ field, operator, value } | 그룹] }`, 그룹 3단·규칙 50개까지. 주면 `conditions`의 최소 주문 금액·첫 구매를 쓰지 않습니다(`conditions`에는 `memberOnly`만 둡니다). 필드 목록은 `COUPON_CONDITION_FIELDS`.
+  ConditionGroup? get eligibility => _j['eligibility'] as ConditionGroup?;
+
+  /// 할인 대상 규칙(이슈 #222) — `include`(하나라도 맞으면 대상, 비면 전 상품)·`exclude`(하나라도 맞으면 제외, 포함보다 우선). 주면 `target`과 `conditions.stackWithInstantDiscount`를 쓰지 않습니다(즉시할인 제외는 `line.hasInstantDiscount` 규칙). 포함·제외를 「모두」나 묶음으로 걸려면 `targetTree`를 씁니다.
+  CouponTargetRules? get targetRules => _j['targetRules'] as CouponTargetRules?;
+
+  /// 할인 대상 트리(이슈 #263) — `include`·`exclude` 각각 사용 조건과 같은 그룹 `{ combinator: and|or, rules }`(3단·규칙 50개, 줄 필드만). 포함 그룹이 참인 줄이 대상(비면 전 상품), 제외 그룹이 참인 줄은 빠집니다(포함보다 우선, 비면 제외 없음). 주면 `targetRules`·`target`·`conditions.stackWithInstantDiscount`를 함께 주지 않습니다.
+  CouponTargetTree? get targetTree => _j['targetTree'] as CouponTargetTree?;
+
+  /// 발급 대상 트리(이슈 #222) — 셀러 지급·받기·회원가입 지급에서 누가 받을 수 있는지입니다. 구매자 조건만. 코드 입력형에는 두지 않습니다.
+  ConditionGroup? get audience => _j['audience'] as ConditionGroup?;
+
+  /// 중복 사용 정책(이슈 #222). 생략하면 종류별 한 장·서로 결합·적립금과 함께. 결합은 양쪽 쿠폰이 모두 허용해야 성립합니다.
+  CouponStacking? get stacking => _j['stacking'] as CouponStacking?;
+
+  /// 확장 혜택(구간 할인 `TIERED`·N+1 `BUY_X_GET_Y`·적립금 지급 `POINT`). 주면 `benefit`을 생략하고, 응답의 `benefit`은 가장 가까운 값입니다. N+1은 상품 쿠폰만, 적립금 지급은 회원 전용 주문 쿠폰만입니다. 수정에서 null이면 확장 혜택을 지웁니다(`benefit`이 필요합니다).
+  CouponReward? get reward => _j['reward'] as CouponReward?;
+
+  /// 받기 시작 시각(받기 쿠폰만, 이슈 #222). 생략하면 사용 시작 시각을 따릅니다.
+  String? get issueStartsAt => _j['issueStartsAt'] as String?;
+
+  /// 받기 종료 시각(받기 쿠폰만, 이 시각부터 못 받습니다). 생략하면 사용 종료 시각을 따릅니다.
+  String? get issueEndsAt => _j['issueEndsAt'] as String?;
+
+  /// 쿠폰 목록 노출 시작(받기 쿠폰만). 이 시각부터 받기 시작 전까지 목록에 보이고 받기는 「시작 전」입니다. 생략하면 받기 시작부터 보입니다.
+  String? get visibleFrom => _j['visibleFrom'] as String?;
 }
 
 /// [UpdateCouponRequest] 스키마입니다.
@@ -331,13 +459,45 @@ final ZodObject<UpdateCouponRequest> updateCouponRequestSchema = z.object<Update
       z.number().int_().greaterThan(1, inclusive: true).lessThan(3650, inclusive: true).nullable().optional(),
   'totalIssueLimit':
       z.number().int_().greaterThan(1, inclusive: true).lessThan(10000000, inclusive: true).nullable().optional(),
+  'dailyIssueLimit':
+      z.number().int_().greaterThan(1, inclusive: true).lessThan(10000000, inclusive: true).nullable().optional(),
   'totalUseLimit':
       z.number().int_().greaterThan(1, inclusive: true).lessThan(10000000, inclusive: true).nullable().optional(),
   'perMemberIssueLimit':
       z.number().int_().greaterThan(1, inclusive: true).lessThan(10000000, inclusive: true).nullable().optional(),
   'perMemberUseLimit':
       z.number().int_().greaterThan(1, inclusive: true).lessThan(10000000, inclusive: true).nullable().optional(),
-}, UpdateCouponRequest._);
+  'eligibility': conditionGroupSchema.optional(),
+  'targetRules': couponTargetRulesSchema.optional(),
+  'targetTree': couponTargetTreeSchema.optional(),
+  'audience': conditionGroupSchema.optional(),
+  'stacking': couponStackingSchema.optional(),
+  'reward': couponRewardSchema.nullable().optional(),
+  'issueStartsAt': z
+      .string()
+      .pattern(
+          RegExp(
+              r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
+          format: 'datetime')
+      .nullable()
+      .optional(),
+  'issueEndsAt': z
+      .string()
+      .pattern(
+          RegExp(
+              r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
+          format: 'datetime')
+      .nullable()
+      .optional(),
+  'visibleFrom': z
+      .string()
+      .pattern(
+          RegExp(
+              r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
+          format: 'datetime')
+      .nullable()
+      .optional(),
+}, UpdateCouponRequest._, strict: true, strictRequest: true);
 
 /// `PATCH /v1/coupons/{couponId}` — 준 항목만 바뀝니다. 발급·사용이 시작된 쿠폰(`locked`)은 이름·설명·종료일 연장·
 /// 한도 상향만 받고, 그 밖의 항목이 현재 값과 다르면 409 `COUPON_LOCKED`입니다. 종류·발급 방식은 바꿀 수 없습니다.
@@ -354,9 +514,19 @@ class UpdateCouponRequest extends ParsedObject {
       Nullable<String>? endsAt,
       Nullable<int>? validDaysAfterIssue,
       Nullable<int>? totalIssueLimit,
+      Nullable<int>? dailyIssueLimit,
       Nullable<int>? totalUseLimit,
       Nullable<int>? perMemberIssueLimit,
-      Nullable<int>? perMemberUseLimit})
+      Nullable<int>? perMemberUseLimit,
+      ConditionGroup? eligibility,
+      CouponTargetRules? targetRules,
+      CouponTargetTree? targetTree,
+      ConditionGroup? audience,
+      CouponStacking? stacking,
+      Nullable<CouponReward>? reward,
+      Nullable<String>? issueStartsAt,
+      Nullable<String>? issueEndsAt,
+      Nullable<String>? visibleFrom})
       : super({
           if (name != null) 'name': name,
           if (description != null) 'description': description.value,
@@ -368,9 +538,19 @@ class UpdateCouponRequest extends ParsedObject {
           if (endsAt != null) 'endsAt': endsAt.value,
           if (validDaysAfterIssue != null) 'validDaysAfterIssue': validDaysAfterIssue.value,
           if (totalIssueLimit != null) 'totalIssueLimit': totalIssueLimit.value,
+          if (dailyIssueLimit != null) 'dailyIssueLimit': dailyIssueLimit.value,
           if (totalUseLimit != null) 'totalUseLimit': totalUseLimit.value,
           if (perMemberIssueLimit != null) 'perMemberIssueLimit': perMemberIssueLimit.value,
-          if (perMemberUseLimit != null) 'perMemberUseLimit': perMemberUseLimit.value
+          if (perMemberUseLimit != null) 'perMemberUseLimit': perMemberUseLimit.value,
+          if (eligibility != null) 'eligibility': eligibility,
+          if (targetRules != null) 'targetRules': targetRules,
+          if (targetTree != null) 'targetTree': targetTree,
+          if (audience != null) 'audience': audience,
+          if (stacking != null) 'stacking': stacking,
+          if (reward != null) 'reward': reward.value,
+          if (issueStartsAt != null) 'issueStartsAt': issueStartsAt.value,
+          if (issueEndsAt != null) 'issueEndsAt': issueEndsAt.value,
+          if (visibleFrom != null) 'visibleFrom': visibleFrom.value
         });
 
   UpdateCouponRequest._(super.json);
@@ -410,6 +590,9 @@ class UpdateCouponRequest extends ParsedObject {
   /// 총 발급 수 한도. 생략하면 무제한. 다운로드·회원가입 쿠폰은 한도에 닿으면 더 발급하지 않습니다.
   int? get totalIssueLimit => _j['totalIssueLimit'] as int?;
 
+  /// 하루 발급 수 한도(이슈 #222) — 한국 시간 0시 기준 하루마다 이 장수까지 발급합니다(받기·회원가입·셀러 지급). 생략하면 없습니다. 코드 입력형에는 두지 않습니다.
+  int? get dailyIssueLimit => _j['dailyIssueLimit'] as int?;
+
   /// 총 사용 수 한도. 결제 중인 예약도 셉니다. 생략하면 무제한.
   int? get totalUseLimit => _j['totalUseLimit'] as int?;
 
@@ -418,6 +601,33 @@ class UpdateCouponRequest extends ParsedObject {
 
   /// 1인 사용 수 한도(코드 입력형). 생략하면 무제한. 비회원에게 여는 쿠폰은 둘 수 없습니다.
   int? get perMemberUseLimit => _j['perMemberUseLimit'] as int?;
+
+  /// 사용 조건 트리(이슈 #222) — `{ combinator: and|or, rules: [{ field, operator, value } | 그룹] }`, 그룹 3단·규칙 50개까지. 주면 `conditions`의 최소 주문 금액·첫 구매를 쓰지 않습니다(`conditions`에는 `memberOnly`만 둡니다). 필드 목록은 `COUPON_CONDITION_FIELDS`.
+  ConditionGroup? get eligibility => _j['eligibility'] as ConditionGroup?;
+
+  /// 할인 대상 규칙(이슈 #222) — `include`(하나라도 맞으면 대상, 비면 전 상품)·`exclude`(하나라도 맞으면 제외, 포함보다 우선). 주면 `target`과 `conditions.stackWithInstantDiscount`를 쓰지 않습니다(즉시할인 제외는 `line.hasInstantDiscount` 규칙). 포함·제외를 「모두」나 묶음으로 걸려면 `targetTree`를 씁니다.
+  CouponTargetRules? get targetRules => _j['targetRules'] as CouponTargetRules?;
+
+  /// 할인 대상 트리(이슈 #263) — `include`·`exclude` 각각 사용 조건과 같은 그룹 `{ combinator: and|or, rules }`(3단·규칙 50개, 줄 필드만). 포함 그룹이 참인 줄이 대상(비면 전 상품), 제외 그룹이 참인 줄은 빠집니다(포함보다 우선, 비면 제외 없음). 주면 `targetRules`·`target`·`conditions.stackWithInstantDiscount`를 함께 주지 않습니다.
+  CouponTargetTree? get targetTree => _j['targetTree'] as CouponTargetTree?;
+
+  /// 발급 대상 트리(이슈 #222) — 셀러 지급·받기·회원가입 지급에서 누가 받을 수 있는지입니다. 구매자 조건만. 코드 입력형에는 두지 않습니다.
+  ConditionGroup? get audience => _j['audience'] as ConditionGroup?;
+
+  /// 중복 사용 정책(이슈 #222). 생략하면 종류별 한 장·서로 결합·적립금과 함께. 결합은 양쪽 쿠폰이 모두 허용해야 성립합니다.
+  CouponStacking? get stacking => _j['stacking'] as CouponStacking?;
+
+  /// 확장 혜택(구간 할인 `TIERED`·N+1 `BUY_X_GET_Y`·적립금 지급 `POINT`). 주면 `benefit`을 생략하고, 응답의 `benefit`은 가장 가까운 값입니다. N+1은 상품 쿠폰만, 적립금 지급은 회원 전용 주문 쿠폰만입니다. 수정에서 null이면 확장 혜택을 지웁니다(`benefit`이 필요합니다).
+  CouponReward? get reward => _j['reward'] as CouponReward?;
+
+  /// 받기 시작 시각(받기 쿠폰만, 이슈 #222). 생략하면 사용 시작 시각을 따릅니다.
+  String? get issueStartsAt => _j['issueStartsAt'] as String?;
+
+  /// 받기 종료 시각(받기 쿠폰만, 이 시각부터 못 받습니다). 생략하면 사용 종료 시각을 따릅니다.
+  String? get issueEndsAt => _j['issueEndsAt'] as String?;
+
+  /// 쿠폰 목록 노출 시작(받기 쿠폰만). 이 시각부터 받기 시작 전까지 목록에 보이고 받기는 「시작 전」입니다. 생략하면 받기 시작부터 보입니다.
+  String? get visibleFrom => _j['visibleFrom'] as String?;
 }
 
 /// [Coupon] 스키마입니다.
@@ -437,13 +647,29 @@ final ZodObject<Coupon> couponSchema = z.object<Coupon>({
   'endsAt': z.string().nullable(),
   'validDaysAfterIssue': z.number().int_().nullable(),
   'totalIssueLimit': z.number().int_().nullable(),
+  'dailyIssueLimit': z.number().int_().nullable().optional().withDefault(null),
   'totalUseLimit': z.number().int_().nullable(),
   'perMemberIssueLimit': z.number().int_().nullable(),
   'perMemberUseLimit': z.number().int_().nullable(),
+  'voucher': couponVoucherSchema.nullable().optional().withDefault(null),
   'issuedCount': z.number().int_(),
   'reservedCount': z.number().int_(),
   'usedCount': z.number().int_(),
   'currency': z.string().optional().withDefault('KRW'),
+  'eligibility': conditionGroupSchema.optional(),
+  'targetRules': couponTargetRulesSchema.optional(),
+  'targetTree': couponTargetTreeSchema.optional(),
+  'audience': conditionGroupSchema.optional(),
+  'stacking': couponStackingSchema.optional().withDefault(CouponStacking.fromJson(const {
+        'combinesWith': const {'order': true, 'product': true, 'delivery': true},
+        'withPoints': true,
+        'perOrderLimit': 1
+      })),
+  'reward': couponRewardSchema.nullable().optional().withDefault(null),
+  'rulesOnly': z.boolean().optional().withDefault(false),
+  'issueStartsAt': z.string().nullable().optional().withDefault(null),
+  'issueEndsAt': z.string().nullable().optional().withDefault(null),
+  'visibleFrom': z.string().nullable().optional().withDefault(null),
   'status': couponStatusSchema,
   'locked': z.boolean(),
   'lockedAt': z.string().nullable(),
@@ -468,13 +694,25 @@ class Coupon extends ParsedObject {
       required String? endsAt,
       required int? validDaysAfterIssue,
       required int? totalIssueLimit,
+      int? dailyIssueLimit,
       required int? totalUseLimit,
       required int? perMemberIssueLimit,
       required int? perMemberUseLimit,
+      CouponVoucher? voucher,
       required int issuedCount,
       required int reservedCount,
       required int usedCount,
       String currency = 'KRW',
+      ConditionGroup? eligibility,
+      CouponTargetRules? targetRules,
+      CouponTargetTree? targetTree,
+      ConditionGroup? audience,
+      CouponStacking? stacking,
+      CouponReward? reward,
+      bool rulesOnly = false,
+      String? issueStartsAt,
+      String? issueEndsAt,
+      String? visibleFrom,
       required String status,
       required bool locked,
       required String? lockedAt,
@@ -494,13 +732,30 @@ class Coupon extends ParsedObject {
           'endsAt': endsAt,
           'validDaysAfterIssue': validDaysAfterIssue,
           'totalIssueLimit': totalIssueLimit,
+          'dailyIssueLimit': dailyIssueLimit,
           'totalUseLimit': totalUseLimit,
           'perMemberIssueLimit': perMemberIssueLimit,
           'perMemberUseLimit': perMemberUseLimit,
+          'voucher': voucher,
           'issuedCount': issuedCount,
           'reservedCount': reservedCount,
           'usedCount': usedCount,
           'currency': currency,
+          if (eligibility != null) 'eligibility': eligibility,
+          if (targetRules != null) 'targetRules': targetRules,
+          if (targetTree != null) 'targetTree': targetTree,
+          if (audience != null) 'audience': audience,
+          'stacking': stacking ??
+              CouponStacking.fromJson(const {
+                'combinesWith': const {'order': true, 'product': true, 'delivery': true},
+                'withPoints': true,
+                'perOrderLimit': 1
+              }),
+          'reward': reward,
+          'rulesOnly': rulesOnly,
+          'issueStartsAt': issueStartsAt,
+          'issueEndsAt': issueEndsAt,
+          'visibleFrom': visibleFrom,
           'status': status,
           'locked': locked,
           'lockedAt': lockedAt,
@@ -536,7 +791,7 @@ class Coupon extends ParsedObject {
   /// `target` 값입니다.
   CouponTarget get target => _j['target'] as CouponTarget;
 
-  /// 발급 방식. 현재 값은 `CODE`·`MANUAL`·`DOWNLOAD`(구매자가 받기)·`SIGNUP`(회원가입 자동 지급)이고 값이 추가될 수 있어 문자열로 받습니다.
+  /// 발급 방식. 현재 값은 `CODE`·`MANUAL`·`DOWNLOAD`(구매자가 받기)·`SIGNUP`(회원가입 자동 지급)·`FLOW`(주문 흐름 지급)·`VOUCHER`(쿠폰 번호)이고 값이 추가될 수 있어 문자열로 받습니다.
   String get issueMethod => _j['issueMethod'] as String;
 
   /// 쿠폰 코드(대문자). 코드 입력형이 아니면 null.
@@ -554,6 +809,9 @@ class Coupon extends ParsedObject {
   /// `totalIssueLimit` 값입니다.
   int? get totalIssueLimit => _j['totalIssueLimit'] as int?;
 
+  /// 하루 발급 수 한도(한국 시간 0시 기준). 없으면 null. 서버는 항상 싣습니다.
+  int? get dailyIssueLimit => _j['dailyIssueLimit'] as int?;
+
   /// `totalUseLimit` 값입니다.
   int? get totalUseLimit => _j['totalUseLimit'] as int?;
 
@@ -562,6 +820,9 @@ class Coupon extends ParsedObject {
 
   /// `perMemberUseLimit` 값입니다.
   int? get perMemberUseLimit => _j['perMemberUseLimit'] as int?;
+
+  /// 쿠폰 번호 설정(`VOUCHER`만, 이슈 #264). 다른 발급 방식은 null. 서버는 항상 싣습니다.
+  CouponVoucher? get voucher => _j['voucher'] as CouponVoucher?;
 
   /// 발급 수 — 회수한 발급도 셉니다. 총 발급 한도(`totalIssueLimit`)가 이 값과 비교됩니다.
   int get issuedCount => _j['issuedCount'] as int;
@@ -574,6 +835,36 @@ class Coupon extends ParsedObject {
 
   /// 쿠폰 통화(이슈 #130). 금액 필드는 이 통화의 최소 단위입니다. 옛 서버 응답은 KRW로 읽습니다.
   String get currency => _j['currency'] as String;
+
+  /// 사용 조건 트리(이슈 #222). 옛 쿠폰은 `conditions`에서 만든 트리입니다. 서버는 항상 싣습니다.
+  ConditionGroup? get eligibility => _j['eligibility'] as ConditionGroup?;
+
+  /// 할인 대상 규칙(이슈 #222). 옛 쿠폰은 `target`에서 만든 규칙입니다. `targetTree`가 「하나라도」 목록으로 나타나지 않으면 가장 가까운 값이고 `rulesOnly`가 true입니다. 서버는 항상 싣습니다.
+  CouponTargetRules? get targetRules => _j['targetRules'] as CouponTargetRules?;
+
+  /// 할인 대상 트리(이슈 #263). 할인 대상의 원천입니다. 옛 쿠폰은 `targetRules`에서 만든 트리(「하나 이상」 그룹)다. 서버는 항상 싣습니다.
+  CouponTargetTree? get targetTree => _j['targetTree'] as CouponTargetTree?;
+
+  /// 발급 대상 트리(이슈 #222). 없으면 빈 트리(모두 대상). 서버는 항상 싣습니다.
+  ConditionGroup? get audience => _j['audience'] as ConditionGroup?;
+
+  /// 중복 사용 정책(이슈 #222). 서버는 항상 싣습니다.
+  CouponStacking get stacking => _j['stacking'] as CouponStacking;
+
+  /// 확장 혜택. 없으면 null이고 `benefit`이 혜택입니다. 서버는 항상 싣습니다.
+  CouponReward? get reward => _j['reward'] as CouponReward?;
+
+  /// 트리로만 표현되는 규칙이 있는지입니다(이슈 #222). true면 `conditions`·`target`은 가장 가까운 옛 값이고 원천은 트리입니다.
+  bool get rulesOnly => _j['rulesOnly'] as bool;
+
+  /// 받기 시작 시각(받기 쿠폰만, 이슈 #222). 생략하면 사용 시작 시각을 따릅니다.
+  String? get issueStartsAt => _j['issueStartsAt'] as String?;
+
+  /// 받기 종료 시각(받기 쿠폰만, 이 시각부터 못 받습니다). 생략하면 사용 종료 시각을 따릅니다.
+  String? get issueEndsAt => _j['issueEndsAt'] as String?;
+
+  /// 쿠폰 목록 노출 시작(받기 쿠폰만). 이 시각부터 받기 시작 전까지 목록에 보이고 받기는 「시작 전」입니다. 생략하면 받기 시작부터 보입니다.
+  String? get visibleFrom => _j['visibleFrom'] as String?;
 
   /// 쿠폰 상태. `ACTIVE`=사용 중, `PAUSED`=중지(재개 가능), `ENDED`=종료(되돌릴 수 없음).
   String get status => _j['status'] as String;
@@ -589,6 +880,31 @@ class Coupon extends ParsedObject {
 
   /// `updatedAt` 값입니다.
   String get updatedAt => _j['updatedAt'] as String;
+}
+
+/// [CouponVoucher] 스키마입니다.
+final ZodObject<CouponVoucher> couponVoucherSchema = z.object<CouponVoucher>({
+  'prefix': z.string(),
+  'count': z.number().int_(),
+}, CouponVoucher._);
+
+/// CouponVoucher 값입니다.
+class CouponVoucher extends ParsedObject {
+  /// [CouponVoucher]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CouponVoucher({required String prefix, required int count}) : super({'prefix': prefix, 'count': count});
+
+  CouponVoucher._(super.json);
+
+  /// JSON을 [couponVoucherSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponVoucher.fromJson(Map<String, Object?> json) => couponVoucherSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `prefix` 값입니다.
+  String get prefix => _j['prefix'] as String;
+
+  /// `count` 값입니다.
+  int get count => _j['count'] as int;
 }
 
 /// [CouponListQuery] 스키마입니다.
@@ -629,7 +945,7 @@ class CouponListQuery extends ParsedObject {
   /// 쿠폰 종류. `ORDER`=주문 쿠폰(대상 상품 합계에서 할인), `PRODUCT`=상품 쿠폰(주문상품 한 줄에서 할인), `DELIVERY`=배송비 쿠폰(기본 배송비에서 할인, 지역 추가 배송비 제외).
   String? get kind => _j['kind'] as String?;
 
-  /// 발급 방식. `CODE`=구매자가 주문서에 코드를 입력합니다, `MANUAL`=셀러가 회원을 골라 지급합니다, `DOWNLOAD`=구매자가 스토어프론트에서 받습니다, `SIGNUP`=회원가입 때 자동으로 지급합니다.
+  /// 발급 방식. `CODE`=구매자가 주문서에 코드를 입력합니다, `MANUAL`=셀러가 회원을 골라 지급합니다, `DOWNLOAD`=구매자가 스토어프론트에서 받습니다, `SIGNUP`=회원가입 때 자동으로 지급합니다, `FLOW`=주문 흐름의 쿠폰 지급 단계가 그 주문의 구매자에게 지급합니다, `VOUCHER`=셀러가 1회용 쿠폰 번호를 만들어 나눠 주고 구매자가 번호를 등록하면 지급합니다.
   String? get issueMethod => _j['issueMethod'] as String?;
 
   /// 이름·코드 검색(포함).
@@ -710,7 +1026,7 @@ class CouponIssue extends ParsedObject {
   /// 구매자 이름. 탈퇴한 구매자는 null.
   String? get customerName => _j['customerName'] as String?;
 
-  /// 발급 경로(이슈 #110). 현재 값은 `MANUAL`(셀러 지급)·`DOWNLOAD`(구매자가 받음)·`SIGNUP`(회원가입 자동 지급)이고 값이 추가될 수 있습니다. 서버는 항상 싣습니다.
+  /// 발급 경로(이슈 #110). 현재 값은 `MANUAL`(셀러 지급)·`DOWNLOAD`(구매자가 받음)·`SIGNUP`(회원가입 자동 지급)·`FLOW`(주문 흐름 지급)·`VOUCHER`(쿠폰 번호 등록)이고 값이 추가될 수 있습니다. 서버는 항상 싣습니다.
   String? get source => _j['source'] as String?;
 
   /// 발급 쿠폰 상태. 현재 값은 `AVAILABLE`(사용 가능)·`RESERVED`(결제 중)·`USED`(사용함)·`REVOKED`(회수)·`EXPIRED`(유효 기간 지남)이고 값이 추가될 수 있어 문자열로 받습니다.
@@ -762,6 +1078,121 @@ class CouponIssueListQuery extends ParsedObject {
   String? get size => _j['size'] as String?;
 }
 
+/// [CouponVoucherCodes] 스키마입니다.
+///
+/// `GET /v1/coupons/{couponId}/voucher-codes` — 쿠폰 번호 전체(순번 순). 상점 플랫폼이 CSV로 내려받습니다.
+final ZodObject<CouponVoucherCodes> couponVoucherCodesSchema = z.object<CouponVoucherCodes>({
+  'prefix': z.string(),
+  'count': z.number().int_(),
+  'codes': z.array<String>(z.string()),
+}, CouponVoucherCodes._);
+
+/// `GET /v1/coupons/{couponId}/voucher-codes` — 쿠폰 번호 전체(순번 순). 상점 플랫폼이 CSV로 내려받습니다.
+class CouponVoucherCodes extends ParsedObject {
+  /// [CouponVoucherCodes]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CouponVoucherCodes({required String prefix, required int count, required List<String> codes})
+      : super({'prefix': prefix, 'count': count, 'codes': codes});
+
+  CouponVoucherCodes._(super.json);
+
+  /// JSON을 [couponVoucherCodesSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponVoucherCodes.fromJson(Map<String, Object?> json) => couponVoucherCodesSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `prefix` 값입니다.
+  String get prefix => _j['prefix'] as String;
+
+  /// `count` 값입니다.
+  int get count => _j['count'] as int;
+
+  /// 번호 — 순번 1부터. 등록에 쓴 번호도 싣습니다.
+  List<String> get codes => (_j['codes'] as List).cast<String>();
+}
+
+/// [CouponDistribution] 스키마입니다.
+///
+/// 발급 대상 전원 지급(이슈 #264) — `POST /v1/coupons/{couponId}/distributions`(202)가 만들고 서버가 뒤에서 처리합니다. 셀러 지급(`MANUAL`) 쿠폰을
+/// 발급 대상 조건에 맞는 회원 모두에게 줍니다(셀러 지급과 같은 한도 판정). 쿠폰마다 진행 중 작업은 하나입니다.
+final ZodObject<CouponDistribution> couponDistributionSchema = z.object<CouponDistribution>({
+  'distributionId': z.string(),
+  'couponId': z.string(),
+  'status': z.string(),
+  'processedCount': z.number().int_(),
+  'issuedCount': z.number().int_(),
+  'skippedCount': z.number().int_(),
+  'stopCode': z.string().nullable(),
+  'createdAt': z.string(),
+  'startedAt': z.string().nullable(),
+  'finishedAt': z.string().nullable(),
+}, CouponDistribution._);
+
+/// 발급 대상 전원 지급(이슈 #264) — `POST /v1/coupons/{couponId}/distributions`(202)가 만들고 서버가 뒤에서 처리합니다. 셀러 지급(`MANUAL`) 쿠폰을
+/// 발급 대상 조건에 맞는 회원 모두에게 줍니다(셀러 지급과 같은 한도 판정). 쿠폰마다 진행 중 작업은 하나입니다.
+class CouponDistribution extends ParsedObject {
+  /// [CouponDistribution]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CouponDistribution(
+      {required String distributionId,
+      required String couponId,
+      required String status,
+      required int processedCount,
+      required int issuedCount,
+      required int skippedCount,
+      required String? stopCode,
+      required String createdAt,
+      required String? startedAt,
+      required String? finishedAt})
+      : super({
+          'distributionId': distributionId,
+          'couponId': couponId,
+          'status': status,
+          'processedCount': processedCount,
+          'issuedCount': issuedCount,
+          'skippedCount': skippedCount,
+          'stopCode': stopCode,
+          'createdAt': createdAt,
+          'startedAt': startedAt,
+          'finishedAt': finishedAt
+        });
+
+  CouponDistribution._(super.json);
+
+  /// JSON을 [couponDistributionSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponDistribution.fromJson(Map<String, Object?> json) => couponDistributionSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `distributionId` 값입니다.
+  String get distributionId => _j['distributionId'] as String;
+
+  /// `couponId` 값입니다.
+  String get couponId => _j['couponId'] as String;
+
+  /// 작업 상태. 현재 값은 `QUEUED`(대기)·`RUNNING`(지급 중)·`COMPLETED`(끝남)·`FAILED`(실패)이고 값이 추가될 수 있습니다.
+  String get status => _j['status'] as String;
+
+  /// 지금까지 살펴본 회원 수.
+  int get processedCount => _j['processedCount'] as int;
+
+  /// 이 작업이 지급한 장수.
+  int get issuedCount => _j['issuedCount'] as int;
+
+  /// 건너뛴 회원 수 — 발급 대상이 아니거나 1인 발급 한도에 닿은 회원.
+  int get skippedCount => _j['skippedCount'] as int;
+
+  /// 일찍 끝난 사유. `COUPON_EXHAUSTED`(총 발급 한도)·`COUPON_DAILY_EXHAUSTED`(하루 발급 한도)·`COUPON_NOT_ACTIVE`(중지·종료)·`COUPON_EXPIRED`(사용 기간 끝) 등. 끝까지 돌았으면 null.
+  String? get stopCode => _j['stopCode'] as String?;
+
+  /// `createdAt` 값입니다.
+  String get createdAt => _j['createdAt'] as String;
+
+  /// `startedAt` 값입니다.
+  String? get startedAt => _j['startedAt'] as String?;
+
+  /// `finishedAt` 값입니다.
+  String? get finishedAt => _j['finishedAt'] as String?;
+}
+
 /// [IssueCouponRequest] 스키마입니다.
 ///
 /// `POST /v1/coupons/{couponId}/issues` — 셀러 지급. 한 번에 1,000명까지.
@@ -771,7 +1202,7 @@ final ZodObject<IssueCouponRequest> issueCouponRequestSchema = z.object<IssueCou
       .min(1)
       .max(1000)
       .refine((v) => (v as List).toSet().length == v.length, message: '같은 구매자를 두 번 넣었습니다'),
-}, IssueCouponRequest._);
+}, IssueCouponRequest._, strict: true);
 
 /// `POST /v1/coupons/{couponId}/issues` — 셀러 지급. 한 번에 1,000명까지.
 class IssueCouponRequest extends ParsedObject {
@@ -867,7 +1298,7 @@ class IssueCouponResultFailedItem extends ParsedObject {
   /// `customerId` 값입니다.
   String get customerId => _j['customerId'] as String;
 
-  /// 실패 사유. `CUSTOMER_NOT_FOUND`(이 상점 구매자가 아님)·`COUPON_LIMIT_REACHED`(1인 발급 한도)·`COUPON_EXHAUSTED`(총 발급 한도).
+  /// 실패 사유. `CUSTOMER_NOT_FOUND`(이 상점 구매자가 아님)·`COUPON_LIMIT_REACHED`(1인 발급 한도)·`COUPON_EXHAUSTED`(총 발급 한도)·`AUDIENCE_NOT_MATCHED`(발급 대상 조건에 맞지 않음, 이슈 #222).
   String get code => _j['code'] as String;
 
   /// `message` 값입니다.
@@ -1142,7 +1573,7 @@ class CustomerCoupon extends ParsedObject {
   /// 구매자 이름. 탈퇴한 구매자는 null.
   String? get customerName => _j['customerName'] as String?;
 
-  /// 발급 경로(이슈 #110). 현재 값은 `MANUAL`(셀러 지급)·`DOWNLOAD`(구매자가 받음)·`SIGNUP`(회원가입 자동 지급)이고 값이 추가될 수 있습니다. 서버는 항상 싣습니다.
+  /// 발급 경로(이슈 #110). 현재 값은 `MANUAL`(셀러 지급)·`DOWNLOAD`(구매자가 받음)·`SIGNUP`(회원가입 자동 지급)·`FLOW`(주문 흐름 지급)·`VOUCHER`(쿠폰 번호 등록)이고 값이 추가될 수 있습니다. 서버는 항상 싣습니다.
   String? get source => _j['source'] as String?;
 
   /// 발급 쿠폰 상태. 현재 값은 `AVAILABLE`(사용 가능)·`RESERVED`(결제 중)·`USED`(사용함)·`REVOKED`(회수)·`EXPIRED`(유효 기간 지남)이고 값이 추가될 수 있어 문자열로 받습니다.

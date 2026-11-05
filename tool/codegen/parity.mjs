@@ -71,6 +71,8 @@ export function sample(schema, depth = 0) {
     }
     case "record":
       return { key: sample(d.valueType, depth + 1) };
+    case "tuple":
+      return d.items.map((it) => sample(it, depth + 1));
     case "object": {
       const obj = {};
       for (const [k, v] of Object.entries(d.shape)) {
@@ -292,8 +294,7 @@ function gettersTest({ ir, emit, scan, schemaNames, known, library, testImport, 
   const funcs = [];
   for (const cls of ir.classes.values()) {
     if (cls.kind === "object") {
-      const shown = cls.fields.filter((f) => !(["optional", "catch"].includes(f.node.k) && emit.deprecatedField(cls.root, f)));
-      const lines = shown.map((f) => `  ${touch(emit.type(f.node), `v.${ident(f.key)}`)}`);
+      const lines = emit.shownFields(cls).map((f) => `  ${touch(emit.type(f.node), `v.${ident(f.key)}`)}`);
       funcs.push(`void ${fn(cls.name)}(${cls.name} v) {\n  v.toJson();\n${lines.join("\n")}\n}`);
     } else {
       const variants = emit.variantClasses(cls.node);
@@ -302,10 +303,12 @@ function gettersTest({ ir, emit, scan, schemaNames, known, library, testImport, 
     }
   }
   for (const e of scan.values()) {
-    if (e.kind !== "interface" || !emit.unionBases?.has(e.name)) continue;
+    if (e.kind !== "interface" || !emit.unionBases?.has(e.name) || ir.classes.has(e.name)) continue;
     const ms = interfaceMembers(e.decl).filter((m) => m.name);
     funcs.push(`void ${fn(e.name)}(${e.name} v) {\n${ms.map((m) => `  v.${ident(m.name)};`).join("\n")}\n}`);
   }
+  // manual part가 맡는 스키마의 출력 클래스 — JSON으로만 읽어 본다
+  for (const t of new Set(ir.manualSchemas.values())) funcs.push(`void ${fn(t)}(${t} v) {\n  v.toJson();\n}`);
   const roots = schemaNames
     .map((n) => [n, emit.type(ir.build(n))])
     .filter(([, t]) => isClass(t.replace(/\?$/, "")) || /^List<(\w+)>$/.test(t));

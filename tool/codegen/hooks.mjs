@@ -2,7 +2,8 @@
 // 키는 Node 함수 원문(공백 정리)이다. 생성기가 원문을 찾지 못하면 멈추고 원문을 보여 준다 — 여기에 Dart 구현을 더한다.
 // 모델에 거는 검사는 값이 모델이므로 `jsonOf(v as ParsedObject)`로 JSON을 읽는다.
 
-export const normalize = (fn) => String(fn).replace(/\s+/g, " ").trim();
+// 번들러가 바꾼 zod 이름(`z$1`)은 `z`로 읽는다
+export const normalize = (fn) => String(fn).replace(/\s+/g, " ").replace(/\bz\$\d+\./g, "z.").trim();
 
 /** refine 술어 — Dart `(v) => bool` */
 export const REFINES = {
@@ -96,6 +97,22 @@ Object.assign(REFINES, {
     "(v) { final j = jsonOf(v as ParsedObject); return !truthy(j['regex']) || (j['query'] as String).length <= 100; }",
   "(results) => new Set(results.map((result) => result.ruleId)).size === results.length":
     "(v) => (v as List).map((r) => jsMap(r)['ruleId']).toSet().length == v.length",
+  '(value) => { try { new Intl.DateTimeFormat("en-US", { timeZone: value }); return true; } catch { return false; } }':
+    "(v) => jsIsTimeZone(v as String)",
+  '(value) => { try { new Intl.DateTimeFormat("en", { timeZone: value }); return true; } catch { return false; } }':
+    "(v) => jsIsTimeZone(v as String)",
+  "(value) => { try { return Intl.getCanonicalLocales(value).length === 1; } catch { return false; } }":
+    "(v) => jsIsLocaleTag(v as String)",
+  '(value) => { const [y, m, d] = value.split("-").map(Number); const day = new Date(Date.UTC(y === 0 ? 2e3 : y, m - 1, d)); return day.getUTCMonth() === m - 1 && day.getUTCDate() === d; }':
+    "(v) => jsIsCalendarDate(v as String)",
+  "(body) => body.refundAmount === void 0 || body.deductAmount === void 0":
+    "(v) { final j = jsonOf(v as ParsedObject); return !j.containsKey('refundAmount') || !j.containsKey('deductAmount'); }",
+  "(value) => (value.productIds?.length ?? 0) + (value.productNos?.length ?? 0) <= 100":
+    "(v) { final j = jsonOf(v as ParsedObject); return ((j['productIds'] as List?)?.length ?? 0) + ((j['productNos'] as List?)?.length ?? 0) <= 100; }",
+  "(v) => new TextEncoder().encode(v).length <= STOREFRONT_SITE_VAR_MAX_BYTES":
+    "(v) => utf8.encode(v as String).length <= STOREFRONT_SITE_VAR_MAX_BYTES",
+  '(v) => !v.split("/").some((seg) => seg === "." || seg === "..")':
+    "(v) => !(v as String).split('/').any((seg) => seg == '.' || seg == '..')",
 });
 
 const CSV = { dart: "_splitCsv", output: "List<String>" };
@@ -131,4 +148,5 @@ Object.assign(SUPER_REFINES, {
   productFulfillmentUpdateSchema: "_shippingConsistency",
   tossPaymentsCredentialsInputSchema: "_tossWidgetKeyCheck",
   couponBenefitSchema: "_couponBenefitCheck",
+  couponRewardSchema: "_couponRewardCheck",
 });

@@ -6,5 +6,5 @@ import 'money.dart';
 final Map<String, Object? Function(List<Object?> a)> functions = {
   ...appsFunctions,
   ...catalogFunctions,
-  ...moneyFunctions
+  ...moneyFunctions,
 };

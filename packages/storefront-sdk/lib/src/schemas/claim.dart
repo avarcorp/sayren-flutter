@@ -28,6 +28,7 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 /// [String] 스키마입니다. 값은 `CANCEL`·`RETURN`·`EXCHANGE`입니다.
 final ZodEnum claimTypeSchema = z.enum_(['CANCEL', 'RETURN', 'EXCHANGE']);
@@ -424,7 +425,7 @@ class MyClaim extends ParsedObject {
   /// 예상 반환 적립금 (원, #93) — 결제에 쓴 적립금 중 이 수량의 몫입니다. 예상 환불액(현금)과 별개이고, 차감은 현금에서 먼저 뺍니다. 교환·적립금을 쓰지 않은 주문은 0입니다. 서버는 항상 싣습니다.
   int get expectedPointRefundAmount => _j['expectedPointRefundAmount'] as int;
 
-  /// `rejectReason` 값입니다.
+  /// 판매자가 적은 거절 상세 사유. 거절(`REJECTED`) 클레임만 값이 있습니다.
   String? get rejectReason => _j['rejectReason'] as String?;
 
   /// 반품·교환 물건을 보낼 반품지(이슈 #30). 직접 보내는 수거 안내에 씁니다. 취소 클레임은 null.

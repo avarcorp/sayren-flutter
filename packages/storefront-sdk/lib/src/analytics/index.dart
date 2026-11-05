@@ -2,6 +2,7 @@
 // Flutter 기본 환경과 createAnalytics는 flutter.dart에 있다(이 파일은 Flutter를 import하지 않는다).
 import 'dart:convert';
 
+import '../http.dart' show SAYREN_STOREFRONT_API_BASE_URL;
 import '../schemas/analytics.dart';
 
 /// 분석 동의 상태입니다. `granted`(동의)·`denied`(거부)·`pending`(대기)입니다.
@@ -15,7 +16,7 @@ typedef AnalyticsConsent = String;
 class AnalyticsOptions {
   /// 옵션을 만듭니다.
   const AnalyticsOptions({
-    required this.baseUrl,
+    this.baseUrl = SAYREN_STOREFRONT_API_BASE_URL,
     required this.storeCode,
     this.consent,
     this.autoPageViews,
@@ -24,7 +25,7 @@ class AnalyticsOptions {
     this.flushIntervalMs,
   });
 
-  /// 스토어프론트 API 주소입니다. 예: `https://api.sayren.io/storefront/v1`
+  /// 스토어프론트 API 베이스입니다. 생략하면 운영 주소([SAYREN_STOREFRONT_API_BASE_URL], `https://api.sayren.io/storefront/v1`)이고, 개발·로컬에서만 지정합니다.
   final String baseUrl;
 
   /// 상점 코드입니다.

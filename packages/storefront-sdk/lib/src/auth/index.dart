@@ -71,9 +71,9 @@ class IdpCallbackError implements Exception {
 /// [createStorefrontAuth]에 넘기는 옵션입니다.
 class StorefrontAuthOptions {
   /// 옵션을 만듭니다.
-  const StorefrontAuthOptions({required this.baseUrl, required this.storeCode, this.fetch});
+  const StorefrontAuthOptions({this.baseUrl = SAYREN_STOREFRONT_API_BASE_URL, required this.storeCode, this.fetch});
 
-  /// 스토어프론트 API 주소입니다. 예: `https://api.sayren.io/storefront/v1`
+  /// 스토어프론트 API 주소(버전 경로 포함)입니다. 생략하면 운영 주소([SAYREN_STOREFRONT_API_BASE_URL], `https://api.sayren.io/storefront/v1`)이고, 개발·로컬에서만 지정합니다.
   final String baseUrl;
 
   /// 상점 코드입니다. `X-Store-Code` 헤더로 보냅니다.
@@ -124,6 +124,11 @@ class StorefrontAuth {
 
   /// 이메일·비밀번호로 로그인합니다. `cartToken`을 주면 비회원 장바구니를 합칩니다.
   Future<TokenPair> session(LoginRequest body) => _client().auth.login(body);
+
+  /// 비밀번호 재설정 메일을 요청합니다. 그 이메일의 구매자에게 재설정 메일을 보내고, 가입 여부를 드러내지 않도록 늘 성공합니다.
+  ///
+  /// 메일 링크는 sayren이 호스팅하는 재설정 화면이고, 바꾼 뒤 `successUrl?passwordReset=done`으로 돌아옵니다.
+  Future<void> requestPasswordReset(PasswordResetRequest body) => _client().auth.requestPasswordReset(body);
 
   /// 회원가입합니다. 가입과 동시에 로그인 토큰을 받습니다. `cartToken`을 주면 장바구니를 합칩니다.
   Future<TokenPair> signUp(SignupRequest body) => _client().auth.signup(body);

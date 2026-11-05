@@ -28,6 +28,7 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 /// [MyOrderItem] 스키마입니다.
 final ZodObject<MyOrderItem> myOrderItemSchema = z.object<MyOrderItem>({
@@ -53,6 +54,7 @@ final ZodObject<MyOrderItem> myOrderItemSchema = z.object<MyOrderItem>({
   'reviewWritten': z.boolean(),
   'reviewWritable': z.boolean().optional(),
   'autoDecisionDate': z.string().nullable(),
+  'flow': myOrderItemFlowSchema.optional(),
   'flowState': flowStateSchema.optional(),
   'actions': z.array<FlowAction>(flowActionSchema).optional(),
   'flowBranches': z.array<FlowState>(flowStateSchema).optional(),
@@ -85,6 +87,7 @@ class MyOrderItem extends ParsedObject {
       required bool reviewWritten,
       bool? reviewWritable,
       required String? autoDecisionDate,
+      MyOrderItemFlow? flow,
       FlowState? flowState,
       List<FlowAction>? actions,
       List<FlowState>? flowBranches,
@@ -112,6 +115,7 @@ class MyOrderItem extends ParsedObject {
           'reviewWritten': reviewWritten,
           if (reviewWritable != null) 'reviewWritable': reviewWritable,
           'autoDecisionDate': autoDecisionDate,
+          if (flow != null) 'flow': flow,
           if (flowState != null) 'flowState': flowState,
           if (actions != null) 'actions': actions,
           if (flowBranches != null) 'flowBranches': flowBranches,
@@ -185,11 +189,14 @@ class MyOrderItem extends ParsedObject {
   /// `reviewWritten` 값입니다.
   bool get reviewWritten => _j['reviewWritten'] as bool;
 
-  /// 지금 리뷰를 쓸 수 있는지입니다 — 구매확정·미작성·작성 기한 안이고, 테스트 결제 주문이면 상점이 테스트 주문 리뷰를 허용했을 때만 true. 비회원 주문은 false. 서버는 항상 싣습니다.
+  /// 지금 리뷰를 쓸 수 있는지입니다 — 구매확정·미작성·작성 기한 안이면 true. 비회원 주문은 false. 서버는 항상 싣습니다.
   bool? get reviewWritable => _j['reviewWritable'] as bool?;
 
   /// `autoDecisionDate` 값입니다.
   String? get autoDecisionDate => _j['autoDecisionDate'] as String?;
+
+  /// 이 주문상품이 따르는 흐름(#411). 흐름과 스토어프론트를 같은 셀러가 고친다면 `flow.key` + `flowState.key`로 분기할 수 있습니다 — 한 번 게시한 상태 key는 바뀌지 않습니다. 여러 흐름을 모르는 범용 화면은 `step.type`·`actions`로 그립니다. 플로우가 없는 주문상품은 없습니다.
+  MyOrderItemFlow? get flow => _j['flow'] as MyOrderItemFlow?;
 
   /// 주문 플로우의 지금 상태(이슈 #115). 플로우가 없는 주문상품은 없습니다.
   FlowState? get flowState => _j['flowState'] as FlowState?;
@@ -232,6 +239,31 @@ class MyOrderItemFulfillment extends ParsedObject {
 
   /// 판매자가 제공 처리 때 남긴 이용 안내. 없으면 null.
   String? get note => _j['note'] as String?;
+}
+
+/// [MyOrderItemFlow] 스키마입니다.
+final ZodObject<MyOrderItemFlow> myOrderItemFlowSchema = z.object<MyOrderItemFlow>({
+  'key': z.string(),
+  'version': z.number().int_(),
+}, MyOrderItemFlow._);
+
+/// MyOrderItemFlow 값입니다.
+class MyOrderItemFlow extends ParsedObject {
+  /// [MyOrderItemFlow]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  MyOrderItemFlow({required String key, required int version}) : super({'key': key, 'version': version});
+
+  MyOrderItemFlow._(super.json);
+
+  /// JSON을 [myOrderItemFlowSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory MyOrderItemFlow.fromJson(Map<String, Object?> json) => myOrderItemFlowSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 흐름 key. 상점 안에서 유일하고 바뀌지 않습니다.
+  String get key => _j['key'] as String;
+
+  /// 이 주문상품이 따르는 흐름 버전.
+  int get version => _j['version'] as int;
 }
 
 /// [OrderShippingAddress] 스키마입니다.
@@ -329,6 +361,7 @@ final ZodObject<MyOrder> myOrderSchema = z.object<MyOrder>({
   'payment': myOrderPaymentSchema,
   'currency': z.string().optional(),
   'testPayment': z.boolean(),
+  'payments': z.array<MyOrderPaymentsItem>(myOrderPaymentsItemSchema).optional().withDefault(const []),
 }, MyOrder._);
 
 /// MyOrder 값입니다.
@@ -344,7 +377,8 @@ class MyOrder extends ParsedObject {
       required OrderShippingAddress shippingAddress,
       required MyOrderPayment payment,
       String? currency,
-      required bool testPayment})
+      required bool testPayment,
+      List<MyOrderPaymentsItem> payments = const []})
       : super({
           'orderId': orderId,
           if (progressStatus != null) 'progressStatus': progressStatus,
@@ -355,7 +389,8 @@ class MyOrder extends ParsedObject {
           'shippingAddress': shippingAddress,
           'payment': payment,
           if (currency != null) 'currency': currency,
-          'testPayment': testPayment
+          'testPayment': testPayment,
+          'payments': payments
         });
 
   MyOrder._(super.json);
@@ -394,6 +429,9 @@ class MyOrder extends ParsedObject {
 
   /// 테스트 결제(샌드박스 결제) 주문인지입니다. true면 실제로 돈이 나가지 않았습니다 — 주문 화면에 테스트 결제 배지를 표시합니다.
   bool get testPayment => _j['testPayment'] as bool;
+
+  /// 이 주문의 결제(이슈 #117) — 첫 결제와, 판매자의 결제 요청으로 주문에 줄을 붙인 추가 결제를 결제 순서로 싣습니다. `payment`는 첫 결제입니다. 서버는 항상 싣습니다.
+  List<MyOrderPaymentsItem> get payments => (_j['payments'] as List).cast<MyOrderPaymentsItem>();
 }
 
 /// [MyOrderPayment] 스키마입니다.
@@ -521,6 +559,67 @@ class MyOrderPaymentDiscountsItem extends ParsedObject {
 
   /// `discountAmount` 값입니다.
   int get discountAmount => _j['discountAmount'] as int;
+}
+
+/// [MyOrderPaymentsItem] 스키마입니다.
+final ZodObject<MyOrderPaymentsItem> myOrderPaymentsItemSchema = z.object<MyOrderPaymentsItem>({
+  'paymentId': z.string(),
+  'additional': z.boolean(),
+  'amount': z.number().int_(),
+  'approvedMethod': z.string().nullable(),
+  'easyPayProvider': easyPayProviderResponseSchema.nullable(),
+  'paidAt': z.string(),
+  'refundedAmount': z.number().int_(),
+}, MyOrderPaymentsItem._);
+
+/// MyOrderPaymentsItem 값입니다.
+class MyOrderPaymentsItem extends ParsedObject {
+  /// [MyOrderPaymentsItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  MyOrderPaymentsItem(
+      {required String paymentId,
+      required bool additional,
+      required int amount,
+      required String? approvedMethod,
+      required String? easyPayProvider,
+      required String paidAt,
+      required int refundedAmount})
+      : super({
+          'paymentId': paymentId,
+          'additional': additional,
+          'amount': amount,
+          'approvedMethod': approvedMethod,
+          'easyPayProvider': easyPayProvider,
+          'paidAt': paidAt,
+          'refundedAmount': refundedAmount
+        });
+
+  MyOrderPaymentsItem._(super.json);
+
+  /// JSON을 [myOrderPaymentsItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory MyOrderPaymentsItem.fromJson(Map<String, Object?> json) => myOrderPaymentsItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `paymentId` 값입니다.
+  String get paymentId => _j['paymentId'] as String;
+
+  /// 추가 결제인지입니다. false면 주문을 만든 첫 결제(`payment`와 같은 결제)다.
+  bool get additional => _j['additional'] as bool;
+
+  /// 결제(현금) 금액.
+  int get amount => _j['amount'] as int;
+
+  /// 실제 결제수단. 0원 결제는 null.
+  String? get approvedMethod => _j['approvedMethod'] as String?;
+
+  /// `easyPayProvider` 값입니다.
+  String? get easyPayProvider => _j['easyPayProvider'] as String?;
+
+  /// `paidAt` 값입니다.
+  String get paidAt => _j['paidAt'] as String;
+
+  /// 이 결제에서 환불이 끝난 금액.
+  int get refundedAmount => _j['refundedAmount'] as int;
 }
 
 /// [String] 스키마입니다.

@@ -14,16 +14,21 @@ import 'app-manifest.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -759,10 +766,11 @@ class AppInstallationActivity extends ParsedObject {
 /// `POST /v1/apps/installations`(상점 플랫폼 전용) — 둘 중 하나입니다.
 /// - `{ result }`: accounts 설치 동의 결과(1회용 JWT). 개발자 포털 [내 상점에 설치]가 이 길로 옵니다
 /// - `{ appId, settings }`: 상점 플랫폼 앱 목록 › 설치 화면에서 동의하고 설정까지 채워 바로 설치합니다.
-final ZodType<AppInstallRequest> appInstallRequestSchema = z.union<AppInstallRequest>([
+final ZodType<AppInstallRequest> appInstallRequestSchema =
+    z.strictRequest<AppInstallRequest>(z.union<AppInstallRequest>([
   appInstallRequestOption1Schema,
   appInstallRequestOption2Schema,
-]);
+]));
 
 /// `POST /v1/apps/installations`(상점 플랫폼 전용) — 둘 중 하나입니다.
 /// - `{ result }`: accounts 설치 동의 결과(1회용 JWT). 개발자 포털 [내 상점에 설치]가 이 길로 옵니다

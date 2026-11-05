@@ -102,18 +102,22 @@ List<AppManifestProblem> appManifestProblems(AppManifest manifest) {
   unique(manifest.http?.public ?? const [], 'http.public', '공개 HTTP 핸들러');
   // 외부 런타임 — 주소가 있어야 하고, 내보내는 곳을 sayren이 막을 수 없어 network.hosts를 받지 않는다
   if ((manifest.runtime == 'external') != (manifest.external != null)) {
-    problems.add(AppManifestProblem(
-      path: 'external',
-      code: 'EXTERNAL_URL_REQUIRED',
-      message: 'runtime이 external이면 external.url이 필요하고, code면 external을 적지 않습니다',
-    ));
+    problems.add(
+      AppManifestProblem(
+        path: 'external',
+        code: 'EXTERNAL_URL_REQUIRED',
+        message: 'runtime이 external이면 external.url이 필요하고, code면 external을 적지 않습니다',
+      ),
+    );
   }
   if (manifest.runtime == 'external' && manifest.network.hosts.isNotEmpty) {
-    problems.add(const AppManifestProblem(
-      path: 'network.hosts',
-      code: 'EXTERNAL_NETWORK_HOSTS',
-      message: '외부 런타임 앱은 network.hosts를 적지 않습니다',
-    ));
+    problems.add(
+      const AppManifestProblem(
+        path: 'network.hosts',
+        code: 'EXTERNAL_NETWORK_HOSTS',
+        message: '외부 런타임 앱은 network.hosts를 적지 않습니다',
+      ),
+    );
   }
   final external = manifest.external;
   if (external != null) {
@@ -124,17 +128,24 @@ List<AppManifestProblem> appManifestProblems(AppManifest manifest) {
   }
   for (final event in manifest.events) {
     if (!scopesCoverEvent(manifest.scopes, event)) {
-      problems.add(AppManifestProblem(
-        path: 'events.$event',
-        code: 'EVENT_SCOPE_MISSING',
-        message: '$event 이벤트를 받으려면 ${APP_EVENT_SCOPES[event]} 스코프가 필요합니다',
-      ));
+      problems.add(
+        AppManifestProblem(
+          path: 'events.$event',
+          code: 'EVENT_SCOPE_MISSING',
+          message: '$event 이벤트를 받으려면 ${APP_EVENT_SCOPES[event]} 스코프가 필요합니다',
+        ),
+      );
     }
   }
   for (final MapEntry(:key, value: field) in manifest.settings.entries) {
     if (field.type == 'select' && field.options == null) {
-      problems.add(AppManifestProblem(
-          path: 'settings.$key', code: 'SELECT_OPTIONS_REQUIRED', message: 'select 필드에는 options가 필요합니다'));
+      problems.add(
+        AppManifestProblem(
+          path: 'settings.$key',
+          code: 'SELECT_OPTIONS_REQUIRED',
+          message: 'select 필드에는 options가 필요합니다',
+        ),
+      );
     }
     if (field.secret == true && field.type != 'string') {
       problems.add(AppManifestProblem(path: 'settings.$key', code: 'SECRET_FIELD_TYPE', message: '비밀 필드는 string만 됩니다'));
@@ -144,8 +155,9 @@ List<AppManifestProblem> appManifestProblems(AppManifest manifest) {
       final expected = field.type == 'select' ? 'string' : field.type;
       final matchesOption = field.type != 'select' || (field.options?.any((o) => o.value == value) ?? false);
       if (_typeOf(value) != expected || !matchesOption) {
-        problems.add(AppManifestProblem(
-            path: 'settings.$key', code: 'DEFAULT_TYPE_MISMATCH', message: 'default가 필드 형식과 맞지 않습니다'));
+        problems.add(
+          AppManifestProblem(path: 'settings.$key', code: 'DEFAULT_TYPE_MISMATCH', message: 'default가 필드 형식과 맞지 않습니다'),
+        );
       }
     }
   }
@@ -188,11 +200,11 @@ AppCapabilities appCapabilitiesOf(AppManifest manifest) {
     schedules: {for (final e in schedules) e.key: e.value.every},
     requiredSettings: [
       for (final e in settings)
-        if (e.value.required == true) e.key
+        if (e.value.required == true) e.key,
     ]..sort(),
     secretSettings: [
       for (final e in settings)
-        if (e.value.secret == true) e.key
+        if (e.value.secret == true) e.key,
     ]..sort(),
   );
 }
@@ -245,7 +257,7 @@ final APP_CAPABILITIES = <AppCapabilityDefinition>[
     title: '주기적으로 실행되는 작업',
     describe: (c) => [
       for (final MapEntry(key: name, value: every) in (c.schedules ?? const {}).entries)
-        '$name · ${appScheduleIntervalLabel(every)}마다'
+        '$name · ${appScheduleIntervalLabel(every)}마다',
     ],
     widens: (p, n) {
       final before = p.schedules ?? const {};
@@ -270,8 +282,9 @@ final APP_CAPABILITIES = <AppCapabilityDefinition>[
   AppCapabilityDefinition(
     key: 'tools',
     title: 'AI 에이전트 도구',
-    describe: (c) =>
-        [for (final MapEntry(key: name, value: tool) in (c.tools ?? const {}).entries) '$name · ${tool.description}'],
+    describe: (c) => [
+      for (final MapEntry(key: name, value: tool) in (c.tools ?? const {}).entries) '$name · ${tool.description}',
+    ],
     widens: (p, n) => _grew((p.tools ?? const {}).keys.toList(), (n.tools ?? const {}).keys.toList()),
   ),
 ];
@@ -302,7 +315,7 @@ List<({String name, String every})> appScheduleListOf(AppCapabilities capabiliti
       ({
         String name,
         String label,
-        List<({String name, String type, String label, bool required})> params,
+        List<({String name, String type, String label, bool required})> params
       })> flowNotifications,
   List<({String name, String label})> flowEvents,
 }) appFlowSummaryOf(AppCapabilities capabilities) {
@@ -344,5 +357,5 @@ String appScheduleIntervalLabel(String every) {
 /// 재동의가 필요한 capability 키 목록입니다. 비어 있으면 새 버전이 모든 설치에 곧바로 반영됩니다.
 List<String> appManifestWidens(AppCapabilities previous, AppCapabilities next) => [
       for (final c in APP_CAPABILITIES)
-        if (c.widens(previous, next)) c.key
+        if (c.widens(previous, next)) c.key,
     ];

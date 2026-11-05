@@ -15,15 +15,20 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -71,7 +78,8 @@ final ZodObject<CustomerDelegationRequest> customerDelegationRequestSchema = z.o
               r'^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$'),
           format: 'datetime')
       .optional(),
-}, CustomerDelegationRequest._).refine((v) {
+  'userinfo': customerUserinfoInputSchema.optional(),
+}, CustomerDelegationRequest._, strictRequest: true).refine((v) {
   final j = jsonOf(v as ParsedObject);
   return truthy(j['uid']) || truthy(j['email']);
 }, message: 'uid 또는 email이 필요합니다', path: ['uid']);
@@ -79,12 +87,14 @@ final ZodObject<CustomerDelegationRequest> customerDelegationRequestSchema = z.o
 /// CustomerDelegationRequest 값입니다.
 class CustomerDelegationRequest extends ParsedObject {
   /// [CustomerDelegationRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  CustomerDelegationRequest({String? uid, String? email, String? name, String? authenticatedAt})
+  CustomerDelegationRequest(
+      {String? uid, String? email, String? name, String? authenticatedAt, CustomerUserinfoInput? userinfo})
       : super({
           if (uid != null) 'uid': uid,
           if (email != null) 'email': email,
           if (name != null) 'name': name,
-          if (authenticatedAt != null) 'authenticatedAt': authenticatedAt
+          if (authenticatedAt != null) 'authenticatedAt': authenticatedAt,
+          if (userinfo != null) 'userinfo': userinfo
         });
 
   CustomerDelegationRequest._(super.json);
@@ -105,6 +115,9 @@ class CustomerDelegationRequest extends ParsedObject {
 
   /// 사용자가 셀러 서비스에서 실제로 로그인한 시각(uid 위임만). 주면 구매자 토큰의 인증 시각이 됩니다.
   String? get authenticatedAt => _j['authenticatedAt'] as String?;
+
+  /// OIDC 클레임(이슈 #264) — 위임할 때마다 준 클레임만 바뀌고 null은 지웁니다. `email_verified`를 생략하면 위임으로 만든 구매자의 이메일은 확인된 것으로 봅니다.
+  CustomerUserinfoInput? get userinfo => _j['userinfo'] as CustomerUserinfoInput?;
 }
 
 /// [CustomerDelegation] 스키마입니다.

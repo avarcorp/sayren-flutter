@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -34,6 +39,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -50,6 +56,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import '../webhook-headers.dart';
 
 part 'webhook-event.manual.dart';
@@ -181,7 +188,6 @@ final ZodObject<OrderFulfilledWebhookEventData> orderFulfilledWebhookEventDataSc
   'orderItemId': z.string(),
   'status': orderItemStatusSchema,
   'fulfillmentSnapshot': orderItemFulfillmentSnapshotResponseSchema,
-  'fulfillment': orderFulfilledWebhookEventDataFulfillmentSchema.optional(),
   'fulfilledAt': z.string(),
   'currency': z.string().optional(),
   'testPayment': z.boolean(),
@@ -197,7 +203,6 @@ class OrderFulfilledWebhookEventData extends ParsedObject {
       required String orderItemId,
       required String status,
       required OrderItemFulfillmentSnapshotView fulfillmentSnapshot,
-      OrderFulfilledWebhookEventDataFulfillment? fulfillment,
       required String fulfilledAt,
       String? currency,
       required bool testPayment})
@@ -207,7 +212,6 @@ class OrderFulfilledWebhookEventData extends ParsedObject {
           'orderItemId': orderItemId,
           'status': status,
           'fulfillmentSnapshot': fulfillmentSnapshot,
-          if (fulfillment != null) 'fulfillment': fulfillment,
           'fulfilledAt': fulfilledAt,
           if (currency != null) 'currency': currency,
           'testPayment': testPayment
@@ -237,10 +241,6 @@ class OrderFulfilledWebhookEventData extends ParsedObject {
   OrderItemFulfillmentSnapshotView get fulfillmentSnapshot =>
       _j['fulfillmentSnapshot'] as OrderItemFulfillmentSnapshotView;
 
-  /// **Deprecated** — 항상 `{ mode: "MANUAL" }`입니다. 자동 제공을 없앴고(이슈 #48) store-sdk 0.19 이하 호환으로만 싣습니다. 게시된 연동이 store-sdk 0.20 이상으로 넘어간 뒤 다음 릴리스에서 뺍니다.
-  OrderFulfilledWebhookEventDataFulfillment? get fulfillment =>
-      _j['fulfillment'] as OrderFulfilledWebhookEventDataFulfillment?;
-
   /// 제공 시각 (ISO 8601). 주문상품의 `deliveredAt`과 같습니다.
   String get fulfilledAt => _j['fulfilledAt'] as String;
 
@@ -249,29 +249,6 @@ class OrderFulfilledWebhookEventData extends ParsedObject {
 
   /// 테스트 결제(샌드박스 결제) 주문인지입니다. true면 실제로 돈이 오가지 않았습니다.
   bool get testPayment => _j['testPayment'] as bool;
-}
-
-/// [OrderFulfilledWebhookEventDataFulfillment] 스키마입니다.
-final ZodObject<OrderFulfilledWebhookEventDataFulfillment> orderFulfilledWebhookEventDataFulfillmentSchema =
-    z.object<OrderFulfilledWebhookEventDataFulfillment>({
-  'mode': z.string(),
-}, OrderFulfilledWebhookEventDataFulfillment._);
-
-/// OrderFulfilledWebhookEventDataFulfillment 값입니다.
-class OrderFulfilledWebhookEventDataFulfillment extends ParsedObject {
-  /// [OrderFulfilledWebhookEventDataFulfillment]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  OrderFulfilledWebhookEventDataFulfillment({required String mode}) : super({'mode': mode});
-
-  OrderFulfilledWebhookEventDataFulfillment._(super.json);
-
-  /// JSON을 [orderFulfilledWebhookEventDataFulfillmentSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
-  factory OrderFulfilledWebhookEventDataFulfillment.fromJson(Map<String, Object?> json) =>
-      orderFulfilledWebhookEventDataFulfillmentSchema.parse(json);
-
-  Map<String, Object?> get _j => jsonOf(this);
-
-  /// `mode` 값입니다.
-  String get mode => _j['mode'] as String;
 }
 
 /// [OrderCanceledWebhookEventData] 스키마입니다.
@@ -290,11 +267,13 @@ final ZodObject<OrderCanceledWebhookEventData> orderCanceledWebhookEventDataSche
   'quantity': z.number().int_(),
   'canceledQuantity': z.number().int_(),
   'refundAmount': z.number().int_(),
+  'calculatedRefundAmount': z.number().int_().optional(),
   'deliveryFeeRefundAmount': z.number().int_(),
   'deliveryFeeChargeAmount': z.number().int_(),
   'couponChargeAmount': z.number().int_().optional().withDefault(0),
   'couponChargeRefundAmount': z.number().int_().optional().withDefault(0),
   'pointRefundAmount': z.number().int_().optional().withDefault(0),
+  'deductAmount': z.number().int_().optional().withDefault(0),
   'currency': z.string().optional(),
   'testPayment': z.boolean(),
 }, OrderCanceledWebhookEventData._);
@@ -314,11 +293,13 @@ class OrderCanceledWebhookEventData extends ParsedObject {
       required int quantity,
       required int canceledQuantity,
       required int refundAmount,
+      int? calculatedRefundAmount,
       required int deliveryFeeRefundAmount,
       required int deliveryFeeChargeAmount,
       int couponChargeAmount = 0,
       int couponChargeRefundAmount = 0,
       int pointRefundAmount = 0,
+      int deductAmount = 0,
       String? currency,
       required bool testPayment})
       : super({
@@ -331,11 +312,13 @@ class OrderCanceledWebhookEventData extends ParsedObject {
           'quantity': quantity,
           'canceledQuantity': canceledQuantity,
           'refundAmount': refundAmount,
+          if (calculatedRefundAmount != null) 'calculatedRefundAmount': calculatedRefundAmount,
           'deliveryFeeRefundAmount': deliveryFeeRefundAmount,
           'deliveryFeeChargeAmount': deliveryFeeChargeAmount,
           'couponChargeAmount': couponChargeAmount,
           'couponChargeRefundAmount': couponChargeRefundAmount,
           'pointRefundAmount': pointRefundAmount,
+          'deductAmount': deductAmount,
           if (currency != null) 'currency': currency,
           'testPayment': testPayment
         });
@@ -372,8 +355,11 @@ class OrderCanceledWebhookEventData extends ParsedObject {
   /// 취소 후 누적 취소 수량.
   int get canceledQuantity => _j['canceledQuantity'] as int;
 
-  /// 환불액 (원). 수량 비율 상품 실결제 금액(쿠폰 배분을 뺀 금액) + 배송비 환불 − 조건부 무료배송 미달 차감 + 되돌린 쿠폰 차감(`couponChargeRefundAmount`)입니다. 결제사 환불 결과는 결제 내역(`GET /v1/payments/{paymentId}`)으로 확인합니다.
+  /// 환불액 (원). 수량 비율 상품 실결제 금액(쿠폰 배분을 뺀 금액) + 배송비 환불 − 조건부 무료배송 미달 차감 − 쿠폰 조건 미달 차감 + 되돌린 쿠폰 차감(`couponChargeRefundAmount`) − 추가 차감(`deductAmount`)입니다. 판매자가 `refundAmount`를 정했으면 그 값입니다. 결제사 환불 결과는 결제 내역(`GET /v1/payments/{paymentId}`)으로 확인합니다.
   int get refundAmount => _j['refundAmount'] as int;
+
+  /// 서버가 계산한 환불액 (원, #365). 판매자가 최종 금액을 정하지 않았으면 `refundAmount`와 같습니다. 이 필드가 없는 이전 이벤트는 `refundAmount`와 같다고 읽습니다.
+  int? get calculatedRefundAmount => _j['calculatedRefundAmount'] as int?;
 
   /// 환불액에 포함된 배송비 (원).
   int get deliveryFeeRefundAmount => _j['deliveryFeeRefundAmount'] as int;
@@ -381,7 +367,7 @@ class OrderCanceledWebhookEventData extends ParsedObject {
   /// 환불액에서 뺀 배송비 (원) — 조건부 무료배송 기준 미달 차감.
   int get deliveryFeeChargeAmount => _j['deliveryFeeChargeAmount'] as int;
 
-  /// 환불액에서 뺀 쿠폰 조건 미달 차감 (원). 판매자 취소는 차감하지 않으므로 늘 0입니다. 이 필드가 없는 이전 이벤트는 0으로 읽습니다.
+  /// 환불액에서 뺀 쿠폰 조건 미달 차감 (원). 판매자 귀책 취소는 차감하지 않으므로 0이고, 구매자 귀책(`responsibility: BUYER`)이면 생길 수 있습니다. 이 필드가 없는 이전 이벤트는 0으로 읽습니다.
   int get couponChargeAmount => _j['couponChargeAmount'] as int;
 
   /// 환불액에 더한 금액 (원) — 앞선 환불에서 뺀 쿠폰 조건 미달 차감을 되돌린 몫입니다. 전량 취소면 누적 차감이 모두 되돌아갑니다. 이 필드가 없는 이전 이벤트는 0으로 읽습니다.
@@ -389,6 +375,9 @@ class OrderCanceledWebhookEventData extends ParsedObject {
 
   /// 돌려준 적립금 (원, #93) — 결제에 쓴 적립금 중 이번 취소·반품 수량의 몫입니다. 현금 환불(`refundAmount`)과 별개입니다. 차감은 현금에서 먼저 빼고 모자란 몫만 여기서 뺍니다. 적립금을 쓰지 않은 주문과 이 필드가 없는 이전 응답·이벤트는 0으로 읽습니다.
   int get pointRefundAmount => _j['pointRefundAmount'] as int;
+
+  /// 환불액에서 뺀 추가 차감 (원, #301) — 판매자가 취소 요청에 넣은 `deductAmount`입니다. 배송비 차감과 따로 싣습니다. 이 필드가 없는 이전 이벤트는 0으로 읽습니다.
+  int get deductAmount => _j['deductAmount'] as int;
 
   /// 주문 통화(ISO 4217, 이슈 #130). 이 이벤트의 금액은 모두 이 통화의 최소 단위입니다. 외화 주문이 생기면 이 값을 확인합니다. 이 필드가 없는 이전 이벤트는 KRW입니다.
   String? get currency => _j['currency'] as String?;
@@ -407,6 +396,7 @@ final ZodObject<ClaimWebhookEventData> claimWebhookEventDataSchema = z.object<Cl
   'status': claimStatusSchema,
   'quantity': z.number().int_().optional().withDefault(0),
   'refundAmount': z.number().int_().nullable().optional().withDefault(null),
+  'calculatedRefundAmount': z.number().int_().optional(),
   'deliveryFeeRefundAmount': z.number().int_().optional().withDefault(0),
   'deliveryFeeChargeAmount': z.number().int_().optional().withDefault(0),
   'deductAmount': z.number().int_().optional().withDefault(0),
@@ -429,6 +419,7 @@ class ClaimWebhookEventData extends ParsedObject {
       required String status,
       int quantity = 0,
       int? refundAmount,
+      int? calculatedRefundAmount,
       int deliveryFeeRefundAmount = 0,
       int deliveryFeeChargeAmount = 0,
       int deductAmount = 0,
@@ -446,6 +437,7 @@ class ClaimWebhookEventData extends ParsedObject {
           'status': status,
           'quantity': quantity,
           'refundAmount': refundAmount,
+          if (calculatedRefundAmount != null) 'calculatedRefundAmount': calculatedRefundAmount,
           'deliveryFeeRefundAmount': deliveryFeeRefundAmount,
           'deliveryFeeChargeAmount': deliveryFeeChargeAmount,
           'deductAmount': deductAmount,
@@ -484,8 +476,11 @@ class ClaimWebhookEventData extends ParsedObject {
   /// 클레임 대상 수량. 이 필드가 없는 이전 이벤트는 0으로 읽습니다.
   int get quantity => _j['quantity'] as int;
 
-  /// 환불액 (원). 배송비 환불을 포함하고 배송비 차감·추가 차감을 뺀 실제 금액입니다. 환불이 확정되지 않은 접수 이벤트는 예상 환불액이고, 교환처럼 환불이 없으면 null입니다.
+  /// 환불액 (원). 배송비 환불을 포함하고 배송비 차감·추가 차감을 뺀 실제 금액입니다. 판매자가 승인에 최종 금액을 정했으면 그 값입니다. 환불이 확정되지 않은 접수 이벤트는 예상 환불액이고, 교환처럼 환불이 없으면 null입니다.
   int? get refundAmount => _j['refundAmount'] as int?;
+
+  /// 서버가 계산한 환불액 (원, #365) — 완료 이벤트(`CLAIM.COMPLETED`)에만 싣습니다. 판매자가 최종 금액을 정하지 않았으면 `refundAmount`와 같습니다. 이 필드가 없는 이벤트는 `refundAmount`와 같다고 읽습니다.
+  int? get calculatedRefundAmount => _j['calculatedRefundAmount'] as int?;
 
   /// 환불액에 포함된 배송비 (원). 이 필드가 없는 이전 이벤트는 0으로 읽습니다.
   int get deliveryFeeRefundAmount => _j['deliveryFeeRefundAmount'] as int;
@@ -1477,6 +1472,409 @@ class FlowStateChangedWebhookEvent extends ParsedObject implements WebhookEvent 
   FlowStateChangedWebhookEventData get data => _j['data'] as FlowStateChangedWebhookEventData;
 }
 
+/// [OrderPaymentAddedWebhookEventData] 스키마입니다.
+///
+/// 추가 결제(이슈 #117) — 결제 요청(`POST /v1/checkouts`의 `orderId`)이 결제돼 줄이 주문에 붙었습니다. 붙은 줄은 이 결제가 냈고 환불도 이 결제에서 합니다.
+/// 개인정보는 싣지 않습니다.
+final ZodObject<OrderPaymentAddedWebhookEventData> orderPaymentAddedWebhookEventDataSchema =
+    z.object<OrderPaymentAddedWebhookEventData>({
+  'orderId': z.string(),
+  'orderNo': z.string(),
+  'paymentId': z.string(),
+  'checkoutId': z.string(),
+  'amount': z.number().int_(),
+  'orderItemIds': z.array<String>(z.string()),
+  'currency': z.string(),
+  'testPayment': z.boolean(),
+}, OrderPaymentAddedWebhookEventData._);
+
+/// 추가 결제(이슈 #117) — 결제 요청(`POST /v1/checkouts`의 `orderId`)이 결제돼 줄이 주문에 붙었습니다. 붙은 줄은 이 결제가 냈고 환불도 이 결제에서 합니다.
+/// 개인정보는 싣지 않습니다.
+class OrderPaymentAddedWebhookEventData extends ParsedObject {
+  /// [OrderPaymentAddedWebhookEventData]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderPaymentAddedWebhookEventData(
+      {required String orderId,
+      required String orderNo,
+      required String paymentId,
+      required String checkoutId,
+      required int amount,
+      required List<String> orderItemIds,
+      required String currency,
+      required bool testPayment})
+      : super({
+          'orderId': orderId,
+          'orderNo': orderNo,
+          'paymentId': paymentId,
+          'checkoutId': checkoutId,
+          'amount': amount,
+          'orderItemIds': orderItemIds,
+          'currency': currency,
+          'testPayment': testPayment
+        });
+
+  OrderPaymentAddedWebhookEventData._(super.json);
+
+  /// JSON을 [orderPaymentAddedWebhookEventDataSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderPaymentAddedWebhookEventData.fromJson(Map<String, Object?> json) =>
+      orderPaymentAddedWebhookEventDataSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 주문 ID.
+  String get orderId => _j['orderId'] as String;
+
+  /// 주문번호.
+  String get orderNo => _j['orderNo'] as String;
+
+  /// 붙은 결제(주문 응답 `payments[].paymentId`).
+  String get paymentId => _j['paymentId'] as String;
+
+  /// 결제한 결제 요청(셀러 작성 주문서) id.
+  String get checkoutId => _j['checkoutId'] as String;
+
+  /// 결제 금액.
+  int get amount => _j['amount'] as int;
+
+  /// 이 결제로 붙은 주문상품.
+  List<String> get orderItemIds => (_j['orderItemIds'] as List).cast<String>();
+
+  /// 주문 통화.
+  String get currency => _j['currency'] as String;
+
+  /// `testPayment` 값입니다.
+  bool get testPayment => _j['testPayment'] as bool;
+}
+
+/// [OrderPaymentAddedWebhookEvent] 스키마입니다.
+final ZodObject<OrderPaymentAddedWebhookEvent> orderPaymentAddedWebhookEventSchema =
+    z.object<OrderPaymentAddedWebhookEvent>({
+  'id': z.string(),
+  'createdAt': z.string(),
+  'storeId': z.string(),
+  'sequence': z.number().int_().greaterThan(0, inclusive: false).optional(),
+  'type': z.literal<String>('ORDER.PAYMENT_ADDED'),
+  'data': orderPaymentAddedWebhookEventDataSchema,
+}, OrderPaymentAddedWebhookEvent._);
+
+/// OrderPaymentAddedWebhookEvent 값입니다.
+class OrderPaymentAddedWebhookEvent extends ParsedObject implements WebhookEvent {
+  /// [OrderPaymentAddedWebhookEvent]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderPaymentAddedWebhookEvent(
+      {required String id,
+      required String createdAt,
+      required String storeId,
+      int? sequence,
+      required String type,
+      required OrderPaymentAddedWebhookEventData data})
+      : super({
+          'id': id,
+          'createdAt': createdAt,
+          'storeId': storeId,
+          if (sequence != null) 'sequence': sequence,
+          'type': type,
+          'data': data
+        });
+
+  OrderPaymentAddedWebhookEvent._(super.json);
+
+  /// JSON을 [orderPaymentAddedWebhookEventSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderPaymentAddedWebhookEvent.fromJson(Map<String, Object?> json) =>
+      orderPaymentAddedWebhookEventSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 이벤트 ID (`evt_…`, 테스트 전송은 `evt_test_…`). 중복 제거 키.
+  @override
+  String get id => _j['id'] as String;
+
+  /// 이벤트 발생 일시 (ISO 8601).
+  @override
+  String get createdAt => _j['createdAt'] as String;
+
+  /// 이벤트가 발생한 상점 ID.
+  @override
+  String get storeId => _j['storeId'] as String;
+
+  /// 리소스별 순번. 같은 주문·클레임·문의·리뷰·상품의 이벤트마다 1씩 커집니다. 도착 순서는 보장하지 않으므로 같은 리소스의 이벤트는 이 값으로 정렬합니다. 이 필드가 생기기 전의 이벤트와 테스트 전송에는 없습니다.
+  @override
+  int? get sequence => _j['sequence'] as int?;
+
+  /// `type` 값입니다.
+  @override
+  String get type => _j['type'] as String;
+
+  /// `data` 값입니다.
+  OrderPaymentAddedWebhookEventData get data => _j['data'] as OrderPaymentAddedWebhookEventData;
+}
+
+/// [OrderPaymentRequestedWebhookEventData] 스키마입니다.
+///
+/// 결제 요청(이슈 #117) — 흐름 노드 「결제 요청」이 이 주문에 대한 결제 링크를 만들었습니다. 상점이 이 링크를 구매자에게 보냅니다(알림톡·메일).
+/// 결제되면 `ORDER.PAYMENT_ADDED`가 옵니다. 개인정보는 싣지 않습니다.
+final ZodObject<OrderPaymentRequestedWebhookEventData> orderPaymentRequestedWebhookEventDataSchema =
+    z.object<OrderPaymentRequestedWebhookEventData>({
+  'orderId': z.string(),
+  'orderNo': z.string(),
+  'orderItemIds': z.array<String>(z.string()),
+  'checkoutId': z.string(),
+  'checkoutUrl': z.string(),
+  'amount': z.number().int_(),
+  'currency': z.string(),
+  'expiresAt': z.string(),
+}, OrderPaymentRequestedWebhookEventData._);
+
+/// 결제 요청(이슈 #117) — 흐름 노드 「결제 요청」이 이 주문에 대한 결제 링크를 만들었습니다. 상점이 이 링크를 구매자에게 보냅니다(알림톡·메일).
+/// 결제되면 `ORDER.PAYMENT_ADDED`가 옵니다. 개인정보는 싣지 않습니다.
+class OrderPaymentRequestedWebhookEventData extends ParsedObject {
+  /// [OrderPaymentRequestedWebhookEventData]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderPaymentRequestedWebhookEventData(
+      {required String orderId,
+      required String orderNo,
+      required List<String> orderItemIds,
+      required String checkoutId,
+      required String checkoutUrl,
+      required int amount,
+      required String currency,
+      required String expiresAt})
+      : super({
+          'orderId': orderId,
+          'orderNo': orderNo,
+          'orderItemIds': orderItemIds,
+          'checkoutId': checkoutId,
+          'checkoutUrl': checkoutUrl,
+          'amount': amount,
+          'currency': currency,
+          'expiresAt': expiresAt
+        });
+
+  OrderPaymentRequestedWebhookEventData._(super.json);
+
+  /// JSON을 [orderPaymentRequestedWebhookEventDataSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderPaymentRequestedWebhookEventData.fromJson(Map<String, Object?> json) =>
+      orderPaymentRequestedWebhookEventDataSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 주문 ID.
+  String get orderId => _j['orderId'] as String;
+
+  /// 주문번호.
+  String get orderNo => _j['orderNo'] as String;
+
+  /// 결제를 요청한 흐름의 주문상품.
+  List<String> get orderItemIds => (_j['orderItemIds'] as List).cast<String>();
+
+  /// 결제 요청(셀러 작성 주문서) id.
+  String get checkoutId => _j['checkoutId'] as String;
+
+  /// 구매자에게 보낼 결제 링크(sayren 결제 페이지).
+  String get checkoutUrl => _j['checkoutUrl'] as String;
+
+  /// 결제 금액.
+  int get amount => _j['amount'] as int;
+
+  /// 주문 통화.
+  String get currency => _j['currency'] as String;
+
+  /// 결제 링크 만료 시각.
+  String get expiresAt => _j['expiresAt'] as String;
+}
+
+/// [OrderPaymentRequestedWebhookEvent] 스키마입니다.
+final ZodObject<OrderPaymentRequestedWebhookEvent> orderPaymentRequestedWebhookEventSchema =
+    z.object<OrderPaymentRequestedWebhookEvent>({
+  'id': z.string(),
+  'createdAt': z.string(),
+  'storeId': z.string(),
+  'sequence': z.number().int_().greaterThan(0, inclusive: false).optional(),
+  'type': z.literal<String>('ORDER.PAYMENT_REQUESTED'),
+  'data': orderPaymentRequestedWebhookEventDataSchema,
+}, OrderPaymentRequestedWebhookEvent._);
+
+/// OrderPaymentRequestedWebhookEvent 값입니다.
+class OrderPaymentRequestedWebhookEvent extends ParsedObject implements WebhookEvent {
+  /// [OrderPaymentRequestedWebhookEvent]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderPaymentRequestedWebhookEvent(
+      {required String id,
+      required String createdAt,
+      required String storeId,
+      int? sequence,
+      required String type,
+      required OrderPaymentRequestedWebhookEventData data})
+      : super({
+          'id': id,
+          'createdAt': createdAt,
+          'storeId': storeId,
+          if (sequence != null) 'sequence': sequence,
+          'type': type,
+          'data': data
+        });
+
+  OrderPaymentRequestedWebhookEvent._(super.json);
+
+  /// JSON을 [orderPaymentRequestedWebhookEventSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderPaymentRequestedWebhookEvent.fromJson(Map<String, Object?> json) =>
+      orderPaymentRequestedWebhookEventSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 이벤트 ID (`evt_…`, 테스트 전송은 `evt_test_…`). 중복 제거 키.
+  @override
+  String get id => _j['id'] as String;
+
+  /// 이벤트 발생 일시 (ISO 8601).
+  @override
+  String get createdAt => _j['createdAt'] as String;
+
+  /// 이벤트가 발생한 상점 ID.
+  @override
+  String get storeId => _j['storeId'] as String;
+
+  /// 리소스별 순번. 같은 주문·클레임·문의·리뷰·상품의 이벤트마다 1씩 커집니다. 도착 순서는 보장하지 않으므로 같은 리소스의 이벤트는 이 값으로 정렬합니다. 이 필드가 생기기 전의 이벤트와 테스트 전송에는 없습니다.
+  @override
+  int? get sequence => _j['sequence'] as int?;
+
+  /// `type` 값입니다.
+  @override
+  String get type => _j['type'] as String;
+
+  /// `data` 값입니다.
+  OrderPaymentRequestedWebhookEventData get data => _j['data'] as OrderPaymentRequestedWebhookEventData;
+}
+
+/// [OrderRefundedWebhookEventData] 스키마입니다.
+///
+/// 금액만 환불(#365) — 판매자가 주문상품을 취소하지 않고 결제에서 금액만 돌려주기로 했습니다. 결제사 환불 결과는 결제 상세
+/// (`GET /v1/payments/{paymentId}`의 `refunds[]`, `refundId`)로 확인합니다. 개인정보는 싣지 않습니다.
+final ZodObject<OrderRefundedWebhookEventData> orderRefundedWebhookEventDataSchema =
+    z.object<OrderRefundedWebhookEventData>({
+  'orderId': z.string(),
+  'orderNo': z.string().nullable(),
+  'paymentId': z.string(),
+  'refundId': z.string(),
+  'amount': z.number().int_(),
+  'reason': z.string(),
+  'currency': z.string(),
+  'testPayment': z.boolean(),
+}, OrderRefundedWebhookEventData._);
+
+/// 금액만 환불(#365) — 판매자가 주문상품을 취소하지 않고 결제에서 금액만 돌려주기로 했습니다. 결제사 환불 결과는 결제 상세
+/// (`GET /v1/payments/{paymentId}`의 `refunds[]`, `refundId`)로 확인합니다. 개인정보는 싣지 않습니다.
+class OrderRefundedWebhookEventData extends ParsedObject {
+  /// [OrderRefundedWebhookEventData]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderRefundedWebhookEventData(
+      {required String orderId,
+      required String? orderNo,
+      required String paymentId,
+      required String refundId,
+      required int amount,
+      required String reason,
+      required String currency,
+      required bool testPayment})
+      : super({
+          'orderId': orderId,
+          'orderNo': orderNo,
+          'paymentId': paymentId,
+          'refundId': refundId,
+          'amount': amount,
+          'reason': reason,
+          'currency': currency,
+          'testPayment': testPayment
+        });
+
+  OrderRefundedWebhookEventData._(super.json);
+
+  /// JSON을 [orderRefundedWebhookEventDataSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderRefundedWebhookEventData.fromJson(Map<String, Object?> json) =>
+      orderRefundedWebhookEventDataSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 주문 ID.
+  String get orderId => _j['orderId'] as String;
+
+  /// 주문번호. 번호 체계 이전 주문은 null.
+  String? get orderNo => _j['orderNo'] as String?;
+
+  /// 환불한 결제.
+  String get paymentId => _j['paymentId'] as String;
+
+  /// 환불 이력 id(결제 상세 `refunds[].refundId`).
+  String get refundId => _j['refundId'] as String;
+
+  /// 돌려준 현금 (원).
+  int get amount => _j['amount'] as int;
+
+  /// 판매자가 적은 환불 사유.
+  String get reason => _j['reason'] as String;
+
+  /// 주문 통화.
+  String get currency => _j['currency'] as String;
+
+  /// `testPayment` 값입니다.
+  bool get testPayment => _j['testPayment'] as bool;
+}
+
+/// [OrderRefundedWebhookEvent] 스키마입니다.
+final ZodObject<OrderRefundedWebhookEvent> orderRefundedWebhookEventSchema = z.object<OrderRefundedWebhookEvent>({
+  'id': z.string(),
+  'createdAt': z.string(),
+  'storeId': z.string(),
+  'sequence': z.number().int_().greaterThan(0, inclusive: false).optional(),
+  'type': z.literal<String>('ORDER.REFUNDED'),
+  'data': orderRefundedWebhookEventDataSchema,
+}, OrderRefundedWebhookEvent._);
+
+/// OrderRefundedWebhookEvent 값입니다.
+class OrderRefundedWebhookEvent extends ParsedObject implements WebhookEvent {
+  /// [OrderRefundedWebhookEvent]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderRefundedWebhookEvent(
+      {required String id,
+      required String createdAt,
+      required String storeId,
+      int? sequence,
+      required String type,
+      required OrderRefundedWebhookEventData data})
+      : super({
+          'id': id,
+          'createdAt': createdAt,
+          'storeId': storeId,
+          if (sequence != null) 'sequence': sequence,
+          'type': type,
+          'data': data
+        });
+
+  OrderRefundedWebhookEvent._(super.json);
+
+  /// JSON을 [orderRefundedWebhookEventSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderRefundedWebhookEvent.fromJson(Map<String, Object?> json) => orderRefundedWebhookEventSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 이벤트 ID (`evt_…`, 테스트 전송은 `evt_test_…`). 중복 제거 키.
+  @override
+  String get id => _j['id'] as String;
+
+  /// 이벤트 발생 일시 (ISO 8601).
+  @override
+  String get createdAt => _j['createdAt'] as String;
+
+  /// 이벤트가 발생한 상점 ID.
+  @override
+  String get storeId => _j['storeId'] as String;
+
+  /// 리소스별 순번. 같은 주문·클레임·문의·리뷰·상품의 이벤트마다 1씩 커집니다. 도착 순서는 보장하지 않으므로 같은 리소스의 이벤트는 이 값으로 정렬합니다. 이 필드가 생기기 전의 이벤트와 테스트 전송에는 없습니다.
+  @override
+  int? get sequence => _j['sequence'] as int?;
+
+  /// `type` 값입니다.
+  @override
+  String get type => _j['type'] as String;
+
+  /// `data` 값입니다.
+  OrderRefundedWebhookEventData get data => _j['data'] as OrderRefundedWebhookEventData;
+}
+
 /// [WebhookEvent] 스키마입니다.
 ///
 /// 웹훅 요청 본문. `type`으로 판별하며 `data` 형태가 타입별로 다릅니다.
@@ -1491,6 +1889,9 @@ final ZodType<WebhookEvent> webhookEventSchema = z.discriminatedUnion<WebhookEve
   flowNotificationWebhookEventSchema,
   flowStateChangedWebhookEventSchema,
   inventoryChangedWebhookEventSchema,
+  orderPaymentAddedWebhookEventSchema,
+  orderPaymentRequestedWebhookEventSchema,
+  orderRefundedWebhookEventSchema,
 ]);
 
 /// 웹훅 요청 본문. `type`으로 판별하며 `data` 형태가 타입별로 다릅니다.
@@ -1540,7 +1941,10 @@ const KNOWN_WEBHOOK_EVENT_TYPES = <String>[
   'PRODUCT.OUT_OF_STOCK',
   'ORDER.FLOW_NOTIFICATION',
   'ORDER.FLOW_STATE_CHANGED',
-  'INVENTORY.CHANGED'
+  'INVENTORY.CHANGED',
+  'ORDER.PAYMENT_ADDED',
+  'ORDER.PAYMENT_REQUESTED',
+  'ORDER.REFUNDED'
 ];
 
 /// [UnknownWebhookEvent] 스키마입니다.

@@ -14,16 +14,21 @@ import 'app-manifest.dart';
 import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -561,7 +568,7 @@ final ZodObject<CategoryCreateRequest> categoryCreateRequestSchema = z.object<Ca
   'metaTitle': z.string().max(100).nullable().optional(),
   'metaDescription': z.string().max(300).nullable().optional(),
   'metaKeywords': z.string().max(200).nullable().optional(),
-}, CategoryCreateRequest._);
+}, CategoryCreateRequest._, strictRequest: true);
 
 /// CategoryCreateRequest 값입니다.
 class CategoryCreateRequest extends ParsedObject {
@@ -641,7 +648,7 @@ final ZodObject<CategoryPatchRequest> categoryPatchRequestSchema = z.object<Cate
   'metaDescription': z.string().max(300).nullable().optional(),
   'metaKeywords': z.string().max(200).nullable().optional(),
   'flowId': z.string().nullable().optional(),
-}, CategoryPatchRequest._);
+}, CategoryPatchRequest._, strictRequest: true);
 
 /// CategoryPatchRequest 값입니다.
 class CategoryPatchRequest extends ParsedObject {
@@ -856,7 +863,7 @@ final ZodObject<CategoryLocalizationRequest> categoryLocalizationRequestSchema =
   'metaTitle': z.string().max(100).nullable().optional(),
   'metaDescription': z.string().max(300).nullable().optional(),
   'metaKeywords': z.string().max(200).nullable().optional(),
-}, CategoryLocalizationRequest._);
+}, CategoryLocalizationRequest._, strict: true);
 
 /// `PUT /v1/categories/{categoryId}/localizations/{locale}` 본문 — 레코드 전체를 바꿉니다. 빠진 칸은 null(기본 언어 값으로 대체)입니다.
 class CategoryLocalizationRequest extends ParsedObject {

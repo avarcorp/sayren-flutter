@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'inventory.dart';
 import 'locale.dart';
 import 'login.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -204,7 +211,7 @@ final ZodObject<ProductFulfillmentCreateShipping> productFulfillmentCreateShippi
       .min(1)
       .refine((v) => (v as List).toSet().length == v.length, message: '이행 방식이 겹칩니다')
       .optional(),
-}, ProductFulfillmentCreateShipping._);
+}, ProductFulfillmentCreateShipping._, strict: true);
 
 /// ProductFulfillmentCreateShipping 값입니다.
 class ProductFulfillmentCreateShipping extends ParsedObject implements ProductFulfillmentCreate {
@@ -242,7 +249,7 @@ final ZodType<ProductFulfillmentCreateShippingShipping> productFulfillmentCreate
   'shippingAddressId': z.string().nullable().optional(),
   'returnAddressId': z.string().nullable().optional(),
   'prices': shippingCurrencyPricesSchema.optional(),
-}, ProductFulfillmentCreateShippingShipping._).check(_shippingConsistency);
+}, ProductFulfillmentCreateShippingShipping._, strict: true).check(_shippingConsistency);
 
 /// ProductFulfillmentCreateShippingShipping 값입니다.
 class ProductFulfillmentCreateShippingShipping extends ParsedObject {
@@ -299,7 +306,7 @@ final ZodObject<ProductFulfillmentCreateManual> productFulfillmentCreateManualSc
       .min(1)
       .refine((v) => (v as List).toSet().length == v.length, message: '이행 방식이 겹칩니다')
       .optional(),
-}, ProductFulfillmentCreateManual._);
+}, ProductFulfillmentCreateManual._, strict: true);
 
 /// ProductFulfillmentCreateManual 값입니다.
 class ProductFulfillmentCreateManual extends ParsedObject implements ProductFulfillmentCreate {
@@ -363,7 +370,7 @@ final ZodObject<ProductFulfillmentUpdateShipping> productFulfillmentUpdateShippi
       .min(1)
       .refine((v) => (v as List).toSet().length == v.length, message: '이행 방식이 겹칩니다')
       .optional(),
-}, ProductFulfillmentUpdateShipping._);
+}, ProductFulfillmentUpdateShipping._, strict: true);
 
 /// ProductFulfillmentUpdateShipping 값입니다.
 class ProductFulfillmentUpdateShipping extends ParsedObject implements ProductFulfillmentUpdate {
@@ -401,7 +408,7 @@ final ZodType<ProductFulfillmentUpdateShippingShipping> productFulfillmentUpdate
   'shippingAddressId': z.string().nullable(),
   'returnAddressId': z.string().nullable(),
   'prices': shippingCurrencyPricesSchema.optional(),
-}, ProductFulfillmentUpdateShippingShipping._).check(_shippingConsistency);
+}, ProductFulfillmentUpdateShippingShipping._, strict: true).check(_shippingConsistency);
 
 /// ProductFulfillmentUpdateShippingShipping 값입니다.
 class ProductFulfillmentUpdateShippingShipping extends ParsedObject {
@@ -458,7 +465,7 @@ final ZodObject<ProductFulfillmentUpdateManual> productFulfillmentUpdateManualSc
       .min(1)
       .refine((v) => (v as List).toSet().length == v.length, message: '이행 방식이 겹칩니다')
       .optional(),
-}, ProductFulfillmentUpdateManual._);
+}, ProductFulfillmentUpdateManual._, strict: true);
 
 /// ProductFulfillmentUpdateManual 값입니다.
 class ProductFulfillmentUpdateManual extends ParsedObject implements ProductFulfillmentUpdate {
@@ -967,7 +974,7 @@ final ZodObject<PickupLocationRequest> pickupLocationRequestSchema = z.object<Pi
   'hours': z.string().trim().max(100).nullable().optional(),
   'usable': z.boolean().withDefault(true),
   'inventoryLocationId': z.string().min(1).optional(),
-}, PickupLocationRequest._);
+}, PickupLocationRequest._, strict: true);
 
 /// PickupLocationRequest 값입니다.
 class PickupLocationRequest extends ParsedObject {

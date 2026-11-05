@@ -1,6 +1,6 @@
 name: sayren_store_sdk
 description: Dart SDK for the sayren admin API — products, orders, claims, settings and webhook signatures. Same API as @sayren/store-sdk.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/avarcorp/sayren-flutter
 issue_tracker: https://github.com/avarcorp/sayren-flutter/issues
 topics:

@@ -37,7 +37,7 @@ library;
 
 export 'src/analytics-ids.dart';
 export 'src/client.dart';
-export 'src/http.dart' show ApiError, Fetch, Query, TokenSource, buildQuery;
+export 'src/http.dart' show ApiError, Fetch, Query, SAYREN_STOREFRONT_API_BASE_URL, TokenSource, buildQuery;
 export 'src/session.dart';
 export 'src/schemas/analytics.dart';
 export 'src/schemas/auth.dart';
@@ -61,4 +61,5 @@ export 'src/schemas/product-options.dart';
 export 'src/schemas/review.dart';
 export 'src/schemas/stay.dart';
 export 'src/schemas/store.dart';
+export 'src/schemas/userinfo.dart';
 export 'src/zod.dart' show Nullable, SafeParseResult, ZodArray, ZodEnum, ZodError, ZodIssue, ZodObject, ZodType;

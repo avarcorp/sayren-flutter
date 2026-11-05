@@ -1118,6 +1118,441 @@
       }
     },
     {
+      "name": "products.imports.create 생성 예시",
+      "call": "products.imports.create",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "importId": "sample",
+            "status": "sample",
+            "itemCount": 1,
+            "errors": [
+              {
+                "key": "sample",
+                "code": "sample",
+                "message": "sample",
+                "fieldErrors": []
+              }
+            ],
+            "results": [
+              {
+                "key": "sample",
+                "action": "sample",
+                "productId": "sample"
+              }
+            ],
+            "createdAt": "sample",
+            "startedAt": "sample",
+            "finishedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "products.imports.addItems 생성 예시",
+      "call": "products.imports.addItems",
+      "args": [
+        "id-1",
+        [
+          {
+            "key": "sample",
+            "action": "CREATE",
+            "product": {
+              "name": "sample",
+              "categoryId": "sample",
+              "salePrice": 10,
+              "originalPrice": 1,
+              "pointEarnRateBp": 1,
+              "prices": [],
+              "description": "sample",
+              "descriptionJson": "sample",
+              "images": [
+                "https://example.test/a.png"
+              ],
+              "attributes": [
+                {
+                  "attributeId": "sample",
+                  "value": "sample"
+                }
+              ],
+              "refundPolicy": {
+                "preShipmentDeliveryFeeRefund": true,
+                "returnDeliveryFee": 1,
+                "exchangeDeliveryFee": 1,
+                "sellerFaultFreeShipping": true,
+                "conditionalFreeShortfallCharge": true
+              },
+              "notice": {
+                "schemaId": "sample",
+                "version": 1,
+                "values": {
+                  "key": "sample"
+                }
+              },
+              "certifications": {
+                "subjects": [],
+                "items": []
+              },
+              "infoSectionIds": [
+                "sample"
+              ],
+              "optionGroups": [],
+              "variants": [
+                {
+                  "variantId": "sample",
+                  "valueNames": [],
+                  "additionalPrice": 1,
+                  "prices": [],
+                  "stockQuantity": 1,
+                  "sku": "sample",
+                  "barcode": "sample",
+                  "costPrice": 1,
+                  "weightGram": 1,
+                  "sellerCode": "sample",
+                  "usable": true,
+                  "attributes": {
+                    "key": "sample"
+                  }
+                }
+              ],
+              "addonGroups": [],
+              "customInputs": [
+                {
+                  "inputId": "sample",
+                  "label": "sample",
+                  "placeholder": "sample",
+                  "maxLength": 1,
+                  "required": true,
+                  "usable": true,
+                  "key": "sample",
+                  "type": "text"
+                }
+              ],
+              "optionSort": "REGISTERED",
+              "sourceOptionSetIds": [
+                "sample"
+              ],
+              "inventoryMode": "STANDARD",
+              "flowId": "sample",
+              "fulfillment": {
+                "type": "MANUAL"
+              }
+            },
+            "status": "SALE"
+          }
+        ]
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "importId": "sample",
+            "status": "sample",
+            "itemCount": 1,
+            "errors": [
+              {
+                "key": "sample",
+                "code": "sample",
+                "message": "sample",
+                "fieldErrors": []
+              }
+            ],
+            "results": [
+              {
+                "key": "sample",
+                "action": "sample",
+                "productId": "sample"
+              }
+            ],
+            "createdAt": "sample",
+            "startedAt": "sample",
+            "finishedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "products.imports.start 생성 예시",
+      "call": "products.imports.start",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "importId": "sample",
+            "status": "sample",
+            "itemCount": 1,
+            "errors": [
+              {
+                "key": "sample",
+                "code": "sample",
+                "message": "sample",
+                "fieldErrors": []
+              }
+            ],
+            "results": [
+              {
+                "key": "sample",
+                "action": "sample",
+                "productId": "sample"
+              }
+            ],
+            "createdAt": "sample",
+            "startedAt": "sample",
+            "finishedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "products.imports.get 생성 예시",
+      "call": "products.imports.get",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "importId": "sample",
+            "status": "sample",
+            "itemCount": 1,
+            "errors": [
+              {
+                "key": "sample",
+                "code": "sample",
+                "message": "sample",
+                "fieldErrors": []
+              }
+            ],
+            "results": [
+              {
+                "key": "sample",
+                "action": "sample",
+                "productId": "sample"
+              }
+            ],
+            "createdAt": "sample",
+            "startedAt": "sample",
+            "finishedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "products.imports.lookup 생성 예시",
+      "call": "products.imports.lookup",
+      "args": [
+        {
+          "productIds": [
+            "sample"
+          ],
+          "productNos": [
+            1
+          ]
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "productId": "sample",
+              "productNo": 1,
+              "name": "sample",
+              "status": "SALE",
+              "salePrice": 1,
+              "discountedPrice": 1,
+              "stockQuantity": 1,
+              "categoryId": "sample",
+              "thumbnailUrl": "https://example.test/a.png",
+              "hasOptions": true,
+              "fulfillment": {
+                "type": "SHIPPING",
+                "shipping": {
+                  "deliveryType": "FREE",
+                  "deliveryFee": 1,
+                  "conditionalFreeAmount": 1,
+                  "shippingAddressId": "sample",
+                  "returnAddressId": "sample",
+                  "prices": []
+                },
+                "methods": []
+              },
+              "updatedAt": "sample",
+              "sample": true,
+              "prices": [
+                {
+                  "currency": "sample",
+                  "salePrice": 1,
+                  "originalPrice": 1,
+                  "discountAmount": 1
+                }
+              ],
+              "description": "sample",
+              "descriptionJson": "sample",
+              "originalPrice": 1,
+              "pointEarnRateBp": 1,
+              "images": [
+                "https://example.test/a.png"
+              ],
+              "attributes": [
+                {
+                  "attributeId": "sample",
+                  "value": "sample"
+                }
+              ],
+              "optionGroups": [
+                {
+                  "groupId": "sample",
+                  "name": "sample",
+                  "sortOrder": 1,
+                  "values": []
+                }
+              ],
+              "variants": [
+                {
+                  "variantId": "sample",
+                  "variantNo": "sample",
+                  "valueIds": [],
+                  "name": "sample",
+                  "additionalPrice": 1,
+                  "prices": [],
+                  "stockQuantity": 1,
+                  "sku": "sample",
+                  "barcode": "sample",
+                  "costPrice": 1,
+                  "weightGram": 1,
+                  "sellerCode": "sample",
+                  "usable": true,
+                  "attributes": {
+                    "key": "sample"
+                  },
+                  "hasOrders": true
+                }
+              ],
+              "addonGroups": [
+                {
+                  "groupId": "sample",
+                  "name": "sample",
+                  "sortOrder": 1,
+                  "required": true,
+                  "values": []
+                }
+              ],
+              "customInputs": [
+                {
+                  "inputId": "sample",
+                  "label": "sample",
+                  "placeholder": "sample",
+                  "maxLength": 1,
+                  "required": true,
+                  "usable": true,
+                  "sortOrder": 1,
+                  "key": "sample",
+                  "type": "sample",
+                  "options": []
+                }
+              ],
+              "optionSort": "REGISTERED",
+              "inventoryMode": "sample",
+              "flowId": "sample",
+              "fulfillmentTypeLocked": true,
+              "refundPolicy": {
+                "preShipmentDeliveryFeeRefund": true,
+                "returnDeliveryFee": 1,
+                "exchangeDeliveryFee": 1,
+                "sellerFaultFreeShipping": true,
+                "conditionalFreeShortfallCharge": true
+              },
+              "discount": {
+                "productId": "sample",
+                "discountType": "RATE",
+                "discountValue": 1,
+                "discountedPrice": 1,
+                "startAt": "sample",
+                "endAt": "sample"
+              },
+              "notice": {
+                "schemaId": "sample",
+                "version": 1,
+                "values": {
+                  "key": "sample"
+                }
+              },
+              "certifications": {
+                "subjects": [],
+                "items": []
+              },
+              "infoSectionIds": [
+                "sample"
+              ],
+              "createdAt": "sample"
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
       "name": "products.getOptionModel 생성 예시",
       "call": "products.getOptionModel",
       "args": [
@@ -2176,6 +2611,171 @@
       "call": "infoSections.localizations.remove",
       "args": [
         "id-1",
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "noticeTemplates.list 생성 예시",
+      "call": "noticeTemplates.list",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "templateId": "sample",
+              "name": "sample",
+              "schemaId": "sample",
+              "version": 1,
+              "values": {
+                "key": "sample"
+              },
+              "createdAt": "sample",
+              "updatedAt": "sample"
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "noticeTemplates.get 생성 예시",
+      "call": "noticeTemplates.get",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "templateId": "sample",
+            "name": "sample",
+            "schemaId": "sample",
+            "version": 1,
+            "values": {
+              "key": "sample"
+            },
+            "createdAt": "sample",
+            "updatedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "noticeTemplates.create 생성 예시",
+      "call": "noticeTemplates.create",
+      "args": [
+        {
+          "name": "sample",
+          "schemaId": "sample",
+          "version": 1,
+          "values": {
+            "key": "sample"
+          }
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "templateId": "sample",
+            "name": "sample",
+            "schemaId": "sample",
+            "version": 1,
+            "values": {
+              "key": "sample"
+            },
+            "createdAt": "sample",
+            "updatedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "noticeTemplates.update 생성 예시",
+      "call": "noticeTemplates.update",
+      "args": [
+        "id-1",
+        {
+          "name": "sample",
+          "schemaId": "sample",
+          "version": 1,
+          "values": {
+            "key": "sample"
+          }
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "templateId": "sample",
+            "name": "sample",
+            "schemaId": "sample",
+            "version": 1,
+            "values": {
+              "key": "sample"
+            },
+            "createdAt": "sample",
+            "updatedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "noticeTemplates.remove 생성 예시",
+      "call": "noticeTemplates.remove",
+      "args": [
         "id-1"
       ],
       "options": {
@@ -3358,11 +3958,45 @@
             "currency": "sample",
             "testPayment": true,
             "locale": "sample",
+            "payments": [
+              {
+                "paymentId": "sample",
+                "additional": true,
+                "amount": 1,
+                "approvedMethod": "sample",
+                "easyPayProvider": "sample",
+                "paidAt": "sample",
+                "refundedAmount": 1
+              }
+            ],
+            "paymentRequests": [
+              {
+                "checkoutId": "sample",
+                "status": "sample",
+                "checkoutUrl": "sample",
+                "currency": "sample",
+                "items": [],
+                "amounts": {
+                  "productAmount": 1,
+                  "deliveryFee": 1,
+                  "totalAmount": 1
+                },
+                "requiresShipping": true,
+                "trackInventory": true,
+                "couponsEnabled": true,
+                "pointsEnabled": true,
+                "orderId": "sample",
+                "additionalPayment": true,
+                "createdAt": "sample",
+                "expiresAt": "sample"
+              }
+            ],
             "items": [
               {
                 "orderItemId": "sample",
                 "orderItemNo": "sample",
                 "orderId": "sample",
+                "paymentId": "sample",
                 "status": "PAYMENT_WAITING",
                 "claimStatus": "CANCEL_REQUESTED",
                 "productId": "sample",
@@ -3407,8 +4041,7 @@
                 "fulfillment": {
                   "status": "sample",
                   "fulfilledAt": "sample",
-                  "note": "sample",
-                  "mode": "sample"
+                  "note": "sample"
                 },
                 "autoDecisionDate": "sample",
                 "sellerMemo": "sample",
@@ -3418,6 +4051,94 @@
                 "testPayment": true
               }
             ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "orders.create 생성 예시",
+      "call": "orders.create",
+      "args": [
+        {
+          "memberId": "sample",
+          "guest": {
+            "name": "sample",
+            "phone": "01012345678",
+            "email": "buyer@example.test"
+          },
+          "shippingAddress": {
+            "receiverName": "sample",
+            "phone": "01012345678",
+            "zipCode": "12345",
+            "address1": "sample",
+            "address2": "sample",
+            "deliveryMemo": "sample"
+          },
+          "items": [
+            {
+              "productId": "sample",
+              "optionId": "sample",
+              "quantity": 1,
+              "unitPrice": 1,
+              "addons": [],
+              "customInputs": []
+            }
+          ],
+          "expiresAt": "2026-01-01T00:00:00.000Z",
+          "fulfillmentMethod": "CARRIER",
+          "pickupLocationId": "sample",
+          "trackInventory": true
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "orderId": "sample",
+            "orderNo": "sample",
+            "paymentRequest": {
+              "checkoutId": "sample",
+              "status": "sample",
+              "checkoutUrl": "sample",
+              "currency": "sample",
+              "items": [
+                {
+                  "lineId": "sample",
+                  "productId": "sample",
+                  "productName": "sample",
+                  "optionId": "sample",
+                  "optionName": "sample",
+                  "quantity": 1,
+                  "unitPrice": 1,
+                  "listUnitPrice": 1,
+                  "totalPrice": 1
+                }
+              ],
+              "amounts": {
+                "productAmount": 1,
+                "deliveryFee": 1,
+                "totalAmount": 1
+              },
+              "requiresShipping": true,
+              "trackInventory": true,
+              "couponsEnabled": true,
+              "pointsEnabled": true,
+              "orderId": "sample",
+              "additionalPayment": true,
+              "createdAt": "sample",
+              "expiresAt": "sample"
+            }
           },
           "error": null
         }
@@ -3460,6 +4181,47 @@
             "reissuable": true,
             "requestedAt": "sample",
             "updatedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "orders.refund 생성 예시",
+      "call": "orders.refund",
+      "args": [
+        "id-1",
+        {
+          "amount": 1,
+          "reason": "sample",
+          "paymentId": "sample"
+        },
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "refundId": "sample",
+            "amount": 1,
+            "pointRefundAmount": 1,
+            "calculatedAmount": 1,
+            "reason": "sample",
+            "kind": "sample",
+            "status": "sample",
+            "failMessage": "sample",
+            "requestedAt": "sample",
+            "completedAt": "sample"
           },
           "error": null
         }
@@ -3541,6 +4303,7 @@
                 "orderItemId": "sample",
                 "orderItemNo": "sample",
                 "orderId": "sample",
+                "paymentId": "sample",
                 "status": "PAYMENT_WAITING",
                 "claimStatus": "CANCEL_REQUESTED",
                 "productId": "sample",
@@ -3585,8 +4348,7 @@
                 "fulfillment": {
                   "status": "sample",
                   "fulfilledAt": "sample",
-                  "note": "sample",
-                  "mode": "sample"
+                  "note": "sample"
                 },
                 "autoDecisionDate": "sample",
                 "sellerMemo": "sample",
@@ -3698,7 +4460,11 @@
           "reason": "OUT_OF_STOCK",
           "detail": "sample",
           "quantity": 1,
-          "holdRefund": true
+          "holdRefund": true,
+          "responsibility": "SELLER",
+          "refundAmount": 1,
+          "restock": true,
+          "reclaimPurchasePoints": true
         },
         "id-1"
       ],
@@ -3718,6 +4484,7 @@
           "data": {
             "orderItemId": "sample",
             "refundAmount": 1,
+            "calculatedRefundAmount": 1,
             "quantity": 1,
             "canceledQuantity": 1,
             "deliveryFeeRefundAmount": 1,
@@ -3726,7 +4493,10 @@
             "couponChargeRefundAmount": 1,
             "pointRefundAmount": 1,
             "refundedAt": "sample",
-            "refundHeld": true
+            "refundHeld": true,
+            "refundStatus": "sample",
+            "deductAmount": 1,
+            "purchasePointReclaimedAmount": 1
           },
           "error": null
         }
@@ -3870,6 +4640,7 @@
             "orderItemId": "sample",
             "orderItemNo": "sample",
             "orderId": "sample",
+            "paymentId": "sample",
             "status": "PAYMENT_WAITING",
             "claimStatus": "CANCEL_REQUESTED",
             "productId": "sample",
@@ -3933,8 +4704,7 @@
             "fulfillment": {
               "status": "sample",
               "fulfilledAt": "sample",
-              "note": "sample",
-              "mode": "sample"
+              "note": "sample"
             },
             "autoDecisionDate": "sample",
             "sellerMemo": "sample",
@@ -4014,6 +4784,7 @@
             "orderItemId": "sample",
             "orderItemNo": "sample",
             "orderId": "sample",
+            "paymentId": "sample",
             "status": "PAYMENT_WAITING",
             "claimStatus": "CANCEL_REQUESTED",
             "productId": "sample",
@@ -4077,8 +4848,7 @@
             "fulfillment": {
               "status": "sample",
               "fulfilledAt": "sample",
-              "note": "sample",
-              "mode": "sample"
+              "note": "sample"
             },
             "autoDecisionDate": "sample",
             "sellerMemo": "sample",
@@ -4162,14 +4932,18 @@
             "orderItemId": "sample",
             "flow": {
               "flowId": "sample",
+              "key": "sample",
+              "name": "sample",
               "version": 1
             },
             "flowState": {
               "key": "sample",
               "label": "sample",
+              "labelKey": "sample",
               "coreStatus": "PAYMENT_WAITING",
               "claimStatus": "REQUESTED",
               "message": "sample",
+              "messageKey": "sample",
               "enteredAt": "sample",
               "deadlineAt": "sample",
               "attachments": [
@@ -4191,6 +4965,7 @@
               {
                 "key": "sample",
                 "label": "sample",
+                "labelKey": "sample",
                 "mode": "INSTANT",
                 "enabled": true,
                 "disabled": {
@@ -4223,9 +4998,11 @@
               {
                 "key": "sample",
                 "label": "sample",
+                "labelKey": "sample",
                 "coreStatus": "PAYMENT_WAITING",
                 "claimStatus": "REQUESTED",
                 "message": "sample",
+                "messageKey": "sample",
                 "enteredAt": "sample",
                 "deadlineAt": "sample",
                 "attachments": [],
@@ -4238,6 +5015,44 @@
                 "fields": {
                   "key": "sample"
                 }
+              }
+            ],
+            "waiting": [
+              {
+                "type": "sample",
+                "key": "sample",
+                "label": "sample",
+                "dueAt": "sample",
+                "next": {
+                  "key": "sample",
+                  "label": "sample"
+                }
+              }
+            ],
+            "claimable": [
+              {
+                "action": "sample",
+                "until": "sample"
+              }
+            ],
+            "path": [
+              {
+                "key": "sample",
+                "label": "sample",
+                "status": "sample",
+                "more": 1
+              }
+            ],
+            "attention": true,
+            "revisions": {
+              "used": 1,
+              "limit": 1
+            },
+            "data": [
+              {
+                "key": "sample",
+                "label": "sample",
+                "value": "sample"
               }
             ]
           },
@@ -4274,9 +5089,11 @@
             "flowState": {
               "key": "sample",
               "label": "sample",
+              "labelKey": "sample",
               "coreStatus": "PAYMENT_WAITING",
               "claimStatus": "REQUESTED",
               "message": "sample",
+              "messageKey": "sample",
               "enteredAt": "sample",
               "deadlineAt": "sample",
               "attachments": [
@@ -4298,6 +5115,7 @@
               {
                 "key": "sample",
                 "label": "sample",
+                "labelKey": "sample",
                 "mode": "INSTANT",
                 "enabled": true,
                 "disabled": {
@@ -4348,9 +5166,11 @@
             "flowState": {
               "key": "sample",
               "label": "sample",
+              "labelKey": "sample",
               "coreStatus": "PAYMENT_WAITING",
               "claimStatus": "REQUESTED",
               "message": "sample",
+              "messageKey": "sample",
               "enteredAt": "sample",
               "deadlineAt": "sample",
               "attachments": [
@@ -4372,6 +5192,7 @@
               {
                 "key": "sample",
                 "label": "sample",
+                "labelKey": "sample",
                 "mode": "INSTANT",
                 "enabled": true,
                 "disabled": {
@@ -4400,7 +5221,8 @@
         "id-1",
         {
           "to": "sample",
-          "reason": "sample"
+          "reason": "sample",
+          "restock": true
         },
         "id-1"
       ],
@@ -4422,9 +5244,11 @@
             "flowState": {
               "key": "sample",
               "label": "sample",
+              "labelKey": "sample",
               "coreStatus": "PAYMENT_WAITING",
               "claimStatus": "REQUESTED",
               "message": "sample",
+              "messageKey": "sample",
               "enteredAt": "sample",
               "deadlineAt": "sample",
               "attachments": [
@@ -4446,6 +5270,7 @@
               {
                 "key": "sample",
                 "label": "sample",
+                "labelKey": "sample",
                 "mode": "INSTANT",
                 "enabled": true,
                 "disabled": {
@@ -4695,11 +5520,133 @@
               "defaultFor": "SHIPPING",
               "archivedAt": "sample",
               "createdAt": "sample",
+              "updatedAt": "sample",
+              "draftVersion": 1,
+              "stepCount": 1,
+              "assignment": {
+                "categories": [],
+                "productCount": 1
+              },
+              "inProgress": {
+                "total": 1,
+                "previousVersions": 1
+              }
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.texts 생성 예시",
+      "call": "commerceFlows.texts",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "key": "sample",
+              "text": "sample"
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.localizations.list 생성 예시",
+      "call": "commerceFlows.localizations.list",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "locale": "sample",
+              "texts": {
+                "key": "sample"
+              },
               "updatedAt": "sample"
             }
           ],
           "error": null
         }
+      }
+    },
+    {
+      "name": "commerceFlows.localizations.put 생성 예시",
+      "call": "commerceFlows.localizations.put",
+      "args": [
+        "id-1",
+        "id-1",
+        {
+          "texts": {
+            "key": "sample"
+          }
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "locale": "sample",
+            "texts": {
+              "key": "sample"
+            },
+            "updatedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.localizations.remove 생성 예시",
+      "call": "commerceFlows.localizations.remove",
+      "args": [
+        "id-1",
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
       }
     },
     {
@@ -4736,6 +5683,21 @@
             "archivedAt": "sample",
             "createdAt": "sample",
             "updatedAt": "sample",
+            "draftVersion": 1,
+            "stepCount": 1,
+            "assignment": {
+              "categories": [
+                {
+                  "categoryId": "sample",
+                  "name": "sample"
+                }
+              ],
+              "productCount": 1
+            },
+            "inProgress": {
+              "total": 1,
+              "previousVersions": 1
+            },
             "draft": {
               "version": 1,
               "status": "DRAFT",
@@ -4765,6 +5727,14 @@
                 "key": "x"
               },
               "publishedAt": "sample"
+            },
+            "publishedKeys": {
+              "states": [
+                "sample"
+              ],
+              "actions": [
+                "sample"
+              ]
             },
             "versions": [
               {
@@ -4826,6 +5796,21 @@
             "archivedAt": "sample",
             "createdAt": "sample",
             "updatedAt": "sample",
+            "draftVersion": 1,
+            "stepCount": 1,
+            "assignment": {
+              "categories": [
+                {
+                  "categoryId": "sample",
+                  "name": "sample"
+                }
+              ],
+              "productCount": 1
+            },
+            "inProgress": {
+              "total": 1,
+              "previousVersions": 1
+            },
             "draft": {
               "version": 1,
               "status": "DRAFT",
@@ -4856,6 +5841,14 @@
               },
               "publishedAt": "sample"
             },
+            "publishedKeys": {
+              "states": [
+                "sample"
+              ],
+              "actions": [
+                "sample"
+              ]
+            },
             "versions": [
               {
                 "version": 1,
@@ -4867,6 +5860,124 @@
           },
           "error": null
         }
+      }
+    },
+    {
+      "name": "commerceFlows.update 생성 예시",
+      "call": "commerceFlows.update",
+      "args": [
+        "id-1",
+        {
+          "name": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "flowId": "sample",
+            "key": "sample",
+            "name": "sample",
+            "progression": "ITEM",
+            "fulfillmentMethods": [
+              "sample"
+            ],
+            "presetKey": "sample",
+            "presetVersion": 1,
+            "activeVersion": 1,
+            "defaultFor": "SHIPPING",
+            "archivedAt": "sample",
+            "createdAt": "sample",
+            "updatedAt": "sample",
+            "draftVersion": 1,
+            "stepCount": 1,
+            "assignment": {
+              "categories": [
+                {
+                  "categoryId": "sample",
+                  "name": "sample"
+                }
+              ],
+              "productCount": 1
+            },
+            "inProgress": {
+              "total": 1,
+              "previousVersions": 1
+            },
+            "draft": {
+              "version": 1,
+              "status": "DRAFT",
+              "revision": 1,
+              "graph": {
+                "key": "x"
+              },
+              "definition": {
+                "key": "x"
+              },
+              "variables": {
+                "key": "x"
+              },
+              "publishedAt": "sample"
+            },
+            "active": {
+              "version": 1,
+              "status": "DRAFT",
+              "revision": 1,
+              "graph": {
+                "key": "x"
+              },
+              "definition": {
+                "key": "x"
+              },
+              "variables": {
+                "key": "x"
+              },
+              "publishedAt": "sample"
+            },
+            "publishedKeys": {
+              "states": [
+                "sample"
+              ],
+              "actions": [
+                "sample"
+              ]
+            },
+            "versions": [
+              {
+                "version": 1,
+                "status": "DRAFT",
+                "publishedAt": "sample",
+                "inProgress": 1
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.discardDraft 생성 예시",
+      "call": "commerceFlows.discardDraft",
+      "args": [
+        "id-1",
+        1
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
       }
     },
     {
@@ -4895,7 +6006,11 @@
                 "code": "sample",
                 "message": "sample",
                 "nodeId": "sample",
-                "edgeId": "sample"
+                "edgeId": "sample",
+                "pointer": "sample",
+                "opIndex": 1,
+                "hint": "sample",
+                "expected": "x"
               }
             ],
             "warnings": [
@@ -4903,7 +6018,11 @@
                 "code": "sample",
                 "message": "sample",
                 "nodeId": "sample",
-                "edgeId": "sample"
+                "edgeId": "sample",
+                "pointer": "sample",
+                "opIndex": 1,
+                "hint": "sample",
+                "expected": "x"
               }
             ]
           },
@@ -4945,6 +6064,21 @@
             "archivedAt": "sample",
             "createdAt": "sample",
             "updatedAt": "sample",
+            "draftVersion": 1,
+            "stepCount": 1,
+            "assignment": {
+              "categories": [
+                {
+                  "categoryId": "sample",
+                  "name": "sample"
+                }
+              ],
+              "productCount": 1
+            },
+            "inProgress": {
+              "total": 1,
+              "previousVersions": 1
+            },
             "draft": {
               "version": 1,
               "status": "DRAFT",
@@ -4974,6 +6108,14 @@
                 "key": "x"
               },
               "publishedAt": "sample"
+            },
+            "publishedKeys": {
+              "states": [
+                "sample"
+              ],
+              "actions": [
+                "sample"
+              ]
             },
             "versions": [
               {
@@ -5217,7 +6359,11 @@
                 "code": "sample",
                 "message": "sample",
                 "nodeId": "sample",
-                "edgeId": "sample"
+                "edgeId": "sample",
+                "pointer": "sample",
+                "opIndex": 1,
+                "hint": "sample",
+                "expected": "x"
               }
             ],
             "trace": [
@@ -5273,7 +6419,11 @@
                 "code": "sample",
                 "message": "sample",
                 "nodeId": "sample",
-                "edgeId": "sample"
+                "edgeId": "sample",
+                "pointer": "sample",
+                "opIndex": 1,
+                "hint": "sample",
+                "expected": "x"
               }
             ],
             "steps": [
@@ -5344,6 +6494,432 @@
                 "window": true,
                 "fee": true,
                 "listed": true
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.authoringGuide 생성 예시",
+      "call": "commerceFlows.authoringGuide",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "nodes": [
+              {
+                "type": "sample",
+                "name": "sample",
+                "kind": "sample",
+                "outputs": [],
+                "description": "sample"
+              }
+            ],
+            "blocks": [
+              {
+                "type": "sample",
+                "effect": "sample",
+                "description": "sample"
+              }
+            ],
+            "triggers": [
+              {
+                "type": "sample",
+                "format": "sample",
+                "description": "sample"
+              }
+            ],
+            "context": {
+              "key": "sample"
+            },
+            "functions": [
+              {
+                "name": "sample",
+                "signature": "sample",
+                "doc": "sample"
+              }
+            ],
+            "templateFilters": [
+              "sample"
+            ],
+            "rules": [
+              "sample"
+            ],
+            "expressionExamples": [
+              {
+                "expr": "sample",
+                "description": "sample"
+              }
+            ],
+            "operationExample": [
+              {
+                "key": "x"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.nodeType 생성 예시",
+      "call": "commerceFlows.nodeType",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "type": "sample",
+            "category": "sample",
+            "version": 1,
+            "kind": "sample",
+            "effect": "sample",
+            "outputs": [
+              "sample"
+            ],
+            "name": "sample",
+            "description": "sample",
+            "configSchema": {
+              "key": "x"
+            },
+            "example": {
+              "key": "x"
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.draftNodes 생성 예시",
+      "call": "commerceFlows.draftNodes",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "revision": 1,
+            "start": "sample",
+            "publishedKeys": {
+              "states": [
+                "sample"
+              ],
+              "actions": [
+                "sample"
+              ]
+            },
+            "nodes": [
+              {
+                "id": "sample",
+                "type": "sample",
+                "label": "sample",
+                "kind": "sample",
+                "outputs": []
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.draftNode 생성 예시",
+      "call": "commerceFlows.draftNode",
+      "args": [
+        "id-1",
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "revision": 1,
+            "node": {
+              "id": "sample",
+              "type": "sample",
+              "version": 1,
+              "config": {
+                "key": "x"
+              },
+              "outputs": [
+                "sample"
+              ],
+              "position": {
+                "x": 1,
+                "y": 1
+              }
+            },
+            "kind": "sample",
+            "outputs": [
+              "sample"
+            ],
+            "start": true,
+            "incoming": [
+              "sample"
+            ],
+            "outgoing": [
+              "sample"
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.draftEdges 생성 예시",
+      "call": "commerceFlows.draftEdges",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "revision": 1,
+            "edges": [
+              {
+                "id": "sample",
+                "from": "sample",
+                "to": "sample",
+                "on": {
+                  "key": "x"
+                },
+                "guard": "sample",
+                "do": []
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.editSession 생성 예시",
+      "call": "commerceFlows.editSession",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "revision": 1,
+            "session": {
+              "holder": {
+                "kind": "sample",
+                "name": "sample"
+              },
+              "expiresAt": "sample",
+              "mine": true
+            },
+            "channel": {
+              "streamId": "sample",
+              "streamUrl": "sample",
+              "streamToken": "sample"
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.claimEditSession 생성 예시",
+      "call": "commerceFlows.claimEditSession",
+      "args": [
+        "id-1",
+        {
+          "takeover": true
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "revision": 1,
+            "session": {
+              "holder": {
+                "kind": "sample",
+                "name": "sample"
+              },
+              "expiresAt": "sample",
+              "mine": true
+            },
+            "channel": {
+              "streamId": "sample",
+              "streamUrl": "sample",
+              "streamToken": "sample"
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "commerceFlows.releaseEditSession 생성 예시",
+      "call": "commerceFlows.releaseEditSession",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "commerceFlows.applyOperations 생성 예시",
+      "call": "commerceFlows.applyOperations",
+      "args": [
+        "id-1",
+        [
+          {
+            "op": "addNode",
+            "id": "sample",
+            "type": "sample",
+            "config": {
+              "key": "x"
+            },
+            "position": {
+              "x": 1,
+              "y": 1
+            }
+          }
+        ],
+        1
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "revision": 1,
+            "changed": {
+              "nodes": [
+                "sample"
+              ],
+              "edges": [
+                "sample"
+              ],
+              "removedNodes": [
+                "sample"
+              ],
+              "removedEdges": [
+                "sample"
+              ],
+              "removedActions": [
+                "sample"
+              ]
+            },
+            "issues": [
+              {
+                "code": "sample",
+                "message": "sample",
+                "nodeId": "sample",
+                "edgeId": "sample",
+                "pointer": "sample",
+                "opIndex": 1,
+                "hint": "sample",
+                "expected": "x"
+              }
+            ],
+            "warnings": [
+              {
+                "code": "sample",
+                "message": "sample",
+                "nodeId": "sample",
+                "edgeId": "sample",
+                "pointer": "sample",
+                "opIndex": 1,
+                "hint": "sample",
+                "expected": "x"
               }
             ]
           },
@@ -5428,6 +7004,10 @@
             "completedAt": "sample",
             "holdExpiresAt": "sample",
             "holdUsed": true,
+            "rejection": {
+              "reason": "sample",
+              "detail": "sample"
+            },
             "returnAddress": {
               "name": "sample",
               "contactName": "sample",
@@ -5578,6 +7158,10 @@
             "completedAt": "sample",
             "holdExpiresAt": "sample",
             "holdUsed": true,
+            "rejection": {
+              "reason": "sample",
+              "detail": "sample"
+            },
             "returnAddress": {
               "name": "sample",
               "contactName": "sample",
@@ -6126,6 +7710,7 @@
             "joinedAt": "sample",
             "point": 1,
             "marketingAgreed": true,
+            "lockedUntil": "sample",
             "loginMethods": [
               {
                 "method": "password",
@@ -6177,6 +7762,161 @@
                 "region": "sample"
               }
             ],
+            "userinfo": {
+              "sub": "sample",
+              "name": "sample",
+              "given_name": "sample",
+              "family_name": "sample",
+              "middle_name": "sample",
+              "nickname": "sample",
+              "preferred_username": "sample",
+              "profile": "sample",
+              "picture": "sample",
+              "website": "sample",
+              "email": "sample",
+              "email_verified": true,
+              "gender": "sample",
+              "birthdate": "sample",
+              "zoneinfo": "sample",
+              "locale": "sample",
+              "phone_number": "sample",
+              "phone_number_verified": true,
+              "address": {
+                "formatted": "sample",
+                "street_address": "sample",
+                "locality": "sample",
+                "region": "sample",
+                "postal_code": "sample",
+                "country": "sample"
+              },
+              "updated_at": 1
+            },
+            "stats": {
+              "orderCount": 1,
+              "totalPaid": 1,
+              "lastOrderedAt": "sample",
+              "canceledOrReturnedCount": 1,
+              "reviewCount": 1,
+              "inquiryCount": 1
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "customers.update 생성 예시",
+      "call": "customers.update",
+      "args": [
+        "id-1",
+        {
+          "userinfo": {
+            "birthdate": "2026-01-01"
+          }
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "customerId": "sample",
+            "name": "sample",
+            "email": "sample",
+            "phone": "sample",
+            "joinedAt": "sample",
+            "point": 1,
+            "marketingAgreed": true,
+            "lockedUntil": "sample",
+            "loginMethods": [
+              {
+                "method": "password",
+                "linkedAt": "sample"
+              }
+            ],
+            "consents": {
+              "terms": {
+                "kind": "TERMS",
+                "agreed": true,
+                "agreedVersion": "sample",
+                "currentVersion": "sample",
+                "currentDocumentUrl": "sample",
+                "updatedAt": "sample",
+                "reconsentRequired": true
+              },
+              "privacy": {
+                "kind": "TERMS",
+                "agreed": true,
+                "agreedVersion": "sample",
+                "currentVersion": "sample",
+                "currentDocumentUrl": "sample",
+                "updatedAt": "sample",
+                "reconsentRequired": true
+              },
+              "marketing": {
+                "kind": "TERMS",
+                "agreed": true,
+                "agreedVersion": "sample",
+                "currentVersion": "sample",
+                "currentDocumentUrl": "sample",
+                "updatedAt": "sample",
+                "reconsentRequired": true
+              },
+              "reconsentRequired": true
+            },
+            "addresses": [
+              {
+                "addressId": "sample",
+                "alias": "sample",
+                "isDefault": true,
+                "receiverName": "sample",
+                "phone": "sample",
+                "zipCode": "sample",
+                "address1": "sample",
+                "address2": "sample",
+                "countryCode": "sample",
+                "city": "sample",
+                "region": "sample"
+              }
+            ],
+            "userinfo": {
+              "sub": "sample",
+              "name": "sample",
+              "given_name": "sample",
+              "family_name": "sample",
+              "middle_name": "sample",
+              "nickname": "sample",
+              "preferred_username": "sample",
+              "profile": "sample",
+              "picture": "sample",
+              "website": "sample",
+              "email": "sample",
+              "email_verified": true,
+              "gender": "sample",
+              "birthdate": "sample",
+              "zoneinfo": "sample",
+              "locale": "sample",
+              "phone_number": "sample",
+              "phone_number_verified": true,
+              "address": {
+                "formatted": "sample",
+                "street_address": "sample",
+                "locality": "sample",
+                "region": "sample",
+                "postal_code": "sample",
+                "country": "sample"
+              },
+              "updated_at": 1
+            },
             "stats": {
               "orderCount": 1,
               "totalPaid": 1,
@@ -6323,6 +8063,141 @@
       }
     },
     {
+      "name": "customers.sendPasswordReset 생성 예시",
+      "call": "customers.sendPasswordReset",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "customers.unlock 생성 예시",
+      "call": "customers.unlock",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "customerId": "sample",
+            "name": "sample",
+            "email": "sample",
+            "phone": "sample",
+            "joinedAt": "sample",
+            "point": 1,
+            "marketingAgreed": true,
+            "lockedUntil": "sample",
+            "loginMethods": [
+              {
+                "method": "password",
+                "linkedAt": "sample"
+              }
+            ],
+            "consents": {
+              "terms": {
+                "kind": "TERMS",
+                "agreed": true,
+                "agreedVersion": "sample",
+                "currentVersion": "sample",
+                "currentDocumentUrl": "sample",
+                "updatedAt": "sample",
+                "reconsentRequired": true
+              },
+              "privacy": {
+                "kind": "TERMS",
+                "agreed": true,
+                "agreedVersion": "sample",
+                "currentVersion": "sample",
+                "currentDocumentUrl": "sample",
+                "updatedAt": "sample",
+                "reconsentRequired": true
+              },
+              "marketing": {
+                "kind": "TERMS",
+                "agreed": true,
+                "agreedVersion": "sample",
+                "currentVersion": "sample",
+                "currentDocumentUrl": "sample",
+                "updatedAt": "sample",
+                "reconsentRequired": true
+              },
+              "reconsentRequired": true
+            },
+            "addresses": [
+              {
+                "addressId": "sample",
+                "alias": "sample",
+                "isDefault": true,
+                "receiverName": "sample",
+                "phone": "sample",
+                "zipCode": "sample",
+                "address1": "sample",
+                "address2": "sample",
+                "countryCode": "sample",
+                "city": "sample",
+                "region": "sample"
+              }
+            ],
+            "userinfo": {
+              "sub": "sample",
+              "name": "sample",
+              "given_name": "sample",
+              "family_name": "sample",
+              "middle_name": "sample",
+              "nickname": "sample",
+              "preferred_username": "sample",
+              "profile": "sample",
+              "picture": "sample",
+              "website": "sample",
+              "email": "sample",
+              "email_verified": true,
+              "gender": "sample",
+              "birthdate": "sample",
+              "zoneinfo": "sample",
+              "locale": "sample",
+              "phone_number": "sample",
+              "phone_number_verified": true,
+              "address": {
+                "formatted": "sample",
+                "street_address": "sample",
+                "locality": "sample",
+                "region": "sample",
+                "postal_code": "sample",
+                "country": "sample"
+              },
+              "updated_at": 1
+            },
+            "stats": {
+              "orderCount": 1,
+              "totalPaid": 1,
+              "lastOrderedAt": "sample",
+              "canceledOrReturnedCount": 1,
+              "reviewCount": 1,
+              "inquiryCount": 1
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
       "name": "customers.withdraw 생성 예시",
       "call": "customers.withdraw",
       "args": [
@@ -6375,14 +8250,84 @@
           },
           "issueMethod": "CODE",
           "code": "sample",
+          "voucher": {
+            "prefix": "sample",
+            "count": 1
+          },
           "startsAt": "2026-01-01T00:00:00.000Z",
           "endsAt": "2026-01-01T00:00:00.000Z",
           "validDaysAfterIssue": 1,
           "totalIssueLimit": 1,
+          "dailyIssueLimit": 1,
           "totalUseLimit": 1,
           "perMemberIssueLimit": 1,
           "perMemberUseLimit": 1,
-          "currency": "KRW"
+          "currency": "KRW",
+          "eligibility": {
+            "combinator": "and",
+            "rules": [
+              {
+                "field": "sample",
+                "operator": "sample",
+                "value": 1
+              }
+            ]
+          },
+          "targetRules": {
+            "include": [
+              {
+                "field": "sample",
+                "operator": "sample",
+                "value": 1
+              }
+            ],
+            "exclude": [
+              {
+                "field": "sample",
+                "operator": "sample",
+                "value": 1
+              }
+            ]
+          },
+          "targetTree": {
+            "include": {
+              "combinator": "and",
+              "rules": []
+            },
+            "exclude": {
+              "combinator": "and",
+              "rules": []
+            }
+          },
+          "audience": {
+            "combinator": "and",
+            "rules": [
+              {
+                "field": "sample",
+                "operator": "sample",
+                "value": 1
+              }
+            ]
+          },
+          "stacking": {
+            "combinesWith": {
+              "order": true,
+              "product": true,
+              "delivery": true
+            },
+            "withPoints": true,
+            "perOrderLimit": 1
+          },
+          "reward": {
+            "type": "BUY_X_GET_Y",
+            "buy": 1,
+            "get": 1,
+            "rate": 1,
+            "shortfallCharge": true
+          },
+          "issueStartsAt": "2026-01-01T00:00:00.000Z",
+          "issueEndsAt": "2026-01-01T00:00:00.000Z",
+          "visibleFrom": "2026-01-01T00:00:00.000Z"
         },
         "id-1"
       ],
@@ -6435,13 +8380,84 @@
             "endsAt": "sample",
             "validDaysAfterIssue": 1,
             "totalIssueLimit": 1,
+            "dailyIssueLimit": 1,
             "totalUseLimit": 1,
             "perMemberIssueLimit": 1,
             "perMemberUseLimit": 1,
+            "voucher": {
+              "prefix": "sample",
+              "count": 1
+            },
             "issuedCount": 1,
             "reservedCount": 1,
             "usedCount": 1,
             "currency": "sample",
+            "eligibility": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetRules": {
+              "include": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ],
+              "exclude": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetTree": {
+              "include": {
+                "combinator": "and",
+                "rules": []
+              },
+              "exclude": {
+                "combinator": "and",
+                "rules": []
+              }
+            },
+            "audience": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "stacking": {
+              "combinesWith": {
+                "order": true,
+                "product": true,
+                "delivery": true
+              },
+              "withPoints": true,
+              "perOrderLimit": 1
+            },
+            "reward": {
+              "type": "BUY_X_GET_Y",
+              "buy": 1,
+              "get": 1,
+              "rate": 1,
+              "shortfallCharge": true
+            },
+            "rulesOnly": true,
+            "issueStartsAt": "sample",
+            "issueEndsAt": "sample",
+            "visibleFrom": "sample",
             "status": "ACTIVE",
             "locked": true,
             "lockedAt": "sample",
@@ -6507,13 +8523,84 @@
             "endsAt": "sample",
             "validDaysAfterIssue": 1,
             "totalIssueLimit": 1,
+            "dailyIssueLimit": 1,
             "totalUseLimit": 1,
             "perMemberIssueLimit": 1,
             "perMemberUseLimit": 1,
+            "voucher": {
+              "prefix": "sample",
+              "count": 1
+            },
             "issuedCount": 1,
             "reservedCount": 1,
             "usedCount": 1,
             "currency": "sample",
+            "eligibility": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetRules": {
+              "include": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ],
+              "exclude": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetTree": {
+              "include": {
+                "combinator": "and",
+                "rules": []
+              },
+              "exclude": {
+                "combinator": "and",
+                "rules": []
+              }
+            },
+            "audience": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "stacking": {
+              "combinesWith": {
+                "order": true,
+                "product": true,
+                "delivery": true
+              },
+              "withPoints": true,
+              "perOrderLimit": 1
+            },
+            "reward": {
+              "type": "BUY_X_GET_Y",
+              "buy": 1,
+              "get": 1,
+              "rate": 1,
+              "shortfallCharge": true
+            },
+            "rulesOnly": true,
+            "issueStartsAt": "sample",
+            "issueEndsAt": "sample",
+            "visibleFrom": "sample",
             "status": "ACTIVE",
             "locked": true,
             "lockedAt": "sample",
@@ -6562,9 +8649,75 @@
           "endsAt": "2026-01-01T00:00:00.000Z",
           "validDaysAfterIssue": 1,
           "totalIssueLimit": 1,
+          "dailyIssueLimit": 1,
           "totalUseLimit": 1,
           "perMemberIssueLimit": 1,
-          "perMemberUseLimit": 1
+          "perMemberUseLimit": 1,
+          "eligibility": {
+            "combinator": "and",
+            "rules": [
+              {
+                "field": "sample",
+                "operator": "sample",
+                "value": 1
+              }
+            ]
+          },
+          "targetRules": {
+            "include": [
+              {
+                "field": "sample",
+                "operator": "sample",
+                "value": 1
+              }
+            ],
+            "exclude": [
+              {
+                "field": "sample",
+                "operator": "sample",
+                "value": 1
+              }
+            ]
+          },
+          "targetTree": {
+            "include": {
+              "combinator": "and",
+              "rules": []
+            },
+            "exclude": {
+              "combinator": "and",
+              "rules": []
+            }
+          },
+          "audience": {
+            "combinator": "and",
+            "rules": [
+              {
+                "field": "sample",
+                "operator": "sample",
+                "value": 1
+              }
+            ]
+          },
+          "stacking": {
+            "combinesWith": {
+              "order": true,
+              "product": true,
+              "delivery": true
+            },
+            "withPoints": true,
+            "perOrderLimit": 1
+          },
+          "reward": {
+            "type": "BUY_X_GET_Y",
+            "buy": 1,
+            "get": 1,
+            "rate": 1,
+            "shortfallCharge": true
+          },
+          "issueStartsAt": "2026-01-01T00:00:00.000Z",
+          "issueEndsAt": "2026-01-01T00:00:00.000Z",
+          "visibleFrom": "2026-01-01T00:00:00.000Z"
         }
       ],
       "options": {
@@ -6616,13 +8769,84 @@
             "endsAt": "sample",
             "validDaysAfterIssue": 1,
             "totalIssueLimit": 1,
+            "dailyIssueLimit": 1,
             "totalUseLimit": 1,
             "perMemberIssueLimit": 1,
             "perMemberUseLimit": 1,
+            "voucher": {
+              "prefix": "sample",
+              "count": 1
+            },
             "issuedCount": 1,
             "reservedCount": 1,
             "usedCount": 1,
             "currency": "sample",
+            "eligibility": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetRules": {
+              "include": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ],
+              "exclude": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetTree": {
+              "include": {
+                "combinator": "and",
+                "rules": []
+              },
+              "exclude": {
+                "combinator": "and",
+                "rules": []
+              }
+            },
+            "audience": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "stacking": {
+              "combinesWith": {
+                "order": true,
+                "product": true,
+                "delivery": true
+              },
+              "withPoints": true,
+              "perOrderLimit": 1
+            },
+            "reward": {
+              "type": "BUY_X_GET_Y",
+              "buy": 1,
+              "get": 1,
+              "rate": 1,
+              "shortfallCharge": true
+            },
+            "rulesOnly": true,
+            "issueStartsAt": "sample",
+            "issueEndsAt": "sample",
+            "visibleFrom": "sample",
             "status": "ACTIVE",
             "locked": true,
             "lockedAt": "sample",
@@ -6688,13 +8912,84 @@
             "endsAt": "sample",
             "validDaysAfterIssue": 1,
             "totalIssueLimit": 1,
+            "dailyIssueLimit": 1,
             "totalUseLimit": 1,
             "perMemberIssueLimit": 1,
             "perMemberUseLimit": 1,
+            "voucher": {
+              "prefix": "sample",
+              "count": 1
+            },
             "issuedCount": 1,
             "reservedCount": 1,
             "usedCount": 1,
             "currency": "sample",
+            "eligibility": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetRules": {
+              "include": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ],
+              "exclude": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetTree": {
+              "include": {
+                "combinator": "and",
+                "rules": []
+              },
+              "exclude": {
+                "combinator": "and",
+                "rules": []
+              }
+            },
+            "audience": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "stacking": {
+              "combinesWith": {
+                "order": true,
+                "product": true,
+                "delivery": true
+              },
+              "withPoints": true,
+              "perOrderLimit": 1
+            },
+            "reward": {
+              "type": "BUY_X_GET_Y",
+              "buy": 1,
+              "get": 1,
+              "rate": 1,
+              "shortfallCharge": true
+            },
+            "rulesOnly": true,
+            "issueStartsAt": "sample",
+            "issueEndsAt": "sample",
+            "visibleFrom": "sample",
             "status": "ACTIVE",
             "locked": true,
             "lockedAt": "sample",
@@ -6760,13 +9055,84 @@
             "endsAt": "sample",
             "validDaysAfterIssue": 1,
             "totalIssueLimit": 1,
+            "dailyIssueLimit": 1,
             "totalUseLimit": 1,
             "perMemberIssueLimit": 1,
             "perMemberUseLimit": 1,
+            "voucher": {
+              "prefix": "sample",
+              "count": 1
+            },
             "issuedCount": 1,
             "reservedCount": 1,
             "usedCount": 1,
             "currency": "sample",
+            "eligibility": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetRules": {
+              "include": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ],
+              "exclude": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetTree": {
+              "include": {
+                "combinator": "and",
+                "rules": []
+              },
+              "exclude": {
+                "combinator": "and",
+                "rules": []
+              }
+            },
+            "audience": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "stacking": {
+              "combinesWith": {
+                "order": true,
+                "product": true,
+                "delivery": true
+              },
+              "withPoints": true,
+              "perOrderLimit": 1
+            },
+            "reward": {
+              "type": "BUY_X_GET_Y",
+              "buy": 1,
+              "get": 1,
+              "rate": 1,
+              "shortfallCharge": true
+            },
+            "rulesOnly": true,
+            "issueStartsAt": "sample",
+            "issueEndsAt": "sample",
+            "visibleFrom": "sample",
             "status": "ACTIVE",
             "locked": true,
             "lockedAt": "sample",
@@ -6832,13 +9198,84 @@
             "endsAt": "sample",
             "validDaysAfterIssue": 1,
             "totalIssueLimit": 1,
+            "dailyIssueLimit": 1,
             "totalUseLimit": 1,
             "perMemberIssueLimit": 1,
             "perMemberUseLimit": 1,
+            "voucher": {
+              "prefix": "sample",
+              "count": 1
+            },
             "issuedCount": 1,
             "reservedCount": 1,
             "usedCount": 1,
             "currency": "sample",
+            "eligibility": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetRules": {
+              "include": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ],
+              "exclude": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "targetTree": {
+              "include": {
+                "combinator": "and",
+                "rules": []
+              },
+              "exclude": {
+                "combinator": "and",
+                "rules": []
+              }
+            },
+            "audience": {
+              "combinator": "and",
+              "rules": [
+                {
+                  "field": "sample",
+                  "operator": "sample",
+                  "value": 1
+                }
+              ]
+            },
+            "stacking": {
+              "combinesWith": {
+                "order": true,
+                "product": true,
+                "delivery": true
+              },
+              "withPoints": true,
+              "perOrderLimit": 1
+            },
+            "reward": {
+              "type": "BUY_X_GET_Y",
+              "buy": 1,
+              "get": 1,
+              "rate": 1,
+              "shortfallCharge": true
+            },
+            "rulesOnly": true,
+            "issueStartsAt": "sample",
+            "issueEndsAt": "sample",
+            "visibleFrom": "sample",
             "status": "ACTIVE",
             "locked": true,
             "lockedAt": "sample",
@@ -6888,6 +9325,144 @@
                 "message": "sample"
               }
             ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "coupons.voucherCodes 생성 예시",
+      "call": "coupons.voucherCodes",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "prefix": "sample",
+            "count": 1,
+            "codes": [
+              "sample"
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "coupons.distribute 생성 예시",
+      "call": "coupons.distribute",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "distributionId": "sample",
+            "couponId": "sample",
+            "status": "sample",
+            "processedCount": 1,
+            "issuedCount": 1,
+            "skippedCount": 1,
+            "stopCode": "sample",
+            "createdAt": "sample",
+            "startedAt": "sample",
+            "finishedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "coupons.distributions 생성 예시",
+      "call": "coupons.distributions",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "distributionId": "sample",
+              "couponId": "sample",
+              "status": "sample",
+              "processedCount": 1,
+              "issuedCount": 1,
+              "skippedCount": 1,
+              "stopCode": "sample",
+              "createdAt": "sample",
+              "startedAt": "sample",
+              "finishedAt": "sample"
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "coupons.distribution 생성 예시",
+      "call": "coupons.distribution",
+      "args": [
+        "id-1",
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "distributionId": "sample",
+            "couponId": "sample",
+            "status": "sample",
+            "processedCount": 1,
+            "issuedCount": 1,
+            "skippedCount": 1,
+            "stopCode": "sample",
+            "createdAt": "sample",
+            "startedAt": "sample",
+            "finishedAt": "sample"
           },
           "error": null
         }
@@ -7792,6 +10367,7 @@
             "createdAt": "sample",
             "cashReceiptStatus": "sample",
             "refundableAmount": 1,
+            "availableRefundAmount": 1,
             "merchantId": "sample",
             "attempts": [
               {
@@ -7818,6 +10394,7 @@
                 "refundId": "sample",
                 "amount": 1,
                 "pointRefundAmount": 1,
+                "calculatedAmount": 1,
                 "reason": "sample",
                 "kind": "sample",
                 "status": "sample",
@@ -7873,6 +10450,7 @@
             "refundId": "sample",
             "amount": 1,
             "pointRefundAmount": 1,
+            "calculatedAmount": 1,
             "reason": "sample",
             "kind": "sample",
             "status": "sample",
@@ -11088,6 +13666,175 @@
       }
     },
     {
+      "name": "inventory.lowStock.list 생성 예시",
+      "call": "inventory.lowStock.list",
+      "args": [
+        {
+          "cursor": "sample",
+          "limit": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "scope": "TOTAL",
+            "contents": [
+              {
+                "productId": "sample",
+                "variantId": "sample",
+                "inventoryLocationId": "sample",
+                "available": 1,
+                "threshold": 1,
+                "thresholdSource": "VARIANT"
+              }
+            ],
+            "nextCursor": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "inventory.lowStock.settings 생성 예시",
+      "call": "inventory.lowStock.settings",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "defaultThreshold": 1,
+            "scope": "TOTAL"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "inventory.lowStock.updateSettings 생성 예시",
+      "call": "inventory.lowStock.updateSettings",
+      "args": [
+        {
+          "defaultThreshold": 1,
+          "scope": "TOTAL"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "defaultThreshold": 1,
+            "scope": "TOTAL"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "inventory.lowStock.thresholds 생성 예시",
+      "call": "inventory.lowStock.thresholds",
+      "args": [
+        {
+          "productId": "sample",
+          "cursor": "sample",
+          "limit": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "contents": [
+              {
+                "productId": "sample",
+                "variantId": "sample",
+                "threshold": 1
+              }
+            ],
+            "nextCursor": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "inventory.lowStock.setThresholds 생성 예시",
+      "call": "inventory.lowStock.setThresholds",
+      "args": [
+        {
+          "lines": [
+            {
+              "variantId": "sample",
+              "threshold": 1
+            }
+          ]
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "productId": "sample",
+              "variantId": "sample",
+              "threshold": 1
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
       "name": "markets.list 생성 예시",
       "call": "markets.list",
       "args": [],
@@ -11421,6 +14168,243 @@
       }
     },
     {
+      "name": "checkouts.create 생성 예시",
+      "call": "checkouts.create",
+      "args": [
+        {
+          "items": [
+            {
+              "productId": "sample",
+              "optionId": "sample",
+              "quantity": 1,
+              "unitPrice": 1,
+              "addons": [],
+              "customInputs": []
+            }
+          ],
+          "expiresAt": "2026-01-01T00:00:00.000Z",
+          "fulfillmentMethod": "CARRIER",
+          "pickupLocationId": "sample",
+          "trackInventory": true,
+          "couponsEnabled": true,
+          "pointsEnabled": true,
+          "orderId": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "checkoutId": "sample",
+            "status": "sample",
+            "checkoutUrl": "sample",
+            "currency": "sample",
+            "items": [
+              {
+                "lineId": "sample",
+                "productId": "sample",
+                "productName": "sample",
+                "optionId": "sample",
+                "optionName": "sample",
+                "quantity": 1,
+                "unitPrice": 1,
+                "listUnitPrice": 1,
+                "totalPrice": 1
+              }
+            ],
+            "amounts": {
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "totalAmount": 1
+            },
+            "requiresShipping": true,
+            "trackInventory": true,
+            "couponsEnabled": true,
+            "pointsEnabled": true,
+            "orderId": "sample",
+            "additionalPayment": true,
+            "createdAt": "sample",
+            "expiresAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "checkouts.list 생성 예시",
+      "call": "checkouts.list",
+      "args": [
+        {
+          "page": 1,
+          "size": 1
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "page": 1,
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "contents": [
+              {
+                "checkoutId": "sample",
+                "status": "sample",
+                "checkoutUrl": "sample",
+                "currency": "sample",
+                "items": [],
+                "amounts": {
+                  "productAmount": 1,
+                  "deliveryFee": 1,
+                  "totalAmount": 1
+                },
+                "requiresShipping": true,
+                "trackInventory": true,
+                "couponsEnabled": true,
+                "pointsEnabled": true,
+                "orderId": "sample",
+                "additionalPayment": true,
+                "createdAt": "sample",
+                "expiresAt": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "checkouts.get 생성 예시",
+      "call": "checkouts.get",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "checkoutId": "sample",
+            "status": "sample",
+            "checkoutUrl": "sample",
+            "currency": "sample",
+            "items": [
+              {
+                "lineId": "sample",
+                "productId": "sample",
+                "productName": "sample",
+                "optionId": "sample",
+                "optionName": "sample",
+                "quantity": 1,
+                "unitPrice": 1,
+                "listUnitPrice": 1,
+                "totalPrice": 1
+              }
+            ],
+            "amounts": {
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "totalAmount": 1
+            },
+            "requiresShipping": true,
+            "trackInventory": true,
+            "couponsEnabled": true,
+            "pointsEnabled": true,
+            "orderId": "sample",
+            "additionalPayment": true,
+            "createdAt": "sample",
+            "expiresAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "checkouts.expire 생성 예시",
+      "call": "checkouts.expire",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "checkoutId": "sample",
+            "status": "sample",
+            "checkoutUrl": "sample",
+            "currency": "sample",
+            "items": [
+              {
+                "lineId": "sample",
+                "productId": "sample",
+                "productName": "sample",
+                "optionId": "sample",
+                "optionName": "sample",
+                "quantity": 1,
+                "unitPrice": 1,
+                "listUnitPrice": 1,
+                "totalPrice": 1
+              }
+            ],
+            "amounts": {
+              "productAmount": 1,
+              "deliveryFee": 1,
+              "totalAmount": 1
+            },
+            "requiresShipping": true,
+            "trackInventory": true,
+            "couponsEnabled": true,
+            "pointsEnabled": true,
+            "orderId": "sample",
+            "additionalPayment": true,
+            "createdAt": "sample",
+            "expiresAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
       "name": "ai.listConversations 생성 예시",
       "call": "ai.listConversations",
       "args": [],
@@ -11441,6 +14425,7 @@
             {
               "id": "sample",
               "title": "sample",
+              "agent": "STORE",
               "createdAt": "sample",
               "updatedAt": "sample"
             }
@@ -11463,7 +14448,8 @@
             "shopType": "BASIC",
             "heroProduct": "sample",
             "slug": "sample"
-          }
+          },
+          "agent": "STORE"
         }
       ],
       "options": {
@@ -11483,6 +14469,7 @@
             "conversation": {
               "id": "sample",
               "title": "sample",
+              "agent": "STORE",
               "createdAt": "sample",
               "updatedAt": "sample"
             },
@@ -11518,6 +14505,7 @@
           "data": {
             "id": "sample",
             "title": "sample",
+            "agent": "STORE",
             "createdAt": "sample",
             "updatedAt": "sample",
             "messages": [
@@ -11578,7 +14566,12 @@
             "tag": "sample",
             "text": "sample",
             "pagePath": "sample"
-          }
+          },
+          "designSelection": {
+            "file": "sample",
+            "title": "sample"
+          },
+          "timeZone": "sample"
         }
       ],
       "options": {
@@ -11733,108 +14726,6 @@
       }
     },
     {
-      "name": "storefront.listTemplates 생성 예시",
-      "call": "storefront.listTemplates",
-      "args": [],
-      "options": {
-        "accessToken": "member-token",
-        "cartToken": "cart-1"
-      },
-      "response": {
-        "status": 200,
-        "body": {
-          "meta": {
-            "status": 200,
-            "code": "OK",
-            "message": "OK",
-            "isSuccess": true
-          },
-          "data": [
-            {
-              "templateId": "sample",
-              "name": "sample",
-              "industry": "sample",
-              "description": "sample",
-              "thumbnailUrl": "sample",
-              "version": "sample",
-              "isDefault": true,
-              "tags": [
-                "sample"
-              ],
-              "supportsCheckout": true,
-              "previewUrl": "sample",
-              "source": "CATALOG"
-            }
-          ],
-          "error": null
-        }
-      }
-    },
-    {
-      "name": "storefront.getStoreTemplate 생성 예시",
-      "call": "storefront.getStoreTemplate",
-      "args": [],
-      "options": {
-        "accessToken": "member-token",
-        "cartToken": "cart-1"
-      },
-      "response": {
-        "status": 200,
-        "body": {
-          "meta": {
-            "status": 200,
-            "code": "OK",
-            "message": "OK",
-            "isSuccess": true
-          },
-          "data": {
-            "templateId": "sample",
-            "name": "sample",
-            "description": "sample",
-            "thumbnailUrl": "sample",
-            "status": "DRAFT",
-            "version": "sample"
-          },
-          "error": null
-        }
-      }
-    },
-    {
-      "name": "storefront.updateStoreTemplate 생성 예시",
-      "call": "storefront.updateStoreTemplate",
-      "args": [
-        {
-          "name": "sample",
-          "description": "sample",
-          "thumbnailUrl": "https://example.test/a.png"
-        }
-      ],
-      "options": {
-        "accessToken": "member-token",
-        "cartToken": "cart-1"
-      },
-      "response": {
-        "status": 200,
-        "body": {
-          "meta": {
-            "status": 200,
-            "code": "OK",
-            "message": "OK",
-            "isSuccess": true
-          },
-          "data": {
-            "templateId": "sample",
-            "name": "sample",
-            "description": "sample",
-            "thumbnailUrl": "sample",
-            "status": "DRAFT",
-            "version": "sample"
-          },
-          "error": null
-        }
-      }
-    },
-    {
       "name": "storefront.get 생성 예시",
       "call": "storefront.get",
       "args": [],
@@ -11857,6 +14748,9 @@
             "editingEnabled": true,
             "site": {
               "siteId": "sample",
+              "versionHistory": true,
+              "autoPublish": true,
+              "deployWithoutApproval": true,
               "slug": "sample",
               "hostname": "sample",
               "url": "sample",
@@ -11869,15 +14763,11 @@
                   "holdUntil": "sample"
                 }
               ],
-              "templateId": "sample",
-              "sourceMode": "MANAGED",
               "status": "ACTIVE",
               "visibility": "COMING_SOON",
               "publishedVersion": {
                 "versionId": "sample",
                 "number": 1,
-                "templateId": "sample",
-                "templateVersion": "sample",
                 "status": "BUILDING",
                 "published": true,
                 "publishedAt": "sample",
@@ -11886,6 +14776,11 @@
                 "buildId": "sample",
                 "createdByType": "sample",
                 "createdVia": "sample",
+                "gitRef": "sample",
+                "commitSha": "sample",
+                "excludedPaths": [],
+                "mainChanged": true,
+                "buildCanceled": true,
                 "createdAt": "sample",
                 "previewable": true
               },
@@ -11948,9 +14843,8 @@
       "call": "storefront.create",
       "args": [
         {
-          "templateId": "sample",
-          "slug": "sample",
-          "copyContent": true
+          "initialSource": "NONE",
+          "slug": "sample"
         }
       ],
       "options": {
@@ -11968,6 +14862,9 @@
           },
           "data": {
             "siteId": "sample",
+            "versionHistory": true,
+            "autoPublish": true,
+            "deployWithoutApproval": true,
             "slug": "sample",
             "hostname": "sample",
             "url": "sample",
@@ -11980,15 +14877,11 @@
                 "holdUntil": "sample"
               }
             ],
-            "templateId": "sample",
-            "sourceMode": "MANAGED",
             "status": "ACTIVE",
             "visibility": "COMING_SOON",
             "publishedVersion": {
               "versionId": "sample",
               "number": 1,
-              "templateId": "sample",
-              "templateVersion": "sample",
               "status": "BUILDING",
               "published": true,
               "publishedAt": "sample",
@@ -11997,6 +14890,13 @@
               "buildId": "sample",
               "createdByType": "sample",
               "createdVia": "sample",
+              "gitRef": "sample",
+              "commitSha": "sample",
+              "excludedPaths": [
+                "sample"
+              ],
+              "mainChanged": true,
+              "buildCanceled": true,
               "createdAt": "sample",
               "previewable": true
             },
@@ -12138,8 +15038,6 @@
             {
               "versionId": "sample",
               "number": 1,
-              "templateId": "sample",
-              "templateVersion": "sample",
               "status": "BUILDING",
               "published": true,
               "publishedAt": "sample",
@@ -12148,6 +15046,13 @@
               "buildId": "sample",
               "createdByType": "sample",
               "createdVia": "sample",
+              "gitRef": "sample",
+              "commitSha": "sample",
+              "excludedPaths": [
+                "sample"
+              ],
+              "mainChanged": true,
+              "buildCanceled": true,
               "createdAt": "sample",
               "previewable": true
             }
@@ -12180,6 +15085,9 @@
           },
           "data": {
             "siteId": "sample",
+            "versionHistory": true,
+            "autoPublish": true,
+            "deployWithoutApproval": true,
             "slug": "sample",
             "hostname": "sample",
             "url": "sample",
@@ -12192,15 +15100,11 @@
                 "holdUntil": "sample"
               }
             ],
-            "templateId": "sample",
-            "sourceMode": "MANAGED",
             "status": "ACTIVE",
             "visibility": "COMING_SOON",
             "publishedVersion": {
               "versionId": "sample",
               "number": 1,
-              "templateId": "sample",
-              "templateVersion": "sample",
               "status": "BUILDING",
               "published": true,
               "publishedAt": "sample",
@@ -12209,6 +15113,13 @@
               "buildId": "sample",
               "createdByType": "sample",
               "createdVia": "sample",
+              "gitRef": "sample",
+              "commitSha": "sample",
+              "excludedPaths": [
+                "sample"
+              ],
+              "mainChanged": true,
+              "buildCanceled": true,
               "createdAt": "sample",
               "previewable": true
             },
@@ -12261,6 +15172,9 @@
           },
           "data": {
             "siteId": "sample",
+            "versionHistory": true,
+            "autoPublish": true,
+            "deployWithoutApproval": true,
             "slug": "sample",
             "hostname": "sample",
             "url": "sample",
@@ -12273,15 +15187,11 @@
                 "holdUntil": "sample"
               }
             ],
-            "templateId": "sample",
-            "sourceMode": "MANAGED",
             "status": "ACTIVE",
             "visibility": "COMING_SOON",
             "publishedVersion": {
               "versionId": "sample",
               "number": 1,
-              "templateId": "sample",
-              "templateVersion": "sample",
               "status": "BUILDING",
               "published": true,
               "publishedAt": "sample",
@@ -12290,6 +15200,13 @@
               "buildId": "sample",
               "createdByType": "sample",
               "createdVia": "sample",
+              "gitRef": "sample",
+              "commitSha": "sample",
+              "excludedPaths": [
+                "sample"
+              ],
+              "mainChanged": true,
+              "buildCanceled": true,
               "createdAt": "sample",
               "previewable": true
             },
@@ -12341,6 +15258,9 @@
           },
           "data": {
             "siteId": "sample",
+            "versionHistory": true,
+            "autoPublish": true,
+            "deployWithoutApproval": true,
             "slug": "sample",
             "hostname": "sample",
             "url": "sample",
@@ -12353,15 +15273,11 @@
                 "holdUntil": "sample"
               }
             ],
-            "templateId": "sample",
-            "sourceMode": "MANAGED",
             "status": "ACTIVE",
             "visibility": "COMING_SOON",
             "publishedVersion": {
               "versionId": "sample",
               "number": 1,
-              "templateId": "sample",
-              "templateVersion": "sample",
               "status": "BUILDING",
               "published": true,
               "publishedAt": "sample",
@@ -12370,6 +15286,13 @@
               "buildId": "sample",
               "createdByType": "sample",
               "createdVia": "sample",
+              "gitRef": "sample",
+              "commitSha": "sample",
+              "excludedPaths": [
+                "sample"
+              ],
+              "mainChanged": true,
+              "buildCanceled": true,
               "createdAt": "sample",
               "previewable": true
             },
@@ -12422,6 +15345,9 @@
           },
           "data": {
             "siteId": "sample",
+            "versionHistory": true,
+            "autoPublish": true,
+            "deployWithoutApproval": true,
             "slug": "sample",
             "hostname": "sample",
             "url": "sample",
@@ -12434,15 +15360,11 @@
                 "holdUntil": "sample"
               }
             ],
-            "templateId": "sample",
-            "sourceMode": "MANAGED",
             "status": "ACTIVE",
             "visibility": "COMING_SOON",
             "publishedVersion": {
               "versionId": "sample",
               "number": 1,
-              "templateId": "sample",
-              "templateVersion": "sample",
               "status": "BUILDING",
               "published": true,
               "publishedAt": "sample",
@@ -12451,6 +15373,13 @@
               "buildId": "sample",
               "createdByType": "sample",
               "createdVia": "sample",
+              "gitRef": "sample",
+              "commitSha": "sample",
+              "excludedPaths": [
+                "sample"
+              ],
+              "mainChanged": true,
+              "buildCanceled": true,
               "createdAt": "sample",
               "previewable": true
             },
@@ -12538,13 +15467,11 @@
             "site": {
               "siteId": "sample",
               "url": "sample",
-              "templateId": "sample",
               "visibility": "COMING_SOON",
               "status": "sample",
               "synced": true,
               "publishedVersion": {
                 "versionId": "sample",
-                "templateVersion": "sample",
                 "createdVia": "sample",
                 "publishedAt": "sample"
               }
@@ -12771,6 +15698,85 @@
       }
     },
     {
+      "name": "storefront.listVars 생성 예시",
+      "call": "storefront.listVars",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "limit": 1,
+            "vars": [
+              {
+                "key": "sample",
+                "secret": true,
+                "value": "sample",
+                "updatedAt": "sample"
+              }
+            ]
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "storefront.putVar 생성 예시",
+      "call": "storefront.putVar",
+      "args": [
+        "id-1",
+        {
+          "value": "sample",
+          "secret": true
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "key": "sample",
+            "secret": true,
+            "value": "sample",
+            "updatedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "storefront.deleteVar 생성 예시",
+      "call": "storefront.deleteVar",
+      "args": [
+        "id-1"
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
       "name": "storefront.disable 생성 예시",
       "call": "storefront.disable",
       "args": [
@@ -12793,6 +15799,9 @@
           },
           "data": {
             "siteId": "sample",
+            "versionHistory": true,
+            "autoPublish": true,
+            "deployWithoutApproval": true,
             "slug": "sample",
             "hostname": "sample",
             "url": "sample",
@@ -12805,15 +15814,11 @@
                 "holdUntil": "sample"
               }
             ],
-            "templateId": "sample",
-            "sourceMode": "MANAGED",
             "status": "ACTIVE",
             "visibility": "COMING_SOON",
             "publishedVersion": {
               "versionId": "sample",
               "number": 1,
-              "templateId": "sample",
-              "templateVersion": "sample",
               "status": "BUILDING",
               "published": true,
               "publishedAt": "sample",
@@ -12822,6 +15827,13 @@
               "buildId": "sample",
               "createdByType": "sample",
               "createdVia": "sample",
+              "gitRef": "sample",
+              "commitSha": "sample",
+              "excludedPaths": [
+                "sample"
+              ],
+              "mainChanged": true,
+              "buildCanceled": true,
               "createdAt": "sample",
               "previewable": true
             },
@@ -12889,6 +15901,12 @@
             "workingTree": {
               "modified": true,
               "lastEditedAt": "sample"
+            },
+            "lastFailure": {
+              "code": "sample",
+              "message": "sample",
+              "logTail": "sample",
+              "failedAt": "sample"
             }
           },
           "error": null
@@ -12934,6 +15952,12 @@
             "workingTree": {
               "modified": true,
               "lastEditedAt": "sample"
+            },
+            "lastFailure": {
+              "code": "sample",
+              "message": "sample",
+              "logTail": "sample",
+              "failedAt": "sample"
             }
           },
           "error": null
@@ -12979,6 +16003,12 @@
             "workingTree": {
               "modified": true,
               "lastEditedAt": "sample"
+            },
+            "lastFailure": {
+              "code": "sample",
+              "message": "sample",
+              "logTail": "sample",
+              "failedAt": "sample"
             }
           },
           "error": null
@@ -13369,8 +16399,6 @@
             "version": {
               "versionId": "sample",
               "number": 1,
-              "templateId": "sample",
-              "templateVersion": "sample",
               "status": "BUILDING",
               "published": true,
               "publishedAt": "sample",
@@ -13379,6 +16407,13 @@
               "buildId": "sample",
               "createdByType": "sample",
               "createdVia": "sample",
+              "gitRef": "sample",
+              "commitSha": "sample",
+              "excludedPaths": [
+                "sample"
+              ],
+              "mainChanged": true,
+              "buildCanceled": true,
               "createdAt": "sample",
               "previewable": true
             },
@@ -13678,16 +16713,12 @@
       }
     },
     {
-      "name": "storefront.uploadSourceBlobs 생성 예시",
-      "call": "storefront.uploadSourceBlobs",
+      "name": "storefront.uploadSourcePack 생성 예시",
+      "call": "storefront.uploadSourcePack",
       "args": [
         {
-          "blobs": [
-            {
-              "hash": "sample",
-              "content": "sample"
-            }
-          ]
+          "hash": "sample",
+          "content": "sample"
         }
       ],
       "options": {
@@ -13704,8 +16735,40 @@
             "isSuccess": true
           },
           "data": {
-            "stored": 1,
-            "existing": 1
+            "hash": "sample",
+            "size": 1
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "storefront.createSourceUploads 생성 예시",
+      "call": "storefront.createSourceUploads",
+      "args": [
+        {
+          "pack": {
+            "hash": "sample",
+            "size": 1
+          }
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "uploads": [],
+            "expiresAt": "sample"
           },
           "error": null
         }
@@ -13726,7 +16789,11 @@
           ],
           "endEditSession": true,
           "packageJson": "sample",
-          "lockfile": "sample"
+          "lockfile": "sample",
+          "pack": {
+            "hash": "sample",
+            "size": 1
+          }
         }
       ],
       "options": {
@@ -13749,6 +16816,8 @@
             "files": 1,
             "bytes": 1,
             "changed": true,
+            "merged": true,
+            "uploadedRef": "sample",
             "endedEditSession": true,
             "dependencyWarnings": [
               {
@@ -13770,9 +16839,13 @@
       }
     },
     {
-      "name": "subscription.get 생성 예시",
-      "call": "subscription.get",
-      "args": [],
+      "name": "storefront.setAutoPublish 생성 예시",
+      "call": "storefront.setAutoPublish",
+      "args": [
+        {
+          "autoPublish": true
+        }
+      ],
       "options": {
         "accessToken": "member-token",
         "cartToken": "cart-1"
@@ -13787,71 +16860,159 @@
             "isSuccess": true
           },
           "data": {
-            "plan": {
-              "code": "BETA",
-              "name": "sample"
-            },
+            "siteId": "sample",
+            "versionHistory": true,
+            "autoPublish": true,
+            "deployWithoutApproval": true,
+            "slug": "sample",
+            "hostname": "sample",
+            "url": "sample",
+            "domains": [
+              {
+                "hostname": "sample",
+                "kind": "PLATFORM",
+                "status": "ACTIVE",
+                "isPrimary": true,
+                "holdUntil": "sample"
+              }
+            ],
             "status": "ACTIVE",
-            "interval": "MONTH",
-            "cancelAtPeriodEnd": true,
-            "period": {
-              "start": "sample",
-              "end": "sample"
+            "visibility": "COMING_SOON",
+            "publishedVersion": {
+              "versionId": "sample",
+              "number": 1,
+              "status": "BUILDING",
+              "published": true,
+              "publishedAt": "sample",
+              "message": "sample",
+              "source": "TEMPLATE",
+              "buildId": "sample",
+              "createdByType": "sample",
+              "createdVia": "sample",
+              "gitRef": "sample",
+              "commitSha": "sample",
+              "excludedPaths": [
+                "sample"
+              ],
+              "mainChanged": true,
+              "buildCanceled": true,
+              "createdAt": "sample",
+              "previewable": true
             },
-            "limits": {
-              "liveOrdersMonthly": 1,
-              "seatsIncluded": 1,
-              "aiActionsMonthly": 1,
-              "aiReadsMonthly": 1,
-              "customDomains": 1,
-              "webhooks": 1,
-              "socialProviders": 1,
-              "emailsMonthly": 1,
-              "storefrontRequestsMonthly": 1,
-              "apiLogRetentionDays": 1,
-              "auditLogRetentionDays": 1,
-              "storefrontPreviewHoursMonthly": 1,
-              "storefrontBuildMinutesMonthly": 1,
-              "adminApiRequestsMonthly": 1
+            "provisioning": {
+              "status": "SYNCED",
+              "lastErrorCode": "sample",
+              "syncedAt": "sample"
             },
-            "features": {
-              "adminApi": true,
-              "analytics": true,
-              "storeClone": true,
-              "removeBadge": true
+            "editPreview": {
+              "hostname": "sample"
             },
-            "usage": {
-              "liveOrders": 1,
-              "aiActions": 1,
-              "aiReads": 1,
-              "storefrontRequests": 1,
-              "adminApiRequests": 1,
-              "emails": 1,
-              "storefrontPreviewMinutes": 1,
-              "storefrontBuildMinutes": 1,
-              "seats": 1,
-              "customDomains": 1,
-              "webhooks": 1
+            "slugChangesRemaining": 1,
+            "suspension": {
+              "reason": "sample",
+              "suspendedAt": "sample"
             },
-            "aiActions": {
-              "limit": 1,
-              "used": 1,
-              "resetsAt": "sample"
+            "snapshot": {
+              "url": "sample",
+              "versionId": "sample",
+              "capturedAt": "sample"
             },
-            "aiReads": {
-              "limit": 1,
-              "used": 1,
-              "resetsAt": "sample"
-            },
-            "salesFeePercent": 0
+            "createdAt": "sample",
+            "updatedAt": "sample"
           },
           "error": null
         }
       }
     },
     {
-      "name": "plans.listPublic 생성 예시",
-      "call": "plans.listPublic",
+      "name": "storefront.setDeployApproval 생성 예시",
+      "call": "storefront.setDeployApproval",
+      "args": [
+        {
+          "deployWithoutApproval": true
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "siteId": "sample",
+            "versionHistory": true,
+            "autoPublish": true,
+            "deployWithoutApproval": true,
+            "slug": "sample",
+            "hostname": "sample",
+            "url": "sample",
+            "domains": [
+              {
+                "hostname": "sample",
+                "kind": "PLATFORM",
+                "status": "ACTIVE",
+                "isPrimary": true,
+                "holdUntil": "sample"
+              }
+            ],
+            "status": "ACTIVE",
+            "visibility": "COMING_SOON",
+            "publishedVersion": {
+              "versionId": "sample",
+              "number": 1,
+              "status": "BUILDING",
+              "published": true,
+              "publishedAt": "sample",
+              "message": "sample",
+              "source": "TEMPLATE",
+              "buildId": "sample",
+              "createdByType": "sample",
+              "createdVia": "sample",
+              "gitRef": "sample",
+              "commitSha": "sample",
+              "excludedPaths": [
+                "sample"
+              ],
+              "mainChanged": true,
+              "buildCanceled": true,
+              "createdAt": "sample",
+              "previewable": true
+            },
+            "provisioning": {
+              "status": "SYNCED",
+              "lastErrorCode": "sample",
+              "syncedAt": "sample"
+            },
+            "editPreview": {
+              "hostname": "sample"
+            },
+            "slugChangesRemaining": 1,
+            "suspension": {
+              "reason": "sample",
+              "suspendedAt": "sample"
+            },
+            "snapshot": {
+              "url": "sample",
+              "versionId": "sample",
+              "capturedAt": "sample"
+            },
+            "createdAt": "sample",
+            "updatedAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "storefront.getGit 생성 예시",
+      "call": "storefront.getGit",
       "args": [],
       "options": {
         "accessToken": "member-token",
@@ -13867,45 +17028,196 @@
             "isSuccess": true
           },
           "data": {
-            "vatPercent": 1,
-            "plans": [
-              {
-                "code": "BETA",
-                "name": "sample",
-                "version": 1,
-                "sort": 1,
-                "purchasable": true,
-                "prices": {
-                  "currency": "KRW",
-                  "monthly": 1,
-                  "startingAt": true,
-                  "vatIncluded": {
-                    "monthly": 1
-                  }
-                },
-                "entitlements": {
-                  "features.admin_api": true,
-                  "features.analytics": true,
-                  "limits.ai_reads_monthly": 1,
-                  "limits.ai_actions_monthly": 1,
-                  "limits.custom_domains": 1,
-                  "limits.webhooks": 1,
-                  "limits.storefront_preview_hours_monthly": 1,
-                  "limits.storefront_build_minutes_monthly": 1,
-                  "limits.storefront_requests_monthly": 1,
-                  "limits.admin_api_requests_monthly": 1,
-                  "rate_limit.admin_api": 1,
-                  "storefront.cpu_ms": 1,
-                  "storefront.subrequests": 1,
-                  "storefront.rate_limit_per_minute": 1,
-                  "seats.included": 1,
-                  "retention.analytics_days": 1,
-                  "retention.api_logs_days": 1,
-                  "retention.audit_days": 1,
-                  "support.tier": "COMMUNITY"
-                }
-              }
-            ]
+            "provider": "GITHUB",
+            "repository": "sample",
+            "productionBranch": "sample",
+            "rootDirectory": "sample",
+            "connectedAt": "sample",
+            "headCommitSha": "sample",
+            "mainChanged": true,
+            "autoPromotePaused": true,
+            "publishPending": true,
+            "publishErrorCode": "sample",
+            "archivedWorkRef": "sample",
+            "lastDisconnect": {
+              "reason": "sample",
+              "repository": "sample",
+              "at": "sample"
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "storefront.createGitConnectState 생성 예시",
+      "call": "storefront.createGitConnectState",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "state": "sample",
+            "expiresAt": "sample"
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "storefront.linkGitInstallation 생성 예시",
+      "call": "storefront.linkGitInstallation",
+      "args": [
+        {
+          "installationId": 1,
+          "code": "sample",
+          "state": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "repoId": 1,
+              "fullName": "sample",
+              "defaultBranch": "sample"
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "storefront.listGitRepositories 생성 예시",
+      "call": "storefront.listGitRepositories",
+      "args": [
+        1
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": [
+            {
+              "repoId": 1,
+              "fullName": "sample",
+              "defaultBranch": "sample"
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "storefront.connectGit 생성 예시",
+      "call": "storefront.connectGit",
+      "args": [
+        {
+          "installationId": 1,
+          "repoId": 1,
+          "productionBranch": "sample",
+          "rootDirectory": "sample"
+        }
+      ],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "provider": "GITHUB",
+            "repository": "sample",
+            "productionBranch": "sample",
+            "rootDirectory": "sample",
+            "connectedAt": "sample",
+            "headCommitSha": "sample",
+            "mainChanged": true,
+            "autoPromotePaused": true,
+            "publishPending": true,
+            "publishErrorCode": "sample",
+            "archivedWorkRef": "sample",
+            "lastDisconnect": {
+              "reason": "sample",
+              "repository": "sample",
+              "at": "sample"
+            }
+          },
+          "error": null
+        }
+      }
+    },
+    {
+      "name": "storefront.disconnectGit 생성 예시",
+      "call": "storefront.disconnectGit",
+      "args": [],
+      "options": {
+        "accessToken": "member-token",
+        "cartToken": "cart-1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "meta": {
+            "status": 200,
+            "code": "OK",
+            "message": "OK",
+            "isSuccess": true
+          },
+          "data": {
+            "provider": "GITHUB",
+            "repository": "sample",
+            "productionBranch": "sample",
+            "rootDirectory": "sample",
+            "connectedAt": "sample",
+            "headCommitSha": "sample",
+            "mainChanged": true,
+            "autoPromotePaused": true,
+            "publishPending": true,
+            "publishErrorCode": "sample",
+            "archivedWorkRef": "sample",
+            "lastDisconnect": {
+              "reason": "sample",
+              "repository": "sample",
+              "at": "sample"
+            }
           },
           "error": null
         }
@@ -13935,6 +17247,7 @@
             "storefrontUrl": "https://example.test/a.png",
             "status": "ACTIVE",
             "logoUrl": "https://example.test/a.png",
+            "iconUrl": "sample",
             "businessNumber": "sample",
             "customerCenterPhone": "sample",
             "businessName": "sample",
@@ -13989,6 +17302,7 @@
         {
           "name": "sample",
           "logoUrl": "https://example.test/a.png",
+          "iconUrl": "https://example.test/a.png",
           "customerCenterPhone": "sample",
           "businessHours": "sample",
           "businessName": "sample",
@@ -14045,6 +17359,7 @@
             "storefrontUrl": "https://example.test/a.png",
             "status": "ACTIVE",
             "logoUrl": "https://example.test/a.png",
+            "iconUrl": "sample",
             "businessNumber": "sample",
             "customerCenterPhone": "sample",
             "businessName": "sample",

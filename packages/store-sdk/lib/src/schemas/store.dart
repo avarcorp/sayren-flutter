@@ -16,16 +16,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -35,6 +40,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -50,6 +56,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -211,6 +218,7 @@ final Map<String, ZodType<Object?>> businessInfoResponseShape = {
 final ZodObject<UpdateStoreRequest> updateStoreRequestSchema = z.object<UpdateStoreRequest>({
   'name': z.string().min(2).max(50).optional(),
   'logoUrl': z.string().url().optional(),
+  'iconUrl': z.string().url().nullable().optional(),
   'customerCenterPhone': z.string().nullable().optional(),
   'businessHours': z.string().max(100).optional(),
   'businessName': z.string().trim().min(1).max(100).nullable().optional(),
@@ -250,7 +258,8 @@ final ZodObject<UpdateStoreRequest> updateStoreRequestSchema = z.object<UpdateSt
   'termsUrl': policyDocumentUrlSchema.optional(),
   'privacyUrl': policyDocumentUrlSchema.optional(),
   'defaultLocale': localeCodeSchema.optional(),
-}, UpdateStoreRequest._).refine((v) => jsonOf(v as ParsedObject).isNotEmpty, message: '최소 1개 필드가 필요합니다');
+}, UpdateStoreRequest._, strictRequest: true).refine((v) => jsonOf(v as ParsedObject).isNotEmpty,
+    message: '최소 1개 필드가 필요합니다');
 
 /// `PATCH /v1/store` 본문 — 바꿀 필드만 보냅니다.
 class UpdateStoreRequest extends ParsedObject {
@@ -258,6 +267,7 @@ class UpdateStoreRequest extends ParsedObject {
   UpdateStoreRequest(
       {String? name,
       String? logoUrl,
+      Nullable<String>? iconUrl,
       Nullable<String>? customerCenterPhone,
       String? businessHours,
       Nullable<String>? businessName,
@@ -270,7 +280,6 @@ class UpdateStoreRequest extends ParsedObject {
       Nullable<String>? privacyOfficerEmail,
       List<String>? storefrontOrigins,
       bool? guestCheckoutEnabled,
-      bool? testOrderReviewsAllowed,
       int? autoDeliverDays,
       int? autoConfirmDays,
       RefundPolicyPatch? refundPolicy,
@@ -283,6 +292,7 @@ class UpdateStoreRequest extends ParsedObject {
       : super({
           if (name != null) 'name': name,
           if (logoUrl != null) 'logoUrl': logoUrl,
+          if (iconUrl != null) 'iconUrl': iconUrl.value,
           if (customerCenterPhone != null) 'customerCenterPhone': customerCenterPhone.value,
           if (businessHours != null) 'businessHours': businessHours,
           if (businessName != null) 'businessName': businessName.value,
@@ -295,7 +305,6 @@ class UpdateStoreRequest extends ParsedObject {
           if (privacyOfficerEmail != null) 'privacyOfficerEmail': privacyOfficerEmail.value,
           if (storefrontOrigins != null) 'storefrontOrigins': storefrontOrigins,
           if (guestCheckoutEnabled != null) 'guestCheckoutEnabled': guestCheckoutEnabled,
-          if (testOrderReviewsAllowed != null) 'testOrderReviewsAllowed': testOrderReviewsAllowed,
           if (autoDeliverDays != null) 'autoDeliverDays': autoDeliverDays,
           if (autoConfirmDays != null) 'autoConfirmDays': autoConfirmDays,
           if (refundPolicy != null) 'refundPolicy': refundPolicy,
@@ -319,6 +328,9 @@ class UpdateStoreRequest extends ParsedObject {
 
   /// `logoUrl` 값입니다.
   String? get logoUrl => _j['logoUrl'] as String?;
+
+  /// 상점 아이콘(정사각, https) — 구매자 비밀번호 재설정 메일·화면에 보입니다. `null`을 주면 지웁니다(상점 이름 첫 글자로 보입니다).
+  String? get iconUrl => _j['iconUrl'] as String?;
 
   /// 고객센터 전화번호. `null`을 주면 지웁니다.
   String? get customerCenterPhone => _j['customerCenterPhone'] as String?;
@@ -356,9 +368,6 @@ class UpdateStoreRequest extends ParsedObject {
   /// 비회원 주문 허용. false(회원만)면 로그인하지 않은 구매자의 주문서 생성·결제 요청이 403 `GUEST_CHECKOUT_DISABLED`입니다. 장바구니 담기와 이미 받은 비회원 주문의 조회·취소는 막지 않습니다.
   bool? get guestCheckoutEnabled => _j['guestCheckoutEnabled'] as bool?;
 
-  /// 테스트 결제(샌드박스) 주문의 리뷰 허용. 기본 false — 돈을 내지 않은 주문으로 구매 인증 리뷰가 쌓이지 않게 막습니다.
-  bool? get testOrderReviewsAllowed => _j['testOrderReviewsAllowed'] as bool?;
-
   /// 발송 후 자동 배송완료까지의 일수(0~30, 기본 7). 발송(`DISPATCHED`)·배송중(`DELIVERING`) 주문상품을 이 기간이 지나면 배송완료(`DELIVERED`)로 바꿉니다. `0`이면 자동 배송완료를 하지 않습니다.
   int? get autoDeliverDays => _j['autoDeliverDays'] as int?;
 
@@ -392,9 +401,10 @@ final ZodObject<Store> storeSchema = z.object<Store>({
   'storeId': z.string(),
   'name': z.string(),
   'storeCode': z.string(),
-  'storefrontUrl': z.string().url(),
+  'storefrontUrl': z.string().url().nullable(),
   'status': z.enum_(['ACTIVE', 'SUSPENDED', 'CLOSED']),
   'logoUrl': z.string().url().nullable(),
+  'iconUrl': z.string().nullable().optional().withDefault(null),
   'businessNumber': z.string().nullable(),
   'customerCenterPhone': z.string().nullable(),
   'businessName': z.string().nullable().optional().withDefault(null),
@@ -430,9 +440,10 @@ class Store extends ParsedObject {
       {required String storeId,
       required String name,
       required String storeCode,
-      required String storefrontUrl,
+      required String? storefrontUrl,
       required String status,
       required String? logoUrl,
+      String? iconUrl,
       required String? businessNumber,
       required String? customerCenterPhone,
       String? businessName,
@@ -445,7 +456,6 @@ class Store extends ParsedObject {
       required List<String> analyticsAllowedOrigins,
       required List<String> storefrontOrigins,
       required bool guestCheckoutEnabled,
-      bool testOrderReviewsAllowed = false,
       required int autoDeliverDays,
       required int autoConfirmDays,
       required RefundPolicy refundPolicy,
@@ -466,6 +476,7 @@ class Store extends ParsedObject {
           'storefrontUrl': storefrontUrl,
           'status': status,
           'logoUrl': logoUrl,
+          'iconUrl': iconUrl,
           'businessNumber': businessNumber,
           'customerCenterPhone': customerCenterPhone,
           'businessName': businessName,
@@ -478,7 +489,6 @@ class Store extends ParsedObject {
           'analyticsAllowedOrigins': analyticsAllowedOrigins,
           'storefrontOrigins': storefrontOrigins,
           'guestCheckoutEnabled': guestCheckoutEnabled,
-          'testOrderReviewsAllowed': testOrderReviewsAllowed,
           'autoDeliverDays': autoDeliverDays,
           'autoConfirmDays': autoConfirmDays,
           'refundPolicy': refundPolicy,
@@ -510,14 +520,17 @@ class Store extends ParsedObject {
   /// `storeCode` 값입니다.
   String get storeCode => _j['storeCode'] as String;
 
-  /// `storefrontUrl` 값입니다.
-  String get storefrontUrl => _j['storefrontUrl'] as String;
+  /// 스토어프론트 호스팅 사이트의 대표 주소. 사이트가 없으면 null.
+  String? get storefrontUrl => _j['storefrontUrl'] as String?;
 
   /// `status` 값입니다.
   String get status => _j['status'] as String;
 
   /// `logoUrl` 값입니다.
   String? get logoUrl => _j['logoUrl'] as String?;
+
+  /// 상점 아이콘(정사각). 없으면 null. 서버는 항상 싣습니다.
+  String? get iconUrl => _j['iconUrl'] as String?;
 
   /// 사업자등록번호(숫자 10자리). 없으면 null.
   String? get businessNumber => _j['businessNumber'] as String?;
@@ -554,9 +567,6 @@ class Store extends ParsedObject {
 
   /// 비회원 주문 허용. false면 회원만 주문할 수 있습니다.
   bool get guestCheckoutEnabled => _j['guestCheckoutEnabled'] as bool;
-
-  /// 테스트 결제(샌드박스) 주문의 리뷰 허용. 서버는 항상 싣습니다.
-  bool get testOrderReviewsAllowed => _j['testOrderReviewsAllowed'] as bool;
 
   /// 발송 후 자동 배송완료까지의 일수(0~30, 기본 7). 발송(`DISPATCHED`)·배송중(`DELIVERING`) 주문상품을 이 기간이 지나면 배송완료(`DELIVERED`)로 바꿉니다. `0`이면 자동 배송완료를 하지 않습니다.
   int get autoDeliverDays => _j['autoDeliverDays'] as int;
@@ -767,7 +777,7 @@ final ZodObject<InviteMemberRequest> inviteMemberRequestSchema = z.object<Invite
       RegExp(r"^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$"),
       format: 'email'),
   'role': z.enum_(['ADMIN', 'STAFF']),
-}, InviteMemberRequest._);
+}, InviteMemberRequest._, strictRequest: true);
 
 /// `POST /v1/store/invitations` 요청 — ADMIN 초대는 OWNER만 할 수 있습니다.
 class InviteMemberRequest extends ParsedObject {
@@ -793,7 +803,7 @@ class InviteMemberRequest extends ParsedObject {
 /// `PATCH /v1/store/members/{userId}` 요청.
 final ZodObject<UpdateMemberRoleRequest> updateMemberRoleRequestSchema = z.object<UpdateMemberRoleRequest>({
   'role': z.enum_(['ADMIN', 'STAFF']),
-}, UpdateMemberRoleRequest._);
+}, UpdateMemberRoleRequest._, strictRequest: true);
 
 /// `PATCH /v1/store/members/{userId}` 요청.
 class UpdateMemberRoleRequest extends ParsedObject {
@@ -989,7 +999,7 @@ final ZodObject<SellerAddressRequest> sellerAddressRequestSchema = z.object<Sell
   'address1': z.string().min(1),
   'address2': z.string().optional(),
   'inventoryLocationId': z.string().min(1).optional(),
-}, SellerAddressRequest._);
+}, SellerAddressRequest._, strictRequest: true);
 
 /// SellerAddressRequest 값입니다.
 class SellerAddressRequest extends ParsedObject {

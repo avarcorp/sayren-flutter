@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -34,6 +39,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -261,7 +268,7 @@ class SavedOptionSet extends ParsedObject {
 final ZodObject<SavedOptionValueRequest> savedOptionValueRequestSchema = z.object<SavedOptionValueRequest>({
   'name': z.string().trim().min(1).max(50),
   'additionalPrice': z.number().int_().greaterThan(0, inclusive: true).withDefault(0),
-}, SavedOptionValueRequest._);
+}, SavedOptionValueRequest._, strict: true);
 
 /// SavedOptionValueRequest 값입니다.
 class SavedOptionValueRequest extends ParsedObject {
@@ -289,7 +296,7 @@ final ZodObject<SavedOptionGroupRequest> savedOptionGroupRequestSchema = z.objec
   'kind': optionGroupKindSchema,
   'required': z.boolean().withDefault(false),
   'values': z.array<SavedOptionValueRequest>(savedOptionValueRequestSchema).min(1).max(100),
-}, SavedOptionGroupRequest._);
+}, SavedOptionGroupRequest._, strict: true);
 
 /// SavedOptionGroupRequest 값입니다.
 class SavedOptionGroupRequest extends ParsedObject {
@@ -330,7 +337,7 @@ final ZodObject<SavedCustomInputRequest> savedCustomInputRequestSchema = z.objec
   'key': z.string().pattern(RegExp(r'^[a-z][a-zA-Z0-9_]{0,39}$')).nullable().optional(),
   'type': z.enum_(['text', 'number', 'select', 'date', 'datetime', 'image']).optional(),
   'options': z.array<String>(z.string().trim().min(1).max(50)).min(1).max(30).nullable().optional(),
-}, SavedCustomInputRequest._);
+}, SavedCustomInputRequest._, strict: true);
 
 /// SavedCustomInputRequest 값입니다.
 class SavedCustomInputRequest extends ParsedObject {
@@ -391,7 +398,7 @@ final ZodObject<SavedOptionSetRequest> savedOptionSetRequestSchema = z.object<Sa
   'optionSort': optionSortSchema.withDefault('REGISTERED'),
   'groups': z.array<SavedOptionGroupRequest>(savedOptionGroupRequestSchema).max(8).withDefault(const []),
   'customInputs': z.array<SavedCustomInputRequest>(savedCustomInputRequestSchema).max(5).withDefault(const []),
-}, SavedOptionSetRequest._);
+}, SavedOptionSetRequest._, strict: true);
 
 /// 저장 옵션 만들기·수정 본문. 조합 옵션명은 최대 `MAX_OPTION_GROUPS`개, 추가 선택은 최대 `MAX_ADDON_GROUPS`개이고
 /// 옵션명과 직접 입력 항목이 모두 비면 400입니다. 수정(PUT)은 통째로 바꿉니다.
@@ -440,7 +447,7 @@ final ZodObject<SavedOptionSetFromProductRequest> savedOptionSetFromProductReque
   'includeOptions': z.boolean().withDefault(true),
   'includeCustomInputs': z.boolean().withDefault(true),
   'replaceOptionSetId': z.string().optional(),
-}, SavedOptionSetFromProductRequest._);
+}, SavedOptionSetFromProductRequest._, strict: true);
 
 /// 상품에서 저장 (`POST /v1/saved-option-sets/from-product`) — 상품의 현재 옵션을 저장 옵션으로 만듭니다.
 ///
@@ -758,7 +765,7 @@ final ZodObject<SavedOptionSetLocalizationRequest> savedOptionSetLocalizationReq
   'customInputs': z
       .array<SavedOptionSetLocalizationRequestCustomInputsItem>(savedOptionSetLocalizationRequestCustomInputsItemSchema)
       .optional(),
-}, SavedOptionSetLocalizationRequest._);
+}, SavedOptionSetLocalizationRequest._, strict: true);
 
 /// `PUT /v1/saved-option-sets/{optionSetId}/localizations/{locale}` 본문 — 레코드 전체를 바꿉니다. 번역할 이름만 보냅니다.
 /// 저장 옵션에 없는 기본 언어 이름은 400 `OPTION_SET_LOCALIZATION_TARGET_NOT_FOUND`, 번역 이름 중복은 상품과 같은 규칙으로 400 `INVALID_OPTION_MODEL`입니다.
@@ -795,7 +802,7 @@ final ZodObject<SavedOptionSetLocalizationRequestGroupsItem> savedOptionSetLocal
       .array<SavedOptionSetLocalizationRequestGroupsItemValuesItem>(
           savedOptionSetLocalizationRequestGroupsItemValuesItemSchema)
       .optional(),
-}, SavedOptionSetLocalizationRequestGroupsItem._);
+}, SavedOptionSetLocalizationRequestGroupsItem._, strict: true);
 
 /// SavedOptionSetLocalizationRequestGroupsItem 값입니다.
 class SavedOptionSetLocalizationRequestGroupsItem extends ParsedObject {
@@ -831,7 +838,7 @@ final ZodObject<SavedOptionSetLocalizationRequestGroupsItemValuesItem>
     z.object<SavedOptionSetLocalizationRequestGroupsItemValuesItem>({
   'baseName': z.string(),
   'name': z.string().trim().min(1).max(50).nullable().optional(),
-}, SavedOptionSetLocalizationRequestGroupsItemValuesItem._);
+}, SavedOptionSetLocalizationRequestGroupsItemValuesItem._, strict: true);
 
 /// SavedOptionSetLocalizationRequestGroupsItemValuesItem 값입니다.
 class SavedOptionSetLocalizationRequestGroupsItemValuesItem extends ParsedObject {
@@ -861,7 +868,7 @@ final ZodObject<SavedOptionSetLocalizationRequestCustomInputsItem>
   'baseLabel': z.string(),
   'label': z.string().trim().min(1).max(30).nullable().optional(),
   'placeholder': z.string().trim().min(1).max(100).nullable().optional(),
-}, SavedOptionSetLocalizationRequestCustomInputsItem._);
+}, SavedOptionSetLocalizationRequestCustomInputsItem._, strict: true);
 
 /// SavedOptionSetLocalizationRequestCustomInputsItem 값입니다.
 class SavedOptionSetLocalizationRequestCustomInputsItem extends ParsedObject {

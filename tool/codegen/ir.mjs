@@ -24,7 +24,10 @@ export class IrBuilder {
     this.z = z;
     this.schemaName = new Map(); // 런타임 스키마 → export 이름
     // `.describe()`는 def를 공유하는 복제를 만든다 — 런타임 객체 대신 def로 같은 스키마를 알아본다
-    for (const [name, e] of exportsByName) if (e.kind === "const" && runtime[name]?._zod) this.schemaName.set(runtime[name]._zod.def, name);
+    // 같은 def를 여러 이름으로 export하면 먼저 나온 이름이 원본이고 뒤 이름은 별칭 상수다
+    for (const [name, e] of exportsByName) {
+      if (e.kind === "const" && runtime[name]?._zod && !this.schemaName.has(runtime[name]._zod.def)) this.schemaName.set(runtime[name]._zod.def, name);
+    }
     this.typeOfSchema = new Map(); // 스키마 export 이름 → 출력 타입 이름
     for (const e of exportsByName.values()) {
       if (e.kind === "type" && e.inferOf && !e.inferOf.startsWith("input:")) this.typeOfSchema.set(e.inferOf, e.name);
@@ -41,6 +44,7 @@ export class IrBuilder {
     this.anonByObject = new Map(); // 익명 런타임 스키마 → 클래스 이름
     this.irs = new Map(); // export 이름 → IR
     this.missingHooks = [];
+    this.manualSchemas = new Map(); // manual part가 맡는 스키마 export → 출력 타입
   }
 
   /** export 스키마의 출력 클래스 이름 */
@@ -50,6 +54,11 @@ export class IrBuilder {
 
   build(exportName) {
     if (this.irs.has(exportName)) return this.irs.get(exportName);
+    if (this.manualSchemas.has(exportName)) {
+      const ir = { k: "manual", name: exportName, type: this.manualSchemas.get(exportName), schema: this.runtime[exportName], checks: [] };
+      this.irs.set(exportName, ir);
+      return ir;
+    }
     const e = this.exportsByName.get(exportName);
     const schema = this.runtime[exportName];
     const ir = this.node(schema, {
@@ -71,6 +80,17 @@ export class IrBuilder {
   node(schema, ctx) {
     const exported = this.schemaName.get(schema._zod.def);
     if (exported && !(ctx.isRoot && exported === ctx.root)) return { k: "ref", name: exported, schema, desc: this.description(schema) };
+    // strictRequest 복제본은 원본으로 만든다 — 공유 스키마를 그대로 참조하고, strictRequest 결과 자리에만 strict를 붙인다
+    const origin = globalThis.__sayrenStrictOrigin?.get(schema._zod.def);
+    if (origin) {
+      const inner = this.node(origin, ctx);
+      if (!globalThis.__sayrenStrictRoots?.has(schema._zod.def)) return inner;
+      if (inner.k === "object" && !inner.loose) {
+        inner.strictRequest = true;
+        return inner;
+      }
+      return { k: "strict", schema, desc: inner.desc, inner, checks: [] };
+    }
     const d = schema._zod.def;
     const desc = this.description(schema);
     const sub = { ...ctx, isRoot: false };
@@ -95,6 +115,9 @@ export class IrBuilder {
         return { k: "catch", schema, desc, inner: this.node(d.innerType, ctx), value: d.catchValue?.({}), checks };
       case "array":
         return { k: "array", schema, desc, el: this.node(d.element, { ...sub, naming: `${ctx.naming}Item` }), checks };
+      case "tuple":
+        if (d.rest) throw new Error(`rest가 있는 tuple @ ${ctx.root}`);
+        return { k: "tuple", schema, desc, items: d.items.map((it, i) => this.node(it, { ...sub, naming: `${ctx.naming}Item${i + 1}` })), checks };
       case "record":
         return { k: "record", schema, desc, value: this.node(d.valueType, { ...sub, naming: `${ctx.naming}Value` }), checks };
       case "lazy":
@@ -192,6 +215,8 @@ export class IrBuilder {
     const existing = this.anonByObject.get(schema._zod.def);
     if (existing) return { name: existing, schemaRef: null, existing: true };
     let name = ctx.naming;
+    // 익명 클래스 이름이 export 이름과 겹치면 export가 이름을 갖고 익명 클래스는 끝에 `Field`를 붙인다
+    if (this.exportsByName.has(name)) name = `${name}Field`;
     if (this.classes.has(name) || this.exportsByName.has(name)) {
       throw new Error(`클래스 이름 충돌 ${name} @ ${ctx.root}`);
     }
@@ -208,6 +233,11 @@ export class IrBuilder {
     }
     const { name, schemaRef, existing } = this.claim(schema, ctx);
     const node = { k: "object", schema, desc, className: name, checks, loose: d.catchall?._zod.def.type === "unknown" };
+    // `z.strictObject`·strictRequest 복제본 — 이 객체가 모르는 키를 거른다. 필드가 strictRequest 복제본이면 안쪽까지 거른다
+    if (d.catchall?._zod.def.type === "never") {
+      node.strict = true;
+      if (Object.values(d.shape).some((v) => globalThis.__sayrenStrictOrigin?.has(v._zod.def))) node.strictRequest = true;
+    }
     if (existing) return node;
     const cls = {
       kind: "object",

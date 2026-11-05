@@ -1,6 +1,6 @@
 name: sayren_storefront_sdk
 description: Flutter SDK for the sayren storefront API — catalog, cart, checkout, payments, buyer auth and analytics. Same API as @sayren/storefront-sdk.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/avarcorp/sayren-flutter
 issue_tracker: https://github.com/avarcorp/sayren-flutter/issues
 topics:

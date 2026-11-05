@@ -5,6 +5,7 @@
 // 원천: 패키지의 TS 원본(src, export·JSDoc·인터페이스·클라이언트 정의)과 런타임 zod 스키마(검증 규칙·기본값·describe).
 // 생성할 수 없는 코드(함수·클로저 구현)는 같은 라이브러리의 `{파일}.manual.dart` part에 손으로 쓴다.
 import { execFileSync } from "node:child_process";
+import { register } from "node:module";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,6 +19,9 @@ import { packageSrc, scanEntry } from "./scan.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
+// SDK dist의 strictRequest 복제본 → 원본을 기록한다(strict-hooks.mjs). SDK를 import하기 전에 등록한다
+register("./strict-hooks.mjs", import.meta.url);
+
 /** 생성 대상 — Node 패키지 하나가 Dart 패키지 하나다 */
 const TARGETS = {
   storefront: {
@@ -28,7 +32,7 @@ const TARGETS = {
     PARITY: path.join(here, "../parity/generated"),
     /** 손으로 쓴 파일이 맡는 export — 생성하지 않는다 */
     HAND_WRITTEN: {
-      "http.ts": ["ApiError", "buildQuery", "Query", "TokenSource"],
+      "http.ts": ["ApiError", "buildQuery", "Query", "SAYREN_STOREFRONT_API_BASE_URL", "TokenSource"],
       "client.ts": ["StorefrontClient", "StorefrontClientOptions", "createStorefrontClient"],
       "analytics-ids.ts": ["analyticsIdsFromCookie"],
       "session.ts": ["createStorefrontSession", "SessionStorage", "StorefrontSessionOptions", "StorefrontSession", "STOREFRONT_SESSION_KEYS"],
@@ -53,7 +57,7 @@ const TARGETS = {
     ENTRY_EXPORTS: [
       "export 'src/analytics-ids.dart';",
       "export 'src/client.dart';",
-      "export 'src/http.dart' show ApiError, Fetch, Query, TokenSource, buildQuery;",
+      "export 'src/http.dart' show ApiError, Fetch, Query, SAYREN_STOREFRONT_API_BASE_URL, TokenSource, buildQuery;",
       "export 'src/session.dart';",
     ],
     LAUNCH: true,
@@ -65,7 +69,7 @@ const TARGETS = {
     TEST_IMPORT: "package:test/test.dart",
     PARITY: path.join(here, "../parity/generated/store"),
     HAND_WRITTEN: {
-      "http.ts": ["ApiError", "ApprovalPendingError", "APPROVAL_ALREADY_DECIDED_CODE", "APPROVAL_REQUIRED_CODE", "buildQuery", "Query", "TokenSource"],
+      "http.ts": ["ApiError", "ApprovalPendingError", "APPROVAL_ALREADY_DECIDED_CODE", "APPROVAL_REQUIRED_CODE", "buildQuery", "Query", "SAYREN_API_BASE_URL", "SAYREN_API_ORIGIN", "TokenSource"],
       "client.ts": ["StoreClient", "StoreClientOptions", "createStoreClient"],
       "oauth.ts": ["buildAuthorizeUrl", "createPkcePair", "exchangeAuthorizationCode", "OAuthTokenResponse", "oauthTokenResponseSchema", "refreshUserToken"],
       "session.ts": ["AuthorizeOptions", "createStoreSession", "SessionStorage", "STORE_SESSION_KEYS", "StoreAuthServer", "StoreSession", "StoreSessionOptions"],
@@ -76,9 +80,15 @@ const TARGETS = {
       "schemas/app-manifest.ts": ["import 'dart:convert';", "import '../url.dart';"],
       "schemas/store.ts": ["import '../url.dart';"],
       "schemas/starter.ts": ["import '../url.dart';"],
-      "schemas/storefront-hosting.ts": ["import '../url.dart';", "import 'package:unorm_dart/unorm_dart.dart' as unorm;"],
+      "schemas/storefront-hosting.ts": ["import 'dart:convert';", "import '../url.dart';", "import 'package:unorm_dart/unorm_dart.dart' as unorm;"],
     },
     MANUAL_CONSTS: new Set(["CURRENCIES", "KRW_MONEY_RULES"]),
+    /** manual part가 스키마 상수와 출력 클래스를 함께 맡는 스키마 → 출력 타입. 고정 단계 재귀 그룹을 Dart에서 한 클래스(`ConditionGroup`)로 둔다 */
+    MANUAL_SCHEMAS: { conditionGroupSchema: "ConditionGroup" },
+    /** manual part의 Dart 인터페이스(TS union 별칭)를 구현할 생성 클래스 */
+    EXTRA_IMPLEMENTS: { ConditionRule: ["ConditionNode"] },
+    /** 같은 이름의 인터페이스가 이름을 갖는 스키마의 출력 클래스 이름 — 인터페이스가 스키마보다 넓다(구매자 클레임 등) */
+    SCHEMA_OUTPUT_NAMES: { couponFactsSchema: "CouponFactsSnapshot" },
     /** zod 런타임은 스토어프론트 패키지 것을 그대로 복사한다(Node 두 SDK가 같은 zod를 쓰는 것과 같다) */
     ZOD_FROM: path.join(here, "../../packages/storefront-sdk/lib/src/zod.dart"),
     CLIENT: {
@@ -94,7 +104,7 @@ const TARGETS = {
     },
     ENTRY_EXPORTS: [
       "export 'src/client.dart';",
-      "export 'src/http.dart' show APPROVAL_ALREADY_DECIDED_CODE, APPROVAL_REQUIRED_CODE, ApiError, ApprovalPendingError, Fetch, Query, TokenSource, buildQuery;",
+      "export 'src/http.dart' show APPROVAL_ALREADY_DECIDED_CODE, APPROVAL_REQUIRED_CODE, ApiError, ApprovalPendingError, Fetch, Query, SAYREN_API_BASE_URL, SAYREN_API_ORIGIN, TokenSource, buildQuery;",
       "export 'src/oauth.dart';",
       "export 'src/session.dart';",
     ],
@@ -118,6 +128,10 @@ async function generate(T) {
     .filter((e, i, all) => all.findIndex((x) => x.name === e.name) === i);
   const scan = new Map(exportsList.map((e) => [e.name, e]));
   const ir = new IrBuilder(scan, runtime, z);
+  // 스키마 출력 클래스 이름을 정한다(같은 이름의 인터페이스가 이름을 갖는 경우)
+  for (const [schema, name] of Object.entries(T.SCHEMA_OUTPUT_NAMES ?? {})) ir.typeOfSchema.set(schema, name);
+  // manual part가 스키마 상수와 출력 클래스를 함께 맡는 스키마(재귀 타입 등)
+  for (const [schema, type] of Object.entries(T.MANUAL_SCHEMAS ?? {})) ir.manualSchemas.set(schema, type);
   const emit = new DartEmitter(ir, scan);
 
   const isSchema = (e) => e.kind === "const" && runtime[e.name]?._zod;
@@ -143,7 +157,12 @@ async function generate(T) {
   }
 
   // 2) 인터페이스 — 스키마 출력이 아닌 것만 클래스로 만든다
-  const schemaOutputs = new Set([...ir.typeOfSchema.values()]);
+  // 스키마 출력 클래스와 이름이 같은 인터페이스는 만들지 않는다 — 스키마 모델이 그 이름을 갖는다
+  const schemaOutputs = new Set([
+    ...ir.typeOfSchema.values(),
+    ...[...ir.classes.values()].filter((c) => c.schemaRef).map((c) => c.name),
+    ...Object.values(T.MANUAL_SCHEMAS ?? {}),
+  ]);
   const interfaces = exportsList.filter((e) => e.kind === "interface" && !schemaOutputs.has(e.name) && !Object.values(HAND_WRITTEN).flat().includes(e.name));
   const transformOutputs = new Set([...ir.classes.values()].flatMap(() => []));
   for (const n of collectTransforms()) transformOutputs.add(n);
@@ -183,6 +202,8 @@ async function generate(T) {
 
   // 4) union 소속 — 형태 클래스가 구현할 union과 공통 getter
   emit.unionBases = new Map();
+  // TS 타입 별칭 union(`ConditionNode = ConditionRule | ConditionGroup`)을 manual part가 Dart 인터페이스로 둘 때, 형태 클래스가 구현한다
+  for (const [cls, bases] of Object.entries(T.EXTRA_IMPLEMENTS ?? {})) emit.unionBases.set(cls, { implements: [...bases], overrides: new Set() });
   const unionInfo = new Map();
   for (const cls of ir.classes.values()) {
     if (cls.kind !== "union") continue;
@@ -258,7 +279,10 @@ async function generate(T) {
     };
     for (const e of exportsList.filter((x) => x.file === file)) {
       const docText = formal(e.doc);
-      if (isSchema(e)) {
+      if (isSchema(e) && ir.manualSchemas.has(e.name)) {
+        need(file, e.name);
+        need(file, ir.manualSchemas.get(e.name));
+      } else if (isSchema(e)) {
         const node = ir.irs.get(e.name);
         const outName = ir.outputName(e.name);
         const values = node.k === "enum" ? ` 값은 ${node.values.map((v) => `\`${v}\``).join("·")}입니다.` : "";
@@ -283,7 +307,9 @@ async function generate(T) {
         }
       } else if (e.kind === "interface") {
         if (schemaOutputs.has(e.name)) continue;
-        decls.push(transformOutputs.has(e.name) ? interfaceModel(e, docText) : interfaceClass(e, docText));
+        // 제네릭 인터페이스(`ConditionFieldDef<Ctx>` 등)는 manual part가 맡는다
+        if (e.decl.typeParameters?.length) need(file, e.name);
+        else decls.push(transformOutputs.has(e.name) ? interfaceModel(e, docText) : interfaceClass(e, docText));
       } else if (e.kind === "const") {
         if (MANUAL_CONSTS.has(e.name)) need(file, e.name);
         else {
@@ -348,9 +374,18 @@ async function generate(T) {
   /** TS 인터페이스 → 파라미터·데이터 클래스 */
   function interfaceClass(e, docText) {
     const members = interfaceMembers(e.decl);
-    const parent = members.find((m) => m.extends)?.extends ?? null;
+    let parent = members.find((m) => m.extends)?.extends ?? null;
+    let own = members.filter((m) => m.name);
+    // `extends Omit<T, "a" | "b">`는 Dart에서 상속할 수 없다 — T의 나머지 필드를 이 클래스에 펼친다
+    const omit = parent && /^Omit<(\w+),\s*([\s\S]+)>$/.exec(parent);
+    if (omit) {
+      const dropped = new Set([...omit[2].matchAll(/"([^"]+)"/g)].map((m) => m[1]));
+      const inherited = interfaceMembers(scan.get(omit[1]).decl).filter((m) => m.name && !dropped.has(m.name));
+      own = [...inherited.filter((m) => !own.some((o) => o.name === m.name)), ...own];
+      parent = null;
+    }
+    if (parent && !scan.get(parent)) throw new Error(`${e.name}: 모르는 상위 타입 ${parent}`);
     const parentMembers = parent ? interfaceMembers(scan.get(parent).decl).filter((m) => m.name) : [];
-    const own = members.filter((m) => m.name);
     const type = (m) => optional(tsToDart(m.type, known), m.optional);
     const allOptional = [...parentMembers, ...own].every((m) => m.optional);
     let s = doc(docText ?? `${e.name} 값입니다.`);

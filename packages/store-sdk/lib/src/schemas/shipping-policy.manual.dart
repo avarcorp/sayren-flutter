@@ -115,15 +115,17 @@ DeliveryQuote quoteDelivery(DeliveryQuoteInput input) {
             : freeThreshold != null && group.sum >= freeThreshold
                 ? 'CONDITIONAL'
                 : null;
-    bundles.add(DeliveryBundleQuote(
-      bundleKey: bundleKey,
-      productIds: [...group.ids],
-      fee: waivedBy == null ? listFee : 0,
-      waivedBy: waivedBy,
-      listFee: listFee,
-      freeThreshold: freeThreshold,
-      remoteSurcharge: surcharge,
-    ));
+    bundles.add(
+      DeliveryBundleQuote(
+        bundleKey: bundleKey,
+        productIds: [...group.ids],
+        fee: waivedBy == null ? listFee : 0,
+        waivedBy: waivedBy,
+        listFee: listFee,
+        freeThreshold: freeThreshold,
+        remoteSurcharge: surcharge,
+      ),
+    );
   }
 
   final baseFee = bundles.fold<int>(0, (sum, b) => sum + b.fee);

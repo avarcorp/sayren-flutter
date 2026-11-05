@@ -28,6 +28,7 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 /// [CouponApplication] 스키마입니다.
 ///
@@ -112,6 +113,95 @@ class CouponBenefitView extends ParsedObject {
   int? get maxDiscountAmount => _j['maxDiscountAmount'] as int?;
 }
 
+/// [CouponRewardView] 스키마입니다.
+///
+/// 확장 혜택 — 응답 표시용(이슈 #222 혜택 확장). 있으면 `benefit`은 가장 가까운 값이고 이것이 혜택입니다. 값이 늘 수 있어 방식은 문자열입니다.
+/// - `TIERED`: 구간 할인. `tiers`(기준 금액 하한 오름차순, 넘은 가장 높은 구간의 `benefit`)
+/// - `BUY_X_GET_Y`: N+1. 같은 상품을 `buy + get`개 담을 때마입니다 `get`개를 `rate`% 할인(100이면 무료)
+/// - `POINT`: 적립금 지급. 할인 대신 구매확정 때 `benefit`만큼 적립(`RATE`면 실결제의 %, 최대 `maxDiscountAmount`).
+final ZodObject<CouponRewardView> couponRewardViewSchema = z.object<CouponRewardView>({
+  'type': z.string(),
+  'tiers': z.array<CouponRewardViewTiersItem>(couponRewardViewTiersItemSchema).optional(),
+  'buy': z.number().int_().optional(),
+  'get': z.number().int_().optional(),
+  'rate': z.number().int_().optional(),
+  'benefit': couponBenefitViewSchema.optional(),
+}, CouponRewardView._);
+
+/// 확장 혜택 — 응답 표시용(이슈 #222 혜택 확장). 있으면 `benefit`은 가장 가까운 값이고 이것이 혜택입니다. 값이 늘 수 있어 방식은 문자열입니다.
+/// - `TIERED`: 구간 할인. `tiers`(기준 금액 하한 오름차순, 넘은 가장 높은 구간의 `benefit`)
+/// - `BUY_X_GET_Y`: N+1. 같은 상품을 `buy + get`개 담을 때마입니다 `get`개를 `rate`% 할인(100이면 무료)
+/// - `POINT`: 적립금 지급. 할인 대신 구매확정 때 `benefit`만큼 적립(`RATE`면 실결제의 %, 최대 `maxDiscountAmount`).
+class CouponRewardView extends ParsedObject {
+  /// [CouponRewardView]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CouponRewardView(
+      {required String type,
+      List<CouponRewardViewTiersItem>? tiers,
+      int? buy,
+      int? get,
+      int? rate,
+      CouponBenefitView? benefit})
+      : super({
+          'type': type,
+          if (tiers != null) 'tiers': tiers,
+          if (buy != null) 'buy': buy,
+          if (get != null) 'get': get,
+          if (rate != null) 'rate': rate,
+          if (benefit != null) 'benefit': benefit
+        });
+
+  CouponRewardView._(super.json);
+
+  /// JSON을 [couponRewardViewSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponRewardView.fromJson(Map<String, Object?> json) => couponRewardViewSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 현재 값은 `TIERED`·`BUY_X_GET_Y`·`POINT`이고 값이 늘 수 있습니다.
+  String get type => _j['type'] as String;
+
+  /// `tiers` 값입니다.
+  List<CouponRewardViewTiersItem>? get tiers => (_j['tiers'] as List?)?.cast<CouponRewardViewTiersItem>();
+
+  /// `buy` 값입니다.
+  int? get buy => _j['buy'] as int?;
+
+  /// `get` 값입니다.
+  int? get get => _j['get'] as int?;
+
+  /// `rate` 값입니다.
+  int? get rate => _j['rate'] as int?;
+
+  /// `benefit` 값입니다.
+  CouponBenefitView? get benefit => _j['benefit'] as CouponBenefitView?;
+}
+
+/// [CouponRewardViewTiersItem] 스키마입니다.
+final ZodObject<CouponRewardViewTiersItem> couponRewardViewTiersItemSchema = z.object<CouponRewardViewTiersItem>({
+  'minAmount': z.number().int_(),
+  'benefit': couponBenefitViewSchema,
+}, CouponRewardViewTiersItem._);
+
+/// CouponRewardViewTiersItem 값입니다.
+class CouponRewardViewTiersItem extends ParsedObject {
+  /// [CouponRewardViewTiersItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CouponRewardViewTiersItem({required int minAmount, required CouponBenefitView benefit})
+      : super({'minAmount': minAmount, 'benefit': benefit});
+
+  CouponRewardViewTiersItem._(super.json);
+
+  /// JSON을 [couponRewardViewTiersItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponRewardViewTiersItem.fromJson(Map<String, Object?> json) => couponRewardViewTiersItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `minAmount` 값입니다.
+  int get minAmount => _j['minAmount'] as int;
+
+  /// `benefit` 값입니다.
+  CouponBenefitView get benefit => _j['benefit'] as CouponBenefitView;
+}
+
 /// [CouponResult] 스키마입니다.
 ///
 /// 쿠폰 한 장의 적용 결과.
@@ -122,8 +212,10 @@ final ZodObject<CouponResult> couponResultSchema = z.object<CouponResult>({
   'name': z.string(),
   'kind': z.string(),
   'benefit': couponBenefitViewSchema,
+  'reward': couponRewardViewSchema.nullable().optional().withDefault(null),
   'applied': z.boolean(),
   'discountAmount': z.number().int_(),
+  'rewardPoint': z.number().int_().optional().withDefault(0),
   'rejectReason': z.string().nullable(),
   'optionId': z.string().nullable(),
   'lineId': z.string().nullable().optional().withDefault(null),
@@ -139,8 +231,10 @@ class CouponResult extends ParsedObject {
       required String name,
       required String kind,
       required CouponBenefitView benefit,
+      CouponRewardView? reward,
       required bool applied,
       required int discountAmount,
+      int rewardPoint = 0,
       required String? rejectReason,
       required String? optionId,
       String? lineId})
@@ -151,8 +245,10 @@ class CouponResult extends ParsedObject {
           'name': name,
           'kind': kind,
           'benefit': benefit,
+          'reward': reward,
           'applied': applied,
           'discountAmount': discountAmount,
+          'rewardPoint': rewardPoint,
           'rejectReason': rejectReason,
           'optionId': optionId,
           'lineId': lineId
@@ -183,11 +279,17 @@ class CouponResult extends ParsedObject {
   /// `benefit` 값입니다.
   CouponBenefitView get benefit => _j['benefit'] as CouponBenefitView;
 
+  /// 확장 혜택. 없으면 null이고 `benefit`이 혜택입니다. 서버는 항상 싣습니다.
+  CouponRewardView? get reward => _j['reward'] as CouponRewardView?;
+
   /// `applied` 값입니다.
   bool get applied => _j['applied'] as bool;
 
   /// 이 쿠폰의 할인액. 적용하지 못했으면 0.
   int get discountAmount => _j['discountAmount'] as int;
+
+  /// 적립금 지급 쿠폰이 구매확정 때 줄 적립금(지금 수량 기준). 그 밖은 0. 서버는 항상 싣습니다.
+  int get rewardPoint => _j['rewardPoint'] as int;
 
   /// 적용하지 못한 사유. `MIN_ORDER_AMOUNT`(최소 주문 금액 미달)·`NO_ELIGIBLE_ITEMS`(대상 상품 없음)·`NOT_STARTED`·`EXPIRED`·`MEMBER_ONLY`(회원 전용)·`STACK_LIMIT`(같은 종류 쿠폰이 이미 적용됨)·`DUPLICATE_COUPON`·`LINE_NOT_ELIGIBLE`·`NO_DISCOUNT`·`LINE_AMBIGUOUS`(같은 `optionId`의 줄이 여럿, `lineId`로 지목합니다)·`IN_USE`(다른 결제에서 쓰는 중)·`LIMIT_REACHED`(1인 사용 한도)·`EXHAUSTED`(총 사용 한도)·`INACTIVE`(중지된 쿠폰). 값이 늘 수 있습니다.
   String? get rejectReason => _j['rejectReason'] as String?;
@@ -208,6 +310,7 @@ final ZodObject<PricingAmounts> pricingAmountsSchema = z.object<PricingAmounts>(
   'couponDiscountAmount': z.number().int_(),
   'deliveryDiscountAmount': z.number().int_(),
   'pointAmount': z.number().int_().optional().withDefault(0),
+  'rewardPointAmount': z.number().int_().optional(),
   'totalAmount': z.number().int_(),
 }, PricingAmounts._);
 
@@ -220,6 +323,7 @@ class PricingAmounts extends ParsedObject {
       required int couponDiscountAmount,
       required int deliveryDiscountAmount,
       int pointAmount = 0,
+      int? rewardPointAmount,
       required int totalAmount})
       : super({
           'productAmount': productAmount,
@@ -227,6 +331,7 @@ class PricingAmounts extends ParsedObject {
           'couponDiscountAmount': couponDiscountAmount,
           'deliveryDiscountAmount': deliveryDiscountAmount,
           'pointAmount': pointAmount,
+          if (rewardPointAmount != null) 'rewardPointAmount': rewardPointAmount,
           'totalAmount': totalAmount
         });
 
@@ -251,6 +356,9 @@ class PricingAmounts extends ParsedObject {
 
   /// 사용 적립금(#93). 요청에 `pointAmount`가 없으면 0. 서버는 항상 싣습니다.
   int get pointAmount => _j['pointAmount'] as int;
+
+  /// 적립금 지급 쿠폰의 적립 예정 합계(구매확정 때 줍니다). 결제 금액과 무관합니다. 서버는 항상 싣습니다.
+  int? get rewardPointAmount => _j['rewardPointAmount'] as int?;
 
   /// 결제 금액.
   int get totalAmount => _j['totalAmount'] as int;
@@ -425,6 +533,65 @@ class CheckoutPricingPoints extends ParsedObject {
   String? get rejectReason => _j['rejectReason'] as String?;
 }
 
+/// [CouponRequirement] 스키마입니다.
+///
+/// 쿠폰 사용 조건 한 줄(이슈 #222) — 셀러가 정한 조건을 구매자에게 보일 문구입니다. `label`을 그대로 보이면 되고, 구조화 값(`field`·`operator`·`value`)은
+/// 화면을 직접 꾸밀 때 씁니다. 여러 조건이 「또는」으로 묶인 묶음은 `field: "group"`이고 문구만 있습니다. 조건이 없으면 빈 목록입니다.
+final ZodObject<CouponRequirement> couponRequirementSchema = z.object<CouponRequirement>({
+  'field': z.string(),
+  'operator': z.string().optional(),
+  'value': couponRequirementValueSchema.optional(),
+  'label': z.string(),
+}, CouponRequirement._);
+
+/// 쿠폰 사용 조건 한 줄(이슈 #222) — 셀러가 정한 조건을 구매자에게 보일 문구입니다. `label`을 그대로 보이면 되고, 구조화 값(`field`·`operator`·`value`)은
+/// 화면을 직접 꾸밀 때 씁니다. 여러 조건이 「또는」으로 묶인 묶음은 `field: "group"`이고 문구만 있습니다. 조건이 없으면 빈 목록입니다.
+class CouponRequirement extends ParsedObject {
+  /// [CouponRequirement]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CouponRequirement({required String field, String? operator, Object? value, required String label})
+      : super({
+          'field': field,
+          if (operator != null) 'operator': operator,
+          if (value != null) 'value': value,
+          'label': label
+        });
+
+  CouponRequirement._(super.json);
+
+  /// JSON을 [couponRequirementSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CouponRequirement.fromJson(Map<String, Object?> json) => couponRequirementSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 조건 필드(`cart.targetSubtotal`·`customer.daysSinceJoined` 등) 또는 묶음 `group`. 값이 늘 수 있습니다.
+  String get field => _j['field'] as String;
+
+  /// 연산자(`>=`·`<=`·`=`·`between`·`in`). 묶음은 없습니다.
+  String? get operator => _j['operator'] as String?;
+
+  /// 조건 값 — 숫자·참거짓·문자열, 또는 목록(`in`의 값들, `between`의 `[from, to]`). 금액은 쿠폰 통화 최소 단위입니다. 묶음은 없습니다.
+  Object? get value => _j['value'];
+
+  /// 구매자에게 보일 문구 — 「대상 상품 50,000원 이상」 「가입 30일 이상」.
+  String get label => _j['label'] as String;
+}
+
+/// [CouponRequirementValue] 스키마입니다.
+final ZodType<Object?> couponRequirementValueSchema = z.union<Object?>([
+  z.number(),
+  z.boolean(),
+  z.string(),
+  z.null_(),
+  z.array<Object?>(z.union<Object?>([
+    z.number(),
+    z.string(),
+    z.null_(),
+  ])),
+]);
+
+/// CouponRequirementValue 값입니다.
+typedef CouponRequirementValue = Object?;
+
 /// [ApplicableCoupon] 스키마입니다.
 ///
 /// `GET /checkout/{checkoutId}/coupons` 항목 — 이 주문서에 쓸 수 있는 내 쿠폰.
@@ -435,7 +602,9 @@ final ZodObject<ApplicableCoupon> applicableCouponSchema = z.object<ApplicableCo
   'description': z.string().nullable(),
   'kind': z.string(),
   'benefit': couponBenefitViewSchema,
+  'reward': couponRewardViewSchema.nullable().optional().withDefault(null),
   'minOrderAmount': z.number().int_(),
+  'requirements': z.array<CouponRequirement>(couponRequirementSchema).optional().withDefault(const []),
   'validUntil': z.string().nullable(),
   'applicable': z.boolean(),
   'expectedDiscountAmount': z.number().int_(),
@@ -452,7 +621,9 @@ class ApplicableCoupon extends ParsedObject {
       required String? description,
       required String kind,
       required CouponBenefitView benefit,
+      CouponRewardView? reward,
       required int minOrderAmount,
+      List<CouponRequirement> requirements = const [],
       required String? validUntil,
       required bool applicable,
       required int expectedDiscountAmount,
@@ -464,7 +635,9 @@ class ApplicableCoupon extends ParsedObject {
           'description': description,
           'kind': kind,
           'benefit': benefit,
+          'reward': reward,
           'minOrderAmount': minOrderAmount,
+          'requirements': requirements,
           'validUntil': validUntil,
           'applicable': applicable,
           'expectedDiscountAmount': expectedDiscountAmount,
@@ -496,8 +669,14 @@ class ApplicableCoupon extends ParsedObject {
   /// `benefit` 값입니다.
   CouponBenefitView get benefit => _j['benefit'] as CouponBenefitView;
 
+  /// 확장 혜택. 없으면 null이고 `benefit`이 혜택입니다. 서버는 항상 싣습니다.
+  CouponRewardView? get reward => _j['reward'] as CouponRewardView?;
+
   /// `minOrderAmount` 값입니다.
   int get minOrderAmount => _j['minOrderAmount'] as int;
+
+  /// 사용 조건(이슈 #222). `minOrderAmount`보다 넓습니다 — 주문 금액 전체·구매자·요일 조건도 싣습니다. 서버는 항상 싣습니다.
+  List<CouponRequirement> get requirements => (_j['requirements'] as List).cast<CouponRequirement>();
 
   /// 유효 기간 끝(이 시각부터 못 씁니다). 없으면 null.
   String? get validUntil => _j['validUntil'] as String?;
@@ -512,6 +691,29 @@ class ApplicableCoupon extends ParsedObject {
   String? get rejectReason => _j['rejectReason'] as String?;
 }
 
+/// [RegisterCouponRequest] 스키마입니다.
+///
+/// `POST /coupons/register` — 쿠폰 번호 등록(이슈 #264). 셀러가 나눠 준 1회용 번호를 내 쿠폰으로 옮깁니다.
+final ZodObject<RegisterCouponRequest> registerCouponRequestSchema = z.object<RegisterCouponRequest>({
+  'code': z.string().trim().min(1).max(40),
+}, RegisterCouponRequest._);
+
+/// `POST /coupons/register` — 쿠폰 번호 등록(이슈 #264). 셀러가 나눠 준 1회용 번호를 내 쿠폰으로 옮깁니다.
+class RegisterCouponRequest extends ParsedObject {
+  /// [RegisterCouponRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  RegisterCouponRequest({required String code}) : super({'code': code});
+
+  RegisterCouponRequest._(super.json);
+
+  /// JSON을 [registerCouponRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory RegisterCouponRequest.fromJson(Map<String, Object?> json) => registerCouponRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 쿠폰 번호(대소문자 구분 없음).
+  String get code => _j['code'] as String;
+}
+
 /// [MyCoupon] 스키마입니다.
 ///
 /// `GET /me/coupons` 항목.
@@ -522,7 +724,9 @@ final ZodObject<MyCoupon> myCouponSchema = z.object<MyCoupon>({
   'description': z.string().nullable(),
   'kind': z.string(),
   'benefit': couponBenefitViewSchema,
+  'reward': couponRewardViewSchema.nullable().optional().withDefault(null),
   'minOrderAmount': z.number().int_(),
+  'requirements': z.array<CouponRequirement>(couponRequirementSchema).optional().withDefault(const []),
   'status': z.string(),
   'validFrom': z.string(),
   'validUntil': z.string().nullable(),
@@ -541,7 +745,9 @@ class MyCoupon extends ParsedObject {
       required String? description,
       required String kind,
       required CouponBenefitView benefit,
+      CouponRewardView? reward,
       required int minOrderAmount,
+      List<CouponRequirement> requirements = const [],
       required String status,
       required String validFrom,
       required String? validUntil,
@@ -555,7 +761,9 @@ class MyCoupon extends ParsedObject {
           'description': description,
           'kind': kind,
           'benefit': benefit,
+          'reward': reward,
           'minOrderAmount': minOrderAmount,
+          'requirements': requirements,
           'status': status,
           'validFrom': validFrom,
           'validUntil': validUntil,
@@ -589,8 +797,14 @@ class MyCoupon extends ParsedObject {
   /// `benefit` 값입니다.
   CouponBenefitView get benefit => _j['benefit'] as CouponBenefitView;
 
+  /// 확장 혜택. 없으면 null이고 `benefit`이 혜택입니다. 서버는 항상 싣습니다.
+  CouponRewardView? get reward => _j['reward'] as CouponRewardView?;
+
   /// `minOrderAmount` 값입니다.
   int get minOrderAmount => _j['minOrderAmount'] as int;
+
+  /// 사용 조건(이슈 #222). `minOrderAmount`보다 넓습니다 — 주문 금액 전체·구매자·요일 조건도 싣습니다. 서버는 항상 싣습니다.
+  List<CouponRequirement> get requirements => (_j['requirements'] as List).cast<CouponRequirement>();
 
   /// 상태. 현재 값은 `AVAILABLE`(사용 가능)·`RESERVED`(결제 중)·`USED`(사용함)·`EXPIRED`(기간 지남)이고 값이 늘 수 있습니다.
   String get status => _j['status'] as String;
@@ -692,12 +906,18 @@ final ZodObject<StorefrontCoupon> storefrontCouponSchema = z.object<StorefrontCo
   'description': z.string().nullable(),
   'kind': z.string(),
   'benefit': couponBenefitViewSchema,
+  'reward': couponRewardViewSchema.nullable().optional().withDefault(null),
   'minOrderAmount': z.number().int_(),
+  'requirements': z.array<CouponRequirement>(couponRequirementSchema).optional().withDefault(const []),
   'stackWithInstantDiscount': z.boolean(),
   'target': storefrontCouponTargetSchema,
   'startsAt': z.string().nullable(),
   'endsAt': z.string().nullable(),
   'validDaysAfterIssue': z.number().int_().nullable(),
+  'issueStartsAt': z.string().nullable().optional().withDefault(null),
+  'issueEndsAt': z.string().nullable().optional().withDefault(null),
+  'remainingIssueCount': z.number().int_().nullable().optional().withDefault(null),
+  'remainingTodayCount': z.number().int_().nullable().optional().withDefault(null),
   'perMemberIssueLimit': z.number().int_(),
   'loginRequired': z.boolean(),
   'downloaded': z.boolean().nullable(),
@@ -713,12 +933,18 @@ class StorefrontCoupon extends ParsedObject {
       required String? description,
       required String kind,
       required CouponBenefitView benefit,
+      CouponRewardView? reward,
       required int minOrderAmount,
+      List<CouponRequirement> requirements = const [],
       required bool stackWithInstantDiscount,
       required StorefrontCouponTarget target,
       required String? startsAt,
       required String? endsAt,
       required int? validDaysAfterIssue,
+      String? issueStartsAt,
+      String? issueEndsAt,
+      int? remainingIssueCount,
+      int? remainingTodayCount,
       required int perMemberIssueLimit,
       required bool loginRequired,
       required bool? downloaded,
@@ -729,12 +955,18 @@ class StorefrontCoupon extends ParsedObject {
           'description': description,
           'kind': kind,
           'benefit': benefit,
+          'reward': reward,
           'minOrderAmount': minOrderAmount,
+          'requirements': requirements,
           'stackWithInstantDiscount': stackWithInstantDiscount,
           'target': target,
           'startsAt': startsAt,
           'endsAt': endsAt,
           'validDaysAfterIssue': validDaysAfterIssue,
+          'issueStartsAt': issueStartsAt,
+          'issueEndsAt': issueEndsAt,
+          'remainingIssueCount': remainingIssueCount,
+          'remainingTodayCount': remainingTodayCount,
           'perMemberIssueLimit': perMemberIssueLimit,
           'loginRequired': loginRequired,
           'downloaded': downloaded,
@@ -763,8 +995,14 @@ class StorefrontCoupon extends ParsedObject {
   /// `benefit` 값입니다.
   CouponBenefitView get benefit => _j['benefit'] as CouponBenefitView;
 
+  /// 확장 혜택. 없으면 null이고 `benefit`이 혜택입니다. 서버는 항상 싣습니다.
+  CouponRewardView? get reward => _j['reward'] as CouponRewardView?;
+
   /// 최소 주문 금액(원). 0이면 조건 없음.
   int get minOrderAmount => _j['minOrderAmount'] as int;
+
+  /// 사용 조건(이슈 #222). `minOrderAmount`보다 넓습니다 — 주문 금액 전체·구매자·요일 조건도 싣습니다. 서버는 항상 싣습니다.
+  List<CouponRequirement> get requirements => (_j['requirements'] as List).cast<CouponRequirement>();
 
   /// 즉시할인 중인 상품에도 쓰는지입니다. false면 할인 중인 상품에는 적용되지 않습니다.
   bool get stackWithInstantDiscount => _j['stackWithInstantDiscount'] as bool;
@@ -780,6 +1018,18 @@ class StorefrontCoupon extends ParsedObject {
 
   /// 받은 뒤 유효 일수. 쿠폰 종료 시각과 둘 중 먼저 끝나는 쪽이 적용됩니다. 없으면 null.
   int? get validDaysAfterIssue => _j['validDaysAfterIssue'] as int?;
+
+  /// 받기 시작 시각(이슈 #222). 이 시각 전에는 목록에 보여도 받을 수 없습니다(「오픈 예정」). 없으면 사용 시작 시각을 따릅니다(null). 서버는 항상 싣습니다.
+  String? get issueStartsAt => _j['issueStartsAt'] as String?;
+
+  /// 받기 종료 시각(이 시각부터 받을 수 없습니다). 없으면 사용 종료 시각을 따릅니다(null).
+  String? get issueEndsAt => _j['issueEndsAt'] as String?;
+
+  /// 남은 수량 — 총 발급 한도에서 발급한 수를 뺀 값. 총 발급 한도가 없으면 null. 서버는 항상 싣습니다.
+  int? get remainingIssueCount => _j['remainingIssueCount'] as int?;
+
+  /// 오늘 남은 수량 — 하루 발급 한도(한국 시간 0시 기준)에서 오늘 발급한 수를 뺀 값. 0이면 오늘 마감(`downloadable` false)입니다. 하루 한도가 없으면 null.
+  int? get remainingTodayCount => _j['remainingTodayCount'] as int?;
 
   /// 1인이 받을 수 있는 장수.
   int get perMemberIssueLimit => _j['perMemberIssueLimit'] as int;
@@ -845,4 +1095,223 @@ class StorefrontCouponListParams {
   /// 쿼리 파라미터로 바꿉니다. null인 값은 뺍니다.
   Map<String, Object?> toJson() =>
       {if (productId != null) 'productId': productId, if (page != null) 'page': page, if (size != null) 'size': size};
+}
+
+/// [BestCouponEntry] 스키마입니다.
+///
+/// 최대 할인 조합의 쿠폰 한 장(이슈 #222).
+final ZodObject<BestCouponEntry> bestCouponEntrySchema = z.object<BestCouponEntry>({
+  'couponId': z.string(),
+  'issueId': z.string().nullable(),
+  'name': z.string(),
+  'kind': z.string(),
+  'discountAmount': z.number().int_(),
+  'lineId': z.string().nullable(),
+  'needsDownload': z.boolean(),
+}, BestCouponEntry._);
+
+/// 최대 할인 조합의 쿠폰 한 장(이슈 #222).
+class BestCouponEntry extends ParsedObject {
+  /// [BestCouponEntry]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  BestCouponEntry(
+      {required String couponId,
+      required String? issueId,
+      required String name,
+      required String kind,
+      required int discountAmount,
+      required String? lineId,
+      required bool needsDownload})
+      : super({
+          'couponId': couponId,
+          'issueId': issueId,
+          'name': name,
+          'kind': kind,
+          'discountAmount': discountAmount,
+          'lineId': lineId,
+          'needsDownload': needsDownload
+        });
+
+  BestCouponEntry._(super.json);
+
+  /// JSON을 [bestCouponEntrySchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory BestCouponEntry.fromJson(Map<String, Object?> json) => bestCouponEntrySchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `couponId` 값입니다.
+  String get couponId => _j['couponId'] as String;
+
+  /// 가진 쿠폰이면 발급 쿠폰 id. 아직 받지 않은 쿠폰이면 null(`needsDownload: true`).
+  String? get issueId => _j['issueId'] as String?;
+
+  /// `name` 값입니다.
+  String get name => _j['name'] as String;
+
+  /// 쿠폰 종류. 현재 값은 `ORDER`·`PRODUCT`이고 값이 늘 수 있습니다.
+  String get kind => _j['kind'] as String;
+
+  /// 이 쿠폰의 할인액.
+  int get discountAmount => _j['discountAmount'] as int;
+
+  /// 상품 쿠폰이 걸린 주문서 줄(`line_{index}`). 주문 쿠폰·상품 기준 계산은 null.
+  String? get lineId => _j['lineId'] as String?;
+
+  /// 받아야 쓸 수 있는 쿠폰인지입니다 — 받기(`me.downloadCoupon`) 뒤 같은 할인이 됩니다.
+  bool get needsDownload => _j['needsDownload'] as bool;
+}
+
+/// [ProductCouponBenefit] 스키마입니다.
+///
+/// `GET /products/{productId}/coupon-benefit` — 이 상품을 사면 받을 수 있는 최대 쿠폰 할인(이슈 #222). 가진 쿠폰 + 지금 받을 수 있는
+/// 쿠폰 중 함께 쓸 수 있는 조합을 서버가 고릅니다. 배송비와 배송비 쿠폰, 코드 입력형 쿠폰은 넣지 않습니다. 금액은 서버가 판단합니다 — 화면은 그대로 보입니다.
+final ZodObject<ProductCouponBenefit> productCouponBenefitSchema = z.object<ProductCouponBenefit>({
+  'productId': z.string(),
+  'currency': z.string(),
+  'quantity': z.number().int_(),
+  'amount': z.number().int_(),
+  'maxDiscountAmount': z.number().int_(),
+  'priceAfterDiscount': z.number().int_(),
+  'coupons': z.array<BestCouponEntry>(bestCouponEntrySchema),
+  'withPoints': z.boolean(),
+  'loginRequired': z.boolean(),
+}, ProductCouponBenefit._);
+
+/// `GET /products/{productId}/coupon-benefit` — 이 상품을 사면 받을 수 있는 최대 쿠폰 할인(이슈 #222). 가진 쿠폰 + 지금 받을 수 있는
+/// 쿠폰 중 함께 쓸 수 있는 조합을 서버가 고릅니다. 배송비와 배송비 쿠폰, 코드 입력형 쿠폰은 넣지 않습니다. 금액은 서버가 판단합니다 — 화면은 그대로 보입니다.
+class ProductCouponBenefit extends ParsedObject {
+  /// [ProductCouponBenefit]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ProductCouponBenefit(
+      {required String productId,
+      required String currency,
+      required int quantity,
+      required int amount,
+      required int maxDiscountAmount,
+      required int priceAfterDiscount,
+      required List<BestCouponEntry> coupons,
+      required bool withPoints,
+      required bool loginRequired})
+      : super({
+          'productId': productId,
+          'currency': currency,
+          'quantity': quantity,
+          'amount': amount,
+          'maxDiscountAmount': maxDiscountAmount,
+          'priceAfterDiscount': priceAfterDiscount,
+          'coupons': coupons,
+          'withPoints': withPoints,
+          'loginRequired': loginRequired
+        });
+
+  ProductCouponBenefit._(super.json);
+
+  /// JSON을 [productCouponBenefitSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ProductCouponBenefit.fromJson(Map<String, Object?> json) => productCouponBenefitSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `productId` 값입니다.
+  String get productId => _j['productId'] as String;
+
+  /// 금액 통화(요청 판매 권역의 통화). 금액은 이 통화의 최소 단위입니다.
+  String get currency => _j['currency'] as String;
+
+  /// `quantity` 값입니다.
+  int get quantity => _j['quantity'] as int;
+
+  /// 쿠폰 전 금액 — 즉시할인 반영 판매가 × 수량(옵션 추가금 제외).
+  int get amount => _j['amount'] as int;
+
+  /// 받을 수 있는 최대 쿠폰 할인. 쓸 쿠폰이 없으면 0.
+  int get maxDiscountAmount => _j['maxDiscountAmount'] as int;
+
+  /// 쿠폰 적용 뒤 금액 = `amount − maxDiscountAmount`.
+  int get priceAfterDiscount => _j['priceAfterDiscount'] as int;
+
+  /// 최대 할인 조합.
+  List<BestCouponEntry> get coupons => (_j['coupons'] as List).cast<BestCouponEntry>();
+
+  /// 이 조합과 적립금을 함께 쓸 수 있는지입니다.
+  bool get withPoints => _j['withPoints'] as bool;
+
+  /// 로그인하면 더 받을 수 있습니다 — 회원 토큰 없이 불러 구매자 조건 쿠폰을 빼고 계산했습니다.
+  bool get loginRequired => _j['loginRequired'] as bool;
+}
+
+/// [ProductCouponBenefitQuery] 스키마입니다.
+final ZodObject<ProductCouponBenefitQuery> productCouponBenefitQuerySchema = z.object<ProductCouponBenefitQuery>({
+  'quantity': z.string().pattern(RegExp(r'^[1-9]\d{0,2}$')).optional(),
+  'optionId': z.string().min(1).max(100).optional(),
+}, ProductCouponBenefitQuery._);
+
+/// ProductCouponBenefitQuery 값입니다.
+class ProductCouponBenefitQuery extends ParsedObject {
+  /// [ProductCouponBenefitQuery]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ProductCouponBenefitQuery({String? quantity, String? optionId})
+      : super({if (quantity != null) 'quantity': quantity, if (optionId != null) 'optionId': optionId});
+
+  ProductCouponBenefitQuery._(super.json);
+
+  /// JSON을 [productCouponBenefitQuerySchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ProductCouponBenefitQuery.fromJson(Map<String, Object?> json) => productCouponBenefitQuerySchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 수량(1~999 정수, 기본 1).
+  String? get quantity => _j['quantity'] as String?;
+
+  /// 고른 조합(`variants[].optionId`). 주면 조합 추가금이 든 단가로 계산합니다. 옵션 없는 상품은 무시합니다.
+  String? get optionId => _j['optionId'] as String?;
+}
+
+/// [CheckoutBestCoupons] 스키마입니다.
+///
+/// `GET /checkout/{checkoutId}/best-coupons` — 가진 쿠폰으로 이 주문서의 쿠폰 할인이 가장 큰 조합(이슈 #222, 회원 전용).
+/// `applications`를 그대로 금액 미리보기·결제 시작의 `coupons`로 넣으면 같은 금액입니다. 적립금은 넣지 않고 계산합니다.
+final ZodObject<CheckoutBestCoupons> checkoutBestCouponsSchema = z.object<CheckoutBestCoupons>({
+  'applications': z.array<CouponApplication>(couponApplicationSchema),
+  'coupons': z.array<BestCouponEntry>(bestCouponEntrySchema),
+  'discountAmount': z.number().int_(),
+  'totalAmount': z.number().int_(),
+  'withPoints': z.boolean(),
+}, CheckoutBestCoupons._);
+
+/// `GET /checkout/{checkoutId}/best-coupons` — 가진 쿠폰으로 이 주문서의 쿠폰 할인이 가장 큰 조합(이슈 #222, 회원 전용).
+/// `applications`를 그대로 금액 미리보기·결제 시작의 `coupons`로 넣으면 같은 금액입니다. 적립금은 넣지 않고 계산합니다.
+class CheckoutBestCoupons extends ParsedObject {
+  /// [CheckoutBestCoupons]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CheckoutBestCoupons(
+      {required List<CouponApplication> applications,
+      required List<BestCouponEntry> coupons,
+      required int discountAmount,
+      required int totalAmount,
+      required bool withPoints})
+      : super({
+          'applications': applications,
+          'coupons': coupons,
+          'discountAmount': discountAmount,
+          'totalAmount': totalAmount,
+          'withPoints': withPoints
+        });
+
+  CheckoutBestCoupons._(super.json);
+
+  /// JSON을 [checkoutBestCouponsSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CheckoutBestCoupons.fromJson(Map<String, Object?> json) => checkoutBestCouponsSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 결제 시작 `coupons`에 그대로 넣는 값 — 발급 쿠폰 id와 상품 쿠폰의 줄.
+  List<CouponApplication> get applications => (_j['applications'] as List).cast<CouponApplication>();
+
+  /// `coupons` 값입니다.
+  List<BestCouponEntry> get coupons => (_j['coupons'] as List).cast<BestCouponEntry>();
+
+  /// 쿠폰 할인 합(상품·주문 + 배송비).
+  int get discountAmount => _j['discountAmount'] as int;
+
+  /// 이 조합으로 계산한 결제 금액(적립금 전).
+  int get totalAmount => _j['totalAmount'] as int;
+
+  /// 이 조합과 적립금을 함께 쓸 수 있는지입니다.
+  bool get withPoints => _j['withPoints'] as bool;
 }

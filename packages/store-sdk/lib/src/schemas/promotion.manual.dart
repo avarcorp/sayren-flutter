@@ -1,4 +1,4 @@
-// 손으로 쓴 부분 — promotion.ts의 쿠폰 금액 계산(quotePricing)과 환불 정산의 조건 미달 차감.
+// 손으로 쓴 부분 — promotion.ts의 쿠폰 금액 계산(quotePricing)·확장 혜택·중복 정책과 환불 정산의 조건 미달 차감.
 part of 'promotion.dart';
 
 /// 쿠폰 혜택 superRefine — 정률은 1~100%, 정액에는 최대 할인액을 두지 않는다
@@ -60,25 +60,141 @@ List<int> allocateByWeight(int total, List<int> weights) {
   ];
 }
 
-/// 카테고리 경로(`/a/b/c/`)가 그 카테고리 또는 하위를 가리키는가
-bool _inCategory(String? categoryPath, List<String> categoryIds) {
-  if (categoryPath == null || categoryPath.isEmpty || categoryIds.isEmpty) return false;
-  final chain = categoryPath.split('/').where((s) => s.isNotEmpty).toList();
-  return categoryIds.any(chain.contains);
+/// 확장 혜택 superRefine — 구간 하한은 앞 구간보다 커야 한다
+void _couponRewardCheck(Object? value, ZodCheckContext ctx) {
+  if (value is! CouponRewardTiered) return;
+  final tiers = value.tiers;
+  for (var index = 1; index < tiers.length; index++) {
+    if (tiers[index].minAmount <= tiers[index - 1].minAmount) {
+      ctx.addIssue('구간 하한은 앞 구간보다 커야 합니다', path: ['tiers', index, 'minAmount']);
+    }
+  }
 }
 
-/// 줄 [line]이 쿠폰 [rule]의 대상인지입니다. 제외가 포함보다 우선하고, 포함 목록이 모두 비면 전 상품입니다.
+/// 확장 혜택에서 가장 가까운 `benefit`을 돌려줍니다(응답·옛 칸용).
 ///
-/// 규칙은 `target`·`conditions`만, 줄은 `productId`·`categoryPath`·`baseAmount`·`amount`만 읽습니다.
-bool isCouponTargetLine(CouponRule rule, PricingLine line) {
-  final target = rule.target;
-  if (!rule.conditions.stackWithInstantDiscount && line.amount < line.baseAmount) return false;
-  if (target.excludeProductIds.contains(line.productId)) return false;
-  if (_inCategory(line.categoryPath, target.excludeCategoryIds)) return false;
-  final noInclude = target.includeProductIds.isEmpty && target.includeCategoryIds.isEmpty;
-  if (noInclude) return true;
-  return target.includeProductIds.contains(line.productId) || _inCategory(line.categoryPath, target.includeCategoryIds);
+/// 구간 할인은 첫 구간, N+1은 묶음 평균 할인율(1+1 무료 → 50%), 적립금 지급은 할인 0원에 가까운 1원입니다.
+CouponBenefit couponBenefitOfReward(CouponReward reward) {
+  switch (reward) {
+    case CouponRewardTiered():
+      return reward.tiers[0].benefit;
+    case CouponRewardBuyXGetY():
+      // 묶음 평균 할인율 — 확장 혜택을 모르는 소비자에게 「100% 할인」으로 보이지 않게
+      final value = _max(1, _floorDiv(reward.rate * reward.get, reward.buy + reward.get));
+      return CouponBenefit(type: 'RATE', value: value, maxDiscountAmount: null);
+    case CouponRewardPoint():
+      return CouponBenefit(type: 'AMOUNT', value: 1, maxDiscountAmount: null);
+  }
 }
+
+/// 구간 할인의 적용 구간을 돌려줍니다. 기준 금액 [base]가 넘은 가장 높은 구간이고, 없으면 null입니다.
+({int index, CouponBenefit benefit})? couponTierOf(CouponRewardTiered reward, int base) {
+  final tiers = reward.tiers;
+  for (var index = tiers.length - 1; index >= 0; index--) {
+    if (base >= tiers[index].minAmount) return (index: index, benefit: tiers[index].benefit);
+  }
+  return null;
+}
+
+/// 쿠폰 한 장의 할인액입니다. 확장 혜택까지 보는 원천입니다([quotePricing]·최대 조합이 같이 씁니다).
+///
+/// [line]은 상품 쿠폰이 걸린 줄의 수량이고 N+1만 읽습니다. 적립금 지급은 할인이 0입니다. [rules]를 생략하면 KRW 규칙입니다.
+int couponRuleDiscountOf(CouponRule rule, int base, ({int quantity})? line, [MoneyRules? rules]) {
+  final money = rules ?? KRW_MONEY_RULES;
+  final reward = rule.reward;
+  switch (reward) {
+    case null:
+      return couponDiscountOf(rule.benefit, base, money);
+    case CouponRewardPoint():
+      return 0;
+    case CouponRewardTiered():
+      final tier = couponTierOf(reward, base);
+      return tier == null ? 0 : couponDiscountOf(tier.benefit, base, money);
+    case CouponRewardBuyXGetY():
+      final quantity = line?.quantity ?? 0;
+      if (base <= 0 || quantity <= 0) return 0;
+      final units = _floorDiv(quantity, reward.buy + reward.get) * reward.get;
+      // 같은 줄은 단가가 같다 — 할인 수량의 금액은 줄 금액의 수량 비율(내림)이다
+      final unitsAmount = (BigInt.from(base) * BigInt.from(units) ~/ BigInt.from(quantity)).toInt();
+      if (reward.rate == 100) return unitsAmount;
+      return couponDiscountOf(
+          CouponBenefit(type: 'RATE', value: reward.rate, maxDiscountAmount: null), unitsAmount, money);
+  }
+}
+
+/// 적립금 지급 쿠폰의 적립금입니다. 대상 줄 실결제(쿠폰·적립금 뒤)에 혜택을 적용하고 줄에 실결제 비율로 나눕니다.
+///
+/// 결제 시작([quotePricing])과 구매확정 지급이 같은 함수입니다. [rules]를 생략하면 KRW 규칙입니다.
+({int total, List<int> shares}) couponPointRewardOf(CouponRewardPoint reward, List<int> paidByLine,
+    [MoneyRules? rules]) {
+  final weights = [for (final paid in paidByLine) _max(0, paid)];
+  final base = weights.fold<int>(0, (sum, w) => sum + w);
+  final total = couponDiscountOf(reward.benefit, base, rules ?? KRW_MONEY_RULES);
+  return (total: total, shares: total > 0 ? allocateByWeight(total, weights) : [for (final _ in weights) 0]);
+}
+
+/// 규칙의 트리를 돌려줍니다. 트리 칸이 없으면 옛 칸에서 만듭니다(계산은 늘 이 한 경로). 할인 대상은 늘 트리(`targetTree`)까지 채웁니다.
+CouponRuleTrees couponTreesOf(CouponRule rule) {
+  final conditions = rule.conditions;
+  final target = rule.target;
+  final legacy = couponRulesFromLegacy(
+    LegacyCouponConditions(
+      minOrderAmount: conditions.minOrderAmount,
+      firstOrderOnly: conditions.firstOrderOnly,
+      memberOnly: conditions.memberOnly,
+      stackWithInstantDiscount: conditions.stackWithInstantDiscount,
+    ),
+    LegacyCouponTarget(
+      includeProductIds: target.includeProductIds,
+      includeCategoryIds: target.includeCategoryIds,
+      excludeProductIds: target.excludeProductIds,
+      excludeCategoryIds: target.excludeCategoryIds,
+    ),
+  );
+  final tree = rule.targetTree;
+  final targetRules =
+      tree != null ? couponTargetRulesFromTree(tree).targetRules : (rule.targetRules ?? legacy.targetRules);
+  return CouponRuleTrees(
+    eligibility: rule.eligibility ?? legacy.eligibility,
+    targetRules: targetRules,
+    targetTree: tree ?? couponTargetTreeFromRules(targetRules),
+  );
+}
+
+final _stackingDefaults = CouponStacking.fromJson(COUPON_STACKING_DEFAULTS);
+
+/// 규칙의 중복 사용 정책을 돌려줍니다. 없으면 `COUPON_STACKING_DEFAULTS`(종류별 한 장·서로 결합·적립금과 함께)입니다.
+CouponStacking couponStackingOf(CouponRule rule) => rule.stacking ?? _stackingDefaults;
+
+bool _combinesWithKind(CouponStacking stacking, String kind) => switch (kind) {
+      'ORDER' => stacking.combinesWith.order,
+      'PRODUCT' => stacking.combinesWith.product,
+      'DELIVERY' => stacking.combinesWith.delivery,
+      _ => false,
+    };
+
+/// 두 쿠폰을 함께 쓸 수 있는지입니다. 서로가 상대 종류를 허용해야 합니다. 같은 쿠폰 정의의 사본끼리는 장수 규칙(`perOrderLimit`)이 보므로 늘 참입니다.
+///
+/// [quotePricing]과 최대 조합(`bestCouponSelection`)이 같은 함수를 씁니다.
+bool couponsCombinable(PricingCoupon a, PricingCoupon b) {
+  if (a.rule.couponId == b.rule.couponId) return true;
+  return _combinesWithKind(couponStackingOf(a.rule), b.rule.kind) &&
+      _combinesWithKind(couponStackingOf(b.rule), a.rule.kind);
+}
+
+CouponLineContext _lineContextOf(PricingLine line) => couponLineContextOf(
+      productId: line.productId,
+      categoryPath: line.categoryPath,
+      quantity: line.quantity,
+      baseAmount: line.baseAmount,
+      amount: line.amount,
+    );
+
+/// 줄 [line]이 쿠폰 [rule]의 대상인지입니다. 제외가 포함보다 우선하고, 포함이 비면 전 상품입니다.
+///
+/// 트리(`targetTree`, 없으면 `targetRules`)가 없으면 옛 칸에서 만든 트리로 봅니다. 단가 조건은 금액 ÷ 수량입니다.
+bool isCouponTargetLine(CouponRule rule, PricingLine line) =>
+    couponTargetTreeMatches(couponTreesOf(rule).targetTree!, _lineContextOf(line));
 
 /// 시각 파싱 — 값이 없으면 null(제한 없음), 읽지 못하면 NaN(판정에서 거절한다)
 double? _timeOf(String? value) => value == null || value.isEmpty ? null : jsDateParse(value);
@@ -113,6 +229,9 @@ class _PricingCouponState {
   CouponRejectReason? rejectReason;
   String? lineId;
   var eligibleLineIds = <String>[];
+  var facts = const CouponFacts();
+  var rewardPoint = 0;
+  int? tierIndex;
 
   PricingCouponResult result() => PricingCouponResult(
         couponKey: couponKey,
@@ -123,7 +242,20 @@ class _PricingCouponState {
         rejectReason: rejectReason,
         lineId: lineId,
         eligibleLineIds: eligibleLineIds,
+        facts: facts,
+        rewardPoint: rewardPoint,
+        tierIndex: tierIndex,
       );
+}
+
+class _PricingLineState {
+  _PricingLineState(this.lineId, this.amount, this.couponDiscount, this.allocations);
+
+  final String lineId;
+  final int amount;
+  final int couponDiscount;
+  final List<CouponAllocation> allocations;
+  var pointAllocation = 0;
 }
 
 /// 쿠폰 금액을 계산합니다. **순수 함수입니다.** 규칙 스냅샷을 만드는 조회와 한도·보유 판정(발급 쿠폰 상태, 1인 한도)은 호출부 몫입니다.
@@ -136,7 +268,6 @@ class _PricingCouponState {
 /// final pricing = quotePricing(PricingInput(
 ///   lines: [PricingLine(lineId: '1', productId: 'prd_1', quantity: 1, baseAmount: 20000, amount: 18000)],
 ///   coupons: [PricingCoupon(rule: rule)],
-///   firstOrder: false,
 ///   isMember: true,
 ///   now: DateTime.now(),
 /// ));
@@ -155,24 +286,55 @@ PricingResult quotePricing(PricingInput input) {
       _PricingCouponState(coupon.couponKey ?? coupon.rule.couponId, coupon.rule.couponId, coupon.rule.kind),
   ];
 
-  // 1) 쿠폰마다 공통 조건 — 기간·회원·첫 구매·대상·최소 금액
+  final subtotal = lines.fold<int>(0, (sum, entry) => sum + entry.line.amount);
+  final inputTime = input.facts?.time ?? couponTimeFactsAt(input.now);
+  // 쿠폰 하나의 사실 값 — 스냅샷 값 → 입력 값 순. 트리가 없는 옛 쿠폰(첫 구매 = 옛 칸)만 옛 입력 firstOrder: true를
+  // 결제 완료 주문 0으로 읽는다. 트리 쿠폰은 호출부가 실제 사실 값을 넘긴다
+  CouponFacts factsOf(PricingCoupon coupon) {
+    final own = coupon.facts?.customer;
+    final given = input.facts?.customer;
+    var paidOrderCount = own?.paidOrderCount ?? given?.paidOrderCount;
+    if (paidOrderCount == null && input.firstOrder == true && coupon.rule.eligibility == null) paidOrderCount = 0;
+    return CouponFacts(
+      customer: CouponCustomerFacts(
+        daysSinceJoined: own?.daysSinceJoined ?? given?.daysSinceJoined,
+        marketingAgreed: own?.marketingAgreed ?? given?.marketingAgreed,
+        paidOrderCount: paidOrderCount,
+        daysSinceLastOrder: own?.daysSinceLastOrder ?? given?.daysSinceLastOrder,
+        claims: own?.claims ?? given?.claims,
+      ),
+      time: coupon.facts?.time ?? inputTime,
+    );
+  }
+
+  // 1) 쿠폰마다 공통 조건 — 기간·회원 → 구매자·시각 조건 → 대상 줄 → 주문서 집계 조건(옛 판정 순서와 같다)
   CouponRejectReason? commonRejectOf(PricingCoupon coupon, _PricingCouponState result) {
     if (input.ignoreEligibility != true) {
       final period = _periodRejectOf(coupon, input.now);
       if (period != null) return period;
       if (coupon.rule.conditions.memberOnly && !input.isMember) return 'MEMBER_ONLY';
-      if (coupon.rule.conditions.firstOrderOnly && !input.firstOrder) return 'FIRST_ORDER_ONLY';
     }
+    final trees = couponTreesOf(coupon.rule);
+    final facts = factsOf(coupon);
+    result.facts = pickCouponFacts(facts, trees.eligibility);
+    final early = evaluateCouponEligibility(trees.eligibility, CouponOrderContext(facts: facts), 'beforeLines');
+    if (early != null) return early;
     final pinned = coupon.eligibleLineIds?.toSet();
     final eligible = [
       for (final entry in lines)
-        if (pinned != null ? pinned.contains(entry.line.lineId) : isCouponTargetLine(coupon.rule, entry.line)) entry,
+        if (pinned != null
+            ? pinned.contains(entry.line.lineId)
+            : couponTargetTreeMatches(trees.targetTree!, _lineContextOf(entry.line)))
+          entry,
     ];
     result.eligibleLineIds = [for (final entry in eligible) entry.line.lineId];
     if (eligible.isEmpty) return 'NO_ELIGIBLE_ITEMS';
-    final targetAmount = eligible.fold<int>(0, (sum, entry) => sum + entry.line.amount);
-    if (targetAmount < coupon.rule.conditions.minOrderAmount) return 'MIN_ORDER_AMOUNT';
-    return null;
+    final cart = CouponCartFacts(
+      subtotal: subtotal,
+      targetSubtotal: eligible.fold<int>(0, (sum, entry) => sum + entry.line.amount),
+      targetQuantity: eligible.fold<int>(0, (sum, entry) => sum + entry.line.quantity),
+    );
+    return evaluateCouponEligibility(trees.eligibility, CouponOrderContext(facts: facts, cart: cart), 'afterLines');
   }
 
   final passed = <int>[];
@@ -186,21 +348,50 @@ PricingResult quotePricing(PricingInput input) {
     }
   }
 
-  // 적용된 쿠폰 id — 같은 쿠폰 정의는 주문에 한 장
-  final appliedCouponIds = <String>{};
-  void apply(int index, int discount, String? lineId) {
-    final result = results[index]
+  // 적용된 쿠폰 — 같은 쿠폰 정의의 장수(perOrderLimit)와 결합 판정에 쓴다
+  final appliedCount = <String, int>{};
+  final applied = <PricingCoupon>[];
+  void apply(int index, int discount, String? lineId, [int base = 0]) {
+    final result = results[index];
+    final coupon = input.coupons[index];
+    final reward = coupon.rule.reward;
+    if (reward is CouponRewardTiered) result.tierIndex = couponTierOf(reward, base)?.index;
+    result
       ..applied = true
       ..discount = discount
       ..lineId = lineId;
-    appliedCouponIds.add(result.couponId);
+    appliedCount[result.couponId] = (appliedCount[result.couponId] ?? 0) + 1;
+    applied.add(coupon);
   }
 
+  // 같은 쿠폰 정의의 장수 — 상품 쿠폰만 perOrderLimit까지, 나머지는 한 장
   bool duplicate(int index) {
     final result = results[index];
-    if (!appliedCouponIds.contains(result.couponId)) return false;
+    final coupon = input.coupons[index];
+    final limit = coupon.rule.kind == 'PRODUCT' ? couponStackingOf(coupon.rule).perOrderLimit : 1;
+    if ((appliedCount[result.couponId] ?? 0) < limit) return false;
     result.rejectReason = 'DUPLICATE_COUPON';
     return true;
+  }
+
+  // 결합 — 이미 적용된 쿠폰과 이 쿠폰이 서로의 종류를 허용해야 한다
+  bool notCombinable(int index) {
+    final coupon = input.coupons[index];
+    final blocked = applied.any((other) => !couponsCombinable(coupon, other));
+    if (blocked) results[index].rejectReason = 'NOT_COMBINABLE';
+    return blocked;
+  }
+
+  // 상품 쿠폰을 줄 하나에 걸었을 때의 할인 — N+1은 그 줄 수량을 센다
+  int productDiscountOn(PricingCoupon coupon, String lineId) {
+    final line = lineOf(lineId)?.line;
+    return couponRuleDiscountOf(coupon.rule, line?.amount ?? 0, line == null ? null : (quantity: line.quantity), rules);
+  }
+
+  // 할인이 0일 때의 사유 — 구간 할인이 첫 구간에 못 미치면 최소 금액 미달이다
+  CouponRejectReason zeroReasonOf(PricingCoupon coupon, int base) {
+    final reward = coupon.rule.reward;
+    return reward is CouponRewardTiered && couponTierOf(reward, base) == null ? 'MIN_ORDER_AMOUNT' : 'NO_DISCOUNT';
   }
 
   bool hasLine(PricingCoupon coupon) => coupon.lineId != null && coupon.lineId!.isNotEmpty;
@@ -219,6 +410,7 @@ PricingResult quotePricing(PricingInput input) {
     final coupon = input.coupons[index];
     final result = results[index];
     if (duplicate(index)) continue;
+    if (notCombinable(index)) continue;
     final candidates = result.eligibleLineIds.where((id) => !takenLines.contains(id)).toList();
     String? chosen;
     var best = 0;
@@ -229,14 +421,14 @@ PricingResult quotePricing(PricingInput input) {
         continue;
       }
       chosen = lineId;
-      best = couponDiscountOf(coupon.rule.benefit, lineOf(chosen)?.line.amount ?? 0, rules);
+      best = productDiscountOn(coupon, chosen);
     } else {
       if (candidates.isEmpty) {
         result.rejectReason = 'STACK_LIMIT';
         continue;
       }
       for (final id in candidates) {
-        final discount = couponDiscountOf(coupon.rule.benefit, lineOf(id)?.line.amount ?? 0, rules);
+        final discount = productDiscountOn(coupon, id);
         if (chosen == null || discount > best) {
           chosen = id;
           best = discount;
@@ -245,13 +437,13 @@ PricingResult quotePricing(PricingInput input) {
     }
     final entry = chosen == null ? null : lineOf(chosen);
     if (entry == null || chosen == null || best <= 0) {
-      result.rejectReason = 'NO_DISCOUNT';
+      result.rejectReason = zeroReasonOf(coupon, entry?.line.amount ?? 0);
       continue;
     }
     takenLines.add(chosen);
     entry.productDiscount += best;
     entry.allocations.add(CouponAllocation(couponKey: result.couponKey, amount: best));
-    apply(index, best, chosen);
+    apply(index, best, chosen, entry.line.amount);
   }
 
   // 3) 주문 쿠폰 — 상품 쿠폰 차감 뒤 금액 기준, 대상 줄에 금액 비율로 배분
@@ -265,12 +457,23 @@ PricingResult quotePricing(PricingInput input) {
       result.rejectReason = 'STACK_LIMIT';
       continue;
     }
+    if (notCombinable(index)) continue;
     final targets = result.eligibleLineIds.map(lineOf).whereType<_PricingLineEntry>().toList();
     final weights = [for (final entry in targets) _max(0, entry.line.amount - entry.productDiscount)];
     final base = weights.fold<int>(0, (sum, w) => sum + w);
-    final discount = couponDiscountOf(coupon.rule.benefit, base, rules);
+    // 적립금 지급은 할인 없이 자리를 차지하고, 적립금은 실결제가 정해진 뒤(5 뒤) 계산한다
+    if (coupon.rule.reward is CouponRewardPoint) {
+      if (base <= 0) {
+        result.rejectReason = 'NO_DISCOUNT';
+        continue;
+      }
+      orderSlot = true;
+      apply(index, 0, null);
+      continue;
+    }
+    final discount = couponRuleDiscountOf(coupon.rule, base, null, rules);
     if (discount <= 0) {
-      result.rejectReason = 'NO_DISCOUNT';
+      result.rejectReason = zeroReasonOf(coupon, base);
       continue;
     }
     final shares = allocateByWeight(discount, weights);
@@ -279,7 +482,7 @@ PricingResult quotePricing(PricingInput input) {
       if (share > 0) targets[i].allocations.add(CouponAllocation(couponKey: result.couponKey, amount: share));
     }
     orderSlot = true;
-    apply(index, discount, null);
+    apply(index, discount, null, base);
   }
 
   // 4) 배송비 쿠폰 — 기본 배송비(지역 추가 제외) 기준, 묶음에 기본 배송비 비율로 배분
@@ -297,9 +500,10 @@ PricingResult quotePricing(PricingInput input) {
       result.rejectReason = 'STACK_LIMIT';
       continue;
     }
+    if (notCombinable(index)) continue;
     final weights = [for (final bundle in deliveryBundles) _max(0, bundle.fee)];
     final base = weights.fold<int>(0, (sum, w) => sum + w);
-    final discount = couponDiscountOf(coupon.rule.benefit, base, rules);
+    final discount = couponRuleDiscountOf(coupon.rule, base, null, rules);
     if (discount <= 0) {
       result.rejectReason = 'NO_DISCOUNT';
       continue;
@@ -313,30 +517,45 @@ PricingResult quotePricing(PricingInput input) {
     apply(index, discount, null);
   }
 
-  final lineCoupon = [for (final entry in lines) entry.allocations.fold<int>(0, (sum, a) => sum + a.amount)];
-  final linePoints = [for (final _ in lines) 0];
+  final lineResults = [
+    for (final entry in lines)
+      _PricingLineState(entry.line.lineId, entry.line.amount,
+          entry.allocations.fold<int>(0, (sum, a) => sum + a.amount), entry.allocations),
+  ];
   final productAmount = lines.fold<int>(0, (sum, entry) => sum + entry.line.amount);
-  final couponDiscountAmount = lineCoupon.fold<int>(0, (sum, d) => sum + d);
+  final couponDiscountAmount = lineResults.fold<int>(0, (sum, line) => sum + line.couponDiscount);
   final deliveryFee = deliveryBundles.fold<int>(0, (sum, bundle) => sum + bundle.fee + bundle.remoteSurcharge);
   final beforePoints = productAmount - couponDiscountAmount + deliveryFee - deliveryDiscountAmount;
 
   // 5) 적립금(#93 P3) — 쿠폰 뒤 금액에 쓴다. 상품 줄에 먼저(줄 실결제 비율), 남으면 배송 묶음에(묶음 실배송비 비율) 배분한다
-  final productWeights = [for (var i = 0; i < lines.length; i++) _max(0, lines[i].line.amount - lineCoupon[i])];
+  final productWeights = [for (final line in lineResults) _max(0, line.amount - line.couponDiscount)];
   final bundleWeights = [
     for (var i = 0; i < deliveryBundles.length; i++)
       _max(0, deliveryBundles[i].fee + deliveryBundles[i].remoteSurcharge - bundleDiscounts[i]),
   ];
   final productPaid = productWeights.fold<int>(0, (sum, w) => sum + w);
-  final points = pointUseOf(
-    input.points,
-    (productPaid: productPaid, deliveryPaid: bundleWeights.fold<int>(0, (sum, w) => sum + w), total: beforePoints),
-    rules,
-  );
+  // 적립금과 함께 쓸 수 없는 쿠폰이 적용됐으면 적립금을 쓰지 않는다(쿠폰 우선, 이슈 #222)
+  final pointsBlocked = applied.any((entry) => !couponStackingOf(entry.rule).withPoints);
+  final ({int amount, int maxUsable, String? adjustReason, PointRejectReason? rejectReason}) points = pointsBlocked
+      ? (
+          amount: 0,
+          maxUsable: 0,
+          adjustReason: null,
+          rejectReason: (input.points?.requested ?? 0) > 0 ? 'COUPON_EXCLUSIVE' : null,
+        )
+      : pointUseOf(
+          input.points,
+          (
+            productPaid: productPaid,
+            deliveryPaid: bundleWeights.fold<int>(0, (sum, w) => sum + w),
+            total: beforePoints
+          ),
+          rules);
   if (points.amount > 0) {
     final toLines = _min(points.amount, productPaid);
     final lineShares = allocateByWeight(toLines, productWeights);
     for (var i = 0; i < lineShares.length; i++) {
-      linePoints[i] = lineShares[i];
+      lineResults[i].pointAllocation = lineShares[i];
     }
     final toBundles = points.amount - toLines;
     if (toBundles > 0) {
@@ -346,15 +565,34 @@ PricingResult quotePricing(PricingInput input) {
       }
     }
   }
+
+  // 6) 적립금 지급 쿠폰 — 대상 줄의 실결제(쿠폰·사용 적립금 뒤)로 계산한다. 구매확정 지급도 같은 함수다
+  var rewardPointAmount = 0;
+  for (var index = 0; index < input.coupons.length; index++) {
+    final result = results[index];
+    final reward = input.coupons[index].rule.reward;
+    if (!result.applied || reward is! CouponRewardPoint) continue;
+    final paid = [
+      for (final id in result.eligibleLineIds)
+        () {
+          final i = lineIndex[id];
+          if (i == null) return 0;
+          final line = lineResults[i];
+          return line.amount - line.couponDiscount - line.pointAllocation;
+        }(),
+    ];
+    result.rewardPoint = couponPointRewardOf(reward, paid, rules).total;
+    rewardPointAmount += result.rewardPoint;
+  }
   return PricingResult(
     lines: [
-      for (var i = 0; i < lines.length; i++)
+      for (final line in lineResults)
         PricingLineResult(
-          lineId: lines[i].line.lineId,
-          amount: lines[i].line.amount,
-          couponDiscount: lineCoupon[i],
-          allocations: lines[i].allocations,
-          pointAllocation: linePoints[i],
+          lineId: line.lineId,
+          amount: line.amount,
+          couponDiscount: line.couponDiscount,
+          allocations: line.allocations,
+          pointAllocation: line.pointAllocation,
         ),
     ],
     coupons: [for (final result in results) result.result()],
@@ -366,6 +604,7 @@ PricingResult quotePricing(PricingInput input) {
           pointAllocation: bundlePoints[i],
         ),
     ],
+    rewardPointAmount: rewardPointAmount,
     productAmount: productAmount,
     couponDiscountAmount: couponDiscountAmount,
     deliveryFee: deliveryFee,
@@ -425,15 +664,65 @@ PricingResult quotePricing(PricingInput input) {
     amount: used.amount,
     maxUsable: maxUsable,
     adjustReason: used.adjusted ? 'MIN_PAYMENT' : null,
-    rejectReason: null
+    rejectReason: null,
   );
+}
+
+/// 주문이 받은 쿠폰을 수량 [quantityOf]로 다시 계산합니다. 환불 정산([settleCouponShortfall])과 적립금 지급 쿠폰의 구매확정 적립이 같이 씁니다.
+///
+/// 기간·회원 전용은 결제 시작에서 이미 통과했습니다. 사용 조건 트리는 주문 시점 사실 값 + 남은 금액으로 다시 보고,
+/// 스냅샷에 없는 구매자·시각 값(옛 주문)은 통과한 것으로 둡니다. [quantityOf]를 생략하면 남은 활성 수량입니다.
+PricingResult recomputeOrderCoupons(
+  List<AppliedCouponSnapshot> coupons,
+  List<CouponSettlementLine> lines, [
+  int Function(CouponSettlementLine line)? quantityOf,
+]) {
+  final quantity = quantityOf ?? (line) => line.activeQuantity;
+  return quotePricing(PricingInput(
+    lines: [
+      for (final line in lines)
+        () {
+          final count = quantity(line);
+          final amount = proratedRefundBase(line.totalPrice, line.quantity, 0, count);
+          // 대상은 주문 시점 목록으로 고정하므로 즉시할인 판정에 쓰는 정가는 금액과 같게 둔다
+          return PricingLine(
+            lineId: line.lineId,
+            productId: line.productId,
+            quantity: count,
+            baseAmount: amount,
+            amount: amount,
+          );
+        }(),
+    ],
+    coupons: [
+      for (final coupon in coupons)
+        () {
+          final facts = coupon.facts ?? const CouponFacts();
+          final eligibility = assumeCouponFactRules(couponTreesOf(coupon.rule).eligibility, facts);
+          return PricingCoupon(
+            rule: CouponRule._({...jsonOf(coupon.rule), 'eligibility': eligibility}),
+            couponKey: coupon.couponKey,
+            lineId: coupon.lineId,
+            eligibleLineIds: coupon.eligibleLineIds,
+            facts: facts,
+          );
+        }(),
+    ],
+    delivery: null,
+    isMember: true,
+    // ignoreEligibility라 기간을 보지 않는다. 시각 조건은 스냅샷 값이거나 통과로 둔다
+    now: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+    ignoreEligibility: true,
+  ));
 }
 
 /// 쿠폰 조건 미달 차감을 정산합니다. **순수 함수입니다.** 부분 취소·반품으로 남은 주문상품이 쿠폰 조건을 잃으면,
 /// 남은 주문상품이 받던 할인만큼을 이번 환불에서 뺍니다.
 ///
-/// 쿠폰마다 남은 수량에 배분된 할인(`allocatedRemaining`)과, 주문 시점 규칙·대상 줄로 남은 금액만 넣어 [quotePricing]을 다시 돌린
-/// 할인(`recomputed`)을 구합니다. 쿠폰이 여전히 적용되면 목표는 0, 조건을 잃었으면 목표는 `allocatedRemaining`입니다.
+/// 쿠폰마다 남은 수량에 배분된 할인(`allocatedRemaining`)과, 주문 시점 규칙·대상 줄로 남은 금액만 넣어 다시 계산한
+/// 할인(`recomputed`, [recomputeOrderCoupons])을 구합니다. 쿠폰이 여전히 적용되면 목표는 0, 조건을 잃었으면 목표는 `allocatedRemaining`입니다.
+/// 확장 혜택(구간 할인·N+1)에서 차액 정산(`reward.shortfallCharge`)을 켰으면 적용이 유지돼도 목표가 `allocatedRemaining − recomputed`입니다
+/// (구간 할인은 구간이 내려갔을 때만, 0 아래로 내리지 않습니다. N+1만 음수 목표로 더 돌려줍니다).
 /// 목표와 누적(차감 + 면제)의 차이가 양수면 청구하고(판매자 귀책·정책 꺼짐이면 면제로 기록), 음수면 앞서 뺀 차감부터 돌려줍니다.
 /// 청구는 이번 환불에서 실제로 뺄 수 있는 금액(`chargeableAmount` + 이번에 되돌린 금액)을 넘지 않습니다.
 ///
@@ -442,37 +731,12 @@ CouponSettlementResult settleCouponShortfall(CouponSettlementInput input) {
   final coupons = input.coupons.where((coupon) => coupon.rule.kind != 'DELIVERY').toList();
   if (coupons.isEmpty) return const CouponSettlementResult(chargeAmount: 0, refundAmount: 0, entries: []);
 
-  final pricingLines = [
-    for (final line in input.lines)
-      () {
-        final remaining = proratedRefundBase(line.totalPrice, line.quantity, 0, line.activeQuantity);
-        // 대상은 주문 시점 목록으로 고정하므로 즉시할인 판정에 쓰는 정가는 금액과 같게 둔다
-        return PricingLine(
-          lineId: line.lineId,
-          productId: line.productId,
-          quantity: line.activeQuantity,
-          baseAmount: remaining,
-          amount: remaining,
-        );
-      }(),
-  ];
-  final recomputed = quotePricing(PricingInput(
-    lines: pricingLines,
-    coupons: [
-      for (final coupon in coupons)
-        PricingCoupon(
-          rule: coupon.rule,
-          couponKey: coupon.couponKey,
-          lineId: coupon.lineId,
-          eligibleLineIds: coupon.eligibleLineIds,
-        ),
-    ],
-    // 기간·회원·첫 구매 조건은 결제 시작에서 이미 통과했다 — 대상과 최소 금액만 남은 금액으로 다시 본다
-    firstOrder: true,
-    isMember: true,
-    now: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
-    ignoreEligibility: true,
-  ));
+  PricingResult recompute(int Function(CouponSettlementLine line) quantityOf) =>
+      recomputeOrderCoupons(coupons, input.lines, quantityOf);
+  final recomputed = recompute((line) => line.activeQuantity);
+  // 차액 차감(확장 혜택) — 구간 할인은 구간이 내려갔을 때만 본다(같은 구간의 정률 내림 차이로 몇 원씩 빼지 않는다)
+  final original =
+      coupons.any((coupon) => coupon.rule.reward is CouponRewardTiered) ? recompute((line) => line.quantity) : null;
 
   final base = [
     for (var index = 0; index < coupons.length; index++)
@@ -485,13 +749,29 @@ CouponSettlementResult settleCouponShortfall(CouponSettlementInput input) {
         });
         final result = index < recomputed.coupons.length ? recomputed.coupons[index] : null;
         final stillApplied = result?.applied == true;
+        final recomputedDiscount = stillApplied ? result!.discount : 0;
         final state = input.settlements[coupon.couponKey];
+        final reward = coupon.rule.reward;
+        // 차액 정산 — 구간 할인은 구간이 내려갔을 때만, 0 아래로는 내리지 않는다.
+        // N+1은 할인 개수가 정수라 남은 수량의 할인이 배분보다 클 수 있다 — 그 차이만 음수 목표(더 돌려줌)다
+        final originalTier =
+            original != null && index < original.coupons.length ? original.coupons[index].tierIndex : null;
+        final tiered =
+            reward is CouponRewardTiered && reward.shortfallCharge && (result?.tierIndex ?? -1) < (originalTier ?? -1);
+        final signed = reward is CouponRewardBuyXGetY && reward.shortfallCharge;
         return (
           couponKey: coupon.couponKey,
           allocatedRemaining: allocatedRemaining,
-          recomputed: stillApplied ? result!.discount : 0,
-          target: stillApplied ? 0 : allocatedRemaining,
-          charged: _max(0, state?.charged ?? 0),
+          recomputed: recomputedDiscount,
+          target: !stillApplied
+              ? allocatedRemaining
+              : signed
+                  ? allocatedRemaining - recomputedDiscount
+                  : tiered
+                      ? _max(0, allocatedRemaining - recomputedDiscount)
+                      : 0,
+          signed: signed,
+          charged: signed ? (state?.charged ?? 0) : _max(0, state?.charged ?? 0),
           waived: _max(0, state?.waived ?? 0),
         );
       }(),
@@ -508,9 +788,13 @@ CouponSettlementResult settleCouponShortfall(CouponSettlementInput input) {
     var refund = 0;
     var waived = item.waived;
     if (delta < 0) {
-      // 구매자에게 유리하게 앞서 뺀 차감부터 돌려주고, 남은 초과분은 면제 기록에서 지운다
-      refund = _min(item.charged, -delta);
-      waived = _max(0, waived - (-delta - refund));
+      // 구매자에게 유리하게 앞서 뺀 차감부터 돌려주고, 남은 초과분은 면제 기록에서 지운다.
+      // 차액 정산 쿠폰은 그래도 남으면 더 돌려준다(누적 차감이 음수가 되고, 뒤의 환불이 목표로 돌아오며 다시 맞춘다)
+      refund = _min(_max(0, item.charged), -delta);
+      final rest = -delta - refund;
+      final unwaived = _min(waived, rest);
+      waived -= unwaived;
+      if (item.signed) refund += rest - unwaived;
     }
     refundAmount += refund;
     entries.add((
@@ -529,20 +813,33 @@ CouponSettlementResult settleCouponShortfall(CouponSettlementInput input) {
   var chargeAmount = 0;
   final chargeAllowed = input.shortfallCharge && !input.sellerFault;
   for (var i = 0; i < entries.length; i++) {
-    final next = nexts[i];
-    final delta = entries[i].target - (next.charged + next.waived);
+    var delta = entries[i].target - (nexts[i].charged + nexts[i].waived);
     if (delta <= 0) continue;
+    // 앞서 더 돌려준 몫(음수 누적)을 되찾는 것은 차감이 아니다 — 판매자 귀책·정책 꺼짐에도 면제하지 않는다.
+    // 면제로 적으면 환불 합계가 결제액을 넘는다
+    final owed = _max(0, -nexts[i].charged);
+    if (owed > 0) {
+      final reclaim = _min(delta, _min(owed, capacity));
+      if (reclaim > 0) {
+        capacity -= reclaim;
+        chargeAmount += reclaim;
+        charges[i] += reclaim;
+        nexts[i] = CouponSettlementState(charged: nexts[i].charged + reclaim, waived: nexts[i].waived);
+      }
+      delta -= _min(delta, owed);
+      if (delta <= 0) continue;
+    }
     if (!chargeAllowed) {
       waives[i] = delta;
-      nexts[i] = CouponSettlementState(charged: next.charged, waived: next.waived + delta);
+      nexts[i] = CouponSettlementState(charged: nexts[i].charged, waived: nexts[i].waived + delta);
       continue;
     }
     final charge = _min(delta, capacity);
     if (charge <= 0) continue;
     capacity -= charge;
     chargeAmount += charge;
-    charges[i] = charge;
-    nexts[i] = CouponSettlementState(charged: next.charged + charge, waived: next.waived);
+    charges[i] += charge;
+    nexts[i] = CouponSettlementState(charged: nexts[i].charged + charge, waived: nexts[i].waived);
   }
   return CouponSettlementResult(
     chargeAmount: chargeAmount,

@@ -81,10 +81,6 @@ void main() {
     final v = createAiConversationResponseSchema.parse(samples['createAiConversationResponseSchema']);
     _touchCreateAiConversationResponse(v);
   });
-  test('sendAiMessageRequestSchema', () {
-    final v = sendAiMessageRequestSchema.parse(samples['sendAiMessageRequestSchema']);
-    _touchSendAiMessageRequest(v);
-  });
   test('sendAiMessageResponseSchema', () {
     final v = sendAiMessageResponseSchema.parse(samples['sendAiMessageResponseSchema']);
     _touchSendAiMessageResponse(v);
@@ -505,6 +501,34 @@ void main() {
     final v = categoryLocalizationRequestSchema.parse(samples['categoryLocalizationRequestSchema']);
     _touchCategoryLocalizationRequest(v);
   });
+  test('sellerCheckoutLineSchema', () {
+    final v = sellerCheckoutLineSchema.parse(samples['sellerCheckoutLineSchema']);
+    _touchSellerCheckoutLineRequest(v);
+  });
+  test('createSellerCheckoutRequestSchema', () {
+    final v = createSellerCheckoutRequestSchema.parse(samples['createSellerCheckoutRequestSchema']);
+    _touchCreateSellerCheckoutRequest(v);
+  });
+  test('sellerCheckoutSchema', () {
+    final v = sellerCheckoutSchema.parse(samples['sellerCheckoutSchema']);
+    _touchSellerCheckout(v);
+  });
+  test('sellerCheckoutPageSchema', () {
+    final v = sellerCheckoutPageSchema.parse(samples['sellerCheckoutPageSchema']);
+    _touchSellerCheckoutPage(v);
+  });
+  test('directOrderShippingAddressSchema', () {
+    final v = directOrderShippingAddressSchema.parse(samples['directOrderShippingAddressSchema']);
+    _touchDirectOrderShippingAddress(v);
+  });
+  test('createOrderRequestSchema', () {
+    final v = createOrderRequestSchema.parse(samples['createOrderRequestSchema']);
+    _touchCreateOrderRequest(v);
+  });
+  test('createdOrderSchema', () {
+    final v = createdOrderSchema.parse(samples['createdOrderSchema']);
+    _touchCreatedOrder(v);
+  });
   test('claimReturnAddressSchema', () {
     final v = claimReturnAddressSchema.parse(samples['claimReturnAddressSchema']);
     _touchClaimReturnAddress(v);
@@ -528,6 +552,10 @@ void main() {
   test('rejectClaimRequestSchema', () {
     final v = rejectClaimRequestSchema.parse(samples['rejectClaimRequestSchema']);
     _touchRejectClaimRequest(v);
+  });
+  test('approveClaimRequestSchema', () {
+    final v = approveClaimRequestSchema.parse(samples['approveClaimRequestSchema']);
+    _touchApproveClaimRequest(v);
   });
   test('approveClaimResultSchema', () {
     final v = approveClaimResultSchema.parse(samples['approveClaimResultSchema']);
@@ -665,6 +693,10 @@ void main() {
     final v = migrateFlowVersionResultSchema.parse(samples['migrateFlowVersionResultSchema']);
     _touchMigrateFlowVersionResult(v);
   });
+  test('updateCommerceFlowRequestSchema', () {
+    final v = updateCommerceFlowRequestSchema.parse(samples['updateCommerceFlowRequestSchema']);
+    _touchUpdateCommerceFlowRequest(v);
+  });
   test('createCommerceFlowRequestSchema', () {
     final v = createCommerceFlowRequestSchema.parse(samples['createCommerceFlowRequestSchema']);
     _touchCreateCommerceFlowRequest(v);
@@ -673,9 +705,25 @@ void main() {
     final v = saveFlowDraftRequestSchema.parse(samples['saveFlowDraftRequestSchema']);
     _touchSaveFlowDraftRequest(v);
   });
+  test('flowIssueSchema', () {
+    final v = flowIssueSchema.parse(samples['flowIssueSchema']);
+    _touchFlowIssue(v);
+  });
   test('commerceFlowCheckSchema', () {
     final v = commerceFlowCheckSchema.parse(samples['commerceFlowCheckSchema']);
     _touchCommerceFlowCheck(v);
+  });
+  test('flowDraftOperationSchema', () {
+    final v = flowDraftOperationSchema.parse(samples['flowDraftOperationSchema']);
+    _touchFlowDraftOperation(v);
+  });
+  test('applyFlowOperationsRequestSchema', () {
+    final v = applyFlowOperationsRequestSchema.parse(samples['applyFlowOperationsRequestSchema']);
+    _touchApplyFlowOperationsRequest(v);
+  });
+  test('flowOperationsResultSchema', () {
+    final v = flowOperationsResultSchema.parse(samples['flowOperationsResultSchema']);
+    _touchFlowOperationsResult(v);
   });
   test('resolvedFlowSchema', () {
     final v = resolvedFlowSchema.parse(samples['resolvedFlowSchema']);
@@ -713,9 +761,37 @@ void main() {
     final v = replayFlowResultSchema.parse(samples['replayFlowResultSchema']);
     _touchReplayFlowResult(v);
   });
+  test('flowDraftNodesSchema', () {
+    final v = flowDraftNodesSchema.parse(samples['flowDraftNodesSchema']);
+    _touchFlowDraftNodes(v);
+  });
+  test('flowDraftNodeSchema', () {
+    final v = flowDraftNodeSchema.parse(samples['flowDraftNodeSchema']);
+    _touchFlowDraftNode(v);
+  });
+  test('flowDraftEdgesSchema', () {
+    final v = flowDraftEdgesSchema.parse(samples['flowDraftEdgesSchema']);
+    _touchFlowDraftEdges(v);
+  });
   test('flowNodeTypesSchema', () {
     final v = flowNodeTypesSchema.parse(samples['flowNodeTypesSchema']);
     _touchFlowNodeTypes(v);
+  });
+  test('flowAuthoringGuideSchema', () {
+    final v = flowAuthoringGuideSchema.parse(samples['flowAuthoringGuideSchema']);
+    _touchFlowAuthoringGuide(v);
+  });
+  test('flowNodeTypeDetailSchema', () {
+    final v = flowNodeTypeDetailSchema.parse(samples['flowNodeTypeDetailSchema']);
+    _touchFlowNodeTypeDetail(v);
+  });
+  test('flowEditSessionViewSchema', () {
+    final v = flowEditSessionViewSchema.parse(samples['flowEditSessionViewSchema']);
+    _touchFlowEditSessionView(v);
+  });
+  test('claimFlowEditSessionRequestSchema', () {
+    final v = claimFlowEditSessionRequestSchema.parse(samples['claimFlowEditSessionRequestSchema']);
+    _touchClaimFlowEditSessionRequest(v);
   });
   test('pageInfoSchema', () {
     final v = pageInfoSchema.parse(samples['pageInfoSchema']);
@@ -724,6 +800,38 @@ void main() {
   test('bulkResultSchema', () {
     final v = bulkResultSchema.parse(samples['bulkResultSchema']);
     _touchBulkResult(v);
+  });
+  test('conditionRuleSchema', () {
+    final v = conditionRuleSchema.parse(samples['conditionRuleSchema']);
+    _touchConditionRule(v);
+  });
+  test('conditionGroupSchema', () {
+    final v = conditionGroupSchema.parse(samples['conditionGroupSchema']);
+    _touchConditionGroup(v);
+  });
+  test('couponFactsSchema', () {
+    final v = couponFactsSchema.parse(samples['couponFactsSchema']);
+    _touchCouponFactsSnapshot(v);
+  });
+  test('couponTargetRulesSchema', () {
+    final v = couponTargetRulesSchema.parse(samples['couponTargetRulesSchema']);
+    _touchCouponTargetRules(v);
+  });
+  test('couponTargetTreeSchema', () {
+    final v = couponTargetTreeSchema.parse(samples['couponTargetTreeSchema']);
+    _touchCouponTargetTree(v);
+  });
+  test('couponConditionTreeSchema', () {
+    final v = couponConditionTreeSchema.parse(samples['couponConditionTreeSchema']);
+    _touchConditionGroup(v);
+  });
+  test('couponStackingSchema', () {
+    final v = couponStackingSchema.parse(samples['couponStackingSchema']);
+    _touchCouponStacking(v);
+  });
+  test('couponVoucherInputSchema', () {
+    final v = couponVoucherInputSchema.parse(samples['couponVoucherInputSchema']);
+    _touchCouponVoucherInput(v);
   });
   test('couponConditionsInputSchema', () {
     final v = couponConditionsInputSchema.parse(samples['couponConditionsInputSchema']);
@@ -752,6 +860,14 @@ void main() {
   test('couponIssueListQuerySchema', () {
     final v = couponIssueListQuerySchema.parse(samples['couponIssueListQuerySchema']);
     _touchCouponIssueListQuery(v);
+  });
+  test('couponVoucherCodesSchema', () {
+    final v = couponVoucherCodesSchema.parse(samples['couponVoucherCodesSchema']);
+    _touchCouponVoucherCodes(v);
+  });
+  test('couponDistributionSchema', () {
+    final v = couponDistributionSchema.parse(samples['couponDistributionSchema']);
+    _touchCouponDistribution(v);
   });
   test('issueCouponRequestSchema', () {
     final v = issueCouponRequestSchema.parse(samples['issueCouponRequestSchema']);
@@ -829,6 +945,18 @@ void main() {
     final v = customerSummarySchema.parse(samples['customerSummarySchema']);
     _touchCustomerSummary(v);
   });
+  test('customerExportQuerySchema', () {
+    final v = customerExportQuerySchema.parse(samples['customerExportQuerySchema']);
+    _touchCustomerExportQuery(v);
+  });
+  test('customerExportAddressSchema', () {
+    final v = customerExportAddressSchema.parse(samples['customerExportAddressSchema']);
+    _touchCustomerExportAddress(v);
+  });
+  test('customerExportRowSchema', () {
+    final v = customerExportRowSchema.parse(samples['customerExportRowSchema']);
+    _touchCustomerExportRow(v);
+  });
   test('customerAddressSchema', () {
     final v = customerAddressSchema.parse(samples['customerAddressSchema']);
     _touchCustomerAddress(v);
@@ -864,6 +992,22 @@ void main() {
   test('customerWithdrawalBlockedDetailsSchema', () {
     final v = customerWithdrawalBlockedDetailsSchema.parse(samples['customerWithdrawalBlockedDetailsSchema']);
     _touchCustomerWithdrawalBlockedDetails(v);
+  });
+  test('updateCustomerRequestSchema', () {
+    final v = updateCustomerRequestSchema.parse(samples['updateCustomerRequestSchema']);
+    _touchUpdateCustomerRequest(v);
+  });
+  test('flowTextSchema', () {
+    final v = flowTextSchema.parse(samples['flowTextSchema']);
+    _touchFlowText(v);
+  });
+  test('flowLocalizationSchema', () {
+    final v = flowLocalizationSchema.parse(samples['flowLocalizationSchema']);
+    _touchFlowLocalization(v);
+  });
+  test('flowLocalizationRequestSchema', () {
+    final v = flowLocalizationRequestSchema.parse(samples['flowLocalizationRequestSchema']);
+    _touchFlowLocalizationRequest(v);
   });
   test('productFulfillmentCreateSchema', () {
     final v = productFulfillmentCreateSchema.parse(samples['productFulfillmentCreateSchema']);
@@ -956,6 +1100,46 @@ void main() {
   test('claimRedeliveryRequestSchema', () {
     final v = claimRedeliveryRequestSchema.parse(samples['claimRedeliveryRequestSchema']);
     _touchClaimRedeliveryRequest(v);
+  });
+  test('lowStockSettingsSchema', () {
+    final v = lowStockSettingsSchema.parse(samples['lowStockSettingsSchema']);
+    _touchLowStockSettings(v);
+  });
+  test('lowStockSettingsRequestSchema', () {
+    final v = lowStockSettingsRequestSchema.parse(samples['lowStockSettingsRequestSchema']);
+    _touchLowStockSettingsRequest(v);
+  });
+  test('lowStockVariantThresholdSchema', () {
+    final v = lowStockVariantThresholdSchema.parse(samples['lowStockVariantThresholdSchema']);
+    _touchLowStockVariantThreshold(v);
+  });
+  test('lowStockThresholdListQuerySchema', () {
+    final v = lowStockThresholdListQuerySchema.parse(samples['lowStockThresholdListQuerySchema']);
+    _touchLowStockThresholdListQuery(v);
+  });
+  test('lowStockThresholdPageSchema', () {
+    final v = lowStockThresholdPageSchema.parse(samples['lowStockThresholdPageSchema']);
+    _touchLowStockThresholdPage(v);
+  });
+  test('lowStockThresholdsRequestSchema', () {
+    final v = lowStockThresholdsRequestSchema.parse(samples['lowStockThresholdsRequestSchema']);
+    _touchLowStockThresholdsRequest(v);
+  });
+  test('lowStockThresholdsResultSchema', () {
+    final v = lowStockThresholdsResultSchema.parse(samples['lowStockThresholdsResultSchema']);
+    for (final x in v) _touchLowStockThresholdsResultItem(x);
+  });
+  test('lowStockItemSchema', () {
+    final v = lowStockItemSchema.parse(samples['lowStockItemSchema']);
+    _touchLowStockItem(v);
+  });
+  test('lowStockListQuerySchema', () {
+    final v = lowStockListQuerySchema.parse(samples['lowStockListQuerySchema']);
+    _touchLowStockListQuery(v);
+  });
+  test('lowStockPageSchema', () {
+    final v = lowStockPageSchema.parse(samples['lowStockPageSchema']);
+    _touchLowStockPage(v);
   });
   test('loginProviderStatusSchema', () {
     final v = loginProviderStatusSchema.parse(samples['loginProviderStatusSchema']);
@@ -1109,6 +1293,10 @@ void main() {
     final v = orderDiscountSchema.parse(samples['orderDiscountSchema']);
     _touchOrderDiscount(v);
   });
+  test('orderPaymentSchema', () {
+    final v = orderPaymentSchema.parse(samples['orderPaymentSchema']);
+    _touchOrderPayment(v);
+  });
   test('orderSchema', () {
     final v = orderSchema.parse(samples['orderSchema']);
     _touchOrder(v);
@@ -1137,6 +1325,18 @@ void main() {
     final v = deliveryInfoSchema.parse(samples['deliveryInfoSchema']);
     _touchDeliveryInfo(v);
   });
+  test('shippingOrderItemSchema', () {
+    final v = shippingOrderItemSchema.parse(samples['shippingOrderItemSchema']);
+    _touchShippingOrderItem(v);
+  });
+  test('shippingOrderItemPageSchema', () {
+    final v = shippingOrderItemPageSchema.parse(samples['shippingOrderItemPageSchema']);
+    _touchShippingOrderItemPage(v);
+  });
+  test('shippingOrderItemListQuerySchema', () {
+    final v = shippingOrderItemListQuerySchema.parse(samples['shippingOrderItemListQuerySchema']);
+    _touchShippingOrderItemListQuery(v);
+  });
   test('deliveryStatusSchema', () {
     final v = deliveryStatusSchema.parse(samples['deliveryStatusSchema']);
     _touchDeliveryStatus(v);
@@ -1156,6 +1356,10 @@ void main() {
   test('cancelBySellerRequestSchema', () {
     final v = cancelBySellerRequestSchema.parse(samples['cancelBySellerRequestSchema']);
     _touchCancelBySellerRequest(v);
+  });
+  test('sellerRefundRequestSchema', () {
+    final v = sellerRefundRequestSchema.parse(samples['sellerRefundRequestSchema']);
+    _touchSellerRefundRequest(v);
   });
   test('fulfillRequestSchema', () {
     final v = fulfillRequestSchema.parse(samples['fulfillRequestSchema']);
@@ -1377,6 +1581,22 @@ void main() {
     final v = pointAdjustmentResultSchema.parse(samples['pointAdjustmentResultSchema']);
     _touchPointAdjustmentResult(v);
   });
+  test('productImportItemSchema', () {
+    final v = productImportItemSchema.parse(samples['productImportItemSchema']);
+    _touchProductImportItem(v);
+  });
+  test('productLookupRequestSchema', () {
+    final v = productLookupRequestSchema.parse(samples['productLookupRequestSchema']);
+    _touchProductLookupRequest(v);
+  });
+  test('productImportErrorSchema', () {
+    final v = productImportErrorSchema.parse(samples['productImportErrorSchema']);
+    _touchProductImportError(v);
+  });
+  test('productImportSchema', () {
+    final v = productImportSchema.parse(samples['productImportSchema']);
+    _touchProductImport(v);
+  });
   test('infoFieldSourceSchema', () {
     final v = infoFieldSourceSchema.parse(samples['infoFieldSourceSchema']);
     _touchInfoFieldSource(v);
@@ -1424,6 +1644,14 @@ void main() {
   test('infoSectionLocalizationRequestSchema', () {
     final v = infoSectionLocalizationRequestSchema.parse(samples['infoSectionLocalizationRequestSchema']);
     _touchInfoSectionLocalizationRequest(v);
+  });
+  test('noticeTemplateSchema', () {
+    final v = noticeTemplateSchema.parse(samples['noticeTemplateSchema']);
+    _touchNoticeTemplate(v);
+  });
+  test('noticeTemplateRequestSchema', () {
+    final v = noticeTemplateRequestSchema.parse(samples['noticeTemplateRequestSchema']);
+    _touchNoticeTemplateRequest(v);
   });
   test('productLocalizationSchema', () {
     final v = productLocalizationSchema.parse(samples['productLocalizationSchema']);
@@ -1540,6 +1768,10 @@ void main() {
   test('couponBenefitSchema', () {
     final v = couponBenefitSchema.parse(samples['couponBenefitSchema']);
     _touchCouponBenefit(v);
+  });
+  test('couponRewardSchema', () {
+    final v = couponRewardSchema.parse(samples['couponRewardSchema']);
+    _touchCouponReward(v);
   });
   test('couponConditionsSchema', () {
     final v = couponConditionsSchema.parse(samples['couponConditionsSchema']);
@@ -1709,18 +1941,6 @@ void main() {
     final v = sellerAddressRequestSchema.parse(samples['sellerAddressRequestSchema']);
     _touchSellerAddressRequest(v);
   });
-  test('storefrontTemplateSchema', () {
-    final v = storefrontTemplateSchema.parse(samples['storefrontTemplateSchema']);
-    _touchStorefrontTemplate(v);
-  });
-  test('storeTemplateSchema', () {
-    final v = storeTemplateSchema.parse(samples['storeTemplateSchema']);
-    _touchStoreTemplate(v);
-  });
-  test('updateStoreTemplateRequestSchema', () {
-    final v = updateStoreTemplateRequestSchema.parse(samples['updateStoreTemplateRequestSchema']);
-    _touchUpdateStoreTemplateRequest(v);
-  });
   test('storefrontVersionSchema', () {
     final v = storefrontVersionSchema.parse(samples['storefrontVersionSchema']);
     _touchStorefrontVersion(v);
@@ -1821,13 +2041,37 @@ void main() {
     final v = addStorefrontDomainRequestSchema.parse(samples['addStorefrontDomainRequestSchema']);
     _touchAddStorefrontDomainRequest(v);
   });
+  test('storefrontSiteVarSchema', () {
+    final v = storefrontSiteVarSchema.parse(samples['storefrontSiteVarSchema']);
+    _touchStorefrontSiteVar(v);
+  });
+  test('storefrontSiteVarsSchema', () {
+    final v = storefrontSiteVarsSchema.parse(samples['storefrontSiteVarsSchema']);
+    _touchStorefrontSiteVars(v);
+  });
+  test('putStorefrontSiteVarRequestSchema', () {
+    final v = putStorefrontSiteVarRequestSchema.parse(samples['putStorefrontSiteVarRequestSchema']);
+    _touchPutStorefrontSiteVarRequest(v);
+  });
   test('storefrontEditSessionSchema', () {
     final v = storefrontEditSessionSchema.parse(samples['storefrontEditSessionSchema']);
     _touchStorefrontEditSession(v);
   });
+  test('storefrontGitMergeRequestSchema', () {
+    final v = storefrontGitMergeRequestSchema.parse(samples['storefrontGitMergeRequestSchema']);
+    _touchStorefrontGitMergeRequest(v);
+  });
+  test('storefrontGitMergeSchema', () {
+    final v = storefrontGitMergeSchema.parse(samples['storefrontGitMergeSchema']);
+    _touchStorefrontGitMerge(v);
+  });
   test('storefrontDevLogsSchema', () {
     final v = storefrontDevLogsSchema.parse(samples['storefrontDevLogsSchema']);
     _touchStorefrontDevLogs(v);
+  });
+  test('storefrontEditFailureSchema', () {
+    final v = storefrontEditFailureSchema.parse(samples['storefrontEditFailureSchema']);
+    _touchStorefrontEditFailure(v);
   });
   test('storefrontEditingSchema', () {
     final v = storefrontEditingSchema.parse(samples['storefrontEditingSchema']);
@@ -1921,37 +2165,41 @@ void main() {
     final v = createStorefrontEditPreviewLinkRequestSchema.parse(samples['createStorefrontEditPreviewLinkRequestSchema']);
     _touchCreateStorefrontEditPreviewLinkRequest(v);
   });
-  test('storefrontSourceBlobsResultSchema', () {
-    final v = storefrontSourceBlobsResultSchema.parse(samples['storefrontSourceBlobsResultSchema']);
-    _touchStorefrontSourceBlobsResult(v);
+  test('storefrontSourceUploadsSchema', () {
+    final v = storefrontSourceUploadsSchema.parse(samples['storefrontSourceUploadsSchema']);
+    _touchStorefrontSourceUploads(v);
   });
-  test('subscriptionLimitsSchema', () {
-    final v = subscriptionLimitsSchema.parse(samples['subscriptionLimitsSchema']);
-    _touchSubscriptionLimits(v);
+  test('storefrontGitStatusSchema', () {
+    final v = storefrontGitStatusSchema.parse(samples['storefrontGitStatusSchema']);
+    _touchStorefrontGitStatus(v);
   });
-  test('subscriptionUsageSchema', () {
-    final v = subscriptionUsageSchema.parse(samples['subscriptionUsageSchema']);
-    _touchSubscriptionUsage(v);
+  test('storefrontGitRepositorySchema', () {
+    final v = storefrontGitRepositorySchema.parse(samples['storefrontGitRepositorySchema']);
+    _touchStorefrontGitRepository(v);
   });
-  test('storeSubscriptionSchema', () {
-    final v = storeSubscriptionSchema.parse(samples['storeSubscriptionSchema']);
-    _touchStoreSubscription(v);
+  test('linkStorefrontGitInstallationRequestSchema', () {
+    final v = linkStorefrontGitInstallationRequestSchema.parse(samples['linkStorefrontGitInstallationRequestSchema']);
+    _touchLinkStorefrontGitInstallationRequest(v);
+  });
+  test('storefrontGitConnectStateSchema', () {
+    final v = storefrontGitConnectStateSchema.parse(samples['storefrontGitConnectStateSchema']);
+    _touchStorefrontGitConnectState(v);
+  });
+  test('connectStorefrontGitRequestSchema', () {
+    final v = connectStorefrontGitRequestSchema.parse(samples['connectStorefrontGitRequestSchema']);
+    _touchConnectStorefrontGitRequest(v);
+  });
+  test('setStorefrontAutoPublishRequestSchema', () {
+    final v = setStorefrontAutoPublishRequestSchema.parse(samples['setStorefrontAutoPublishRequestSchema']);
+    _touchSetStorefrontAutoPublishRequest(v);
+  });
+  test('setStorefrontDeployApprovalRequestSchema', () {
+    final v = setStorefrontDeployApprovalRequestSchema.parse(samples['setStorefrontDeployApprovalRequestSchema']);
+    _touchSetStorefrontDeployApprovalRequest(v);
   });
   test('planErrorDetailsSchema', () {
     final v = planErrorDetailsSchema.parse(samples['planErrorDetailsSchema']);
     _touchPlanErrorDetails(v);
-  });
-  test('planEntitlementsSchema', () {
-    final v = planEntitlementsSchema.parse(samples['planEntitlementsSchema']);
-    _touchPlanEntitlementValues(v);
-  });
-  test('publicPlanSchema', () {
-    final v = publicPlanSchema.parse(samples['publicPlanSchema']);
-    _touchPublicPlan(v);
-  });
-  test('publicPlansSchema', () {
-    final v = publicPlansSchema.parse(samples['publicPlansSchema']);
-    _touchPublicPlans(v);
   });
   test('mcpRuleResultSchema', () {
     final v = mcpRuleResultSchema.parse(samples['mcpRuleResultSchema']);
@@ -1968,6 +2216,18 @@ void main() {
   test('uploadTicketSchema', () {
     final v = uploadTicketSchema.parse(samples['uploadTicketSchema']);
     _touchUploadTicket(v);
+  });
+  test('customerUserinfoAddressSchema', () {
+    final v = customerUserinfoAddressSchema.parse(samples['customerUserinfoAddressSchema']);
+    _touchCustomerUserinfoAddress(v);
+  });
+  test('customerUserinfoSchema', () {
+    final v = customerUserinfoSchema.parse(samples['customerUserinfoSchema']);
+    _touchCustomerUserinfo(v);
+  });
+  test('customerUserinfoInputSchema', () {
+    final v = customerUserinfoInputSchema.parse(samples['customerUserinfoInputSchema']);
+    _touchCustomerUserinfoInput(v);
   });
   test('orderWebhookEventDataSchema', () {
     final v = orderWebhookEventDataSchema.parse(samples['orderWebhookEventDataSchema']);
@@ -2049,6 +2309,30 @@ void main() {
     final v = flowStateChangedWebhookEventSchema.parse(samples['flowStateChangedWebhookEventSchema']);
     _touchFlowStateChangedWebhookEvent(v);
   });
+  test('orderPaymentAddedWebhookEventDataSchema', () {
+    final v = orderPaymentAddedWebhookEventDataSchema.parse(samples['orderPaymentAddedWebhookEventDataSchema']);
+    _touchOrderPaymentAddedWebhookEventData(v);
+  });
+  test('orderPaymentAddedWebhookEventSchema', () {
+    final v = orderPaymentAddedWebhookEventSchema.parse(samples['orderPaymentAddedWebhookEventSchema']);
+    _touchOrderPaymentAddedWebhookEvent(v);
+  });
+  test('orderPaymentRequestedWebhookEventDataSchema', () {
+    final v = orderPaymentRequestedWebhookEventDataSchema.parse(samples['orderPaymentRequestedWebhookEventDataSchema']);
+    _touchOrderPaymentRequestedWebhookEventData(v);
+  });
+  test('orderPaymentRequestedWebhookEventSchema', () {
+    final v = orderPaymentRequestedWebhookEventSchema.parse(samples['orderPaymentRequestedWebhookEventSchema']);
+    _touchOrderPaymentRequestedWebhookEvent(v);
+  });
+  test('orderRefundedWebhookEventDataSchema', () {
+    final v = orderRefundedWebhookEventDataSchema.parse(samples['orderRefundedWebhookEventDataSchema']);
+    _touchOrderRefundedWebhookEventData(v);
+  });
+  test('orderRefundedWebhookEventSchema', () {
+    final v = orderRefundedWebhookEventSchema.parse(samples['orderRefundedWebhookEventSchema']);
+    _touchOrderRefundedWebhookEvent(v);
+  });
   test('webhookEventSchema', () {
     final v = webhookEventSchema.parse(samples['webhookEventSchema']);
     _touchWebhookEvent(v);
@@ -2114,6 +2398,7 @@ void _touchAiToolChange(AiToolChange v) {
   v.added;
   v.removed;
   for (final x in v.preview) _touchAiToolChangePreviewItem(x);
+  if (v.lines != null) { v.lines!.length; }
 }
 
 void _touchAiToolChangePreviewItem(AiToolChangePreviewItem v) {
@@ -2128,6 +2413,7 @@ void _touchAiTodo(AiTodo v) {
   v.content;
   v.status;
   if (v.phase != null) { v.phase; }
+  if (v.note != null) { v.note; }
 }
 
 void _touchAiDesignBoard(AiDesignBoard v) {
@@ -2195,6 +2481,7 @@ void _touchAiMessagePartText(AiMessagePartText v) {
   v.toJson();
   v.type;
   v.text;
+  if (v.choice != null) { v.choice; }
 }
 
 void _touchAiMessagePartTool(AiMessagePartTool v) {
@@ -2292,6 +2579,7 @@ void _touchAiConversationSummary(AiConversationSummary v) {
   v.toJson();
   v.id;
   if (v.title != null) { v.title; }
+  if (v.agent != null) { v.agent; }
   v.createdAt;
   v.updatedAt;
 }
@@ -2300,6 +2588,7 @@ void _touchAiConversation(AiConversation v) {
   v.toJson();
   v.id;
   if (v.title != null) { v.title; }
+  if (v.agent != null) { v.agent; }
   v.createdAt;
   v.updatedAt;
   for (final x in v.messages) _touchAiMessage(x);
@@ -2332,6 +2621,8 @@ void _touchCreateAiConversationRequest(CreateAiConversationRequest v) {
   v.toJson();
   if (v.draftId != null) { v.draftId; }
   if (v.brief != null) { _touchStoreSetupBrief(v.brief!); }
+  if (v.agent != null) { v.agent; }
+  if (v.timeZone != null) { v.timeZone; }
 }
 
 void _touchCreateAiConversationResponse(CreateAiConversationResponse v) {
@@ -2347,6 +2638,7 @@ void _touchSendAiMessageRequest(SendAiMessageRequest v) {
   if (v.choice != null) { v.choice; }
   if (v.selection != null) { _touchAiPreviewSelection(v.selection!); }
   if (v.designSelection != null) { _touchAiDesignSelection(v.designSelection!); }
+  if (v.timeZone != null) { v.timeZone; }
 }
 
 void _touchSendAiMessageResponse(SendAiMessageResponse v) {
@@ -2480,6 +2772,7 @@ void _touchAiStreamEventToolResult(AiStreamEventToolResult v) {
   v.toolCallId;
   v.status;
   if (v.summary != null) { v.summary; }
+  if (v.changes != null) { for (final x in v.changes!) _touchAiToolChange(x); }
 }
 
 void _touchAiStreamEventChoices(AiStreamEventChoices v) {
@@ -3863,6 +4156,123 @@ void _touchCategoryLocalizationRequest(CategoryLocalizationRequest v) {
   if (v.metaKeywords != null) { v.metaKeywords; }
 }
 
+void _touchSellerCheckoutLineRequest(SellerCheckoutLineRequest v) {
+  v.toJson();
+  v.productId;
+  if (v.optionId != null) { v.optionId; }
+  v.quantity;
+  if (v.unitPrice != null) { v.unitPrice; }
+  if (v.addons != null) { for (final x in v.addons!) _touchSellerCheckoutLineRequestAddonsItem(x); }
+  if (v.customInputs != null) { for (final x in v.customInputs!) _touchSellerCheckoutLineRequestCustomInputsItem(x); }
+}
+
+void _touchSellerCheckoutLineRequestAddonsItem(SellerCheckoutLineRequestAddonsItem v) {
+  v.toJson();
+  v.groupId;
+  v.valueId;
+}
+
+void _touchSellerCheckoutLineRequestCustomInputsItem(SellerCheckoutLineRequestCustomInputsItem v) {
+  v.toJson();
+  v.inputId;
+  v.value;
+}
+
+void _touchCreateSellerCheckoutRequest(CreateSellerCheckoutRequest v) {
+  v.toJson();
+  for (final x in v.items) _touchSellerCheckoutLineRequest(x);
+  v.expiresAt;
+  if (v.fulfillmentMethod != null) { v.fulfillmentMethod; }
+  if (v.pickupLocationId != null) { v.pickupLocationId; }
+  v.trackInventory;
+  v.couponsEnabled;
+  v.pointsEnabled;
+  if (v.orderId != null) { v.orderId; }
+}
+
+void _touchSellerCheckout(SellerCheckout v) {
+  v.toJson();
+  v.checkoutId;
+  v.status;
+  v.checkoutUrl;
+  v.currency;
+  for (final x in v.items) _touchSellerCheckoutItemsItem(x);
+  _touchSellerCheckoutAmounts(v.amounts);
+  v.requiresShipping;
+  v.trackInventory;
+  v.couponsEnabled;
+  v.pointsEnabled;
+  if (v.orderId != null) { v.orderId; }
+  v.additionalPayment;
+  v.createdAt;
+  v.expiresAt;
+}
+
+void _touchSellerCheckoutItemsItem(SellerCheckoutItemsItem v) {
+  v.toJson();
+  v.lineId;
+  v.productId;
+  v.productName;
+  if (v.optionId != null) { v.optionId; }
+  if (v.optionName != null) { v.optionName; }
+  v.quantity;
+  v.unitPrice;
+  v.listUnitPrice;
+  v.totalPrice;
+}
+
+void _touchSellerCheckoutAmounts(SellerCheckoutAmounts v) {
+  v.toJson();
+  v.productAmount;
+  v.deliveryFee;
+  v.totalAmount;
+}
+
+void _touchSellerCheckoutPage(SellerCheckoutPage v) {
+  v.toJson();
+  v.page;
+  v.size;
+  v.totalElements;
+  v.totalPages;
+  for (final x in v.contents) _touchSellerCheckout(x);
+}
+
+void _touchDirectOrderShippingAddress(DirectOrderShippingAddress v) {
+  v.toJson();
+  v.receiverName;
+  v.phone;
+  v.zipCode;
+  v.address1;
+  if (v.address2 != null) { v.address2; }
+  if (v.deliveryMemo != null) { v.deliveryMemo; }
+}
+
+void _touchCreateOrderRequest(CreateOrderRequest v) {
+  v.toJson();
+  if (v.memberId != null) { v.memberId; }
+  if (v.guest != null) { _touchCreateOrderRequestGuest(v.guest!); }
+  if (v.shippingAddress != null) { _touchDirectOrderShippingAddress(v.shippingAddress!); }
+  for (final x in v.items) _touchSellerCheckoutLineRequest(x);
+  v.expiresAt;
+  if (v.fulfillmentMethod != null) { v.fulfillmentMethod; }
+  if (v.pickupLocationId != null) { v.pickupLocationId; }
+  v.trackInventory;
+}
+
+void _touchCreateOrderRequestGuest(CreateOrderRequestGuest v) {
+  v.toJson();
+  v.name;
+  v.phone;
+  if (v.email != null) { v.email; }
+}
+
+void _touchCreatedOrder(CreatedOrder v) {
+  v.toJson();
+  v.orderId;
+  v.orderNo;
+  _touchSellerCheckout(v.paymentRequest);
+}
+
 void _touchClaimReturnAddress(ClaimReturnAddress v) {
   v.toJson();
   v.name;
@@ -3897,6 +4307,7 @@ void _touchClaim(Claim v) {
   if (v.completedAt != null) { v.completedAt; }
   if (v.holdExpiresAt != null) { v.holdExpiresAt; }
   v.holdUsed;
+  if (v.rejection != null) { _touchClaimRejection(v.rejection!); }
   if (v.returnAddress != null) { _touchClaimReturnAddress(v.returnAddress!); }
 }
 
@@ -3911,6 +4322,12 @@ void _touchClaimCollect(ClaimCollect v) {
   v.method;
   if (v.carrierCode != null) { v.carrierCode; }
   if (v.trackingNumber != null) { v.trackingNumber; }
+}
+
+void _touchClaimRejection(ClaimRejection v) {
+  v.toJson();
+  v.reason;
+  v.detail;
 }
 
 void _touchClaimListQuery(ClaimListQuery v) {
@@ -3948,6 +4365,7 @@ void _touchClaimDetail(ClaimDetail v) {
   if (v.completedAt != null) { v.completedAt; }
   if (v.holdExpiresAt != null) { v.holdExpiresAt; }
   v.holdUsed;
+  if (v.rejection != null) { _touchClaimRejection(v.rejection!); }
   if (v.returnAddress != null) { _touchClaimReturnAddress(v.returnAddress!); }
   if (v.histories != null) { for (final x in v.histories!) _touchClaimDetailHistoriesItem(x); }
 }
@@ -3972,10 +4390,18 @@ void _touchRejectClaimRequest(RejectClaimRequest v) {
   if (v.evidenceImages != null) { v.evidenceImages!.length; }
 }
 
+void _touchApproveClaimRequest(ApproveClaimRequest v) {
+  v.toJson();
+  if (v.deductAmount != null) { v.deductAmount; }
+  if (v.refundAmount != null) { v.refundAmount; }
+  if (v.holdRefund != null) { v.holdRefund; }
+}
+
 void _touchApproveClaimResult(ApproveClaimResult v) {
   v.toJson();
   v.claimId;
   v.refundAmount;
+  if (v.calculatedRefundAmount != null) { v.calculatedRefundAmount; }
   v.deductAmount;
   v.quantity;
   v.deliveryFeeRefundAmount;
@@ -3985,6 +4411,7 @@ void _touchApproveClaimResult(ApproveClaimResult v) {
   v.pointRefundAmount;
   v.refundedAt;
   v.refundHeld;
+  if (v.refundStatus != null) { v.refundStatus; }
 }
 
 void _touchCollectionRule(CollectionRule v) {
@@ -4218,6 +4645,7 @@ void _touchFlowAction(FlowAction v) {
   v.toJson();
   v.key;
   v.label;
+  if (v.labelKey != null) { v.labelKey; }
   v.mode;
   v.enabled;
   if (v.disabled != null) { _touchFlowActionDisabled(v.disabled!); }
@@ -4238,9 +4666,11 @@ void _touchFlowState(FlowState v) {
   v.toJson();
   v.key;
   v.label;
+  if (v.labelKey != null) { v.labelKey; }
   if (v.coreStatus != null) { v.coreStatus; }
   if (v.claimStatus != null) { v.claimStatus; }
   if (v.message != null) { v.message; }
+  if (v.messageKey != null) { v.messageKey; }
   v.enteredAt;
   if (v.deadlineAt != null) { v.deadlineAt; }
   if (v.attachments != null) { v.attachments!.length; }
@@ -4275,11 +4705,19 @@ void _touchOrderItemFlow(OrderItemFlow v) {
   v.ended;
   if (v.moveTargets != null) { for (final x in v.moveTargets!) _touchOrderItemFlowMoveTargetsItem(x); }
   if (v.branches != null) { for (final x in v.branches!) _touchFlowState(x); }
+  if (v.waiting != null) { for (final x in v.waiting!) _touchOrderItemFlowWaitingItem(x); }
+  if (v.claimable != null) { for (final x in v.claimable!) _touchOrderItemFlowClaimableItem(x); }
+  if (v.path != null) { for (final x in v.path!) _touchOrderItemFlowPathItem(x); }
+  if (v.attention != null) { v.attention; }
+  if (v.revisions != null) { _touchOrderItemFlowRevisions(v.revisions!); }
+  if (v.data != null) { for (final x in v.data!) _touchOrderItemFlowDataItem(x); }
 }
 
 void _touchOrderItemFlowFlow(OrderItemFlowFlow v) {
   v.toJson();
   v.flowId;
+  if (v.key != null) { v.key; }
+  if (v.name != null) { v.name; }
   v.version;
 }
 
@@ -4297,10 +4735,53 @@ void _touchOrderItemFlowMoveTargetsItem(OrderItemFlowMoveTargetsItem v) {
   if (v.coreStatus != null) { v.coreStatus; }
 }
 
+void _touchOrderItemFlowWaitingItem(OrderItemFlowWaitingItem v) {
+  v.toJson();
+  v.type;
+  v.key;
+  if (v.label != null) { v.label; }
+  if (v.dueAt != null) { v.dueAt; }
+  if (v.next != null) { _touchOrderItemFlowWaitingItemNext(v.next!); }
+}
+
+void _touchOrderItemFlowWaitingItemNext(OrderItemFlowWaitingItemNext v) {
+  v.toJson();
+  v.key;
+  if (v.label != null) { v.label; }
+}
+
+void _touchOrderItemFlowClaimableItem(OrderItemFlowClaimableItem v) {
+  v.toJson();
+  v.action;
+  if (v.until != null) { v.until; }
+}
+
+void _touchOrderItemFlowPathItem(OrderItemFlowPathItem v) {
+  v.toJson();
+  v.key;
+  if (v.label != null) { v.label; }
+  v.status;
+  v.more;
+}
+
+void _touchOrderItemFlowRevisions(OrderItemFlowRevisions v) {
+  v.toJson();
+  v.used;
+  v.limit;
+}
+
+void _touchOrderItemFlowDataItem(OrderItemFlowDataItem v) {
+  v.toJson();
+  v.key;
+  v.label;
+  v.value;
+}
+
 void _touchMoveFlowStateRequest(MoveFlowStateRequest v) {
   v.toJson();
   v.to;
   if (v.reason != null) { v.reason; }
+  if (v.restock != null) { v.restock; }
 }
 
 void _touchFlowRunStep(FlowRunStep v) {
@@ -4383,6 +4864,28 @@ void _touchCommerceFlowSummary(CommerceFlowSummary v) {
   if (v.archivedAt != null) { v.archivedAt; }
   v.createdAt;
   v.updatedAt;
+  if (v.draftVersion != null) { v.draftVersion; }
+  if (v.stepCount != null) { v.stepCount; }
+  if (v.assignment != null) { _touchCommerceFlowSummaryAssignment(v.assignment!); }
+  if (v.inProgress != null) { _touchCommerceFlowSummaryInProgress(v.inProgress!); }
+}
+
+void _touchCommerceFlowSummaryAssignment(CommerceFlowSummaryAssignment v) {
+  v.toJson();
+  for (final x in v.categories) _touchCommerceFlowSummaryAssignmentCategoriesItem(x);
+  v.productCount;
+}
+
+void _touchCommerceFlowSummaryAssignmentCategoriesItem(CommerceFlowSummaryAssignmentCategoriesItem v) {
+  v.toJson();
+  v.categoryId;
+  v.name;
+}
+
+void _touchCommerceFlowSummaryInProgress(CommerceFlowSummaryInProgress v) {
+  v.toJson();
+  v.total;
+  v.previousVersions;
 }
 
 void _touchCommerceFlowVersionView(CommerceFlowVersionView v) {
@@ -4410,9 +4913,20 @@ void _touchCommerceFlow(CommerceFlow v) {
   if (v.archivedAt != null) { v.archivedAt; }
   v.createdAt;
   v.updatedAt;
+  if (v.draftVersion != null) { v.draftVersion; }
+  if (v.stepCount != null) { v.stepCount; }
+  if (v.assignment != null) { _touchCommerceFlowSummaryAssignment(v.assignment!); }
+  if (v.inProgress != null) { _touchCommerceFlowSummaryInProgress(v.inProgress!); }
   if (v.draft != null) { _touchCommerceFlowVersionView(v.draft!); }
   if (v.active != null) { _touchCommerceFlowVersionView(v.active!); }
+  if (v.publishedKeys != null) { _touchCommerceFlowPublishedKeys(v.publishedKeys!); }
   for (final x in v.versions) _touchCommerceFlowVersionsItem(x);
+}
+
+void _touchCommerceFlowPublishedKeys(CommerceFlowPublishedKeys v) {
+  v.toJson();
+  v.states.length;
+  v.actions.length;
 }
 
 void _touchCommerceFlowVersionsItem(CommerceFlowVersionsItem v) {
@@ -4444,6 +4958,11 @@ void _touchMigrateFlowVersionResultSkippedItem(MigrateFlowVersionResultSkippedIt
   v.reason;
 }
 
+void _touchUpdateCommerceFlowRequest(UpdateCommerceFlowRequest v) {
+  v.toJson();
+  v.name;
+}
+
 void _touchCreateCommerceFlowRequest(CreateCommerceFlowRequest v) {
   v.toJson();
   v.key;
@@ -4461,19 +4980,130 @@ void _touchSaveFlowDraftRequest(SaveFlowDraftRequest v) {
   if (v.variables != null) { v.variables!.length; }
 }
 
-void _touchCommerceFlowCheck(CommerceFlowCheck v) {
-  v.toJson();
-  v.publishable;
-  for (final x in v.blocking) _touchCommerceFlowCheckBlockingItem(x);
-  for (final x in v.warnings) _touchCommerceFlowCheckBlockingItem(x);
-}
-
-void _touchCommerceFlowCheckBlockingItem(CommerceFlowCheckBlockingItem v) {
+void _touchFlowIssue(FlowIssue v) {
   v.toJson();
   v.code;
   v.message;
   if (v.nodeId != null) { v.nodeId; }
   if (v.edgeId != null) { v.edgeId; }
+  if (v.pointer != null) { v.pointer; }
+  if (v.opIndex != null) { v.opIndex; }
+  if (v.hint != null) { v.hint; }
+  if (v.expected != null) { v.expected; }
+}
+
+void _touchCommerceFlowCheck(CommerceFlowCheck v) {
+  v.toJson();
+  v.publishable;
+  for (final x in v.blocking) _touchFlowIssue(x);
+  for (final x in v.warnings) _touchFlowIssue(x);
+}
+
+void _touchFlowDraftOperation(FlowDraftOperation v) {
+  if (v is FlowDraftOperationAddnode) _touchFlowDraftOperationAddnode(v);
+  if (v is FlowDraftOperationUpdatenode) _touchFlowDraftOperationUpdatenode(v);
+  if (v is FlowDraftOperationRemovenode) _touchFlowDraftOperationRemovenode(v);
+  if (v is FlowDraftOperationConnect) _touchFlowDraftOperationConnect(v);
+  if (v is FlowDraftOperationUpdateedge) _touchFlowDraftOperationUpdateedge(v);
+  if (v is FlowDraftOperationDisconnect) _touchFlowDraftOperationDisconnect(v);
+  if (v is FlowDraftOperationSetstart) _touchFlowDraftOperationSetstart(v);
+  if (v is FlowDraftOperationSetdefinition) _touchFlowDraftOperationSetdefinition(v);
+}
+
+void _touchFlowDraftOperationAddnode(FlowDraftOperationAddnode v) {
+  v.toJson();
+  v.op;
+  v.id;
+  v.type;
+  if (v.config != null) { v.config!.length; }
+  if (v.position != null) { _touchFlowDraftOperationAddnodePosition(v.position!); }
+}
+
+void _touchFlowDraftOperationAddnodePosition(FlowDraftOperationAddnodePosition v) {
+  v.toJson();
+  v.x;
+  v.y;
+}
+
+void _touchFlowDraftOperationUpdatenode(FlowDraftOperationUpdatenode v) {
+  v.toJson();
+  v.op;
+  v.id;
+  if (v.set != null) { v.set!.length; }
+  if (v.unset != null) { v.unset!.length; }
+}
+
+void _touchFlowDraftOperationRemovenode(FlowDraftOperationRemovenode v) {
+  v.toJson();
+  v.op;
+  v.id;
+}
+
+void _touchFlowDraftOperationConnect(FlowDraftOperationConnect v) {
+  v.toJson();
+  v.op;
+  if (v.id != null) { v.id; }
+  v.from;
+  v.to;
+  if (v.on != null) { v.on!.length; }
+  if (v.guard != null) { v.guard; }
+  if (v.do_ != null) { v.do_!.length; }
+}
+
+void _touchFlowDraftOperationUpdateedge(FlowDraftOperationUpdateedge v) {
+  v.toJson();
+  v.op;
+  v.id;
+  if (v.set != null) { v.set!.length; }
+  if (v.unset != null) { v.unset!.length; }
+}
+
+void _touchFlowDraftOperationDisconnect(FlowDraftOperationDisconnect v) {
+  v.toJson();
+  v.op;
+  v.id;
+}
+
+void _touchFlowDraftOperationSetstart(FlowDraftOperationSetstart v) {
+  v.toJson();
+  v.op;
+  v.id;
+}
+
+void _touchFlowDraftOperationSetdefinition(FlowDraftOperationSetdefinition v) {
+  v.toJson();
+  v.op;
+  if (v.set != null) { _touchFlowDraftOperationSetdefinitionSet(v.set!); }
+  if (v.unset != null) { v.unset!.length; }
+}
+
+void _touchFlowDraftOperationSetdefinitionSet(FlowDraftOperationSetdefinitionSet v) {
+  v.toJson();
+  if (v.progression != null) { v.progression; }
+  if (v.groupClaim != null) { v.groupClaim; }
+  if (v.fulfillmentMethods != null) { v.fulfillmentMethods!.length; }
+}
+
+void _touchApplyFlowOperationsRequest(ApplyFlowOperationsRequest v) {
+  v.toJson();
+  for (final x in v.operations) _touchFlowDraftOperation(x);
+}
+
+void _touchFlowOperationsResult(FlowOperationsResult v) {
+  v.toJson();
+  v.revision;
+  _touchFlowOperationsResultChanged(v.changed);
+  for (final x in v.issues) _touchFlowIssue(x);
+  for (final x in v.warnings) _touchFlowIssue(x);
+}
+
+void _touchFlowOperationsResultChanged(FlowOperationsResultChanged v) {
+  v.toJson();
+  v.nodes.length;
+  v.edges.length;
+  v.removedNodes.length;
+  v.removedEdges.length;
+  v.removedActions.length;
 }
 
 void _touchResolvedFlow(ResolvedFlow v) {
@@ -4571,7 +5201,7 @@ void _touchSimulationStepLeavesItem(SimulationStepLeavesItem v) {
 void _touchSimulateFlowResult(SimulateFlowResult v) {
   v.toJson();
   v.compiled;
-  for (final x in v.errors) _touchCommerceFlowCheckBlockingItem(x);
+  for (final x in v.errors) _touchFlowIssue(x);
   for (final x in v.trace) _touchSimulationStep(x);
 }
 
@@ -4584,7 +5214,7 @@ void _touchReplayFlowResult(ReplayFlowResult v) {
   v.toJson();
   v.orderItemId;
   v.compiled;
-  for (final x in v.errors) _touchCommerceFlowCheckBlockingItem(x);
+  for (final x in v.errors) _touchFlowIssue(x);
   for (final x in v.steps) _touchReplayFlowResultStepsItem(x);
   if (v.divergedAt != null) { v.divergedAt; }
   v.unsupported;
@@ -4598,6 +5228,72 @@ void _touchReplayFlowResultStepsItem(ReplayFlowResultStepsItem v) {
   if (v.simulatedState != null) { v.simulatedState; }
   v.match;
   if (v.error != null) { v.error; }
+}
+
+void _touchFlowDraftNodes(FlowDraftNodes v) {
+  v.toJson();
+  v.revision;
+  v.start;
+  if (v.publishedKeys != null) { _touchFlowDraftNodesPublishedKeys(v.publishedKeys!); }
+  for (final x in v.nodes) _touchFlowDraftNodesNodesItem(x);
+}
+
+void _touchFlowDraftNodesPublishedKeys(FlowDraftNodesPublishedKeys v) {
+  v.toJson();
+  v.states.length;
+  v.actions.length;
+}
+
+void _touchFlowDraftNodesNodesItem(FlowDraftNodesNodesItem v) {
+  v.toJson();
+  v.id;
+  v.type;
+  if (v.label != null) { v.label; }
+  if (v.kind != null) { v.kind; }
+  v.outputs.length;
+}
+
+void _touchFlowDraftNode(FlowDraftNode v) {
+  v.toJson();
+  v.revision;
+  _touchFlowDraftNodeNode(v.node);
+  if (v.kind != null) { v.kind; }
+  v.outputs.length;
+  v.start;
+  v.incoming.length;
+  v.outgoing.length;
+}
+
+void _touchFlowDraftNodeNode(FlowDraftNodeNode v) {
+  v.toJson();
+  v.id;
+  v.type;
+  v.version;
+  v.config.length;
+  if (v.outputs != null) { v.outputs!.length; }
+  if (v.position != null) { _touchFlowDraftNodeNodePosition(v.position!); }
+}
+
+void _touchFlowDraftNodeNodePosition(FlowDraftNodeNodePosition v) {
+  v.toJson();
+  v.x;
+  v.y;
+}
+
+void _touchFlowDraftEdges(FlowDraftEdges v) {
+  v.toJson();
+  v.revision;
+  for (final x in v.edges) _touchFlowDraftEdgesEdgesItem(x);
+}
+
+void _touchFlowDraftEdgesEdgesItem(FlowDraftEdgesEdgesItem v) {
+  v.toJson();
+  v.id;
+  v.from;
+  v.to;
+  if (v.on != null) { v.on!.length; }
+  if (v.guard != null) { v.guard; }
+  if (v.do_ != null) { v.do_!.length; }
 }
 
 void _touchFlowNodeTypes(FlowNodeTypes v) {
@@ -4636,6 +5332,101 @@ void _touchFlowNodeTypesPlatformActionsItem(FlowNodeTypesPlatformActionsItem v) 
   v.listed;
 }
 
+void _touchFlowAuthoringGuide(FlowAuthoringGuide v) {
+  v.toJson();
+  for (final x in v.nodes) _touchFlowAuthoringGuideNodesItem(x);
+  for (final x in v.blocks) _touchFlowAuthoringGuideBlocksItem(x);
+  for (final x in v.triggers) _touchFlowAuthoringGuideTriggersItem(x);
+  v.context.length;
+  for (final x in v.functions) _touchFlowAuthoringGuideFunctionsItem(x);
+  v.templateFilters.length;
+  v.rules.length;
+  for (final x in v.expressionExamples) _touchFlowAuthoringGuideExpressionExamplesItem(x);
+  v.operationExample.length;
+}
+
+void _touchFlowAuthoringGuideNodesItem(FlowAuthoringGuideNodesItem v) {
+  v.toJson();
+  v.type;
+  v.name;
+  v.kind;
+  if (v.outputs != null) { v.outputs!.length; }
+  v.description;
+}
+
+void _touchFlowAuthoringGuideBlocksItem(FlowAuthoringGuideBlocksItem v) {
+  v.toJson();
+  v.type;
+  v.effect;
+  v.description;
+}
+
+void _touchFlowAuthoringGuideTriggersItem(FlowAuthoringGuideTriggersItem v) {
+  v.toJson();
+  v.type;
+  v.format;
+  v.description;
+}
+
+void _touchFlowAuthoringGuideFunctionsItem(FlowAuthoringGuideFunctionsItem v) {
+  v.toJson();
+  v.name;
+  v.signature;
+  v.doc;
+}
+
+void _touchFlowAuthoringGuideExpressionExamplesItem(FlowAuthoringGuideExpressionExamplesItem v) {
+  v.toJson();
+  v.expr;
+  v.description;
+}
+
+void _touchFlowNodeTypeDetail(FlowNodeTypeDetail v) {
+  v.toJson();
+  v.type;
+  v.category;
+  v.version;
+  if (v.kind != null) { v.kind; }
+  if (v.effect != null) { v.effect; }
+  if (v.outputs != null) { v.outputs!.length; }
+  v.name;
+  v.description;
+  if (v.configSchema != null) { v.configSchema!.length; }
+  v.example.length;
+}
+
+void _touchFlowEditSessionView(FlowEditSessionView v) {
+  v.toJson();
+  v.revision;
+  if (v.session != null) { _touchFlowEditSessionViewSession(v.session!); }
+  if (v.channel != null) { _touchFlowEditSessionViewChannel(v.channel!); }
+}
+
+void _touchFlowEditSessionViewSession(FlowEditSessionViewSession v) {
+  v.toJson();
+  _touchFlowEditSessionViewSessionHolder(v.holder);
+  v.expiresAt;
+  v.mine;
+}
+
+void _touchFlowEditSessionViewSessionHolder(FlowEditSessionViewSessionHolder v) {
+  v.toJson();
+  v.kind;
+  if (v.name != null) { v.name; }
+}
+
+void _touchFlowEditSessionViewChannel(FlowEditSessionViewChannel v) {
+  v.toJson();
+  v.streamId;
+  v.streamUrl;
+  v.streamToken;
+}
+
+void _touchClaimFlowEditSessionRequest(ClaimFlowEditSessionRequest v) {
+  v.toJson();
+  if (v.takeover != null) { v.takeover; }
+}
+
 void _touchPageInfo(PageInfo v) {
   v.toJson();
   v.page;
@@ -4659,6 +5450,65 @@ void _touchBulkResultFailedItem(BulkResultFailedItem v) {
   v.message;
 }
 
+void _touchConditionRule(ConditionRule v) {
+  v.toJson();
+  v.field;
+  v.operator;
+  if (v.value != null) { v.value; }
+}
+
+void _touchCouponFactsSnapshot(CouponFactsSnapshot v) {
+  v.toJson();
+  if (v.customer != null) { _touchCouponFactsSnapshotCustomer(v.customer!); }
+  if (v.time != null) { _touchCouponFactsSnapshotTime(v.time!); }
+}
+
+void _touchCouponFactsSnapshotCustomer(CouponFactsSnapshotCustomer v) {
+  v.toJson();
+  if (v.daysSinceJoined != null) { v.daysSinceJoined; }
+  if (v.marketingAgreed != null) { v.marketingAgreed; }
+  if (v.paidOrderCount != null) { v.paidOrderCount; }
+  if (v.daysSinceLastOrder != null) { v.daysSinceLastOrder; }
+}
+
+void _touchCouponFactsSnapshotTime(CouponFactsSnapshotTime v) {
+  v.toJson();
+  v.weekday;
+  v.timeOfDay;
+}
+
+void _touchCouponTargetRules(CouponTargetRules v) {
+  v.toJson();
+  for (final x in v.include) _touchConditionRule(x);
+  for (final x in v.exclude) _touchConditionRule(x);
+}
+
+void _touchCouponTargetTree(CouponTargetTree v) {
+  v.toJson();
+  _touchConditionGroup(v.include);
+  _touchConditionGroup(v.exclude);
+}
+
+void _touchCouponStacking(CouponStacking v) {
+  v.toJson();
+  _touchCouponStackingCombinesWith(v.combinesWith);
+  v.withPoints;
+  v.perOrderLimit;
+}
+
+void _touchCouponStackingCombinesWith(CouponStackingCombinesWith v) {
+  v.toJson();
+  v.order;
+  v.product;
+  v.delivery;
+}
+
+void _touchCouponVoucherInput(CouponVoucherInput v) {
+  v.toJson();
+  v.prefix;
+  v.count;
+}
+
 void _touchCouponConditionsInput(CouponConditionsInput v) {
   v.toJson();
   if (v.minOrderAmount != null) { v.minOrderAmount; }
@@ -4680,19 +5530,30 @@ void _touchCreateCouponRequest(CreateCouponRequest v) {
   v.name;
   if (v.description != null) { v.description; }
   v.kind;
-  _touchCouponBenefit(v.benefit);
+  if (v.benefit != null) { _touchCouponBenefit(v.benefit!); }
   if (v.conditions != null) { _touchCouponConditionsInput(v.conditions!); }
   if (v.target != null) { _touchCouponTargetInput(v.target!); }
   v.issueMethod;
   if (v.code != null) { v.code; }
+  if (v.voucher != null) { _touchCouponVoucherInput(v.voucher!); }
   if (v.startsAt != null) { v.startsAt; }
   if (v.endsAt != null) { v.endsAt; }
   if (v.validDaysAfterIssue != null) { v.validDaysAfterIssue; }
   if (v.totalIssueLimit != null) { v.totalIssueLimit; }
+  if (v.dailyIssueLimit != null) { v.dailyIssueLimit; }
   if (v.totalUseLimit != null) { v.totalUseLimit; }
   if (v.perMemberIssueLimit != null) { v.perMemberIssueLimit; }
   if (v.perMemberUseLimit != null) { v.perMemberUseLimit; }
   if (v.currency != null) { v.currency; }
+  if (v.eligibility != null) { _touchConditionGroup(v.eligibility!); }
+  if (v.targetRules != null) { _touchCouponTargetRules(v.targetRules!); }
+  if (v.targetTree != null) { _touchCouponTargetTree(v.targetTree!); }
+  if (v.audience != null) { _touchConditionGroup(v.audience!); }
+  if (v.stacking != null) { _touchCouponStacking(v.stacking!); }
+  if (v.reward != null) { _touchCouponReward(v.reward!); }
+  if (v.issueStartsAt != null) { v.issueStartsAt; }
+  if (v.issueEndsAt != null) { v.issueEndsAt; }
+  if (v.visibleFrom != null) { v.visibleFrom; }
 }
 
 void _touchUpdateCouponRequest(UpdateCouponRequest v) {
@@ -4707,9 +5568,19 @@ void _touchUpdateCouponRequest(UpdateCouponRequest v) {
   if (v.endsAt != null) { v.endsAt; }
   if (v.validDaysAfterIssue != null) { v.validDaysAfterIssue; }
   if (v.totalIssueLimit != null) { v.totalIssueLimit; }
+  if (v.dailyIssueLimit != null) { v.dailyIssueLimit; }
   if (v.totalUseLimit != null) { v.totalUseLimit; }
   if (v.perMemberIssueLimit != null) { v.perMemberIssueLimit; }
   if (v.perMemberUseLimit != null) { v.perMemberUseLimit; }
+  if (v.eligibility != null) { _touchConditionGroup(v.eligibility!); }
+  if (v.targetRules != null) { _touchCouponTargetRules(v.targetRules!); }
+  if (v.targetTree != null) { _touchCouponTargetTree(v.targetTree!); }
+  if (v.audience != null) { _touchConditionGroup(v.audience!); }
+  if (v.stacking != null) { _touchCouponStacking(v.stacking!); }
+  if (v.reward != null) { _touchCouponReward(v.reward!); }
+  if (v.issueStartsAt != null) { v.issueStartsAt; }
+  if (v.issueEndsAt != null) { v.issueEndsAt; }
+  if (v.visibleFrom != null) { v.visibleFrom; }
 }
 
 void _touchCoupon(Coupon v) {
@@ -4727,18 +5598,36 @@ void _touchCoupon(Coupon v) {
   if (v.endsAt != null) { v.endsAt; }
   if (v.validDaysAfterIssue != null) { v.validDaysAfterIssue; }
   if (v.totalIssueLimit != null) { v.totalIssueLimit; }
+  if (v.dailyIssueLimit != null) { v.dailyIssueLimit; }
   if (v.totalUseLimit != null) { v.totalUseLimit; }
   if (v.perMemberIssueLimit != null) { v.perMemberIssueLimit; }
   if (v.perMemberUseLimit != null) { v.perMemberUseLimit; }
+  if (v.voucher != null) { _touchCouponVoucher(v.voucher!); }
   v.issuedCount;
   v.reservedCount;
   v.usedCount;
   v.currency;
+  if (v.eligibility != null) { _touchConditionGroup(v.eligibility!); }
+  if (v.targetRules != null) { _touchCouponTargetRules(v.targetRules!); }
+  if (v.targetTree != null) { _touchCouponTargetTree(v.targetTree!); }
+  if (v.audience != null) { _touchConditionGroup(v.audience!); }
+  _touchCouponStacking(v.stacking);
+  if (v.reward != null) { _touchCouponReward(v.reward!); }
+  v.rulesOnly;
+  if (v.issueStartsAt != null) { v.issueStartsAt; }
+  if (v.issueEndsAt != null) { v.issueEndsAt; }
+  if (v.visibleFrom != null) { v.visibleFrom; }
   v.status;
   v.locked;
   if (v.lockedAt != null) { v.lockedAt; }
   v.createdAt;
   v.updatedAt;
+}
+
+void _touchCouponVoucher(CouponVoucher v) {
+  v.toJson();
+  v.prefix;
+  v.count;
 }
 
 void _touchCouponListQuery(CouponListQuery v) {
@@ -4771,6 +5660,27 @@ void _touchCouponIssueListQuery(CouponIssueListQuery v) {
   if (v.status != null) { v.status; }
   if (v.page != null) { v.page; }
   if (v.size != null) { v.size; }
+}
+
+void _touchCouponVoucherCodes(CouponVoucherCodes v) {
+  v.toJson();
+  v.prefix;
+  v.count;
+  v.codes.length;
+}
+
+void _touchCouponDistribution(CouponDistribution v) {
+  v.toJson();
+  v.distributionId;
+  v.couponId;
+  v.status;
+  v.processedCount;
+  v.issuedCount;
+  v.skippedCount;
+  if (v.stopCode != null) { v.stopCode; }
+  v.createdAt;
+  if (v.startedAt != null) { v.startedAt; }
+  if (v.finishedAt != null) { v.finishedAt; }
 }
 
 void _touchIssueCouponRequest(IssueCouponRequest v) {
@@ -4899,6 +5809,7 @@ void _touchCustomerDelegationRequest(CustomerDelegationRequest v) {
   if (v.email != null) { v.email; }
   if (v.name != null) { v.name; }
   if (v.authenticatedAt != null) { v.authenticatedAt; }
+  if (v.userinfo != null) { _touchCustomerUserinfoInput(v.userinfo!); }
 }
 
 void _touchCustomerDelegation(CustomerDelegation v) {
@@ -4939,6 +5850,48 @@ void _touchCustomerSummary(CustomerSummary v) {
   v.orderCount;
   v.totalPaid;
   if (v.lastOrderedAt != null) { v.lastOrderedAt; }
+}
+
+void _touchCustomerExportQuery(CustomerExportQuery v) {
+  v.toJson();
+  if (v.q != null) { v.q; }
+  if (v.joinedFrom != null) { v.joinedFrom; }
+  if (v.joinedTo != null) { v.joinedTo; }
+  if (v.marketing != null) { v.marketing; }
+  if (v.sort != null) { v.sort; }
+  if (v.page != null) { v.page; }
+  if (v.size != null) { v.size; }
+  v.fields;
+}
+
+void _touchCustomerExportAddress(CustomerExportAddress v) {
+  v.toJson();
+  v.receiverName;
+  if (v.phone != null) { v.phone; }
+  v.zipCode;
+  v.address1;
+  if (v.address2 != null) { v.address2; }
+  v.countryCode;
+  if (v.city != null) { v.city; }
+  if (v.region != null) { v.region; }
+}
+
+void _touchCustomerExportRow(CustomerExportRow v) {
+  v.toJson();
+  v.customerId;
+  if (v.name != null) { v.name; }
+  if (v.email != null) { v.email; }
+  if (v.phone != null) { v.phone; }
+  if (v.joinedAt != null) { v.joinedAt; }
+  if (v.orderCount != null) { v.orderCount; }
+  if (v.totalPaid != null) { v.totalPaid; }
+  if (v.lastOrderedAt != null) { v.lastOrderedAt; }
+  if (v.point != null) { v.point; }
+  if (v.marketingAgreed != null) { v.marketingAgreed; }
+  if (v.marketingUpdatedAt != null) { v.marketingUpdatedAt; }
+  if (v.birthdate != null) { v.birthdate; }
+  if (v.gender != null) { v.gender; }
+  if (v.defaultAddress != null) { _touchCustomerExportAddress(v.defaultAddress!); }
 }
 
 void _touchCustomerAddress(CustomerAddress v) {
@@ -5002,9 +5955,11 @@ void _touchCustomerDetail(CustomerDetail v) {
   v.joinedAt;
   v.point;
   v.marketingAgreed;
+  if (v.lockedUntil != null) { v.lockedUntil; }
   for (final x in v.loginMethods) _touchCustomerDetailLoginMethodsItem(x);
   _touchCustomerConsents(v.consents);
   for (final x in v.addresses) _touchCustomerAddress(x);
+  if (v.userinfo != null) { _touchCustomerUserinfo(v.userinfo!); }
   _touchCustomerDetailStats(v.stats);
 }
 
@@ -5054,6 +6009,34 @@ void _touchCustomerWithdrawalBlockedDetails(CustomerWithdrawalBlockedDetails v) 
   v.inProgressOrderItems;
   v.openClaims;
   v.pendingPayments;
+}
+
+void _touchUpdateCustomerRequest(UpdateCustomerRequest v) {
+  v.toJson();
+  _touchUpdateCustomerRequestUserinfo(v.userinfo);
+}
+
+void _touchUpdateCustomerRequestUserinfo(UpdateCustomerRequestUserinfo v) {
+  v.toJson();
+  if (v.birthdate != null) { v.birthdate; }
+}
+
+void _touchFlowText(FlowText v) {
+  v.toJson();
+  v.key;
+  v.text;
+}
+
+void _touchFlowLocalization(FlowLocalization v) {
+  v.toJson();
+  v.locale;
+  v.texts.length;
+  v.updatedAt;
+}
+
+void _touchFlowLocalizationRequest(FlowLocalizationRequest v) {
+  v.toJson();
+  v.texts.length;
 }
 
 void _touchProductFulfillmentCreate(ProductFulfillmentCreate v) {
@@ -5354,6 +6337,79 @@ void _touchClaimRedeliveryRequest(ClaimRedeliveryRequest v) {
   v.carrierCode;
   v.trackingNumber;
   if (v.inventoryLocationId != null) { v.inventoryLocationId; }
+}
+
+void _touchLowStockSettings(LowStockSettings v) {
+  v.toJson();
+  if (v.defaultThreshold != null) { v.defaultThreshold; }
+  v.scope;
+}
+
+void _touchLowStockSettingsRequest(LowStockSettingsRequest v) {
+  v.toJson();
+  if (v.defaultThreshold != null) { v.defaultThreshold; }
+  v.scope;
+}
+
+void _touchLowStockVariantThreshold(LowStockVariantThreshold v) {
+  v.toJson();
+  v.productId;
+  v.variantId;
+  v.threshold;
+}
+
+void _touchLowStockThresholdListQuery(LowStockThresholdListQuery v) {
+  v.toJson();
+  if (v.productId != null) { v.productId; }
+  if (v.cursor != null) { v.cursor; }
+  if (v.limit != null) { v.limit; }
+}
+
+void _touchLowStockThresholdPage(LowStockThresholdPage v) {
+  v.toJson();
+  for (final x in v.contents) _touchLowStockVariantThreshold(x);
+  if (v.nextCursor != null) { v.nextCursor; }
+}
+
+void _touchLowStockThresholdsRequest(LowStockThresholdsRequest v) {
+  v.toJson();
+  for (final x in v.lines) _touchLowStockThresholdsRequestLinesItem(x);
+}
+
+void _touchLowStockThresholdsRequestLinesItem(LowStockThresholdsRequestLinesItem v) {
+  v.toJson();
+  v.variantId;
+  if (v.threshold != null) { v.threshold; }
+}
+
+void _touchLowStockThresholdsResultItem(LowStockThresholdsResultItem v) {
+  v.toJson();
+  v.productId;
+  v.variantId;
+  if (v.threshold != null) { v.threshold; }
+}
+
+void _touchLowStockItem(LowStockItem v) {
+  v.toJson();
+  v.productId;
+  v.variantId;
+  if (v.inventoryLocationId != null) { v.inventoryLocationId; }
+  v.available;
+  v.threshold;
+  v.thresholdSource;
+}
+
+void _touchLowStockListQuery(LowStockListQuery v) {
+  v.toJson();
+  if (v.cursor != null) { v.cursor; }
+  if (v.limit != null) { v.limit; }
+}
+
+void _touchLowStockPage(LowStockPage v) {
+  v.toJson();
+  v.scope;
+  for (final x in v.contents) _touchLowStockItem(x);
+  if (v.nextCursor != null) { v.nextCursor; }
 }
 
 void _touchLoginProviderStatus(LoginProviderStatus v) {
@@ -5750,7 +6806,6 @@ void _touchOrderItemFulfillment(OrderItemFulfillment v) {
   v.status;
   v.fulfilledAt;
   if (v.note != null) { v.note; }
-  if (v.mode != null) { v.mode; }
 }
 
 void _touchOrderItem(OrderItem v) {
@@ -5758,6 +6813,7 @@ void _touchOrderItem(OrderItem v) {
   v.orderItemId;
   if (v.orderItemNo != null) { v.orderItemNo; }
   v.orderId;
+  if (v.paymentId != null) { v.paymentId; }
   v.status;
   if (v.claimStatus != null) { v.claimStatus; }
   v.productId;
@@ -5802,6 +6858,17 @@ void _touchOrderDiscount(OrderDiscount v) {
   if (v.issueId != null) { v.issueId; }
 }
 
+void _touchOrderPayment(OrderPayment v) {
+  v.toJson();
+  v.paymentId;
+  v.additional;
+  v.amount;
+  if (v.approvedMethod != null) { v.approvedMethod; }
+  if (v.easyPayProvider != null) { v.easyPayProvider; }
+  v.paidAt;
+  v.refundedAmount;
+}
+
 void _touchOrder(Order v) {
   v.toJson();
   v.orderId;
@@ -5811,10 +6878,12 @@ void _touchOrder(Order v) {
   _touchOrderOrderer(v.orderer);
   v.requiresShipping;
   _touchShippingAddress(v.shippingAddress);
-  _touchOrderPayment(v.payment);
+  _touchOrderPaymentField(v.payment);
   if (v.currency != null) { v.currency; }
   v.testPayment;
   if (v.locale != null) { v.locale; }
+  for (final x in v.payments) _touchOrderPayment(x);
+  for (final x in v.paymentRequests) _touchSellerCheckout(x);
   for (final x in v.items) _touchOrderItem(x);
 }
 
@@ -5825,7 +6894,7 @@ void _touchOrderOrderer(OrderOrderer v) {
   if (v.email != null) { v.email; }
 }
 
-void _touchOrderPayment(OrderPayment v) {
+void _touchOrderPaymentField(OrderPaymentField v) {
   v.toJson();
   v.method;
   if (v.approvedMethod != null) { v.approvedMethod; }
@@ -5904,6 +6973,76 @@ void _touchDeliveryInfo(DeliveryInfo v) {
   if (v.deliveredAt != null) { v.deliveredAt; }
 }
 
+void _touchShippingOrderItem(ShippingOrderItem v) {
+  v.toJson();
+  v.orderItemId;
+  if (v.orderItemNo != null) { v.orderItemNo; }
+  v.orderId;
+  if (v.paymentId != null) { v.paymentId; }
+  v.status;
+  if (v.claimStatus != null) { v.claimStatus; }
+  v.productId;
+  v.productName;
+  if (v.optionId != null) { v.optionId; }
+  if (v.optionName != null) { v.optionName; }
+  for (final x in v.optionSelections) _touchOptionSelection(x);
+  for (final x in v.customInputs) _touchCustomInputValue(x);
+  if (v.stay != null) { _touchStaySnapshot(v.stay!); }
+  if (v.sellerCode != null) { v.sellerCode; }
+  _touchOrderItemFulfillmentSnapshotView(v.fulfillmentSnapshot);
+  v.quantity;
+  v.canceledQuantity;
+  v.activeQuantity;
+  v.unitPrice;
+  v.discountAmount;
+  v.totalPrice;
+  v.couponDiscountAmount;
+  v.pointAllocation;
+  if (v.hold != null) { _touchOrderItemHold(v.hold!); }
+  if (v.fulfillment != null) { _touchOrderItemFulfillment(v.fulfillment!); }
+  if (v.autoDecisionDate != null) { v.autoDecisionDate; }
+  if (v.sellerMemo != null) { v.sellerMemo; }
+  v.orderedAt;
+  v.lastChangedAt;
+  v.lastChangedType;
+  v.testPayment;
+  if (v.orderNo != null) { v.orderNo; }
+  v.ordererName;
+  v.ordererPhone;
+  _touchShippingAddress(v.shippingAddress);
+  if (v.delivery != null) { _touchDeliveryInfo(v.delivery!); }
+  if (v.flowStep != null) { _touchShippingOrderItemFlowStep(v.flowStep!); }
+}
+
+void _touchShippingOrderItemFlowStep(ShippingOrderItemFlowStep v) {
+  v.toJson();
+  v.key;
+  v.label;
+  v.acceptsConfirm;
+  v.acceptsDispatch;
+}
+
+void _touchShippingOrderItemPage(ShippingOrderItemPage v) {
+  v.toJson();
+  v.page;
+  v.size;
+  v.totalElements;
+  v.totalPages;
+  for (final x in v.contents) _touchShippingOrderItem(x);
+}
+
+void _touchShippingOrderItemListQuery(ShippingOrderItemListQuery v) {
+  v.toJson();
+  if (v.orderedFrom != null) { v.orderedFrom; }
+  if (v.orderedTo != null) { v.orderedTo; }
+  if (v.status != null) { v.status; }
+  if (v.orderItemNos != null) { v.orderItemNos; }
+  if (v.keyword != null) { v.keyword; }
+  if (v.testPayment != null) { v.testPayment; }
+  if (v.page != null) { v.page; }
+  if (v.size != null) { v.size; }
+}
+
 void _touchDeliveryStatus(DeliveryStatus v) {
   v.toJson();
   v.orderItemId;
@@ -5962,6 +7101,18 @@ void _touchCancelBySellerRequest(CancelBySellerRequest v) {
   if (v.detail != null) { v.detail; }
   if (v.quantity != null) { v.quantity; }
   if (v.holdRefund != null) { v.holdRefund; }
+  if (v.responsibility != null) { v.responsibility; }
+  if (v.deductAmount != null) { v.deductAmount; }
+  if (v.refundAmount != null) { v.refundAmount; }
+  if (v.restock != null) { v.restock; }
+  if (v.reclaimPurchasePoints != null) { v.reclaimPurchasePoints; }
+}
+
+void _touchSellerRefundRequest(SellerRefundRequest v) {
+  v.toJson();
+  v.amount;
+  v.reason;
+  if (v.paymentId != null) { v.paymentId; }
 }
 
 void _touchFulfillRequest(FulfillRequest v) {
@@ -5979,6 +7130,7 @@ void _touchCancelBySellerResult(CancelBySellerResult v) {
   v.toJson();
   v.orderItemId;
   v.refundAmount;
+  if (v.calculatedRefundAmount != null) { v.calculatedRefundAmount; }
   v.quantity;
   v.canceledQuantity;
   v.deliveryFeeRefundAmount;
@@ -5988,6 +7140,9 @@ void _touchCancelBySellerResult(CancelBySellerResult v) {
   v.pointRefundAmount;
   v.refundedAt;
   v.refundHeld;
+  if (v.refundStatus != null) { v.refundStatus; }
+  v.deductAmount;
+  v.purchasePointReclaimedAmount;
 }
 
 void _touchSellerCancelPreview(SellerCancelPreview v) {
@@ -5998,6 +7153,9 @@ void _touchSellerCancelPreview(SellerCancelPreview v) {
   v.pointRefundAmount;
   v.deliveryFeeRefundAmount;
   v.deliveryFeeChargeAmount;
+  v.deductAmount;
+  v.restockRequired;
+  v.purchasePointAmount;
 }
 
 void _touchOrderItemMemoResult(OrderItemMemoResult v) {
@@ -6383,6 +7541,7 @@ void _touchPaymentRefundRecord(PaymentRefundRecord v) {
   v.refundId;
   v.amount;
   v.pointRefundAmount;
+  if (v.calculatedAmount != null) { v.calculatedAmount; }
   v.reason;
   v.kind;
   v.status;
@@ -6416,6 +7575,7 @@ void _touchPaymentRecordDetail(PaymentRecordDetail v) {
   v.createdAt;
   if (v.cashReceiptStatus != null) { v.cashReceiptStatus; }
   v.refundableAmount;
+  if (v.availableRefundAmount != null) { v.availableRefundAmount; }
   if (v.merchantId != null) { v.merchantId; }
   for (final x in v.attempts) _touchPaymentAttemptRecord(x);
   for (final x in v.refunds) _touchPaymentRefundRecord(x);
@@ -6563,6 +7723,75 @@ void _touchPointAdjustmentResult(PointAdjustmentResult v) {
   v.balance;
 }
 
+void _touchProductImportItem(ProductImportItem v) {
+  if (v is ProductImportItemCreate) _touchProductImportItemCreate(v);
+  if (v is ProductImportItemUpdate) _touchProductImportItemUpdate(v);
+}
+
+void _touchProductImportItemCreate(ProductImportItemCreate v) {
+  v.toJson();
+  v.key;
+  v.action;
+  _touchProductCreateRequest(v.product);
+  if (v.status != null) { v.status; }
+}
+
+void _touchProductImportItemUpdate(ProductImportItemUpdate v) {
+  v.toJson();
+  v.key;
+  v.action;
+  v.productId;
+  v.expectedUpdatedAt;
+  _touchProductReplaceRequest(v.product);
+  if (v.status != null) { v.status; }
+  if (v.expectedStock != null) { v.expectedStock!.length; }
+}
+
+void _touchProductImportItemsRequest(ProductImportItemsRequest v) {
+  v.toJson();
+  for (final x in v.items) _touchProductImportItem(x);
+}
+
+void _touchProductLookupRequest(ProductLookupRequest v) {
+  v.toJson();
+  if (v.productIds != null) { v.productIds!.length; }
+  if (v.productNos != null) { v.productNos!.length; }
+}
+
+void _touchProductImportError(ProductImportError v) {
+  v.toJson();
+  v.key;
+  v.code;
+  v.message;
+  if (v.fieldErrors != null) { for (final x in v.fieldErrors!) _touchProductImportErrorFieldErrorsItem(x); }
+}
+
+void _touchProductImportErrorFieldErrorsItem(ProductImportErrorFieldErrorsItem v) {
+  v.toJson();
+  v.field;
+  v.code;
+  v.message;
+}
+
+void _touchProductImport(ProductImport v) {
+  v.toJson();
+  v.importId;
+  v.status;
+  v.itemCount;
+  for (final x in v.errors) _touchProductImportError(x);
+  for (final x in v.results) _touchProductImportResultsItem(x);
+  v.createdAt;
+  if (v.startedAt != null) { v.startedAt; }
+  if (v.finishedAt != null) { v.finishedAt; }
+}
+
+void _touchProductImportResultsItem(ProductImportResultsItem v) {
+  v.toJson();
+  v.key;
+  v.action;
+  v.productId;
+}
+
 void _touchInfoFieldSource(InfoFieldSource v) {
   v.toJson();
   v.type;
@@ -6683,6 +7912,25 @@ void _touchInfoSectionLocalizationRequest(InfoSectionLocalizationRequest v) {
   if (v.title != null) { v.title; }
   if (v.body != null) { v.body; }
   if (v.bodyJson != null) { v.bodyJson; }
+}
+
+void _touchNoticeTemplate(NoticeTemplate v) {
+  v.toJson();
+  v.templateId;
+  v.name;
+  v.schemaId;
+  v.version;
+  v.values.length;
+  v.createdAt;
+  v.updatedAt;
+}
+
+void _touchNoticeTemplateRequest(NoticeTemplateRequest v) {
+  v.toJson();
+  v.name;
+  v.schemaId;
+  if (v.version != null) { v.version; }
+  v.values.length;
 }
 
 void _touchProductLocalization(ProductLocalization v) {
@@ -7119,6 +8367,40 @@ void _touchCouponBenefit(CouponBenefit v) {
   if (v.maxDiscountAmount != null) { v.maxDiscountAmount; }
 }
 
+void _touchCouponReward(CouponReward v) {
+  if (v is CouponRewardTiered) _touchCouponRewardTiered(v);
+  if (v is CouponRewardBuyXGetY) _touchCouponRewardBuyXGetY(v);
+  if (v is CouponRewardPoint) _touchCouponRewardPoint(v);
+}
+
+void _touchCouponRewardTiered(CouponRewardTiered v) {
+  v.toJson();
+  v.type;
+  for (final x in v.tiers) _touchCouponRewardTieredTiersItem(x);
+  v.shortfallCharge;
+}
+
+void _touchCouponRewardTieredTiersItem(CouponRewardTieredTiersItem v) {
+  v.toJson();
+  v.minAmount;
+  _touchCouponBenefit(v.benefit);
+}
+
+void _touchCouponRewardBuyXGetY(CouponRewardBuyXGetY v) {
+  v.toJson();
+  v.type;
+  v.buy;
+  v.get;
+  v.rate;
+  v.shortfallCharge;
+}
+
+void _touchCouponRewardPoint(CouponRewardPoint v) {
+  v.toJson();
+  v.type;
+  _touchCouponBenefit(v.benefit);
+}
+
 void _touchCouponConditions(CouponConditions v) {
   v.toJson();
   v.minOrderAmount;
@@ -7145,6 +8427,11 @@ void _touchCouponRule(CouponRule v) {
   _touchCouponTarget(v.target);
   if (v.startsAt != null) { v.startsAt; }
   if (v.endsAt != null) { v.endsAt; }
+  if (v.eligibility != null) { _touchConditionGroup(v.eligibility!); }
+  if (v.targetRules != null) { _touchCouponTargetRules(v.targetRules!); }
+  if (v.targetTree != null) { _touchCouponTargetTree(v.targetTree!); }
+  if (v.stacking != null) { _touchCouponStacking(v.stacking!); }
+  if (v.reward != null) { _touchCouponReward(v.reward!); }
 }
 
 void _touchCurrencyRefundFees(CurrencyRefundFees v) {
@@ -7413,7 +8700,6 @@ void _touchStarterStatusSite(StarterStatusSite v) {
   v.toJson();
   v.siteId;
   v.url;
-  v.templateId;
   v.visibility;
   v.status;
   v.synced;
@@ -7423,7 +8709,6 @@ void _touchStarterStatusSite(StarterStatusSite v) {
 void _touchStarterStatusSitePublishedVersion(StarterStatusSitePublishedVersion v) {
   v.toJson();
   v.versionId;
-  v.templateVersion;
   if (v.createdVia != null) { v.createdVia; }
   if (v.publishedAt != null) { v.publishedAt; }
 }
@@ -7506,6 +8791,7 @@ void _touchUpdateStoreRequest(UpdateStoreRequest v) {
   v.toJson();
   if (v.name != null) { v.name; }
   if (v.logoUrl != null) { v.logoUrl; }
+  if (v.iconUrl != null) { v.iconUrl; }
   if (v.customerCenterPhone != null) { v.customerCenterPhone; }
   if (v.businessHours != null) { v.businessHours; }
   if (v.businessName != null) { v.businessName; }
@@ -7518,7 +8804,6 @@ void _touchUpdateStoreRequest(UpdateStoreRequest v) {
   if (v.privacyOfficerEmail != null) { v.privacyOfficerEmail; }
   if (v.storefrontOrigins != null) { v.storefrontOrigins!.length; }
   if (v.guestCheckoutEnabled != null) { v.guestCheckoutEnabled; }
-  if (v.testOrderReviewsAllowed != null) { v.testOrderReviewsAllowed; }
   if (v.autoDeliverDays != null) { v.autoDeliverDays; }
   if (v.autoConfirmDays != null) { v.autoConfirmDays; }
   if (v.refundPolicy != null) { _touchRefundPolicyPatch(v.refundPolicy!); }
@@ -7535,9 +8820,10 @@ void _touchStore(Store v) {
   v.storeId;
   v.name;
   v.storeCode;
-  v.storefrontUrl;
+  if (v.storefrontUrl != null) { v.storefrontUrl; }
   v.status;
   if (v.logoUrl != null) { v.logoUrl; }
+  if (v.iconUrl != null) { v.iconUrl; }
   if (v.businessNumber != null) { v.businessNumber; }
   if (v.customerCenterPhone != null) { v.customerCenterPhone; }
   if (v.businessName != null) { v.businessName; }
@@ -7550,7 +8836,6 @@ void _touchStore(Store v) {
   v.analyticsAllowedOrigins.length;
   v.storefrontOrigins.length;
   v.guestCheckoutEnabled;
-  v.testOrderReviewsAllowed;
   v.autoDeliverDays;
   v.autoConfirmDays;
   _touchRefundPolicy(v.refundPolicy);
@@ -7646,44 +8931,10 @@ void _touchSellerAddressRequest(SellerAddressRequest v) {
   if (v.inventoryLocationId != null) { v.inventoryLocationId; }
 }
 
-void _touchStorefrontTemplate(StorefrontTemplate v) {
-  v.toJson();
-  v.templateId;
-  v.name;
-  v.industry;
-  v.description;
-  if (v.thumbnailUrl != null) { v.thumbnailUrl; }
-  v.version;
-  v.isDefault;
-  v.tags.length;
-  v.supportsCheckout;
-  if (v.previewUrl != null) { v.previewUrl; }
-  v.source;
-}
-
-void _touchStoreTemplate(StoreTemplate v) {
-  v.toJson();
-  v.templateId;
-  v.name;
-  v.description;
-  if (v.thumbnailUrl != null) { v.thumbnailUrl; }
-  v.status;
-  if (v.version != null) { v.version; }
-}
-
-void _touchUpdateStoreTemplateRequest(UpdateStoreTemplateRequest v) {
-  v.toJson();
-  v.name;
-  v.description;
-  if (v.thumbnailUrl != null) { v.thumbnailUrl; }
-}
-
 void _touchStorefrontVersion(StorefrontVersion v) {
   v.toJson();
   v.versionId;
   v.number;
-  v.templateId;
-  v.templateVersion;
   v.status;
   v.published;
   if (v.publishedAt != null) { v.publishedAt; }
@@ -7692,6 +8943,11 @@ void _touchStorefrontVersion(StorefrontVersion v) {
   if (v.buildId != null) { v.buildId; }
   v.createdByType;
   if (v.createdVia != null) { v.createdVia; }
+  if (v.gitRef != null) { v.gitRef; }
+  if (v.commitSha != null) { v.commitSha; }
+  if (v.excludedPaths != null) { v.excludedPaths!.length; }
+  if (v.mainChanged != null) { v.mainChanged; }
+  if (v.buildCanceled != null) { v.buildCanceled; }
   v.createdAt;
   if (v.previewable != null) { v.previewable; }
 }
@@ -7733,12 +8989,13 @@ void _touchStorefrontSiteSnapshot(StorefrontSiteSnapshot v) {
 void _touchStorefrontSite(StorefrontSite v) {
   v.toJson();
   v.siteId;
+  if (v.versionHistory != null) { v.versionHistory; }
+  if (v.autoPublish != null) { v.autoPublish; }
+  if (v.deployWithoutApproval != null) { v.deployWithoutApproval; }
   v.slug;
   v.hostname;
   v.url;
   for (final x in v.domains) _touchStorefrontDomain(x);
-  v.templateId;
-  v.sourceMode;
   v.status;
   v.visibility;
   if (v.publishedVersion != null) { _touchStorefrontVersion(v.publishedVersion!); }
@@ -7797,9 +9054,8 @@ void _touchStorefrontDeployment(StorefrontDeployment v) {
 
 void _touchCreateStorefrontSiteRequest(CreateStorefrontSiteRequest v) {
   v.toJson();
-  v.templateId;
+  if (v.initialSource != null) { v.initialSource; }
   if (v.slug != null) { v.slug; }
-  if (v.copyContent != null) { v.copyContent; }
 }
 
 void _touchPublishStorefrontVersionRequest(PublishStorefrontVersionRequest v) {
@@ -7826,7 +9082,7 @@ void _touchSetStorefrontVisibilityRequest(SetStorefrontVisibilityRequest v) {
 
 void _touchDisableStorefrontHostingRequest(DisableStorefrontHostingRequest v) {
   v.toJson();
-  v.confirmSlug;
+  if (v.confirmSlug != null) { v.confirmSlug; }
 }
 
 void _touchStorefrontSlugAvailabilityQuery(StorefrontSlugAvailabilityQuery v) {
@@ -7884,6 +9140,26 @@ void _touchAddStorefrontDomainRequest(AddStorefrontDomainRequest v) {
   v.hostname;
 }
 
+void _touchStorefrontSiteVar(StorefrontSiteVar v) {
+  v.toJson();
+  v.key;
+  v.secret;
+  if (v.value != null) { v.value; }
+  v.updatedAt;
+}
+
+void _touchStorefrontSiteVars(StorefrontSiteVars v) {
+  v.toJson();
+  v.limit;
+  for (final x in v.vars) _touchStorefrontSiteVar(x);
+}
+
+void _touchPutStorefrontSiteVarRequest(PutStorefrontSiteVarRequest v) {
+  v.toJson();
+  v.value;
+  if (v.secret != null) { v.secret; }
+}
+
 void _touchStorefrontEditSession(StorefrontEditSession v) {
   v.toJson();
   v.sessionId;
@@ -7894,6 +9170,19 @@ void _touchStorefrontEditSession(StorefrontEditSession v) {
   v.lastActiveAt;
   v.idleExpiresAt;
   v.closesAt;
+}
+
+void _touchStorefrontGitMergeRequest(StorefrontGitMergeRequest v) {
+  v.toJson();
+  v.action;
+}
+
+void _touchStorefrontGitMerge(StorefrontGitMerge v) {
+  v.toJson();
+  v.status;
+  v.conflicts.length;
+  v.mainChanged;
+  if (v.dependenciesChanged != null) { v.dependenciesChanged; }
 }
 
 void _touchStorefrontDevLogs(StorefrontDevLogs v) {
@@ -7913,6 +9202,14 @@ void _touchStorefrontDevLogsBrowserItem(StorefrontDevLogsBrowserItem v) {
   v.url;
 }
 
+void _touchStorefrontEditFailure(StorefrontEditFailure v) {
+  v.toJson();
+  v.code;
+  v.message;
+  if (v.logTail != null) { v.logTail; }
+  if (v.failedAt != null) { v.failedAt; }
+}
+
 void _touchStorefrontEditing(StorefrontEditing v) {
   v.toJson();
   v.enabled;
@@ -7920,6 +9217,7 @@ void _touchStorefrontEditing(StorefrontEditing v) {
   _touchStorefrontEditingCapacity(v.capacity);
   _touchStorefrontEditPreview(v.preview);
   _touchStorefrontEditingWorkingTree(v.workingTree);
+  if (v.lastFailure != null) { _touchStorefrontEditFailure(v.lastFailure!); }
 }
 
 void _touchStorefrontEditingCapacity(StorefrontEditingCapacity v) {
@@ -8219,21 +9517,40 @@ void _touchStorefrontSourceArchivePart(StorefrontSourceArchivePart v) {
   v.content;
 }
 
-void _touchUploadStorefrontSourceBlobsRequest(UploadStorefrontSourceBlobsRequest v) {
-  v.toJson();
-  for (final x in v.blobs) _touchUploadStorefrontSourceBlobsRequestBlobsItem(x);
-}
-
-void _touchUploadStorefrontSourceBlobsRequestBlobsItem(UploadStorefrontSourceBlobsRequestBlobsItem v) {
+void _touchUploadStorefrontSourcePackRequest(UploadStorefrontSourcePackRequest v) {
   v.toJson();
   v.hash;
   v.content;
 }
 
-void _touchStorefrontSourceBlobsResult(StorefrontSourceBlobsResult v) {
+void _touchStorefrontSourcePack(StorefrontSourcePack v) {
   v.toJson();
-  v.stored;
-  v.existing;
+  v.hash;
+  v.size;
+}
+
+void _touchCreateStorefrontSourceUploadsRequest(CreateStorefrontSourceUploadsRequest v) {
+  v.toJson();
+  _touchCreateStorefrontSourceUploadsRequestPack(v.pack);
+}
+
+void _touchCreateStorefrontSourceUploadsRequestPack(CreateStorefrontSourceUploadsRequestPack v) {
+  v.toJson();
+  v.hash;
+  v.size;
+}
+
+void _touchStorefrontSourceUploads(StorefrontSourceUploads v) {
+  v.toJson();
+  for (final x in v.uploads) _touchStorefrontSourceUploadsUploadsItem(x);
+  v.expiresAt;
+}
+
+void _touchStorefrontSourceUploadsUploadsItem(StorefrontSourceUploadsUploadsItem v) {
+  v.toJson();
+  v.hash;
+  v.url;
+  v.headers.length;
 }
 
 void _touchReplaceStorefrontSourceRequest(ReplaceStorefrontSourceRequest v) {
@@ -8243,6 +9560,7 @@ void _touchReplaceStorefrontSourceRequest(ReplaceStorefrontSourceRequest v) {
   if (v.endEditSession != null) { v.endEditSession; }
   if (v.packageJson != null) { v.packageJson; }
   if (v.lockfile != null) { v.lockfile; }
+  if (v.pack != null) { _touchReplaceStorefrontSourceRequestPack(v.pack!); }
 }
 
 void _touchReplaceStorefrontSourceRequestFilesItem(ReplaceStorefrontSourceRequestFilesItem v) {
@@ -8252,98 +9570,85 @@ void _touchReplaceStorefrontSourceRequestFilesItem(ReplaceStorefrontSourceReques
   v.size;
 }
 
+void _touchReplaceStorefrontSourceRequestPack(ReplaceStorefrontSourceRequestPack v) {
+  v.toJson();
+  v.hash;
+  v.size;
+}
+
 void _touchStorefrontSourceReplaced(StorefrontSourceReplaced v) {
   v.toJson();
   v.sourceRef;
-  v.previousRef;
+  if (v.previousRef != null) { v.previousRef; }
   v.treeSha256;
   v.files;
   v.bytes;
   v.changed;
+  if (v.merged != null) { v.merged; }
+  if (v.uploadedRef != null) { v.uploadedRef; }
   v.endedEditSession;
   for (final x in v.dependencyWarnings) _touchStorefrontDependencyFinding(x);
 }
 
-void _touchSubscriptionLimits(SubscriptionLimits v) {
+void _touchStorefrontGitStatus(StorefrontGitStatus v) {
   v.toJson();
-  if (v.liveOrdersMonthly != null) { v.liveOrdersMonthly; }
-  if (v.seatsIncluded != null) { v.seatsIncluded; }
-  if (v.aiActionsMonthly != null) { v.aiActionsMonthly; }
-  if (v.aiReadsMonthly != null) { v.aiReadsMonthly; }
-  if (v.customDomains != null) { v.customDomains; }
-  if (v.webhooks != null) { v.webhooks; }
-  if (v.socialProviders != null) { v.socialProviders; }
-  if (v.emailsMonthly != null) { v.emailsMonthly; }
-  if (v.storefrontRequestsMonthly != null) { v.storefrontRequestsMonthly; }
-  if (v.apiLogRetentionDays != null) { v.apiLogRetentionDays; }
-  if (v.auditLogRetentionDays != null) { v.auditLogRetentionDays; }
-  if (v.storefrontPreviewHoursMonthly != null) { v.storefrontPreviewHoursMonthly; }
-  if (v.storefrontBuildMinutesMonthly != null) { v.storefrontBuildMinutesMonthly; }
-  if (v.adminApiRequestsMonthly != null) { v.adminApiRequestsMonthly; }
+  if (v.provider != null) { v.provider; }
+  if (v.repository != null) { v.repository; }
+  if (v.productionBranch != null) { v.productionBranch; }
+  if (v.rootDirectory != null) { v.rootDirectory; }
+  if (v.connectedAt != null) { v.connectedAt; }
+  if (v.headCommitSha != null) { v.headCommitSha; }
+  v.mainChanged;
+  v.autoPromotePaused;
+  v.publishPending;
+  if (v.publishErrorCode != null) { v.publishErrorCode; }
+  if (v.archivedWorkRef != null) { v.archivedWorkRef; }
+  if (v.lastDisconnect != null) { _touchStorefrontGitStatusLastDisconnect(v.lastDisconnect!); }
 }
 
-void _touchSubscriptionUsage(SubscriptionUsage v) {
+void _touchStorefrontGitStatusLastDisconnect(StorefrontGitStatusLastDisconnect v) {
   v.toJson();
-  v.liveOrders;
-  v.aiActions;
-  v.aiReads;
-  v.storefrontRequests;
-  v.adminApiRequests;
-  v.emails;
-  v.storefrontPreviewMinutes;
-  v.storefrontBuildMinutes;
-  v.seats;
-  v.customDomains;
-  v.webhooks;
+  v.reason;
+  if (v.repository != null) { v.repository; }
+  v.at;
 }
 
-void _touchStoreSubscription(StoreSubscription v) {
+void _touchStorefrontGitRepository(StorefrontGitRepository v) {
   v.toJson();
-  _touchStoreSubscriptionPlan(v.plan);
-  v.status;
-  if (v.interval != null) { v.interval; }
-  v.cancelAtPeriodEnd;
-  _touchStoreSubscriptionPeriod(v.period);
-  _touchSubscriptionLimits(v.limits);
-  _touchStoreSubscriptionFeatures(v.features);
-  _touchSubscriptionUsage(v.usage);
-  _touchStoreSubscriptionAiActions(v.aiActions);
-  _touchStoreSubscriptionAiReads(v.aiReads);
-  v.salesFeePercent;
+  v.repoId;
+  v.fullName;
+  v.defaultBranch;
 }
 
-void _touchStoreSubscriptionPlan(StoreSubscriptionPlan v) {
+void _touchLinkStorefrontGitInstallationRequest(LinkStorefrontGitInstallationRequest v) {
   v.toJson();
+  v.installationId;
   v.code;
-  v.name;
+  v.state;
 }
 
-void _touchStoreSubscriptionPeriod(StoreSubscriptionPeriod v) {
+void _touchStorefrontGitConnectState(StorefrontGitConnectState v) {
   v.toJson();
-  v.start;
-  v.end;
+  v.state;
+  v.expiresAt;
 }
 
-void _touchStoreSubscriptionFeatures(StoreSubscriptionFeatures v) {
+void _touchConnectStorefrontGitRequest(ConnectStorefrontGitRequest v) {
   v.toJson();
-  v.adminApi;
-  v.analytics;
-  v.storeClone;
-  v.removeBadge;
+  v.installationId;
+  v.repoId;
+  if (v.productionBranch != null) { v.productionBranch; }
+  if (v.rootDirectory != null) { v.rootDirectory; }
 }
 
-void _touchStoreSubscriptionAiActions(StoreSubscriptionAiActions v) {
+void _touchSetStorefrontAutoPublishRequest(SetStorefrontAutoPublishRequest v) {
   v.toJson();
-  if (v.limit != null) { v.limit; }
-  v.used;
-  v.resetsAt;
+  if (v.autoPublish != null) { v.autoPublish; }
 }
 
-void _touchStoreSubscriptionAiReads(StoreSubscriptionAiReads v) {
+void _touchSetStorefrontDeployApprovalRequest(SetStorefrontDeployApprovalRequest v) {
   v.toJson();
-  if (v.limit != null) { v.limit; }
-  v.used;
-  v.resetsAt;
+  v.deployWithoutApproval;
 }
 
 void _touchPlanErrorDetails(PlanErrorDetails v) {
@@ -8355,59 +9660,6 @@ void _touchPlanErrorDetails(PlanErrorDetails v) {
   if (v.resetsAt != null) { v.resetsAt; }
   if (v.upgradeUrl != null) { v.upgradeUrl; }
   if (v.reason != null) { v.reason; }
-}
-
-void _touchPlanEntitlementValues(PlanEntitlementValues v) {
-  v.toJson();
-  v.featuresAdminApi;
-  v.featuresAnalytics;
-  if (v.limitsAiReadsMonthly != null) { v.limitsAiReadsMonthly; }
-  if (v.limitsAiActionsMonthly != null) { v.limitsAiActionsMonthly; }
-  if (v.limitsCustomDomains != null) { v.limitsCustomDomains; }
-  if (v.limitsWebhooks != null) { v.limitsWebhooks; }
-  if (v.limitsStorefrontPreviewHoursMonthly != null) { v.limitsStorefrontPreviewHoursMonthly; }
-  if (v.limitsStorefrontBuildMinutesMonthly != null) { v.limitsStorefrontBuildMinutesMonthly; }
-  if (v.limitsStorefrontRequestsMonthly != null) { v.limitsStorefrontRequestsMonthly; }
-  if (v.limitsAdminApiRequestsMonthly != null) { v.limitsAdminApiRequestsMonthly; }
-  if (v.rateLimitAdminApi != null) { v.rateLimitAdminApi; }
-  v.storefrontCpuMs;
-  v.storefrontSubrequests;
-  v.storefrontRateLimitPerMinute;
-  if (v.seatsIncluded != null) { v.seatsIncluded; }
-  v.retentionAnalyticsDays;
-  if (v.retentionApiLogsDays != null) { v.retentionApiLogsDays; }
-  if (v.retentionAuditDays != null) { v.retentionAuditDays; }
-  v.supportTier;
-}
-
-void _touchPublicPlan(PublicPlan v) {
-  v.toJson();
-  v.code;
-  v.name;
-  v.version;
-  v.sort;
-  v.purchasable;
-  _touchPublicPlanPrices(v.prices);
-  _touchPlanEntitlementValues(v.entitlements);
-}
-
-void _touchPublicPlanPrices(PublicPlanPrices v) {
-  v.toJson();
-  v.currency;
-  if (v.monthly != null) { v.monthly; }
-  v.startingAt;
-  _touchPublicPlanPricesVatIncluded(v.vatIncluded);
-}
-
-void _touchPublicPlanPricesVatIncluded(PublicPlanPricesVatIncluded v) {
-  v.toJson();
-  if (v.monthly != null) { v.monthly; }
-}
-
-void _touchPublicPlans(PublicPlans v) {
-  v.toJson();
-  v.vatPercent;
-  for (final x in v.plans) _touchPublicPlan(x);
 }
 
 void _touchMcpRuleResult(McpRuleResult v) {
@@ -8442,6 +9694,58 @@ void _touchUploadTicket(UploadTicket v) {
   v.uploadUrl;
 }
 
+void _touchCustomerUserinfoAddress(CustomerUserinfoAddress v) {
+  v.toJson();
+  if (v.formatted != null) { v.formatted; }
+  if (v.street_address != null) { v.street_address; }
+  if (v.locality != null) { v.locality; }
+  if (v.region != null) { v.region; }
+  if (v.postal_code != null) { v.postal_code; }
+  if (v.country != null) { v.country; }
+}
+
+void _touchCustomerUserinfo(CustomerUserinfo v) {
+  v.toJson();
+  v.sub;
+  if (v.name != null) { v.name; }
+  if (v.given_name != null) { v.given_name; }
+  if (v.family_name != null) { v.family_name; }
+  if (v.middle_name != null) { v.middle_name; }
+  if (v.nickname != null) { v.nickname; }
+  if (v.preferred_username != null) { v.preferred_username; }
+  if (v.profile != null) { v.profile; }
+  if (v.picture != null) { v.picture; }
+  if (v.website != null) { v.website; }
+  if (v.email != null) { v.email; }
+  if (v.email_verified != null) { v.email_verified; }
+  if (v.gender != null) { v.gender; }
+  if (v.birthdate != null) { v.birthdate; }
+  if (v.zoneinfo != null) { v.zoneinfo; }
+  if (v.locale != null) { v.locale; }
+  if (v.phone_number != null) { v.phone_number; }
+  if (v.phone_number_verified != null) { v.phone_number_verified; }
+  if (v.address != null) { _touchCustomerUserinfoAddress(v.address!); }
+  if (v.updated_at != null) { v.updated_at; }
+}
+
+void _touchCustomerUserinfoInput(CustomerUserinfoInput v) {
+  v.toJson();
+  if (v.email_verified != null) { v.email_verified; }
+  if (v.phone_number_verified != null) { v.phone_number_verified; }
+  if (v.given_name != null) { v.given_name; }
+  if (v.family_name != null) { v.family_name; }
+  if (v.middle_name != null) { v.middle_name; }
+  if (v.nickname != null) { v.nickname; }
+  if (v.preferred_username != null) { v.preferred_username; }
+  if (v.profile != null) { v.profile; }
+  if (v.picture != null) { v.picture; }
+  if (v.website != null) { v.website; }
+  if (v.gender != null) { v.gender; }
+  if (v.birthdate != null) { v.birthdate; }
+  if (v.zoneinfo != null) { v.zoneinfo; }
+  if (v.locale != null) { v.locale; }
+}
+
 void _touchOrderWebhookEventData(OrderWebhookEventData v) {
   v.toJson();
   v.orderId;
@@ -8470,15 +9774,9 @@ void _touchOrderFulfilledWebhookEventData(OrderFulfilledWebhookEventData v) {
   v.orderItemId;
   v.status;
   _touchOrderItemFulfillmentSnapshotView(v.fulfillmentSnapshot);
-  if (v.fulfillment != null) { _touchOrderFulfilledWebhookEventDataFulfillment(v.fulfillment!); }
   v.fulfilledAt;
   if (v.currency != null) { v.currency; }
   v.testPayment;
-}
-
-void _touchOrderFulfilledWebhookEventDataFulfillment(OrderFulfilledWebhookEventDataFulfillment v) {
-  v.toJson();
-  v.mode;
 }
 
 void _touchOrderCanceledWebhookEventData(OrderCanceledWebhookEventData v) {
@@ -8492,11 +9790,13 @@ void _touchOrderCanceledWebhookEventData(OrderCanceledWebhookEventData v) {
   v.quantity;
   v.canceledQuantity;
   v.refundAmount;
+  if (v.calculatedRefundAmount != null) { v.calculatedRefundAmount; }
   v.deliveryFeeRefundAmount;
   v.deliveryFeeChargeAmount;
   v.couponChargeAmount;
   v.couponChargeRefundAmount;
   v.pointRefundAmount;
+  v.deductAmount;
   if (v.currency != null) { v.currency; }
   v.testPayment;
 }
@@ -8511,6 +9811,7 @@ void _touchClaimWebhookEventData(ClaimWebhookEventData v) {
   v.status;
   v.quantity;
   if (v.refundAmount != null) { v.refundAmount; }
+  if (v.calculatedRefundAmount != null) { v.calculatedRefundAmount; }
   v.deliveryFeeRefundAmount;
   v.deliveryFeeChargeAmount;
   v.deductAmount;
@@ -8683,6 +9984,72 @@ void _touchFlowStateChangedWebhookEvent(FlowStateChangedWebhookEvent v) {
   _touchFlowStateChangedWebhookEventData(v.data);
 }
 
+void _touchOrderPaymentAddedWebhookEventData(OrderPaymentAddedWebhookEventData v) {
+  v.toJson();
+  v.orderId;
+  v.orderNo;
+  v.paymentId;
+  v.checkoutId;
+  v.amount;
+  v.orderItemIds.length;
+  v.currency;
+  v.testPayment;
+}
+
+void _touchOrderPaymentAddedWebhookEvent(OrderPaymentAddedWebhookEvent v) {
+  v.toJson();
+  v.id;
+  v.createdAt;
+  v.storeId;
+  if (v.sequence != null) { v.sequence; }
+  v.type;
+  _touchOrderPaymentAddedWebhookEventData(v.data);
+}
+
+void _touchOrderPaymentRequestedWebhookEventData(OrderPaymentRequestedWebhookEventData v) {
+  v.toJson();
+  v.orderId;
+  v.orderNo;
+  v.orderItemIds.length;
+  v.checkoutId;
+  v.checkoutUrl;
+  v.amount;
+  v.currency;
+  v.expiresAt;
+}
+
+void _touchOrderPaymentRequestedWebhookEvent(OrderPaymentRequestedWebhookEvent v) {
+  v.toJson();
+  v.id;
+  v.createdAt;
+  v.storeId;
+  if (v.sequence != null) { v.sequence; }
+  v.type;
+  _touchOrderPaymentRequestedWebhookEventData(v.data);
+}
+
+void _touchOrderRefundedWebhookEventData(OrderRefundedWebhookEventData v) {
+  v.toJson();
+  v.orderId;
+  if (v.orderNo != null) { v.orderNo; }
+  v.paymentId;
+  v.refundId;
+  v.amount;
+  v.reason;
+  v.currency;
+  v.testPayment;
+}
+
+void _touchOrderRefundedWebhookEvent(OrderRefundedWebhookEvent v) {
+  v.toJson();
+  v.id;
+  v.createdAt;
+  v.storeId;
+  if (v.sequence != null) { v.sequence; }
+  v.type;
+  _touchOrderRefundedWebhookEventData(v.data);
+}
+
 void _touchWebhookEvent(WebhookEvent v) {
   if (v is OrderWebhookEvent) _touchOrderWebhookEvent(v);
   if (v is OrderFulfilledWebhookEvent) _touchOrderFulfilledWebhookEvent(v);
@@ -8694,6 +10061,9 @@ void _touchWebhookEvent(WebhookEvent v) {
   if (v is FlowNotificationWebhookEvent) _touchFlowNotificationWebhookEvent(v);
   if (v is FlowStateChangedWebhookEvent) _touchFlowStateChangedWebhookEvent(v);
   if (v is InventoryChangedWebhookEvent) _touchInventoryChangedWebhookEvent(v);
+  if (v is OrderPaymentAddedWebhookEvent) _touchOrderPaymentAddedWebhookEvent(v);
+  if (v is OrderPaymentRequestedWebhookEvent) _touchOrderPaymentRequestedWebhookEvent(v);
+  if (v is OrderRefundedWebhookEvent) _touchOrderRefundedWebhookEvent(v);
 }
 
 void _touchUnknownWebhookEvent(UnknownWebhookEvent v) {
@@ -8709,4 +10079,8 @@ void _touchUnknownWebhookEvent(UnknownWebhookEvent v) {
 void _touchUnknownFulfillment(UnknownFulfillment v) {
   v.type;
   v.rawType;
+}
+
+void _touchConditionGroup(ConditionGroup v) {
+  v.toJson();
 }

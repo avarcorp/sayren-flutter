@@ -14,16 +14,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -284,20 +291,33 @@ final ZodEnum aiActivitySchema = z.enum_([
 /// 값은 `status`·`brief`·`template`·`site`·`info`·`shipping`·`upload`·`design`·`category`·`product`·`files`·`code`·`check`·`verify`·`version`·`preview`입니다.
 typedef AiActivity = String;
 
+/// 바뀐 줄 미리보기 한 줄의 최대 길이 — 서버가 이 길이로 자르고 화면은 이보다 긴 줄을 앞부분으로 비교합니다.
+const AI_TOOL_CHANGE_LINE_MAX = 300;
+
+/// 바뀐 줄 범위(`lines`) 개수 상한.
+const AI_TOOL_CHANGE_RANGES_MAX = 200;
+
 /// [AiToolChange] 스키마입니다.
 ///
 /// 도구가 바꾼 파일 하나(2026-10-13, AI 상점 도우미 작업 공간의 수정 중인 코드) — 서버가 도구 입력으로 계산합니다.
 /// `edit`는 바꾼 부분의 줄 비교, `write`는 새로 쓴 내용(이전 내용을 모르므로 모두 추가로 셉니다). `preview`는 바뀐 줄 앞부분 12줄까지입니다.
+/// `lines`는 바꾼 뒤 파일에서 추가된 줄의 범위(1부터, 양끝 포함)다 — `edit`가 성공한 뒤에만 실행기가 채웁니다(옛 기록·`write`에는 없습니다).
 final ZodObject<AiToolChange> aiToolChangeSchema = z.object<AiToolChange>({
   'path': z.string().max(300),
   'mode': z.enum_(['edit', 'write']),
   'added': z.number().int_().greaterThan(0, inclusive: true),
   'removed': z.number().int_().greaterThan(0, inclusive: true),
   'preview': z.array<AiToolChangePreviewItem>(aiToolChangePreviewItemSchema).max(12),
+  'lines': z
+      .array<List<int>>(z.tuple<int>(
+          [z.number().int_().greaterThan(1, inclusive: true), z.number().int_().greaterThan(1, inclusive: true)]))
+      .max(200)
+      .optional(),
 }, AiToolChange._);
 
 /// 도구가 바꾼 파일 하나(2026-10-13, AI 상점 도우미 작업 공간의 수정 중인 코드) — 서버가 도구 입력으로 계산합니다.
 /// `edit`는 바꾼 부분의 줄 비교, `write`는 새로 쓴 내용(이전 내용을 모르므로 모두 추가로 셉니다). `preview`는 바뀐 줄 앞부분 12줄까지입니다.
+/// `lines`는 바꾼 뒤 파일에서 추가된 줄의 범위(1부터, 양끝 포함)다 — `edit`가 성공한 뒤에만 실행기가 채웁니다(옛 기록·`write`에는 없습니다).
 class AiToolChange extends ParsedObject {
   /// [AiToolChange]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   AiToolChange(
@@ -305,8 +325,16 @@ class AiToolChange extends ParsedObject {
       required String mode,
       required int added,
       required int removed,
-      required List<AiToolChangePreviewItem> preview})
-      : super({'path': path, 'mode': mode, 'added': added, 'removed': removed, 'preview': preview});
+      required List<AiToolChangePreviewItem> preview,
+      List<List<int>>? lines})
+      : super({
+          'path': path,
+          'mode': mode,
+          'added': added,
+          'removed': removed,
+          'preview': preview,
+          if (lines != null) 'lines': lines
+        });
 
   AiToolChange._(super.json);
 
@@ -329,6 +357,9 @@ class AiToolChange extends ParsedObject {
 
   /// `preview` 값입니다.
   List<AiToolChangePreviewItem> get preview => (_j['preview'] as List).cast<AiToolChangePreviewItem>();
+
+  /// `lines` 값입니다.
+  List<List<int>>? get lines => (_j['lines'] as List?)?.cast<List<int>>();
 }
 
 /// [AiToolChangePreviewItem] 스키마입니다.
@@ -368,27 +399,47 @@ final ZodEnum aiAgentPhaseSchema = z.enum_(['STORE', 'STRUCTURE', 'DESIGN', 'ENV
 /// 값은 `STORE`·`STRUCTURE`·`DESIGN`·`ENVIRONMENT`·`BUILD`·`DONE`입니다.
 typedef AiAgentPhase = String;
 
-/// AI 상점 도우미의 작업 메모 폴더(2026-10-14) — 회차마다 읽는 숨은 규칙(`rules.md`)과 디자인 계획(`design.md`). 셀러 화면(타임라인·코드 탭·변경 기록)에
-/// 보이지 않습니다. 편집 Sandbox가 점(.)으로 시작하는 경로를 받지 않아 작업 트리의 `src` 아래에 둡니다(앱이 import하지 않는 문서라 빌드에 들어가지 않습니다).
+/// AI 상점 도우미의 작업 메모 폴더(2026-10-14) — 회차마다 읽는 숨은 규칙(`rules.md`)과 디자인 계획(`design.md`). 편집 Sandbox가 점(.)으로 시작하는
+/// 경로를 받지 않아 작업 트리의 `src` 아래에 둡니다(앱이 import하지 않는 문서라 빌드에 들어가지 않습니다). 숨은 규칙은 셀러 화면(타임라인·코드 탭·변경 기록)에
+/// 보이지 않습니다. 디자인 계획은 2026-10-24부터 셀러 문서(작업 공간 문서 탭의 「디자인 가이드라인」)라 숨기지 않습니다(`AI_DESIGN_GUIDE_PATH`).
 const AI_AGENT_NOTES_DIR = 'src/site/agent';
 
+/// 디자인 가이드라인(디자인 계획) — 작업 메모 폴더에 있지만 셀러가 읽는 문서입니다.
+const AI_DESIGN_GUIDE_PATH = 'src/site/agent/design.md';
+
+/// 사이트맵 — 에이전트가 쓰는 화면 구성 문서(`{version:1,pages:[…]}`).
+const AI_SITEMAP_PATH = 'src/site/sitemap.json';
+
+/// 「이어서 진행」 버튼(실패한 실행 잇기)이 보내는 선택 값 — 선택지 답처럼 같은 할 일 목록을 잇습니다.
+const AI_RUN_RESUME_CHOICE = 'run:resume';
+
 /// 에이전트의 할 일 목록(2026-10-14, Claude Code의 TaskCreate·TaskUpdate·TaskList와 같습니다) — 에이전트가 패널 도구로 할 일을 만들고 상태를 바꿉니다.
-/// 이벤트·조각은 그 시점의 목록 전체이고 작업 공간 왼쪽 패널이 마지막 목록을 체크리스트로 그립니다. 진행중은 한 번에 하나입니다.
-const AI_TODO_STATUSES = <String>['pending', 'in_progress', 'completed'];
+/// 이벤트·조각은 그 시점의 목록 전체이고 작업 공간 로드맵 탭이 마지막 목록을 칸반으로 그립니다. 진행중은 한 번에 하나입니다.
+/// 목록은 셀러 요청 하나(사이클)의 일입니다 — 새 요청이면 빈 목록에서 시작하고 선택지 답이면 잇습니다(2026-10-24). 개수 상한은 없습니다
+/// (옛 30개 상한은 대화 전체에 할 일이 쌓여 넘쳤습니다 — 크기는 사이클 범위가, 폭주는 턴 예산이 막습니다).
+/// `blocked`는 같은 문제를 거듭 고쳐도 남아 멈춘 일이고 `note`가 그 사유입니다(이어 가기 리마인더가 남은 일로 세지 않습니다).
+const AI_TODO_STATUSES = <String>['pending', 'in_progress', 'completed', 'blocked'];
 
 /// [AiTodo] 스키마입니다.
 final ZodObject<AiTodo> aiTodoSchema = z.object<AiTodo>({
   'id': z.string().max(10).optional(),
   'content': z.string().min(1).max(200),
-  'status': z.enum_(['pending', 'in_progress', 'completed']),
+  'status': z.enum_(['pending', 'in_progress', 'completed', 'blocked']),
   'phase': aiAgentPhaseSchema.optional(),
+  'note': z.string().max(300).optional(),
 }, AiTodo._);
 
 /// AiTodo 값입니다.
 class AiTodo extends ParsedObject {
   /// [AiTodo]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  AiTodo({String? id, required String content, required String status, String? phase})
-      : super({if (id != null) 'id': id, 'content': content, 'status': status, if (phase != null) 'phase': phase});
+  AiTodo({String? id, required String content, required String status, String? phase, String? note})
+      : super({
+          if (id != null) 'id': id,
+          'content': content,
+          'status': status,
+          if (phase != null) 'phase': phase,
+          if (note != null) 'note': note
+        });
 
   AiTodo._(super.json);
 
@@ -397,7 +448,7 @@ class AiTodo extends ParsedObject {
 
   Map<String, Object?> get _j => jsonOf(this);
 
-  /// 할 일 번호(대화 안에서 1부터) — 옛 조각에는 없습니다.
+  /// 할 일 번호(사이클 안에서 1부터) — 옛 조각에는 없습니다.
   String? get id => _j['id'] as String?;
 
   /// `content` 값입니다.
@@ -408,10 +459,10 @@ class AiTodo extends ParsedObject {
 
   /// 이 할 일이 속한 작업 단계 — 진행중이 되면 실행기가 단계를 알립니다(2026-10-14, 모델이 단계 알림을 빠뜨렸습니다).
   String? get phase => _j['phase'] as String?;
-}
 
-/// AI_TODOS_MAX 값입니다.
-const AI_TODOS_MAX = 30;
+  /// 막힌 사유(`blocked`일 때만).
+  String? get note => _j['note'] as String?;
+}
 
 /// 디자인 아트보드 폴더(2026-10-14 사용자 결정, Claude Code Design 캔버스의 파일 계약을 옮겼습니다) — DESIGN 단계에 에이전트가 쓰는 자기완결 HTML 아트보드와
 /// 인덱스 `canvas.json`입니다. 앱 코드가 import하지 않아 발행 빌드에 들어가지 않고, 상점 플랫폼 작업 공간의 디자인 탭이 iframe(srcdoc)으로 그립니다.
@@ -644,6 +695,13 @@ class AiSetupConfirmItem extends ParsedObject {
 /// 확인 카드의 승인 선택지 값.
 const AI_SETUP_CONFIRM_APPROVE = 'setup:approve';
 
+/// AI 첫 구성 체험 카드(#314) — 스토어 디자이너가 없는 요금제의 첫 구성은 홈 화면까지 만든 뒤 실행이 이 선택지로 끝납니다.
+/// 「체험 시작」(`AI_TRIAL_START`)은 상점 플랫폼이 체험을 시작한 뒤 보내 나머지 화면을 잇고, 「다음에 하기」(`AI_TRIAL_LATER`)는 보내지 않고 상점으로 옮깁니다.
+const AI_TRIAL_START = 'trial:start';
+
+/// AI_TRIAL_LATER 값입니다.
+const AI_TRIAL_LATER = 'trial:later';
+
 /// [AiDesignConfirmBoard] 스키마입니다.
 ///
 /// 디자인 확인(2026-10-14 사용자 결정) — DESIGN 단계 끝에 에이전트가 채택한 아트보드를 카드로 보이고 「이 디자인으로 만들까요?」를 묻습니다.
@@ -735,12 +793,14 @@ sealed class AiMessagePart {
 final ZodObject<AiMessagePartText> aiMessagePartTextSchema = z.object<AiMessagePartText>({
   'type': z.literal<String>('text'),
   'text': z.string(),
+  'choice': z.string().max(200).optional(),
 }, AiMessagePartText._);
 
 /// AiMessagePartText 값입니다.
 class AiMessagePartText extends ParsedObject implements AiMessagePart {
   /// [AiMessagePartText]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  AiMessagePartText({required String type, required String text}) : super({'type': type, 'text': text});
+  AiMessagePartText({required String type, required String text, String? choice})
+      : super({'type': type, 'text': text, if (choice != null) 'choice': choice});
 
   AiMessagePartText._(super.json);
 
@@ -755,6 +815,9 @@ class AiMessagePartText extends ParsedObject implements AiMessagePart {
 
   /// `text` 값입니다.
   String get text => _j['text'] as String;
+
+  /// 셀러가 선택지 버튼으로 보낸 답의 값(사용자 메시지만) — 할 일 목록(사이클)을 잇는 기준(`isAiChoiceAnswer`).
+  String? get choice => _j['choice'] as String?;
 }
 
 /// [AiMessagePartTool] 스키마입니다.
@@ -1117,7 +1180,7 @@ class AiMessagePartPhase extends ParsedObject implements AiMessagePart {
 /// [AiMessagePartTodos] 스키마입니다.
 final ZodObject<AiMessagePartTodos> aiMessagePartTodosSchema = z.object<AiMessagePartTodos>({
   'type': z.literal<String>('todos'),
-  'todos': z.array<AiTodo>(aiTodoSchema).max(30),
+  'todos': z.array<AiTodo>(aiTodoSchema),
 }, AiMessagePartTodos._);
 
 /// AiMessagePartTodos 값입니다.
@@ -1183,10 +1246,23 @@ class AiMessage extends ParsedObject {
   String get createdAt => _j['createdAt'] as String;
 }
 
+/// AI 종류(#315 C9, 2026-10-29) — `STORE`는 AI 상점 도우미(상점 데이터만 바꿉니다), `DESIGNER`는 스토어프론트 디자이너(사이트 코드 편집·빌드·발행만 합니다).
+/// 대화 하나는 한 종류입니다. 이 값이 생기기 전에 만든 대화는 null이고 그때의 도구·지시로 끝까지 돕니다(진행 중인 옛 대화가 끊기지 않게).
+const AI_AGENTS = <String>['STORE', 'DESIGNER'];
+
+/// [String] 스키마입니다. 값은 `STORE`·`DESIGNER`입니다.
+final ZodEnum aiAgentSchema = z.enum_(['STORE', 'DESIGNER']);
+
+/// AiAgent 값입니다.
+///
+/// 값은 `STORE`·`DESIGNER`입니다.
+typedef AiAgent = String;
+
 /// [AiConversationSummary] 스키마입니다.
 final ZodObject<AiConversationSummary> aiConversationSummarySchema = z.object<AiConversationSummary>({
   'id': z.string(),
   'title': z.string().nullable(),
+  'agent': aiAgentSchema.nullable().optional(),
   'createdAt': z.string(),
   'updatedAt': z.string(),
 }, AiConversationSummary._);
@@ -1195,8 +1271,18 @@ final ZodObject<AiConversationSummary> aiConversationSummarySchema = z.object<Ai
 class AiConversationSummary extends ParsedObject {
   /// [AiConversationSummary]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   AiConversationSummary(
-      {required String id, required String? title, required String createdAt, required String updatedAt})
-      : super({'id': id, 'title': title, 'createdAt': createdAt, 'updatedAt': updatedAt});
+      {required String id,
+      required String? title,
+      Nullable<String>? agent,
+      required String createdAt,
+      required String updatedAt})
+      : super({
+          'id': id,
+          'title': title,
+          if (agent != null) 'agent': agent.value,
+          'createdAt': createdAt,
+          'updatedAt': updatedAt
+        });
 
   AiConversationSummary._(super.json);
 
@@ -1211,6 +1297,9 @@ class AiConversationSummary extends ParsedObject {
   /// `title` 값입니다.
   String? get title => _j['title'] as String?;
 
+  /// AI 종류 — 옛 대화는 null입니다. 옛 응답에는 없습니다.
+  String? get agent => _j['agent'] as String?;
+
   /// `createdAt` 값입니다.
   String get createdAt => _j['createdAt'] as String;
 
@@ -1222,6 +1311,7 @@ class AiConversationSummary extends ParsedObject {
 final ZodObject<AiConversation> aiConversationSchema = z.object<AiConversation>({
   'id': z.string(),
   'title': z.string().nullable(),
+  'agent': aiAgentSchema.nullable().optional(),
   'createdAt': z.string(),
   'updatedAt': z.string(),
   'messages': z.array<AiMessage>(aiMessageSchema),
@@ -1235,6 +1325,7 @@ class AiConversation extends ParsedObject {
   AiConversation(
       {required String id,
       required String? title,
+      Nullable<String>? agent,
       required String createdAt,
       required String updatedAt,
       required List<AiMessage> messages,
@@ -1243,6 +1334,7 @@ class AiConversation extends ParsedObject {
       : super({
           'id': id,
           'title': title,
+          if (agent != null) 'agent': agent.value,
           'createdAt': createdAt,
           'updatedAt': updatedAt,
           'messages': messages,
@@ -1262,6 +1354,9 @@ class AiConversation extends ParsedObject {
 
   /// `title` 값입니다.
   String? get title => _j['title'] as String?;
+
+  /// `agent` 값입니다.
+  String? get agent => _j['agent'] as String?;
 
   /// `createdAt` 값입니다.
   String get createdAt => _j['createdAt'] as String;
@@ -1399,17 +1494,31 @@ class StoreSetupBrief extends ParsedObject {
   String? get slug => _j['slug'] as String?;
 }
 
+/// [String] 스키마입니다.
+///
+/// 보내는 사람의 시간대(IANA 이름, 예 `Asia/Seoul`) — 브라우저 `Intl.DateTimeFormat().resolvedOptions().timeZone`. AI는 시각을 이 시간대로 씁니다.
+/// 생략하면 `Asia/Seoul`입니다.
+final ZodType<String> aiTimeZoneSchema =
+    z.string().max(64).refine((v) => jsIsTimeZone(v as String), message: 'IANA 시간대 이름이어야 합니다');
+
 /// [CreateAiConversationRequest] 스키마입니다.
 final ZodObject<CreateAiConversationRequest> createAiConversationRequestSchema = z.object<CreateAiConversationRequest>({
   'draftId': z.string().max(64).optional(),
   'brief': storeSetupBriefSchema.optional(),
-}, CreateAiConversationRequest._);
+  'agent': aiAgentSchema.optional(),
+  'timeZone': aiTimeZoneSchema.optional(),
+}, CreateAiConversationRequest._, strictRequest: true);
 
 /// CreateAiConversationRequest 값입니다.
 class CreateAiConversationRequest extends ParsedObject {
   /// [CreateAiConversationRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  CreateAiConversationRequest({String? draftId, StoreSetupBrief? brief})
-      : super({if (draftId != null) 'draftId': draftId, if (brief != null) 'brief': brief});
+  CreateAiConversationRequest({String? draftId, StoreSetupBrief? brief, String? agent, String? timeZone})
+      : super({
+          if (draftId != null) 'draftId': draftId,
+          if (brief != null) 'brief': brief,
+          if (agent != null) 'agent': agent,
+          if (timeZone != null) 'timeZone': timeZone
+        });
 
   CreateAiConversationRequest._(super.json);
 
@@ -1424,6 +1533,12 @@ class CreateAiConversationRequest extends ParsedObject {
 
   /// 질문 화면의 답 — `draftId`와 함께만 씁니다. 초안 앞에 붙어 첫 메시지가 됩니다.
   StoreSetupBrief? get brief => _j['brief'] as StoreSetupBrief?;
+
+  /// AI 종류 — 주지 않으면 초안으로 시작하면 `DESIGNER`, 아니면 `STORE`입니다.
+  String? get agent => _j['agent'] as String?;
+
+  /// 첫 실행의 시간대(`draftId`로 시작할 때).
+  String? get timeZone => _j['timeZone'] as String?;
 }
 
 /// [CreateAiConversationResponse] 스키마입니다.
@@ -1461,7 +1576,8 @@ final ZodObject<SendAiMessageRequest> sendAiMessageRequestSchema = z.object<Send
   'choice': z.string().max(200).optional(),
   'selection': aiPreviewSelectionSchema.optional(),
   'designSelection': aiDesignSelectionSchema.optional(),
-}, SendAiMessageRequest._).refine((v) {
+  'timeZone': aiTimeZoneSchema.optional(),
+}, SendAiMessageRequest._, strictRequest: true).refine((v) {
   final j = jsonOf(v as ParsedObject);
   return (j['text'] as String).isNotEmpty || (j['attachments'] as List).isNotEmpty;
 }, message: '내용이나 첨부가 있어야 합니다');
@@ -1474,13 +1590,15 @@ class SendAiMessageRequest extends ParsedObject {
       List<AiAttachment> attachments = const [],
       String? choice,
       AiPreviewSelection? selection,
-      AiDesignSelection? designSelection})
+      AiDesignSelection? designSelection,
+      String? timeZone})
       : super({
           'text': text,
           'attachments': attachments,
           if (choice != null) 'choice': choice,
           if (selection != null) 'selection': selection,
-          if (designSelection != null) 'designSelection': designSelection
+          if (designSelection != null) 'designSelection': designSelection,
+          if (timeZone != null) 'timeZone': timeZone
         });
 
   SendAiMessageRequest._(super.json);
@@ -1504,6 +1622,9 @@ class SendAiMessageRequest extends ParsedObject {
 
   /// 디자인 탭에서 고른 아트보드(2026-10-14) — 모델은 그 아트보드를 기준으로 고칩니다.
   AiDesignSelection? get designSelection => _j['designSelection'] as AiDesignSelection?;
+
+  /// 보내는 사람의 시간대 — 이 실행의 AI가 시각을 이 시간대로 씁니다.
+  String? get timeZone => _j['timeZone'] as String?;
 }
 
 /// [SendAiMessageResponse] 스키마입니다.
@@ -1994,7 +2115,7 @@ class AiStreamEventPhase extends ParsedObject implements AiStreamEvent {
 final ZodObject<AiStreamEventTodos> aiStreamEventTodosSchema = z.object<AiStreamEventTodos>({
   'type': z.literal<String>('todos'),
   'messageId': z.string(),
-  'todos': z.array<AiTodo>(aiTodoSchema).max(30),
+  'todos': z.array<AiTodo>(aiTodoSchema),
 }, AiStreamEventTodos._);
 
 /// AiStreamEventTodos 값입니다.
@@ -2091,7 +2212,7 @@ class AiStreamEventToolStart extends ParsedObject implements AiStreamEvent {
   /// `target` 값입니다.
   String? get target => _j['target'] as String?;
 
-  /// `changes` 값입니다.
+  /// 결과로 확정한 변경(바뀐 줄 범위 포함) — 있으면 `tool_start`의 `changes`를 바꿉니다.
   List<AiToolChange>? get changes => (_j['changes'] as List?)?.cast<AiToolChange>();
 }
 
@@ -2102,6 +2223,7 @@ final ZodObject<AiStreamEventToolResult> aiStreamEventToolResultSchema = z.objec
   'toolCallId': z.string(),
   'status': z.enum_(['ok', 'error', 'unknown']),
   'summary': z.string().nullable(),
+  'changes': z.array<AiToolChange>(aiToolChangeSchema).max(10).optional(),
 }, AiStreamEventToolResult._);
 
 /// AiStreamEventToolResult 값입니다.
@@ -2112,8 +2234,16 @@ class AiStreamEventToolResult extends ParsedObject implements AiStreamEvent {
       required String messageId,
       required String toolCallId,
       required String status,
-      required String? summary})
-      : super({'type': type, 'messageId': messageId, 'toolCallId': toolCallId, 'status': status, 'summary': summary});
+      required String? summary,
+      List<AiToolChange>? changes})
+      : super({
+          'type': type,
+          'messageId': messageId,
+          'toolCallId': toolCallId,
+          'status': status,
+          'summary': summary,
+          if (changes != null) 'changes': changes
+        });
 
   AiStreamEventToolResult._(super.json);
 
@@ -2137,6 +2267,9 @@ class AiStreamEventToolResult extends ParsedObject implements AiStreamEvent {
 
   /// `summary` 값입니다.
   String? get summary => _j['summary'] as String?;
+
+  /// 결과로 확정한 변경(바뀐 줄 범위 포함) — 있으면 `tool_start`의 `changes`를 바꿉니다.
+  List<AiToolChange>? get changes => (_j['changes'] as List?)?.cast<AiToolChange>();
 }
 
 /// [AiStreamEventChoices] 스키마입니다.
@@ -2440,7 +2573,7 @@ final ZodObject<CreateStoreDraftRequest> createStoreDraftRequestSchema = z.objec
       .array<CreateStoreDraftRequestAttachmentsItem>(createStoreDraftRequestAttachmentsItemSchema)
       .max(5)
       .withDefault(const []),
-}, CreateStoreDraftRequest._);
+}, CreateStoreDraftRequest._, strictRequest: true);
 
 /// CreateStoreDraftRequest 값입니다.
 class CreateStoreDraftRequest extends ParsedObject {

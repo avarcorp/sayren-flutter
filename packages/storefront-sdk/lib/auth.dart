@@ -18,6 +18,7 @@ export 'src/schemas/auth.dart'
         AnonymousSession,
         LoginRequest,
         MemberIdentities,
+        PasswordResetRequest,
         SignupRequest,
         SocialProvider,
         TokenPair,

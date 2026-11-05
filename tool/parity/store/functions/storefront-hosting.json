@@ -1,82 +1,5 @@
 [
  {
-  "name": "isShowcaseStorefrontSlug [\"demo-shop\"]",
-  "fn": "isShowcaseStorefrontSlug",
-  "args": [
-   "demo-shop"
-  ]
- },
- {
-  "name": "isShowcaseStorefrontSlug [\"DEMO-x\"]",
-  "fn": "isShowcaseStorefrontSlug",
-  "args": [
-   "DEMO-x"
-  ]
- },
- {
-  "name": "isShowcaseStorefrontSlug [\"demo\"]",
-  "fn": "isShowcaseStorefrontSlug",
-  "args": [
-   "demo"
-  ]
- },
- {
-  "name": "isShowcaseStorefrontSlug [\"www\"]",
-  "fn": "isShowcaseStorefrontSlug",
-  "args": [
-   "www"
-  ]
- },
- {
-  "name": "isShowcaseStorefrontSlug [\"WWW\"]",
-  "fn": "isShowcaseStorefrontSlug",
-  "args": [
-   "WWW"
-  ]
- },
- {
-  "name": "isShowcaseStorefrontSlug [\"sites\"]",
-  "fn": "isShowcaseStorefrontSlug",
-  "args": [
-   "sites"
-  ]
- },
- {
-  "name": "isShowcaseStorefrontSlug [\"my-preview\"]",
-  "fn": "isShowcaseStorefrontSlug",
-  "args": [
-   "my-preview"
-  ]
- },
- {
-  "name": "isShowcaseStorefrontSlug [\"my-PREVIEW\"]",
-  "fn": "isShowcaseStorefrontSlug",
-  "args": [
-   "my-PREVIEW"
-  ]
- },
- {
-  "name": "isShowcaseStorefrontSlug [\"shop\"]",
-  "fn": "isShowcaseStorefrontSlug",
-  "args": [
-   "shop"
-  ]
- },
- {
-  "name": "isShowcaseStorefrontSlug [\"myshop\"]",
-  "fn": "isShowcaseStorefrontSlug",
-  "args": [
-   "myshop"
-  ]
- },
- {
-  "name": "isShowcaseStorefrontSlug [\"\"]",
-  "fn": "isShowcaseStorefrontSlug",
-  "args": [
-   ""
-  ]
- },
- {
   "name": "isReservedStorefrontSlug [\"demo-shop\"]",
   "fn": "isReservedStorefrontSlug",
   "args": [
@@ -765,6 +688,106 @@
   "fn": "isEditableStorefrontPath",
   "args": [
    "public/@x+y=z,w.png"
+  ]
+ },
+ {
+  "name": "storefrontSiteVarKeyProblem [\"API_KEY\"]",
+  "fn": "storefrontSiteVarKeyProblem",
+  "args": [
+   "API_KEY"
+  ]
+ },
+ {
+  "name": "storefrontSiteVarKeyProblem [\"_x\"]",
+  "fn": "storefrontSiteVarKeyProblem",
+  "args": [
+   "_x"
+  ]
+ },
+ {
+  "name": "storefrontSiteVarKeyProblem [\"1ABC\"]",
+  "fn": "storefrontSiteVarKeyProblem",
+  "args": [
+   "1ABC"
+  ]
+ },
+ {
+  "name": "storefrontSiteVarKeyProblem [\"SAYREN_TOKEN\"]",
+  "fn": "storefrontSiteVarKeyProblem",
+  "args": [
+   "SAYREN_TOKEN"
+  ]
+ },
+ {
+  "name": "storefrontSiteVarKeyProblem [\"NODE_ENV\"]",
+  "fn": "storefrontSiteVarKeyProblem",
+  "args": [
+   "NODE_ENV"
+  ]
+ },
+ {
+  "name": "storefrontSiteVarKeyProblem [\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"]",
+  "fn": "storefrontSiteVarKeyProblem",
+  "args": [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ]
+ },
+ {
+  "name": "storefrontSiteVarKeyProblem [\"키\"]",
+  "fn": "storefrontSiteVarKeyProblem",
+  "args": [
+   "키"
+  ]
+ },
+ {
+  "name": "resolveStorefrontDeployProduction [null, null]",
+  "fn": "resolveStorefrontDeployProduction",
+  "args": [
+   null,
+   null
+  ]
+ },
+ {
+  "name": "resolveStorefrontDeployProduction [true, false]",
+  "fn": "resolveStorefrontDeployProduction",
+  "args": [
+   true,
+   false
+  ]
+ },
+ {
+  "name": "resolveStorefrontDeployProduction [null, true]",
+  "fn": "resolveStorefrontDeployProduction",
+  "args": [
+   null,
+   true
+  ]
+ },
+ {
+  "name": "resolveStorefrontDeployProduction [null, null, false]",
+  "fn": "resolveStorefrontDeployProduction",
+  "args": [
+   null,
+   null,
+   false
+  ]
+ },
+ {
+  "name": "resolveStorefrontDeployProduction [false, true, true]",
+  "fn": "resolveStorefrontDeployProduction",
+  "args": [
+   false,
+   true,
+   true
+  ]
+ },
+ {
+  "name": "resolveStorefrontDeployProduction [null, null, true]",
+  "fn": "resolveStorefrontDeployProduction",
+  "args": [
+   null,
+   null,
+   true
   ]
  }
 ]

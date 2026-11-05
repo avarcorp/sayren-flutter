@@ -109,6 +109,9 @@ String path(List<String> strings, [List<Object> params = const []]) {
   return out.toString();
 }
 
+/// 운영 스토어프론트 API 주소(버전 경로 포함)입니다. 클라이언트·인증·분석·세션의 `baseUrl` 기본값이고, 개발·로컬에서만 다른 주소를 지정합니다.
+const SAYREN_STOREFRONT_API_BASE_URL = 'https://api.sayren.io/storefront/v1';
+
 const _uriComponentSafe = r"-_.!~*'()";
 const _formSafe = '*-._';
 

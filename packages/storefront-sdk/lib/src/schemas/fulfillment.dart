@@ -28,6 +28,7 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 part 'fulfillment.manual.dart';
 
@@ -255,19 +256,13 @@ final ZodObject<LineFulfillment> lineFulfillmentSchema = z.object<LineFulfillmen
   'type': z.string(),
   'requiresShipping': z.boolean(),
   'method': z.string().optional(),
-  'withdrawalRestricted': z.boolean().optional(),
 }, LineFulfillment._);
 
 /// 장바구니 줄·주문서 줄의 이행 — 주문서 줄은 주문서 시점 스냅샷입니다.
 class LineFulfillment extends ParsedObject {
   /// [LineFulfillment]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  LineFulfillment({required String type, required bool requiresShipping, String? method, bool? withdrawalRestricted})
-      : super({
-          'type': type,
-          'requiresShipping': requiresShipping,
-          if (method != null) 'method': method,
-          if (withdrawalRestricted != null) 'withdrawalRestricted': withdrawalRestricted
-        });
+  LineFulfillment({required String type, required bool requiresShipping, String? method})
+      : super({'type': type, 'requiresShipping': requiresShipping, if (method != null) 'method': method});
 
   LineFulfillment._(super.json);
 
@@ -284,9 +279,6 @@ class LineFulfillment extends ParsedObject {
 
   /// 이행 방식(이슈 #115). 주문서 줄은 고른 방식, 장바구니 줄은 기본 방식입니다. 값이 추가될 수 있어 문자열로 받습니다.
   String? get method => _j['method'] as String?;
-
-  /// **Deprecated** — 항상 false입니다. 청약철회 제한 기능을 없앴고(이슈 #48) storefront-sdk 0.15 이하 호환으로만 싣습니다. 게시된 스토어프론트가 0.16 이상으로 넘어간 뒤 다음 릴리스에서 뺍니다.
-  bool? get withdrawalRestricted => _j['withdrawalRestricted'] as bool?;
 }
 
 /// [PickupLocationView] 스키마입니다.

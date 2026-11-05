@@ -28,6 +28,7 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 /// [String] 스키마입니다. 값은 `TERMS`·`PRIVACY`·`MARKETING`입니다.
 ///

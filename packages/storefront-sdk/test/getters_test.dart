@@ -69,6 +69,26 @@ void main() {
     final v = linkIdentityRequestSchema.parse(samples['linkIdentityRequestSchema']);
     _touchLinkIdentityRequest(v);
   });
+  test('passwordResetRequestSchema', () {
+    final v = passwordResetRequestSchema.parse(samples['passwordResetRequestSchema']);
+    _touchPasswordResetRequest(v);
+  });
+  test('passwordResetInspectRequestSchema', () {
+    final v = passwordResetInspectRequestSchema.parse(samples['passwordResetInspectRequestSchema']);
+    _touchPasswordResetInspectRequest(v);
+  });
+  test('passwordResetInspectResponseSchema', () {
+    final v = passwordResetInspectResponseSchema.parse(samples['passwordResetInspectResponseSchema']);
+    _touchPasswordResetInspectResponse(v);
+  });
+  test('passwordResetConfirmRequestSchema', () {
+    final v = passwordResetConfirmRequestSchema.parse(samples['passwordResetConfirmRequestSchema']);
+    _touchPasswordResetConfirmRequest(v);
+  });
+  test('passwordResetConfirmResponseSchema', () {
+    final v = passwordResetConfirmResponseSchema.parse(samples['passwordResetConfirmResponseSchema']);
+    _touchPasswordResetConfirmResponse(v);
+  });
   test('cartItemSchema', () {
     final v = cartItemSchema.parse(samples['cartItemSchema']);
     _touchCartItem(v);
@@ -116,6 +136,14 @@ void main() {
   test('productPageSchema', () {
     final v = productPageSchema.parse(samples['productPageSchema']);
     _touchProductPage(v);
+  });
+  test('sitemapProductSchema', () {
+    final v = sitemapProductSchema.parse(samples['sitemapProductSchema']);
+    _touchSitemapProduct(v);
+  });
+  test('sitemapProductPageSchema', () {
+    final v = sitemapProductPageSchema.parse(samples['sitemapProductPageSchema']);
+    _touchSitemapProductPage(v);
   });
   test('storefrontCollectionSchema', () {
     final v = storefrontCollectionSchema.parse(samples['storefrontCollectionSchema']);
@@ -305,6 +333,10 @@ void main() {
     final v = couponBenefitViewSchema.parse(samples['couponBenefitViewSchema']);
     _touchCouponBenefitView(v);
   });
+  test('couponRewardViewSchema', () {
+    final v = couponRewardViewSchema.parse(samples['couponRewardViewSchema']);
+    _touchCouponRewardView(v);
+  });
   test('couponResultSchema', () {
     final v = couponResultSchema.parse(samples['couponResultSchema']);
     _touchCouponResult(v);
@@ -321,9 +353,17 @@ void main() {
     final v = checkoutPricingSchema.parse(samples['checkoutPricingSchema']);
     _touchCheckoutPricing(v);
   });
+  test('couponRequirementSchema', () {
+    final v = couponRequirementSchema.parse(samples['couponRequirementSchema']);
+    _touchCouponRequirement(v);
+  });
   test('applicableCouponSchema', () {
     final v = applicableCouponSchema.parse(samples['applicableCouponSchema']);
     _touchApplicableCoupon(v);
+  });
+  test('registerCouponRequestSchema', () {
+    final v = registerCouponRequestSchema.parse(samples['registerCouponRequestSchema']);
+    _touchRegisterCouponRequest(v);
   });
   test('myCouponSchema', () {
     final v = myCouponSchema.parse(samples['myCouponSchema']);
@@ -344,6 +384,22 @@ void main() {
   test('storefrontCouponListQuerySchema', () {
     final v = storefrontCouponListQuerySchema.parse(samples['storefrontCouponListQuerySchema']);
     _touchStorefrontCouponListQuery(v);
+  });
+  test('bestCouponEntrySchema', () {
+    final v = bestCouponEntrySchema.parse(samples['bestCouponEntrySchema']);
+    _touchBestCouponEntry(v);
+  });
+  test('productCouponBenefitSchema', () {
+    final v = productCouponBenefitSchema.parse(samples['productCouponBenefitSchema']);
+    _touchProductCouponBenefit(v);
+  });
+  test('productCouponBenefitQuerySchema', () {
+    final v = productCouponBenefitQuerySchema.parse(samples['productCouponBenefitQuerySchema']);
+    _touchProductCouponBenefitQuery(v);
+  });
+  test('checkoutBestCouponsSchema', () {
+    final v = checkoutBestCouponsSchema.parse(samples['checkoutBestCouponsSchema']);
+    _touchCheckoutBestCoupons(v);
   });
   test('customerInquirySchema', () {
     final v = customerInquirySchema.parse(samples['customerInquirySchema']);
@@ -545,6 +601,18 @@ void main() {
     final v = storefrontStoreSchema.parse(samples['storefrontStoreSchema']);
     _touchStorefrontStore(v);
   });
+  test('userinfoAddressSchema', () {
+    final v = userinfoAddressSchema.parse(samples['userinfoAddressSchema']);
+    _touchUserinfoAddress(v);
+  });
+  test('userinfoSchema', () {
+    final v = userinfoSchema.parse(samples['userinfoSchema']);
+    _touchUserinfo(v);
+  });
+  test('userinfoInputSchema', () {
+    final v = userinfoInputSchema.parse(samples['userinfoInputSchema']);
+    _touchUserinfoInput(v);
+  });
 }
 
 void _touchAnalyticsClientEvent(AnalyticsClientEvent v) {
@@ -632,6 +700,7 @@ void _touchSignupRequest(SignupRequest v) {
   if (v.phone != null) { v.phone; }
   _touchSignupRequestAgreements(v.agreements);
   if (v.cartToken != null) { v.cartToken; }
+  if (v.userinfo != null) { _touchUserinfoInput(v.userinfo!); }
 }
 
 void _touchSignupRequestAgreements(SignupRequestAgreements v) {
@@ -711,6 +780,42 @@ void _touchLinkIdentityRequest(LinkIdentityRequest v) {
   v.toJson();
   v.code;
   v.codeVerifier;
+}
+
+void _touchPasswordResetRequest(PasswordResetRequest v) {
+  v.toJson();
+  v.email;
+  if (v.successUrl != null) { v.successUrl; }
+}
+
+void _touchPasswordResetInspectRequest(PasswordResetInspectRequest v) {
+  v.toJson();
+  v.token;
+}
+
+void _touchPasswordResetInspectResponse(PasswordResetInspectResponse v) {
+  v.toJson();
+  v.status;
+  _touchPasswordResetInspectResponseStore(v.store);
+  if (v.maskedEmail != null) { v.maskedEmail; }
+}
+
+void _touchPasswordResetInspectResponseStore(PasswordResetInspectResponseStore v) {
+  v.toJson();
+  v.name;
+  if (v.iconUrl != null) { v.iconUrl; }
+  if (v.url != null) { v.url; }
+}
+
+void _touchPasswordResetConfirmRequest(PasswordResetConfirmRequest v) {
+  v.toJson();
+  v.token;
+  v.password;
+}
+
+void _touchPasswordResetConfirmResponse(PasswordResetConfirmResponse v) {
+  v.toJson();
+  if (v.successUrl != null) { v.successUrl; }
 }
 
 void _touchCartItem(CartItem v) {
@@ -929,6 +1034,22 @@ void _touchProductPage(ProductPage v) {
   if (v.facets != null) { _touchProductFacets(v.facets!); }
 }
 
+void _touchSitemapProduct(SitemapProduct v) {
+  v.toJson();
+  v.productId;
+  v.name;
+  v.updatedAt;
+}
+
+void _touchSitemapProductPage(SitemapProductPage v) {
+  v.toJson();
+  v.page;
+  v.size;
+  v.totalElements;
+  v.totalPages;
+  for (final x in v.contents) _touchSitemapProduct(x);
+}
+
 void _touchStorefrontCollection(StorefrontCollection v) {
   v.toJson();
   v.collectionId;
@@ -1015,9 +1136,12 @@ void _touchCheckoutSession(CheckoutSession v) {
   for (final x in v.items) _touchCheckoutSessionItemsItem(x);
   _touchCheckoutSessionAmounts(v.amounts);
   if (v.points != null) { _touchCheckoutSessionPoints(v.points!); }
+  v.couponsEnabled;
+  v.additionalPayment;
+  v.orderPasswordRequired;
+  v.memberOrder;
   _touchCheckoutDelivery(v.delivery);
   v.requiresShipping;
-  if (v.withdrawal != null) { _touchCheckoutSessionWithdrawal(v.withdrawal!); }
   v.expiresAt;
   for (final x in v.paymentOptions) _touchAvailablePaymentOption(x);
   v.testPayment;
@@ -1058,12 +1182,6 @@ void _touchCheckoutSessionPoints(CheckoutSessionPoints v) {
   v.unit;
   v.minAmount;
   v.minBalance;
-}
-
-void _touchCheckoutSessionWithdrawal(CheckoutSessionWithdrawal v) {
-  v.toJson();
-  v.required;
-  if (v.notice != null) { v.notice; }
 }
 
 void _touchDeliveryQuoteRequest(DeliveryQuoteRequest v) {
@@ -1141,6 +1259,7 @@ void _touchAvailablePaymentOptionCard(AvailablePaymentOptionCard v) {
   v.method;
   v.label;
   v.pgName;
+  if (v.logoUrl != null) { v.logoUrl; }
 }
 
 void _touchAvailablePaymentOptionEasyPay(AvailablePaymentOptionEasyPay v) {
@@ -1150,6 +1269,7 @@ void _touchAvailablePaymentOptionEasyPay(AvailablePaymentOptionEasyPay v) {
   v.provider;
   v.label;
   v.pgName;
+  if (v.logoUrl != null) { v.logoUrl; }
 }
 
 void _touchAvailablePaymentOptionBankTransfer(AvailablePaymentOptionBankTransfer v) {
@@ -1158,6 +1278,7 @@ void _touchAvailablePaymentOptionBankTransfer(AvailablePaymentOptionBankTransfer
   v.method;
   v.label;
   v.pgName;
+  if (v.logoUrl != null) { v.logoUrl; }
 }
 
 void _touchAvailablePaymentOptionVirtualAccount(AvailablePaymentOptionVirtualAccount v) {
@@ -1166,6 +1287,7 @@ void _touchAvailablePaymentOptionVirtualAccount(AvailablePaymentOptionVirtualAcc
   v.method;
   v.label;
   v.pgName;
+  if (v.logoUrl != null) { v.logoUrl; }
 }
 
 void _touchAvailablePaymentOptionMobile(AvailablePaymentOptionMobile v) {
@@ -1174,6 +1296,7 @@ void _touchAvailablePaymentOptionMobile(AvailablePaymentOptionMobile v) {
   v.method;
   v.label;
   v.pgName;
+  if (v.logoUrl != null) { v.logoUrl; }
 }
 
 void _touchShippingAddressInput(ShippingAddressInput v) {
@@ -1223,6 +1346,7 @@ void _touchStartPaymentRequest(StartPaymentRequest v) {
   v.returnUrl;
   if (v.shippingAddress != null) { _touchStartPaymentRequestShippingAddress(v.shippingAddress!); }
   if (v.guest != null) { _touchGuestInfo(v.guest!); }
+  if (v.orderPassword != null) { v.orderPassword; }
   if (v.cashReceipt != null) { _touchCashReceiptRequest(v.cashReceipt!); }
   if (v.coupons != null) { for (final x in v.coupons!) _touchCouponApplication(x); }
   if (v.pointAmount != null) { v.pointAmount; }
@@ -1284,6 +1408,7 @@ void _touchPaymentStart(PaymentStart v) {
   v.paymentId;
   v.status;
   if (v.orderId != null) { v.orderId; }
+  if (v.orderNo != null) { v.orderNo; }
   if (v.attemptId != null) { v.attemptId; }
   if (v.option != null) { _touchPaymentOption(v.option!); }
   if (v.payUrl != null) { v.payUrl; }
@@ -1300,6 +1425,7 @@ void _touchPaymentStatus(PaymentStatus v) {
   v.status;
   v.result;
   if (v.orderId != null) { v.orderId; }
+  if (v.orderNo != null) { v.orderNo; }
   if (v.lastFailure != null) { _touchPaymentStatusLastFailure(v.lastFailure!); }
   v.testPayment;
   v.expiresAt;
@@ -1418,6 +1544,7 @@ void _touchFlowAction(FlowAction v) {
   v.toJson();
   v.key;
   v.label;
+  if (v.labelKey != null) { v.labelKey; }
   v.mode;
   v.enabled;
   if (v.disabled != null) { _touchFlowActionDisabled(v.disabled!); }
@@ -1437,8 +1564,10 @@ void _touchFlowState(FlowState v) {
   v.toJson();
   v.key;
   v.label;
+  if (v.labelKey != null) { v.labelKey; }
   if (v.coreStatus != null) { v.coreStatus; }
   if (v.message != null) { v.message; }
+  if (v.messageKey != null) { v.messageKey; }
   v.enteredAt;
   if (v.deadlineAt != null) { v.deadlineAt; }
   if (v.attachments != null) { v.attachments!.length; }
@@ -1467,7 +1596,9 @@ void _touchOrderStep(OrderStep v) {
   v.toJson();
   v.type;
   v.label;
+  if (v.labelKey != null) { v.labelKey; }
   if (v.message != null) { v.message; }
+  if (v.messageKey != null) { v.messageKey; }
   if (v.deadlineAt != null) { v.deadlineAt; }
   if (v.attachments != null) { v.attachments!.length; }
   if (v.earlierAttachments != null) { v.earlierAttachments!.length; }
@@ -1588,6 +1719,22 @@ void _touchCouponBenefitView(CouponBenefitView v) {
   if (v.maxDiscountAmount != null) { v.maxDiscountAmount; }
 }
 
+void _touchCouponRewardView(CouponRewardView v) {
+  v.toJson();
+  v.type;
+  if (v.tiers != null) { for (final x in v.tiers!) _touchCouponRewardViewTiersItem(x); }
+  if (v.buy != null) { v.buy; }
+  if (v.get != null) { v.get; }
+  if (v.rate != null) { v.rate; }
+  if (v.benefit != null) { _touchCouponBenefitView(v.benefit!); }
+}
+
+void _touchCouponRewardViewTiersItem(CouponRewardViewTiersItem v) {
+  v.toJson();
+  v.minAmount;
+  _touchCouponBenefitView(v.benefit);
+}
+
 void _touchCouponResult(CouponResult v) {
   v.toJson();
   v.couponId;
@@ -1596,8 +1743,10 @@ void _touchCouponResult(CouponResult v) {
   v.name;
   v.kind;
   _touchCouponBenefitView(v.benefit);
+  if (v.reward != null) { _touchCouponRewardView(v.reward!); }
   v.applied;
   v.discountAmount;
+  v.rewardPoint;
   if (v.rejectReason != null) { v.rejectReason; }
   if (v.optionId != null) { v.optionId; }
   if (v.lineId != null) { v.lineId; }
@@ -1610,6 +1759,7 @@ void _touchPricingAmounts(PricingAmounts v) {
   v.couponDiscountAmount;
   v.deliveryDiscountAmount;
   v.pointAmount;
+  if (v.rewardPointAmount != null) { v.rewardPointAmount; }
   v.totalAmount;
 }
 
@@ -1646,6 +1796,14 @@ void _touchCheckoutPricingPoints(CheckoutPricingPoints v) {
   if (v.rejectReason != null) { v.rejectReason; }
 }
 
+void _touchCouponRequirement(CouponRequirement v) {
+  v.toJson();
+  v.field;
+  if (v.operator != null) { v.operator; }
+  if (v.value != null) { v.value; }
+  v.label;
+}
+
 void _touchApplicableCoupon(ApplicableCoupon v) {
   v.toJson();
   v.issueId;
@@ -1654,11 +1812,18 @@ void _touchApplicableCoupon(ApplicableCoupon v) {
   if (v.description != null) { v.description; }
   v.kind;
   _touchCouponBenefitView(v.benefit);
+  if (v.reward != null) { _touchCouponRewardView(v.reward!); }
   v.minOrderAmount;
+  for (final x in v.requirements) _touchCouponRequirement(x);
   if (v.validUntil != null) { v.validUntil; }
   v.applicable;
   v.expectedDiscountAmount;
   if (v.rejectReason != null) { v.rejectReason; }
+}
+
+void _touchRegisterCouponRequest(RegisterCouponRequest v) {
+  v.toJson();
+  v.code;
 }
 
 void _touchMyCoupon(MyCoupon v) {
@@ -1669,7 +1834,9 @@ void _touchMyCoupon(MyCoupon v) {
   if (v.description != null) { v.description; }
   v.kind;
   _touchCouponBenefitView(v.benefit);
+  if (v.reward != null) { _touchCouponRewardView(v.reward!); }
   v.minOrderAmount;
+  for (final x in v.requirements) _touchCouponRequirement(x);
   v.status;
   v.validFrom;
   if (v.validUntil != null) { v.validUntil; }
@@ -1699,12 +1866,18 @@ void _touchStorefrontCoupon(StorefrontCoupon v) {
   if (v.description != null) { v.description; }
   v.kind;
   _touchCouponBenefitView(v.benefit);
+  if (v.reward != null) { _touchCouponRewardView(v.reward!); }
   v.minOrderAmount;
+  for (final x in v.requirements) _touchCouponRequirement(x);
   v.stackWithInstantDiscount;
   _touchStorefrontCouponTarget(v.target);
   if (v.startsAt != null) { v.startsAt; }
   if (v.endsAt != null) { v.endsAt; }
   if (v.validDaysAfterIssue != null) { v.validDaysAfterIssue; }
+  if (v.issueStartsAt != null) { v.issueStartsAt; }
+  if (v.issueEndsAt != null) { v.issueEndsAt; }
+  if (v.remainingIssueCount != null) { v.remainingIssueCount; }
+  if (v.remainingTodayCount != null) { v.remainingTodayCount; }
   v.perMemberIssueLimit;
   v.loginRequired;
   if (v.downloaded != null) { v.downloaded; }
@@ -1716,6 +1889,45 @@ void _touchStorefrontCouponListQuery(StorefrontCouponListQuery v) {
   if (v.productId != null) { v.productId; }
   if (v.page != null) { v.page; }
   if (v.size != null) { v.size; }
+}
+
+void _touchBestCouponEntry(BestCouponEntry v) {
+  v.toJson();
+  v.couponId;
+  if (v.issueId != null) { v.issueId; }
+  v.name;
+  v.kind;
+  v.discountAmount;
+  if (v.lineId != null) { v.lineId; }
+  v.needsDownload;
+}
+
+void _touchProductCouponBenefit(ProductCouponBenefit v) {
+  v.toJson();
+  v.productId;
+  v.currency;
+  v.quantity;
+  v.amount;
+  v.maxDiscountAmount;
+  v.priceAfterDiscount;
+  for (final x in v.coupons) _touchBestCouponEntry(x);
+  v.withPoints;
+  v.loginRequired;
+}
+
+void _touchProductCouponBenefitQuery(ProductCouponBenefitQuery v) {
+  v.toJson();
+  if (v.quantity != null) { v.quantity; }
+  if (v.optionId != null) { v.optionId; }
+}
+
+void _touchCheckoutBestCoupons(CheckoutBestCoupons v) {
+  v.toJson();
+  for (final x in v.applications) _touchCouponApplication(x);
+  for (final x in v.coupons) _touchBestCouponEntry(x);
+  v.discountAmount;
+  v.totalAmount;
+  v.withPoints;
 }
 
 void _touchCustomerInquiry(CustomerInquiry v) {
@@ -1786,7 +1998,6 @@ void _touchLineFulfillment(LineFulfillment v) {
   v.type;
   v.requiresShipping;
   if (v.method != null) { v.method; }
-  if (v.withdrawalRestricted != null) { v.withdrawalRestricted; }
 }
 
 void _touchPickupLocationView(PickupLocationView v) {
@@ -1865,6 +2076,7 @@ void _touchMember(Member v) {
   v.marketingAgreed;
   v.joinedAt;
   v.reconsentRequired;
+  if (v.userinfo != null) { _touchUserinfo(v.userinfo!); }
 }
 
 void _touchUpdateProfileRequest(UpdateProfileRequest v) {
@@ -1872,6 +2084,7 @@ void _touchUpdateProfileRequest(UpdateProfileRequest v) {
   if (v.name != null) { v.name; }
   if (v.phone != null) { v.phone; }
   if (v.marketingAgreed != null) { v.marketingAgreed; }
+  if (v.userinfo != null) { _touchUserinfoInput(v.userinfo!); }
 }
 
 void _touchMemberAddress(MemberAddress v) {
@@ -1949,6 +2162,7 @@ void _touchMyOrderItem(MyOrderItem v) {
   v.reviewWritten;
   if (v.reviewWritable != null) { v.reviewWritable; }
   if (v.autoDecisionDate != null) { v.autoDecisionDate; }
+  if (v.flow != null) { _touchMyOrderItemFlow(v.flow!); }
   if (v.flowState != null) { _touchFlowState(v.flowState!); }
   if (v.actions != null) { for (final x in v.actions!) _touchFlowAction(x); }
   if (v.flowBranches != null) { for (final x in v.flowBranches!) _touchFlowState(x); }
@@ -1960,6 +2174,12 @@ void _touchMyOrderItemFulfillment(MyOrderItemFulfillment v) {
   v.status;
   v.fulfilledAt;
   if (v.note != null) { v.note; }
+}
+
+void _touchMyOrderItemFlow(MyOrderItemFlow v) {
+  v.toJson();
+  v.key;
+  v.version;
 }
 
 void _touchOrderShippingAddress(OrderShippingAddress v) {
@@ -1988,6 +2208,7 @@ void _touchMyOrder(MyOrder v) {
   _touchMyOrderPayment(v.payment);
   if (v.currency != null) { v.currency; }
   v.testPayment;
+  for (final x in v.payments) _touchMyOrderPaymentsItem(x);
 }
 
 void _touchMyOrderPayment(MyOrderPayment v) {
@@ -2012,6 +2233,17 @@ void _touchMyOrderPaymentDiscountsItem(MyOrderPaymentDiscountsItem v) {
   v.name;
   v.kind;
   v.discountAmount;
+}
+
+void _touchMyOrderPaymentsItem(MyOrderPaymentsItem v) {
+  v.toJson();
+  v.paymentId;
+  v.additional;
+  v.amount;
+  if (v.approvedMethod != null) { v.approvedMethod; }
+  if (v.easyPayProvider != null) { v.easyPayProvider; }
+  v.paidAt;
+  v.refundedAmount;
 }
 
 void _touchDeliveryTracking(DeliveryTracking v) {
@@ -2338,6 +2570,56 @@ void _touchStorefrontStoreMarket(StorefrontStoreMarket v) {
   v.currency;
   v.matched;
   v.couponsEnabled;
+}
+
+void _touchUserinfoAddress(UserinfoAddress v) {
+  v.toJson();
+  if (v.formatted != null) { v.formatted; }
+  if (v.street_address != null) { v.street_address; }
+  if (v.locality != null) { v.locality; }
+  if (v.region != null) { v.region; }
+  if (v.postal_code != null) { v.postal_code; }
+  if (v.country != null) { v.country; }
+}
+
+void _touchUserinfo(Userinfo v) {
+  v.toJson();
+  v.sub;
+  if (v.name != null) { v.name; }
+  if (v.given_name != null) { v.given_name; }
+  if (v.family_name != null) { v.family_name; }
+  if (v.middle_name != null) { v.middle_name; }
+  if (v.nickname != null) { v.nickname; }
+  if (v.preferred_username != null) { v.preferred_username; }
+  if (v.profile != null) { v.profile; }
+  if (v.picture != null) { v.picture; }
+  if (v.website != null) { v.website; }
+  if (v.email != null) { v.email; }
+  if (v.email_verified != null) { v.email_verified; }
+  if (v.gender != null) { v.gender; }
+  if (v.birthdate != null) { v.birthdate; }
+  if (v.zoneinfo != null) { v.zoneinfo; }
+  if (v.locale != null) { v.locale; }
+  if (v.phone_number != null) { v.phone_number; }
+  if (v.phone_number_verified != null) { v.phone_number_verified; }
+  if (v.address != null) { _touchUserinfoAddress(v.address!); }
+  if (v.updated_at != null) { v.updated_at; }
+}
+
+void _touchUserinfoInput(UserinfoInput v) {
+  v.toJson();
+  if (v.given_name != null) { v.given_name; }
+  if (v.family_name != null) { v.family_name; }
+  if (v.middle_name != null) { v.middle_name; }
+  if (v.nickname != null) { v.nickname; }
+  if (v.preferred_username != null) { v.preferred_username; }
+  if (v.profile != null) { v.profile; }
+  if (v.picture != null) { v.picture; }
+  if (v.website != null) { v.website; }
+  if (v.gender != null) { v.gender; }
+  if (v.birthdate != null) { v.birthdate; }
+  if (v.zoneinfo != null) { v.zoneinfo; }
+  if (v.locale != null) { v.locale; }
 }
 
 void _touchUnknownFulfillmentView(UnknownFulfillmentView v) {

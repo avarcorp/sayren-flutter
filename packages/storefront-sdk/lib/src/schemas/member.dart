@@ -28,6 +28,7 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 /// [Member] 스키마입니다.
 final ZodObject<Member> memberSchema = z.object<Member>({
@@ -45,6 +46,7 @@ final ZodObject<Member> memberSchema = z.object<Member>({
   'marketingAgreed': z.boolean(),
   'joinedAt': z.string(),
   'reconsentRequired': z.boolean(),
+  'userinfo': userinfoSchema.optional(),
 }, Member._);
 
 /// Member 값입니다.
@@ -58,7 +60,8 @@ class Member extends ParsedObject {
       required int point,
       required bool marketingAgreed,
       required String joinedAt,
-      required bool reconsentRequired})
+      required bool reconsentRequired,
+      Userinfo? userinfo})
       : super({
           'memberId': memberId,
           'email': email,
@@ -67,7 +70,8 @@ class Member extends ParsedObject {
           'point': point,
           'marketingAgreed': marketingAgreed,
           'joinedAt': joinedAt,
-          'reconsentRequired': reconsentRequired
+          'reconsentRequired': reconsentRequired,
+          if (userinfo != null) 'userinfo': userinfo
         });
 
   Member._(super.json);
@@ -100,6 +104,9 @@ class Member extends ParsedObject {
 
   /// 약관이 개정돼 필수 동의를 다시 받아야 하는지입니다. true면 `GET /me/consents`로 어떤 항목인지 확인하고 `POST /me/consents`로 받습니다. 받기 전에도 상점 이용은 막히지 않습니다.
   bool get reconsentRequired => _j['reconsentRequired'] as bool;
+
+  /// OIDC userinfo 표준 클레임(이슈 #264). 서버는 항상 싣습니다.
+  Userinfo? get userinfo => _j['userinfo'] as Userinfo?;
 }
 
 /// [UpdateProfileRequest] 스키마입니다.
@@ -107,16 +114,18 @@ final ZodObject<UpdateProfileRequest> updateProfileRequestSchema = z.object<Upda
   'name': z.string().max(50).optional(),
   'phone': z.string().optional(),
   'marketingAgreed': z.boolean().optional(),
+  'userinfo': userinfoInputSchema.optional(),
 }, UpdateProfileRequest._).refine((v) => jsonOf(v as ParsedObject).isNotEmpty, message: '최소 1개 필드가 필요합니다');
 
 /// UpdateProfileRequest 값입니다.
 class UpdateProfileRequest extends ParsedObject {
   /// [UpdateProfileRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  UpdateProfileRequest({String? name, String? phone, bool? marketingAgreed})
+  UpdateProfileRequest({String? name, String? phone, bool? marketingAgreed, UserinfoInput? userinfo})
       : super({
           if (name != null) 'name': name,
           if (phone != null) 'phone': phone,
-          if (marketingAgreed != null) 'marketingAgreed': marketingAgreed
+          if (marketingAgreed != null) 'marketingAgreed': marketingAgreed,
+          if (userinfo != null) 'userinfo': userinfo
         });
 
   UpdateProfileRequest._(super.json);
@@ -134,6 +143,9 @@ class UpdateProfileRequest extends ParsedObject {
 
   /// `marketingAgreed` 값입니다.
   bool? get marketingAgreed => _j['marketingAgreed'] as bool?;
+
+  /// 바꿀 OIDC 클레임 — 준 것만 바뀌고 null은 지웁니다.
+  UserinfoInput? get userinfo => _j['userinfo'] as UserinfoInput?;
 }
 
 /// [MemberAddress] 스키마입니다.

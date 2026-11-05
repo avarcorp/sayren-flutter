@@ -28,6 +28,7 @@ import 'points.dart';
 import 'product-options.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 /// [PublicReview] 스키마입니다.
 final ZodObject<PublicReview> publicReviewSchema = z.object<PublicReview>({

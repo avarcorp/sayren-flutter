@@ -4,8 +4,8 @@ sayren 공개 API를 Dart·Flutter에서 호출하는 SDK입니다. Node SDK(`@s
 
 | 패키지 | 대응 Node SDK | 용도 | 런타임 |
 |---|---|---|---|
-| [`sayren_storefront_sdk`](packages/storefront-sdk) | `@sayren/storefront-sdk` 0.24.0 | 구매자 앱 — 상점·카탈로그·장바구니·주문·회원, 로그인, 결제, 방문 분석 | Flutter |
-| [`sayren_store_sdk`](packages/store-sdk) | `@sayren/store-sdk` 0.36.0 | 셀러 도구 — 상품·주문·클레임·설정 관리, 웹훅 서명 검증 | Dart |
+| [`sayren_storefront_sdk`](packages/storefront-sdk) | `@sayren/storefront-sdk` 0.40.0 | 구매자 앱 — 상점·카탈로그·장바구니·주문·회원, 로그인, 결제, 방문 분석 | Flutter |
+| [`sayren_store_sdk`](packages/store-sdk) | `@sayren/store-sdk` 0.71.0 | 셀러 도구 — 상품·주문·클레임·설정 관리, 웹훅 서명 검증 | Dart |
 
 ## Features
 

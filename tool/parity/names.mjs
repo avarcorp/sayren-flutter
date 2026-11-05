@@ -14,6 +14,7 @@ const ENTRIES = [
   { pkg: "@sayren/storefront-sdk", entry: "auth/index.ts", dart: "storefront-sdk/lib/auth.dart" },
   { pkg: "@sayren/storefront-sdk", entry: "payments/index.ts", dart: "storefront-sdk/lib/payments.dart" },
   { pkg: "@sayren/storefront-sdk", entry: "analytics/index.ts", dart: "storefront-sdk/lib/analytics.dart" },
+  { pkg: "@sayren/storefront-sdk", entry: "server/index.ts", dart: "storefront-sdk/lib/server.dart" },
   { pkg: "@sayren/store-sdk", entry: "index.ts", dart: "store-sdk/lib/sayren_store_sdk.dart" },
   { pkg: "@sayren/store-sdk", entry: "server.ts", dart: "store-sdk/lib/server.dart" },
 ];
@@ -24,8 +25,6 @@ const NOT_PORTED = new Set([
   "PaymentPostMessage",
   "PreparedPaymentWindow",
   "PREPARED_WINDOW",
-  "changeStorefrontTemplateRequestSchema",
-  "ChangeStorefrontTemplateRequest",
 ]);
 
 /** Dart 파일의 최상위 공개 선언 이름 */

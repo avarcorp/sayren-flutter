@@ -9,7 +9,15 @@ import 'package:unorm_dart/unorm_dart.dart' as unorm;
 /// http(s) 주소를 읽은 결과 — WHATWG `URL`의 같은 이름 속성이다
 class HttpUrl {
   const HttpUrl._(
-      this.protocol, this.username, this.password, this.hostname, this.port, this.pathname, this.search, this.hash);
+    this.protocol,
+    this.username,
+    this.password,
+    this.hostname,
+    this.port,
+    this.pathname,
+    this.search,
+    this.hash,
+  );
 
   /// `https:`·`http:`
   final String protocol;

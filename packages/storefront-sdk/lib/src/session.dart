@@ -61,9 +61,10 @@ const STOREFRONT_SESSION_KEYS = (
 /// [createStorefrontSession]에 넘기는 옵션입니다.
 class StorefrontSessionOptions {
   /// 옵션을 만듭니다.
-  const StorefrontSessionOptions({required this.baseUrl, this.storeCode, required this.storage, this.fetch});
+  const StorefrontSessionOptions(
+      {this.baseUrl = SAYREN_STOREFRONT_API_BASE_URL, this.storeCode, required this.storage, this.fetch});
 
-  /// 스토어프론트 API 주소입니다. 예: `https://api.sayren.io/storefront/v1`
+  /// 스토어프론트 API 주소(버전 경로 포함)입니다. 생략하면 운영 주소([SAYREN_STOREFRONT_API_BASE_URL], `https://api.sayren.io/storefront/v1`)이고, 개발·로컬에서만 지정합니다.
   final String baseUrl;
 
   /// 상점 코드입니다. `X-Store-Code` 헤더로 보냅니다.

@@ -13,16 +13,21 @@ import 'schemas/apps.dart';
 import 'schemas/audit.dart';
 import 'schemas/auth.dart';
 import 'schemas/category.dart';
+import 'schemas/checkout.dart';
 import 'schemas/claim.dart';
 import 'schemas/collection.dart';
 import 'schemas/commerce-flow.dart';
 import 'schemas/commerce-number.dart';
 import 'schemas/common.dart';
+import 'schemas/condition-tree.dart';
+import 'schemas/coupon-rules.dart';
+import 'schemas/coupon-selection.dart';
 import 'schemas/coupon.dart';
 import 'schemas/currency-prices.dart';
 import 'schemas/currency.dart';
 import 'schemas/customer-delegation.dart';
 import 'schemas/customer.dart';
+import 'schemas/flow-localization.dart';
 import 'schemas/fulfillment.dart';
 import 'schemas/inventory.dart';
 import 'schemas/locale.dart';
@@ -32,6 +37,7 @@ import 'schemas/misc.dart';
 import 'schemas/order.dart';
 import 'schemas/payment.dart';
 import 'schemas/points.dart';
+import 'schemas/product-import.dart';
 import 'schemas/product-info.dart';
 import 'schemas/product-localization.dart';
 import 'schemas/product.dart';
@@ -48,6 +54,7 @@ import 'schemas/storefront-hosting.dart';
 import 'schemas/subscription.dart';
 import 'schemas/telemetry.dart';
 import 'schemas/upload.dart';
+import 'schemas/userinfo.dart';
 import 'schemas/webhook-event.dart';
 import 'webhook-headers.dart';
 import 'session.dart';
@@ -59,15 +66,14 @@ import 'zod.dart';
 ///
 /// ```dart
 /// final client = createStoreClient(StoreClientOptions(
-///   baseUrl: 'https://api.sayren.io/v1',
 ///   accessToken: personalAccessToken,
 ///   storeId: storeId,
 /// ));
 /// ```
 class StoreClientOptions {
-  /// 옵션을 만듭니다. [baseUrl]만 필수입니다.
+  /// 옵션을 만듭니다. 모두 선택입니다.
   const StoreClientOptions({
-    required this.baseUrl,
+    this.baseUrl = SAYREN_API_BASE_URL,
     this.accessToken,
     this.storeId,
     this.session,
@@ -76,7 +82,7 @@ class StoreClientOptions {
     this.fetch,
   });
 
-  /// 관리 API 주소입니다. 예: `https://api.sayren.io/v1`
+  /// 관리 API 주소(버전 경로 포함)입니다. 생략하면 운영 주소([SAYREN_API_BASE_URL], `https://api.sayren.io/v1`)이고, 개발·로컬에서만 지정합니다.
   final String baseUrl;
 
   /// 계정 토큰입니다(accounts가 발급한 JWT — 상점 플랫폼 로그인, 개인 액세스 토큰, 연결된 앱의 토큰).
@@ -162,6 +168,7 @@ class StoreClient {
     infoSchemas = StoreClientInfoSchemas._(http_);
     codes = StoreClientCodes._(http_);
     infoSections = StoreClientInfoSections._(http_);
+    noticeTemplates = StoreClientNoticeTemplates._(http_);
     collections = StoreClientCollections._(http_);
     categories = StoreClientCategories._(http_);
     orders = StoreClientOrders._(http_);
@@ -192,10 +199,9 @@ class StoreClient {
     inventory = StoreClientInventory._(http_);
     markets = StoreClientMarkets._(http_);
     pickupLocations = StoreClientPickupLocations._(http_);
+    checkouts = StoreClientCheckouts._(http_);
     ai = StoreClientAi._(http_);
     storefront = StoreClientStorefront._(http_);
-    subscription = StoreClientSubscription._(http_);
-    plans = StoreClientPlans._(http_);
     store = StoreClientStore._(http_);
   }
 
@@ -242,6 +248,10 @@ class StoreClient {
   /// 안내 섹션(이슈 #135) — 여러 상품이 같이 쓰는 글. 상품은 `infoSectionIds`로 연결만 하고, 섹션을 고치면 연결 상품 전체가 바뀝니다.
   /// 지우면 연결도 풀립니다. 권한은 상품과 같습니다(`product:r`·`product:rw`).
   late final StoreClientInfoSections infoSections;
+
+  /// 고시 템플릿(이슈 #250) — 자주 쓰는 고시(품목군 + 칸 값). 적용은 복사입니다 — 상품 `notice`에 같은 값을 실어 저장하고, 템플릿을 고쳐도
+  /// 적용한 상품은 바뀌지 않습니다. 권한은 상품과 같습니다(`product:r`·`product:rw`).
+  late final StoreClientNoticeTemplates noticeTemplates;
 
   /// 컬렉션 (이슈 #83) — 상품을 어디에 보여 줄지 정하는 묶음(다대입니다). 권한은 카테고리와 같습니다(`category:r`·`category:rw`).
   /// 쓰기마입니다 `revision`이 오릅니다. 수정 본문에 읽은 `revision`을 주면 그 사이 다른 수정이 있을 때 409 `COLLECTION_CHANGED`입니다.
@@ -344,20 +354,18 @@ class StoreClient {
   /// `client.pickupLocations` 네임스페이스입니다.
   late final StoreClientPickupLocations pickupLocations;
 
+  /// 셀러 작성 주문서 (이슈 #116) — 셀러가 줄·단가·유효 기한을 정해 만들고 `checkoutId`를 결제 링크로 보냅니다.
+  /// 구매자는 스토어프론트에서 그 주문서로 결제합니다(storefront-sdk `checkout.get`). 스코프 `order:r`·`order:rw`.
+  late final StoreClientCheckouts checkouts;
+
   /// 상점 플랫폼 AI 채팅 (이슈 #124) — 상점 플랫폼 전용(공개 문서 제외). 메시지는 202로 `streamId`를 돌려주고
   /// 응답은 `streamUrl`(SSE, Bearer `streamToken`)로 받습니다. 실행은 브라우저와 무관하게 서버에서 끝까지 돕니다.
   late final StoreClientAi ai;
 
   /// 스토어프론트 호스팅 (이슈 #53) — 조회 `storefront:r`, 쓰기 `storefront:rw`(OWNER·ADMIN).
   /// 쓰기 응답은 바뀐 사이트입니다. Cloudflare 반영은 커밋 뒤라 `provisioning.status`가 잠시 `PENDING`일 수 있습니다.
-  /// 에이전트 토큰의 발행·되돌리기·템플릿 변경·공개 전환·슬러그 변경·끄기는 승인 대기(`ApprovalPendingError`)다.
+  /// 에이전트 토큰의 발행·되돌리기·공개 전환·슬러그 변경·끄기는 승인 대기(`ApprovalPendingError`)다.
   late final StoreClientStorefront storefront;
-
-  /// `client.subscription` 네임스페이스입니다.
-  late final StoreClientSubscription subscription;
-
-  /// `client.plans` 네임스페이스입니다.
-  late final StoreClientPlans plans;
 
   /// `client.store` 네임스페이스입니다.
   late final StoreClientStore store;
@@ -446,14 +454,55 @@ class StoreClientProductsLocalizations {
       'DELETE', '/products/${encodeURIComponent('$productId')}/localizations/${encodeURIComponent('$locale')}');
 }
 
+/// 상품 일괄 반영(이슈 #211, 상점 플랫폼 전용) — 작업 만들기 → 항목 붙이기(여러 번) → 시작(202) → 조회.
+/// 항목 하나라도 실패하면 아무것도 반영하지 않습니다.
+class StoreClientProductsImports {
+  StoreClientProductsImports._(this._http);
+
+  final _Https _http;
+
+  /// `POST /v1/product-imports`
+  Future<ProductImport> create() async => _http.store.request('POST', '/product-imports', productImportSchema);
+
+  /// `POST /v1/product-imports/{importId}/items`
+  Future<ProductImport> addItems(String importId, List<ProductImportItemInput> items) async => _http.store.request(
+      'POST',
+      '/product-imports/${encodeURIComponent('$importId')}/items',
+      productImportSchema,
+      RequestOptions(body: productImportItemsRequestSchema.parse({'items': items}).toJson()));
+
+  /// `POST /v1/product-imports/{importId}/start`
+  Future<ProductImport> start(String importId) async =>
+      _http.store.request('POST', '/product-imports/${encodeURIComponent('$importId')}/start', productImportSchema);
+
+  /// `GET /v1/product-imports/{importId}`
+  Future<ProductImport> get(String importId) async =>
+      _http.store.request('GET', '/product-imports/${encodeURIComponent('$importId')}', productImportSchema);
+
+  /// 상품 상세 묶음 조회(id·상품번호 합 100개) — 상점 플랫폼 전용. 이 상점에 없는 값은 빠집니다.
+  ///
+  /// `POST /v1/product-imports/products`
+  Future<List<Product>> lookup(ProductLookupRequest body) async => _http.store.request(
+      'POST',
+      '/product-imports/products',
+      z.array<Product>(productSchema),
+      RequestOptions(body: productLookupRequestSchema.parse(body).toJson()));
+}
+
 /// `client.products` 네임스페이스입니다.
 class StoreClientProducts {
-  StoreClientProducts._(this._http) : localizations = StoreClientProductsLocalizations._(_http);
+  StoreClientProducts._(this._http)
+      : localizations = StoreClientProductsLocalizations._(_http),
+        imports = StoreClientProductsImports._(_http);
 
   final _Https _http;
 
   /// 번역(이슈 #134) — 언어별 상품명·상세설명·이미지·옵션 이름.
   final StoreClientProductsLocalizations localizations;
+
+  /// 상품 일괄 반영(이슈 #211, 상점 플랫폼 전용) — 작업 만들기 → 항목 붙이기(여러 번) → 시작(202) → 조회.
+  /// 항목 하나라도 실패하면 아무것도 반영하지 않습니다.
+  final StoreClientProductsImports imports;
 
   /// `GET /v1/products`
   Future<Page<ProductSummary>> list([ProductListParams? params]) async => _http.store.request(
@@ -713,6 +762,40 @@ class StoreClientInfoSections {
       _http.store.requestVoid('DELETE', '/info-sections/${encodeURIComponent('$infoSectionId')}');
 }
 
+/// 고시 템플릿(이슈 #250) — 자주 쓰는 고시(품목군 + 칸 값). 적용은 복사입니다 — 상품 `notice`에 같은 값을 실어 저장하고, 템플릿을 고쳐도
+/// 적용한 상품은 바뀌지 않습니다. 권한은 상품과 같습니다(`product:r`·`product:rw`).
+class StoreClientNoticeTemplates {
+  StoreClientNoticeTemplates._(this._http);
+
+  final _Https _http;
+
+  /// `GET /v1/notice-templates`
+  Future<List<NoticeTemplate>> list() async =>
+      _http.store.request('GET', '/notice-templates', z.array<NoticeTemplate>(noticeTemplateSchema));
+
+  /// `GET /v1/notice-templates/{templateId}`
+  Future<NoticeTemplate> get(String templateId) async =>
+      _http.store.request('GET', '/notice-templates/${encodeURIComponent('$templateId')}', noticeTemplateSchema);
+
+  /// `POST /v1/notice-templates`
+  Future<NoticeTemplate> create(NoticeTemplateRequestInput body) async => _http.store.request(
+      'POST',
+      '/notice-templates',
+      noticeTemplateSchema,
+      RequestOptions(body: noticeTemplateRequestSchema.parse(body).toJson()));
+
+  /// `PUT /v1/notice-templates/{templateId}`
+  Future<NoticeTemplate> update(String templateId, NoticeTemplateRequestInput body) async => _http.store.request(
+      'PUT',
+      '/notice-templates/${encodeURIComponent('$templateId')}',
+      noticeTemplateSchema,
+      RequestOptions(body: noticeTemplateRequestSchema.parse(body).toJson()));
+
+  /// `DELETE /v1/notice-templates/{templateId}`
+  Future<void> remove(String templateId) async =>
+      _http.store.requestVoid('DELETE', '/notice-templates/${encodeURIComponent('$templateId')}');
+}
+
 /// 번역(이슈 #134) — 언어별 제목·설명·SEO.
 class StoreClientCollectionsLocalizations {
   StoreClientCollectionsLocalizations._(this._http);
@@ -905,10 +988,21 @@ class StoreClientOrders {
   Future<Order> get(String orderId) async =>
       _http.store.request('GET', '/orders/${encodeURIComponent('$orderId')}', orderSchema);
 
+  /// `POST /v1/orders` — 주문 직접 생성(이슈 #117). 결제 대기 주문과 결제 요청을 만듭니다. 응답 `paymentRequest.checkoutUrl`이 구매자에게 보낼 결제 링큽니다.
+  /// 결제 기한까지 결제하지 않으면 주문이 자동으로 취소됩니다.
+  Future<CreatedOrder> create(CreateOrderRequest body) async => _http.store.request(
+      'POST', '/orders', createdOrderSchema, RequestOptions(body: createOrderRequestSchema.parse(body).toJson()));
+
   /// `POST /v1/orders/{orderId}/cash-receipt/reissue` — 실패했거나 재시도 대기 중인 현금영수증을 지금 다시 발급·취소합니다.
   /// 상점 플랫폼 OWNER·ADMIN 전용(PAT·M2M 403 `INSUFFICIENT_ROLE`). 404 `CASH_RECEIPT_NOT_FOUND`, 409 `CASH_RECEIPT_NOT_REISSUABLE`.
   Future<CashReceipt> reissueCashReceipt(String orderId) async =>
       _http.store.request('POST', '/orders/${encodeURIComponent('$orderId')}/cash-receipt/reissue', cashReceiptSchema);
+
+  /// `POST /v1/orders/{orderId}/refunds` — 금액만 환불(#365). 주문상품을 취소하지 않고 결제에서 금액만 돌려줍니다. `idempotencyKey`가 필수입니다.
+  /// 결제 잔액을 넘으면 409 `REFUND_EXCEEDS_BALANCE`, 환불할 결제가 없으면 409 `NO_REFUNDABLE_PAYMENT`. 결제사 환불이 실패해도 200이고 `status`가 `FAILED`입니다.
+  Future<PaymentRefundRecord> refund(String orderId, SellerRefundRequest body, String idempotencyKey) async =>
+      _http.store.request('POST', '/orders/${encodeURIComponent('$orderId')}/refunds', paymentRefundRecordSchema,
+          RequestOptions(body: sellerRefundRequestSchema.parse(body).toJson(), headers: _idempotency(idempotencyKey)));
 
   /// `POST /orders/{id}/actions/{key}` — 주문 전체 행동(#115). 그 행동이 켜진 주문상품마다 실행하고 결과를 주문상품별로 줍니다(부분 실행).
   /// 켜진 주문상품이 하나도 없으면 409 `ACTION_NOT_AVAILABLE`.
@@ -934,6 +1028,20 @@ class StoreClientOrderItems {
   Future<Page<OrderItem>> listChanged(OrderItemListParams params) async => _http.store
       .request('GET', '/order-items', pageSchema<OrderItem>(orderItemSchema), RequestOptions(query: params.toJson()));
 
+  /// `GET /v1/order-items/shipping` — 배송지가 필요한 주문상품을 주문번호·배송지·발송 정보와 함께, 주문 시각 최신순으로(#208). 스코프 `order:r`.
+  Future<Page<ShippingOrderItem>> listShipping(ShippingOrderItemListParams params) async {
+    final status = params.status;
+    return _http.store.request(
+        'GET',
+        '/order-items/shipping',
+        pageSchema<ShippingOrderItem>(shippingOrderItemSchema),
+        RequestOptions(query: {
+          ...params.toJson(),
+          'status': status is List ? status.join(',') : status,
+          'orderItemNos': params.orderItemNos?.join(','),
+        }));
+  }
+
   /// `POST /v1/order-items/{orderItemId}/confirm`
   Future<void> confirm(String orderItemId, [String? idempotencyKey]) async => _http.store.requestVoid(
       'POST',
@@ -958,11 +1066,23 @@ class StoreClientOrderItems {
       _http.store.requestVoid('DELETE', '/order-items/${encodeURIComponent('$orderItemId')}/hold');
 
   /// 판매자 취소 미리보기(#115) — 취소하면 돌려줄 현금·적립금. 생략한 수량은 남은 수량 전체입니다.
-  Future<SellerCancelPreview> cancelPreview(String orderItemId, [int? quantity]) async => _http.store.request(
-      'GET',
-      '/order-items/${encodeURIComponent(orderItemId)}/cancel-preview',
-      sellerCancelPreviewSchema,
-      RequestOptions(query: {if (truthy(quantity)) 'quantity': quantity}));
+  Future<SellerCancelPreview> cancelPreview(String orderItemId, [Object? query]) async {
+    // 두 번째 인자는 수량(이전 호출) 또는 귀책·추가 차감까지 담은 쿼리(#301)다
+    final params = switch (query) {
+      int() => SellerCancelPreviewQuery(quantity: query),
+      SellerCancelPreviewQuery() => query,
+      null => const SellerCancelPreviewQuery(),
+      _ => throw ArgumentError.value(query, 'query', 'int 또는 SellerCancelPreviewQuery'),
+    };
+    return _http.store.request(
+        'GET',
+        '/order-items/${encodeURIComponent(orderItemId)}/cancel-preview',
+        sellerCancelPreviewSchema,
+        RequestOptions(query: {
+          for (final e in params.toJson().entries)
+            if (e.value != null && e.value != 0) e.key: e.value,
+        }));
+  }
 
   /// `POST /v1/order-items/{orderItemId}/cancel`
   Future<CancelBySellerResult> cancelBySeller(String orderItemId, CancelBySellerRequest body,
@@ -1117,12 +1237,39 @@ class StoreClientFlowRuns {
       _http.store.request('GET', '/flow-runs/${encodeURIComponent('$runId')}', flowRunSchema);
 }
 
+/// 흐름 문구 번역(#411) — 언어별 문구 key → 번역.
+class StoreClientCommerceFlowsLocalizations {
+  StoreClientCommerceFlowsLocalizations._(this._http);
+
+  final _Https _http;
+
+  /// `GET /v1/commerce-flows/{flowId}/localizations`
+  Future<List<FlowLocalization>> list(String flowId) async => _http.store.request(
+      'GET',
+      '/commerce-flows/${encodeURIComponent('$flowId')}/localizations',
+      z.array<FlowLocalization>(flowLocalizationSchema));
+
+  /// `PUT /v1/commerce-flows/{flowId}/localizations/{locale}`
+  Future<FlowLocalization> put(String flowId, String locale, FlowLocalizationRequest body) async => _http.store.request(
+      'PUT',
+      '/commerce-flows/${encodeURIComponent('$flowId')}/localizations/${encodeURIComponent('$locale')}',
+      flowLocalizationSchema,
+      RequestOptions(body: flowLocalizationRequestSchema.parse(body).toJson()));
+
+  /// `DELETE /v1/commerce-flows/{flowId}/localizations/{locale}`
+  Future<void> remove(String flowId, String locale) async => _http.store.requestVoid(
+      'DELETE', '/commerce-flows/${encodeURIComponent('$flowId')}/localizations/${encodeURIComponent('$locale')}');
+}
+
 /// 커머스 플로우 (이슈 #115) — 프리셋 설치·초안 저장·검사·게시와 상품 할당 규칙. 조회 `flow:r`, 쓰기 `flow:rw`.
 /// 게시한 버전은 불변이고, 진행 중 주문은 결제 때 붙은 버전으로 끝까지 갑니다.
 class StoreClientCommerceFlows {
-  StoreClientCommerceFlows._(this._http);
+  StoreClientCommerceFlows._(this._http) : localizations = StoreClientCommerceFlowsLocalizations._(_http);
 
   final _Https _http;
+
+  /// 흐름 문구 번역(#411) — 언어별 문구 key → 번역.
+  final StoreClientCommerceFlowsLocalizations localizations;
 
   /// `GET /v1/flow-presets`
   Future<List<FlowPresetSummary>> presets() async =>
@@ -1136,6 +1283,12 @@ class StoreClientCommerceFlows {
   Future<List<CommerceFlowSummary>> list() async =>
       _http.store.request('GET', '/commerce-flows', z.array<CommerceFlowSummary>(commerceFlowSummarySchema));
 
+  /// 흐름 문구(#411) — 구매자 문구 key와 흐름에 적힌 문구.
+  ///
+  /// `GET /v1/commerce-flows/{flowId}/texts`
+  Future<List<FlowText>> texts(String flowId) async => _http.store
+      .request('GET', '/commerce-flows/${encodeURIComponent('$flowId')}/texts', z.array<FlowText>(flowTextSchema));
+
   /// `GET /v1/commerce-flows/{flowId}`
   Future<CommerceFlow> get(String flowId) async =>
       _http.store.request('GET', '/commerce-flows/${encodeURIComponent('$flowId')}', commerceFlowSchema);
@@ -1145,6 +1298,24 @@ class StoreClientCommerceFlows {
   /// `POST /v1/commerce-flows`
   Future<CommerceFlow> create(CreateCommerceFlowRequest body) async => _http.store.request('POST', '/commerce-flows',
       commerceFlowSchema, RequestOptions(body: createCommerceFlowRequestSchema.parse(body).toJson()));
+
+  /// `PATCH /commerce-flows/{id}` — 흐름 이름 바꾸기(#411). 키는 바꿀 수 없습니다. 에러: 409 `FLOW_DEFAULT_LOCKED`(기본 흐름).
+  ///
+  /// `PATCH /v1/commerce-flows/{flowId}`
+  Future<CommerceFlow> update(String flowId, UpdateCommerceFlowRequest body) async => _http.store.request(
+      'PATCH',
+      '/commerce-flows/${encodeURIComponent('$flowId')}',
+      commerceFlowSchema,
+      RequestOptions(body: updateCommerceFlowRequestSchema.parse(body).toJson()));
+
+  /// `DELETE /commerce-flows/{id}/draft` — 게시하지 않은 초안을 버립니다(#411). 다음 저장은 게시 버전에서 새 초안을 엽니다. `revision`을 주면 그 초안일 때만
+  /// 버립니다. 에러: 409 `FLOW_NOT_PUBLISHED`(게시 버전이 없어 버릴 수 없습니다)·`FLOW_REVISION_CONFLICT`, 423 `FLOW_DRAFT_LOCKED`, 404 `FLOW_DRAFT_NOT_FOUND`.
+  ///
+  /// `DELETE /v1/commerce-flows/{flowId}/draft`
+  Future<void> discardDraft(String flowId, [int? revision]) async => _http.store.requestVoid(
+      'DELETE',
+      '/commerce-flows/${encodeURIComponent('$flowId')}/draft',
+      RequestOptions(headers: revision == null ? null : {'if-match': '${revision}'}));
 
   /// 초안 저장. `revision`을 주면 그 초안일 때만 저장합니다(409 `FLOW_REVISION_CONFLICT`).
   Future<CommerceFlow> saveDraft(String flowId, SaveFlowDraftRequest body, [int? revision]) async =>
@@ -1231,6 +1402,72 @@ class StoreClientCommerceFlows {
 
   /// `GET /flow-node-types` — 쓸 수 있는 노드·블록 종류와 설정 형식(JSON Schema).
   Future<FlowNodeTypes> nodeTypes() async => _http.store.request('GET', '/flow-node-types', flowNodeTypesSchema);
+
+  /// `GET /flow-authoring-guide` — 흐름 작성 안내(#120): 노드·블록 목록, 연결선 조건 형식, 식 컨텍스트·함수, 규칙, 조작 예시.
+  /// 순서: 안내 → `draftNodes`·`draftEdges` → 고칠 노드만 `draftNode` → 새로 쓸 종류만 `nodeType` → `applyOperations`.
+  Future<FlowAuthoringGuide> authoringGuide() async =>
+      _http.store.request('GET', '/flow-authoring-guide', flowAuthoringGuideSchema);
+
+  /// `GET /flow-node-types/{type}` — 노드·블록 종류 하나의 설정 형식(공통 설정은 `$defs`)과 예시. 없으면 404 `FLOW_NODE_TYPE_NOT_FOUND`.
+  Future<FlowNodeTypeDetail> nodeType(String type) async =>
+      _http.store.request('GET', '/flow-node-types/${encodeURIComponent('$type')}', flowNodeTypeDetailSchema);
+
+  /// `GET /commerce-flows/{id}/draft/nodes` — 초안 노드 목록(설정 없음)과 `revision`. 초안이 없으면 게시 버전을 revision 0으로.
+  ///
+  /// `GET /v1/commerce-flows/{flowId}/draft/nodes`
+  Future<FlowDraftNodes> draftNodes(String flowId) async =>
+      _http.store.request('GET', '/commerce-flows/${encodeURIComponent('$flowId')}/draft/nodes', flowDraftNodesSchema);
+
+  /// `GET /commerce-flows/{id}/draft/nodes/{nodeId}` — 노드 하나의 설정 전체와 드나드는 연결선. 없으면 404 `FLOW_NODE_NOT_FOUND`.
+  ///
+  /// `GET /v1/commerce-flows/{flowId}/draft/nodes/{nodeId}`
+  Future<FlowDraftNode> draftNode(String flowId, String nodeId) async => _http.store.request(
+      'GET',
+      '/commerce-flows/${encodeURIComponent('$flowId')}/draft/nodes/${encodeURIComponent('$nodeId')}',
+      flowDraftNodeSchema);
+
+  /// `GET /commerce-flows/{id}/draft/edges` — 초안 연결선 목록과 `revision`.
+  ///
+  /// `GET /v1/commerce-flows/{flowId}/draft/edges`
+  Future<FlowDraftEdges> draftEdges(String flowId) async =>
+      _http.store.request('GET', '/commerce-flows/${encodeURIComponent('$flowId')}/draft/edges', flowDraftEdgesSchema);
+
+  /// `GET /commerce-flows/{id}/draft/edit-session` — 편집권(누가 고치는 중인지)과 흐름 채널 구독 정보(#120).
+  ///
+  /// `GET /v1/commerce-flows/{flowId}/draft/edit-session`
+  Future<FlowEditSessionView> editSession(String flowId) async => _http.store
+      .request('GET', '/commerce-flows/${encodeURIComponent('$flowId')}/draft/edit-session', flowEditSessionViewSchema);
+
+  /// `POST /commerce-flows/{id}/draft/edit-session` — 편집 시작·연장, `takeover`면 가져오기. 다른 주체가 잡고 있으면 423 `FLOW_DRAFT_LOCKED`.
+  ///
+  /// `POST /v1/commerce-flows/{flowId}/draft/edit-session`
+  Future<FlowEditSessionView> claimEditSession(String flowId, [ClaimFlowEditSessionRequest? body]) async =>
+      _http.store.request(
+          'POST',
+          '/commerce-flows/${encodeURIComponent('$flowId')}/draft/edit-session',
+          flowEditSessionViewSchema,
+          RequestOptions(body: claimFlowEditSessionRequestSchema.parse(body ?? const <String, Object?>{}).toJson()));
+
+  /// `DELETE /commerce-flows/{id}/draft/edit-session` — 편집 끝내기(자기 편집권만 놓습니다).
+  ///
+  /// `DELETE /v1/commerce-flows/{flowId}/draft/edit-session`
+  Future<void> releaseEditSession(String flowId) async =>
+      _http.store.requestVoid('DELETE', '/commerce-flows/${encodeURIComponent('$flowId')}/draft/edit-session');
+
+  /// `POST /commerce-flows/{id}/draft/operations` — 조작 묶음을 `revision`(If-Match) 위에 적용해 초안을 저장합니다(원자적).
+  /// 결과의 `issues`는 저장은 됐지만 게시를 막는 문제입니다. 에러: 400 `FLOW_OPERATION_INVALID`(`details.issues[].opIndex`·`pointer`, 저장 안 함) ·
+  /// 409 `FLOW_REVISION_CONFLICT`(`details.currentRevision`, 다시 읽습니다).
+  ///
+  /// `POST /v1/commerce-flows/{flowId}/draft/operations`
+  Future<FlowOperationsResult> applyOperations(
+          String flowId, List<FlowDraftOperation> operations, int revision) async =>
+      _http.store.request(
+          'POST',
+          '/commerce-flows/${encodeURIComponent('$flowId')}/draft/operations',
+          flowOperationsResultSchema,
+          RequestOptions(
+              body: applyFlowOperationsRequestSchema.parse({'operations': operations}).toJson(),
+              headers: {'if-match': '${revision}'}));
 }
 
 /// `client.carriers` 네임스페이스입니다.
@@ -1261,16 +1498,20 @@ class StoreClientClaims {
       _http.store.request('GET', '/claims/${encodeURIComponent('$claimId')}', claimDetailSchema);
 
   /// `holdRefund`(#115)면 승인만 하고 결제 환불은 대기로 남깁니다 — `payments.processRefund`로 따로 환불합니다.
+  /// `refundAmount`(#365)는 최종 현금 환불액이고 `deductAmount`와 함께 줄 수 없습니다.
   Future<ApproveClaimResult> approve(String claimId,
-          [int? deductAmount, String? idempotencyKey, ({bool? holdRefund})? options]) async =>
+          [int? deductAmount, String? idempotencyKey, ({bool? holdRefund, int? refundAmount})? options]) async =>
       _http.store.request(
           'POST',
           '/claims/${encodeURIComponent(claimId)}/approve',
           approveClaimResultSchema,
-          RequestOptions(body: {
-            if (deductAmount != null) 'deductAmount': deductAmount,
-            if (options?.holdRefund ?? false) 'holdRefund': true,
-          }, headers: _idempotency(idempotencyKey)));
+          RequestOptions(
+              body: approveClaimRequestSchema.parse({
+                if (deductAmount != null) 'deductAmount': deductAmount,
+                if (options?.refundAmount != null) 'refundAmount': options!.refundAmount,
+                if (options?.holdRefund ?? false) 'holdRefund': true,
+              }).toJson(),
+              headers: _idempotency(idempotencyKey)));
 
   /// `POST /v1/claims/{claimId}/reject`
   Future<void> reject(String claimId, RejectClaimRequest body) async => _http.store.requestVoid(
@@ -1449,9 +1690,44 @@ class StoreClientCustomers {
             'sort': sort,
           }));
 
+  /// `GET /v1/customers/export` (이슈 #217) — 목록과 같은 조건으로 고른 필드만 페이지마다 줍니다(기본 100, 최대 500).
+  /// 휴대폰은 스코프 `privacy:r`이 있으면 전체 번호, 없으면 가린 번호입니다. `customer:r`.
+  Future<Page<CustomerExportRow>> export(
+          {int? page,
+          int? size,
+          String? q,
+          String? joinedFrom,
+          String? joinedTo,
+          String? marketing,
+          String? sort,
+          required List<String> fields}) async =>
+      _http.store.request(
+          'GET',
+          '/customers/export',
+          pageSchema<CustomerExportRow>(customerExportRowSchema),
+          RequestOptions(query: {
+            'page': page,
+            'size': size,
+            'q': q,
+            'joinedFrom': joinedFrom,
+            'joinedTo': joinedTo,
+            'marketing': marketing,
+            'sort': sort,
+            'fields': fields.join(','),
+          }));
+
   /// `GET /v1/customers/{customerId}`
   Future<CustomerDetail> get(String customerId) async =>
       _http.store.request('GET', '/customers/${encodeURIComponent('$customerId')}', customerDetailSchema);
+
+  /// 구매자 정보 수정 (이슈 #267) — 생일(`userinfo.birthdate`). `customer:rw`.
+  ///
+  /// `PATCH /v1/customers/{customerId}`
+  Future<CustomerDetail> update(String customerId, UpdateCustomerRequest body) async => _http.store.request(
+      'PATCH',
+      '/customers/${encodeURIComponent('$customerId')}',
+      customerDetailSchema,
+      RequestOptions(body: updateCustomerRequestSchema.parse(body).toJson()));
 
   /// `GET /v1/customers/{customerId}/orders`
   Future<Page<CustomerOrder>> orders(String customerId, [PageParams? params]) async => _http.store.request(
@@ -1475,6 +1751,18 @@ class StoreClientCustomers {
   /// `GET /v1/customers/{customerId}/coupons`
   Future<List<CustomerCoupon>> coupons(String customerId) async => _http.store.request(
       'GET', '/customers/${encodeURIComponent('$customerId')}/coupons', z.array<CustomerCoupon>(customerCouponSchema));
+
+  /// 비밀번호 재설정 메일 보내기(#400) — 구매자가 메일 링크에서 새 비밀번호를 정합니다. 상점 플랫폼 OWNER·ADMIN.
+  ///
+  /// `POST /v1/customers/{customerId}/password-reset`
+  Future<void> sendPasswordReset(String customerId) async =>
+      _http.store.requestVoid('POST', '/customers/${encodeURIComponent('$customerId')}/password-reset');
+
+  /// 로그인 잠금 해제 — 비밀번호 연속 실패 잠금과 실패 횟수를 지웁니다(멱등). 상점 플랫폼 OWNER·ADMIN.
+  ///
+  /// `POST /v1/customers/{customerId}/unlock`
+  Future<CustomerDetail> unlock(String customerId) async =>
+      _http.store.request('POST', '/customers/${encodeURIComponent('$customerId')}/unlock', customerDetailSchema);
 
   /// `POST /v1/customers/{customerId}/withdraw`
   Future<void> withdraw(String customerId, WithdrawCustomerRequest body) async => _http.store.requestVoid(
@@ -1541,6 +1829,32 @@ class StoreClientCoupons {
   Future<IssueCouponResult> issue(String couponId, IssueCouponRequest body, [String? idempotencyKey]) async =>
       _http.store.request('POST', '/coupons/${encodeURIComponent('$couponId')}/issues', issueCouponResultSchema,
           RequestOptions(body: issueCouponRequestSchema.parse(body).toJson(), headers: _idempotency(idempotencyKey)));
+
+  /// 쿠폰 번호 전체(`VOUCHER`, #264) — 순번 순.
+  ///
+  /// `GET /v1/coupons/{couponId}/voucher-codes`
+  Future<CouponVoucherCodes> voucherCodes(String couponId) async =>
+      _http.store.request('GET', '/coupons/${encodeURIComponent('$couponId')}/voucher-codes', couponVoucherCodesSchema);
+
+  /// 발급 대상 전원 지급(#264) — 202로 작업을 만듭니다. 진행은 `distributions`·`distribution`으로 봅니다.
+  ///
+  /// `POST /v1/coupons/{couponId}/distributions`
+  Future<CouponDistribution> distribute(String couponId) async => _http.store
+      .request('POST', '/coupons/${encodeURIComponent('$couponId')}/distributions', couponDistributionSchema);
+
+  /// 전원 지급 작업 목록(최근 20건, 최신순).
+  ///
+  /// `GET /v1/coupons/{couponId}/distributions`
+  Future<List<CouponDistribution>> distributions(String couponId) async => _http.store.request(
+      'GET',
+      '/coupons/${encodeURIComponent('$couponId')}/distributions',
+      z.array<CouponDistribution>(couponDistributionSchema));
+
+  /// `GET /v1/coupons/{couponId}/distributions/{distributionId}`
+  Future<CouponDistribution> distribution(String couponId, String distributionId) async => _http.store.request(
+      'GET',
+      '/coupons/${encodeURIComponent('$couponId')}/distributions/${encodeURIComponent('$distributionId')}',
+      couponDistributionSchema);
 
   /// `GET /v1/coupons/{couponId}/issues`
   Future<Page<CouponIssue>> issues(String couponId, {int? page, int? size, String? status}) async =>
@@ -1684,7 +1998,7 @@ class StoreClientPayments {
   Future<PaymentRecordDetail> get(String paymentId) async =>
       _http.store.request('GET', '/payments/${encodeURIComponent('$paymentId')}', paymentRecordDetailSchema);
 
-  /// `POST /v1/payments/refunds/{refundId}/process` — 대기 환불(`HELD`)을 PG로 환불합니다(#115). 409 `REFUND_NOT_HELD`.
+  /// `POST /v1/payments/refunds/{refundId}/process` — 대기(`HELD`)·실패(`FAILED`) 환불을 PG로 환불합니다(#115, #301). 409 `REFUND_NOT_HELD`·`REFUND_EXCEEDS_BALANCE`(실패 행을 다시 보낼 잔액이 없습니다, #365).
   Future<PaymentRefundRecord> processRefund(String refundId) async => _http.store
       .request('POST', '/payments/refunds/${encodeURIComponent('$refundId')}/process', paymentRefundRecordSchema);
 }
@@ -2221,15 +2535,61 @@ class StoreClientInventoryLocations {
       _http.store.requestVoid('DELETE', '/inventory-locations/${encodeURIComponent('$inventoryLocationId')}');
 }
 
+/// 재고 부족 (이슈 #212) — 가용 재고가 임계값 이하인 조합. 임계값은 상점 기본값 + 조합별 덮어쓰기이고 판정 방식(위치 합계·위치별)은
+/// 설정이 정합니다. 조회는 `inventory:r`, 설정은 `inventory:rw`입니다.
+class StoreClientInventoryLowStock {
+  StoreClientInventoryLowStock._(this._http);
+
+  final _Https _http;
+
+  /// 커서 페이지네이션 — 다음 페이지는 응답의 `nextCursor`를 `cursor`로 넘깁니다.
+  ///
+  /// `GET /v1/inventory/low-stock`
+  Future<LowStockPage> list([LowStockListQuery? params]) async =>
+      _http.store.request('GET', '/inventory/low-stock', lowStockPageSchema, RequestOptions(query: params?.toJson()));
+
+  /// `GET /v1/inventory/low-stock-settings`
+  Future<LowStockSettings> settings() async =>
+      _http.store.request('GET', '/inventory/low-stock-settings', lowStockSettingsSchema);
+
+  /// `PUT /v1/inventory/low-stock-settings`
+  Future<LowStockSettings> updateSettings(LowStockSettingsRequest body) async => _http.store.request(
+      'PUT',
+      '/inventory/low-stock-settings',
+      lowStockSettingsSchema,
+      RequestOptions(body: lowStockSettingsRequestSchema.parse(body).toJson()));
+
+  /// 조합별 임계값 목록 — 다음 페이지는 응답의 `nextCursor`를 `cursor`로 넘깁니다.
+  ///
+  /// `GET /v1/inventory/low-stock-thresholds`
+  Future<LowStockThresholdPage> thresholds([LowStockThresholdListQuery? params]) async => _http.store.request(
+      'GET', '/inventory/low-stock-thresholds', lowStockThresholdPageSchema, RequestOptions(query: params?.toJson()));
+
+  /// 조합별 임계값 설정·해제(`threshold: null`) — 응답은 요청한 조합마다 저장한 값입니다.
+  ///
+  /// `PUT /v1/inventory/low-stock-thresholds`
+  Future<List<LowStockThresholdsResultItem>> setThresholds(LowStockThresholdsRequest body) async => _http.store.request(
+      'PUT',
+      '/inventory/low-stock-thresholds',
+      lowStockThresholdsResultSchema,
+      RequestOptions(body: lowStockThresholdsRequestSchema.parse(body).toJson()));
+}
+
 /// 위치별 재고 (이슈 #132) — 재고 위치·위치별 가용 재고·재고 조정·실사·이동·변동 내역. 위치 쓰기는 상점 설정 표면(상점 플랫폼 OWNER·ADMIN)이고
 /// 조회는 `inventory:r`, 조정·이동은 `inventory:rw`입니다. 같은 `idempotencyKey`로 다시 보내면 첫 결과를 돌려줍니다(다른 본문이면 409).
 class StoreClientInventory {
-  StoreClientInventory._(this._http) : locations = StoreClientInventoryLocations._(_http);
+  StoreClientInventory._(this._http)
+      : locations = StoreClientInventoryLocations._(_http),
+        lowStock = StoreClientInventoryLowStock._(_http);
 
   final _Https _http;
 
   /// `client.inventory.locations` 네임스페이스입니다.
   final StoreClientInventoryLocations locations;
+
+  /// 재고 부족 (이슈 #212) — 가용 재고가 임계값 이하인 조합. 임계값은 상점 기본값 + 조합별 덮어쓰기이고 판정 방식(위치 합계·위치별)은
+  /// 설정이 정합니다. 조회는 `inventory:r`, 설정은 `inventory:rw`입니다.
+  final StoreClientInventoryLowStock lowStock;
 
   /// 커서 페이지네이션 — 다음 페이지는 응답의 `nextCursor`를 `cursor`로 넘깁니다.
   ///
@@ -2320,6 +2680,30 @@ class StoreClientPickupLocations {
       _http.store.requestVoid('DELETE', '/pickup-locations/${encodeURIComponent('$locationId')}');
 }
 
+/// 셀러 작성 주문서 (이슈 #116) — 셀러가 줄·단가·유효 기한을 정해 만들고 `checkoutId`를 결제 링크로 보냅니다.
+/// 구매자는 스토어프론트에서 그 주문서로 결제합니다(storefront-sdk `checkout.get`). 스코프 `order:r`·`order:rw`.
+class StoreClientCheckouts {
+  StoreClientCheckouts._(this._http);
+
+  final _Https _http;
+
+  /// `POST /v1/checkouts`
+  Future<SellerCheckout> create(CreateSellerCheckoutRequest body) async => _http.store.request('POST', '/checkouts',
+      sellerCheckoutSchema, RequestOptions(body: createSellerCheckoutRequestSchema.parse(body).toJson()));
+
+  /// `GET /v1/checkouts`
+  Future<SellerCheckoutPage> list({int? page, int? size}) async => _http.store.request(
+      'GET', '/checkouts', sellerCheckoutPageSchema, RequestOptions(query: compact({'page': page, 'size': size})));
+
+  /// `GET /v1/checkouts/{checkoutId}`
+  Future<SellerCheckout> get(String checkoutId) async =>
+      _http.store.request('GET', '/checkouts/${encodeURIComponent('$checkoutId')}', sellerCheckoutSchema);
+
+  /// `POST /v1/checkouts/{checkoutId}/expire` — 결제 대기 중인 주문서를 바로 만료시킵니다.
+  Future<SellerCheckout> expire(String checkoutId) async =>
+      _http.store.request('POST', '/checkouts/${encodeURIComponent('$checkoutId')}/expire', sellerCheckoutSchema);
+}
+
 /// 상점 플랫폼 AI 채팅 (이슈 #124) — 상점 플랫폼 전용(공개 문서 제외). 메시지는 202로 `streamId`를 돌려주고
 /// 응답은 `streamUrl`(SSE, Bearer `streamToken`)로 받습니다. 실행은 브라우저와 무관하게 서버에서 끝까지 돕니다.
 class StoreClientAi {
@@ -2376,26 +2760,11 @@ class StoreClientAi {
 
 /// 스토어프론트 호스팅 (이슈 #53) — 조회 `storefront:r`, 쓰기 `storefront:rw`(OWNER·ADMIN).
 /// 쓰기 응답은 바뀐 사이트입니다. Cloudflare 반영은 커밋 뒤라 `provisioning.status`가 잠시 `PENDING`일 수 있습니다.
-/// 에이전트 토큰의 발행·되돌리기·템플릿 변경·공개 전환·슬러그 변경·끄기는 승인 대기(`ApprovalPendingError`)다.
+/// 에이전트 토큰의 발행·되돌리기·공개 전환·슬러그 변경·끄기는 승인 대기(`ApprovalPendingError`)다.
 class StoreClientStorefront {
   StoreClientStorefront._(this._http);
 
   final _Https _http;
-
-  /// `GET /v1/storefront/templates` — 템플릿 카탈로그.
-  Future<List<StorefrontTemplate>> listTemplates() async =>
-      _http.store.request('GET', '/storefront/templates', z.array<StorefrontTemplate>(storefrontTemplateSchema));
-
-  /// `GET /v1/storefront/template` — 템플릿 상점의 템플릿 정보(#123). 템플릿 상점이 아니면 404 `TEMPLATE_STORE_NOT_FOUND`.
-  Future<StoreTemplate> getStoreTemplate() async =>
-      _http.store.request('GET', '/storefront/template', storeTemplateSchema);
-
-  /// `PUT /v1/storefront/template` — 템플릿 이름·소개·썸네일을 바꿉니다(템플릿 상점만).
-  Future<StoreTemplate> updateStoreTemplate(UpdateStoreTemplateRequest body) async => _http.store.request(
-      'PUT',
-      '/storefront/template',
-      storeTemplateSchema,
-      RequestOptions(body: updateStoreTemplateRequestSchema.parse(body).toJson()));
 
   /// `GET /v1/storefront/site` — 호스팅 설정과 현재 사이트(없으면 `site: null`).
   Future<StorefrontHosting> get() async => _http.store.request('GET', '/storefront/site', storefrontHostingSchema);
@@ -2404,8 +2773,8 @@ class StoreClientStorefront {
   Future<StorefrontSlugAvailability> checkSlug(String slug) async => _http.store.request(
       'GET', '/storefront/slug-availability', storefrontSlugAvailabilitySchema, RequestOptions(query: {'slug': slug}));
 
-  /// `POST /v1/storefront/site` (201) — 템플릿으로 사이트를 만들고 v1을 발행합니다. 공개 상태는 오픈 준비 중입니다.
-  /// 사이트를 만드는 유일한 경로입니다(상점을 만들어도 사이트는 생기지 않습니다). 템플릿은 여기서만 고릅니다.
+  /// `POST /v1/storefront/site` (201) — 사이트를 만듭니다. 공개 상태는 오픈 준비 중이고 발행 버전이 없습니다(첫 성공 빌드가 발행됩니다).
+  /// 사이트를 만드는 유일한 경로입니다(상점을 만들어도 사이트는 생기지 않습니다). 첫 소스는 `initialSource`(기본 `NONE`)다.
   Future<StorefrontSite> create(CreateStorefrontSiteRequest body) async => _http.store.request(
       'POST',
       '/storefront/site',
@@ -2492,12 +2861,27 @@ class StoreClientStorefront {
   Future<void> removeDomain(String domainId) async =>
       _http.store.requestVoid('DELETE', '/storefront/site/domains/${encodeURIComponent('$domainId')}');
 
+  /// `GET /v1/storefront/site/env` — 셀러 env 목록(비밀 값은 값 없이).
+  Future<StorefrontSiteVars> listVars() async =>
+      _http.store.request('GET', '/storefront/site/env', storefrontSiteVarsSchema);
+
+  /// `PUT /v1/storefront/site/env/{key}` — env 하나를 넣거나 바꿉니다. 올라가 있는 버전에 곧바로 반영됩니다.
+  Future<StorefrontSiteVar> putVar(String key, PutStorefrontSiteVarRequest body) async => _http.store.request(
+      'PUT',
+      '/storefront/site/env/${encodeURIComponent('$key')}',
+      storefrontSiteVarSchema,
+      RequestOptions(body: putStorefrontSiteVarRequestSchema.parse(body).toJson()));
+
+  /// `DELETE /v1/storefront/site/env/{key}` — env 하나를 지웁니다. 올라가 있는 버전에서도 곧바로 빠집니다.
+  Future<void> deleteVar(String key) async =>
+      _http.store.requestVoid('DELETE', '/storefront/site/env/${encodeURIComponent('$key')}');
+
   /// `POST /v1/storefront/site/disable` — 호스팅을 끕니다(사이트 `CLOSED`, 슬러그 90일 보류). 다시 만들 수 있습니다.
-  Future<StorefrontSite> disable(DisableStorefrontHostingRequest body) async => _http.store.request(
+  Future<StorefrontSite> disable([DisableStorefrontHostingRequest? body]) async => _http.store.request(
       'POST',
       '/storefront/site/disable',
       storefrontSiteSchema,
-      RequestOptions(body: disableStorefrontHostingRequestSchema.parse(body).toJson()));
+      RequestOptions(body: disableStorefrontHostingRequestSchema.parse(body ?? const <String, Object?>{}).toJson()));
 
   /// `GET /v1/storefront/site/editing` — 편집 환경 상태(열린 환경·동시 상한·미리보기 인증서).
   Future<StorefrontEditing> getEditing() async =>
@@ -2605,10 +2989,19 @@ class StoreClientStorefront {
               query:
                   storefrontSourceArchiveQuerySchema.parse(compact({'sourceRef': sourceRef, 'part': part})).toJson()));
 
-  /// `POST /v1/storefront/site/source/blobs` — 파일 내용 올리기(해시 키). 작업 트리는 바뀌지 않습니다.
-  Future<StorefrontSourceBlobsResult> uploadSourceBlobs(UploadStorefrontSourceBlobsRequest body) async =>
-      _http.store.request('POST', '/storefront/site/source/blobs', storefrontSourceBlobsResultSchema,
-          RequestOptions(body: uploadStorefrontSourceBlobsRequestSchema.parse(body).toJson()));
+  /// `POST /v1/storefront/site/source/pack` — 묶음을 api를 거쳐 올립니다. `createSourceUploads`가 503 `SOURCE_UPLOAD_UNAVAILABLE`일 때만 씁니다.
+  /// 작업 트리는 바뀌지 않습니다.
+  Future<StorefrontSourcePack> uploadSourcePack(UploadStorefrontSourcePackRequest body) async => _http.store.request(
+      'POST',
+      '/storefront/site/source/pack',
+      storefrontSourcePackSchema,
+      RequestOptions(body: uploadStorefrontSourcePackRequestSchema.parse(body).toJson()));
+
+  /// `POST /v1/storefront/site/source/uploads` — 묶음을 저장소에 직접 올릴 서명 PUT 주소(#181·#351). 503 `SOURCE_UPLOAD_UNAVAILABLE`이면
+  /// `uploadSourcePack`으로 올립니다.
+  Future<StorefrontSourceUploads> createSourceUploads(CreateStorefrontSourceUploadsRequest body) async =>
+      _http.store.request('POST', '/storefront/site/source/uploads', storefrontSourceUploadsSchema,
+          RequestOptions(body: createStorefrontSourceUploadsRequestSchema.parse(body).toJson()));
 
   /// `PUT /v1/storefront/site/source` — 작업 트리 전체를 바꿉니다. 409 `SOURCE_CHANGED`(내려받은 뒤 바뀜)·`EDIT_SESSION_OPEN`·
   /// `SOURCE_BLOBS_MISSING`(`details.hashes`를 올리고 다시).
@@ -2617,28 +3010,53 @@ class StoreClientStorefront {
       '/storefront/site/source',
       storefrontSourceReplacedSchema,
       RequestOptions(body: replaceStorefrontSourceRequestSchema.parse(body).toJson()));
-}
 
-/// `client.subscription` 네임스페이스입니다.
-class StoreClientSubscription {
-  StoreClientSubscription._(this._http);
+  /// `PUT /v1/storefront/site/auto-publish` — 배포 뒤 바로 게시(상점 플랫폼 OWNER·ADMIN 전용, #356).
+  Future<StorefrontSite> setAutoPublish(SetStorefrontAutoPublishRequest body) async => _http.store.request(
+      'PUT',
+      '/storefront/site/auto-publish',
+      storefrontSiteSchema,
+      RequestOptions(body: setStorefrontAutoPublishRequestSchema.parse(body).toJson()));
 
-  final _Https _http;
+  /// `PUT /v1/storefront/site/deploy-approval` — 승인 없이 배포(상점 플랫폼 OWNER·ADMIN 전용).
+  Future<StorefrontSite> setDeployApproval(SetStorefrontDeployApprovalRequest body) async => _http.store.request(
+      'PUT',
+      '/storefront/site/deploy-approval',
+      storefrontSiteSchema,
+      RequestOptions(body: setStorefrontDeployApprovalRequestSchema.parse(body).toJson()));
 
-  /// `GET /v1/store/subscription` — 스코프 `store:r`. 현재 요금제·상태·사용량 기간·한도·이번 기간 사용량.
-  /// 결제 수단·청구 금액은 싣지 않습니다. 요금제 변경은 상점 플랫폼에서만 합니다.
-  Future<StoreSubscription> get() async => _http.store.request('GET', '/store/subscription', storeSubscriptionSchema);
-}
+  /// `GET /v1/storefront/site/git` — Git 원천(발행 소스를 둔 저장소)과 상태(#138).
+  Future<StorefrontGitStatus> getGit() async =>
+      _http.store.request('GET', '/storefront/site/git', storefrontGitStatusSchema);
 
-/// `client.plans` 네임스페이스입니다.
-class StoreClientPlans {
-  StoreClientPlans._(this._http);
+  /// `POST /v1/storefront/site/git/installations/state` — GitHub 설치 화면에 싣는 1회용 state(상점 플랫폼 전용).
+  Future<StorefrontGitConnectState> createGitConnectState() async =>
+      _http.store.request('POST', '/storefront/site/git/installations/state', storefrontGitConnectStateSchema);
 
-  final _Https _http;
+  /// `POST /v1/storefront/site/git/installations` — GitHub App 설치 확인(상점 플랫폼 전용) → 그 설치의 저장소.
+  Future<List<StorefrontGitRepository>> linkGitInstallation(LinkStorefrontGitInstallationRequest body) async =>
+      _http.store.request(
+          'POST',
+          '/storefront/site/git/installations',
+          z.array<StorefrontGitRepository>(storefrontGitRepositorySchema),
+          RequestOptions(body: linkStorefrontGitInstallationRequestSchema.parse(body).toJson()));
 
-  /// `GET /v1/public/plans` — 인증 없음. 공개 요금제의 지금 버전(가격·기능 키 값). 값은 서버가 관리하고 언제든 바뀔 수 있어
-  /// 코드에 요금제 수치를 두지 말고 이 값을 읽습니다.
-  Future<PublicPlans> listPublic() async => _http.store.request('GET', '/public/plans', publicPlansSchema);
+  /// `GET /v1/storefront/site/git/installations/{installationId}/repositories` — 확인한 설치의 저장소(상점 플랫폼 전용).
+  Future<List<StorefrontGitRepository>> listGitRepositories(int installationId) async => _http.store.request(
+      'GET',
+      '/storefront/site/git/installations/${encodeURIComponent('$installationId')}/repositories',
+      z.array<StorefrontGitRepository>(storefrontGitRepositorySchema));
+
+  /// `POST /v1/storefront/site/git/connect` — 셀러 GitHub 저장소 연결(상점 플랫폼 전용).
+  Future<StorefrontGitStatus> connectGit(ConnectStorefrontGitRequest body) async => _http.store.request(
+      'POST',
+      '/storefront/site/git/connect',
+      storefrontGitStatusSchema,
+      RequestOptions(body: connectStorefrontGitRequestSchema.parse(body).toJson()));
+
+  /// `POST /v1/storefront/site/git/disconnect` — 연결 해제(R2 원천으로 되돌림, 상점 플랫폼 전용).
+  Future<StorefrontGitStatus> disconnectGit() async =>
+      _http.store.request('POST', '/storefront/site/git/disconnect', storefrontGitStatusSchema);
 }
 
 /// `client.store` 네임스페이스입니다.

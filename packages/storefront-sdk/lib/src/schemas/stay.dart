@@ -28,6 +28,7 @@ import 'points.dart';
 import 'product-options.dart';
 import 'review.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 /// [StayRequest] 스키마입니다.
 ///

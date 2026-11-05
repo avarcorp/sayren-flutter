@@ -28,6 +28,7 @@ import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
 import 'store.dart';
+import 'userinfo.dart';
 
 /// [TokenPair] 스키마입니다.
 final ZodObject<TokenPair> tokenPairSchema = z.object<TokenPair>({
@@ -59,22 +60,26 @@ class TokenPair extends ParsedObject {
   int get expiresIn => _j['expiresIn'] as int;
 }
 
+/// [String] 스키마입니다.
+///
+/// 구매자 비밀번호 규칙 — 가입과 비밀번호 재설정(이슈 #400)이 같은 규칙입니다.
+final ZodType<String> buyerPasswordSchema = z.string().min(10).refine(
+    (v) =>
+        [RegExp(r'[a-zA-Z]'), RegExp(r'[0-9]'), RegExp(r'[^a-zA-Z0-9]')].where((p) => p.hasMatch(v as String)).length >=
+        2,
+    message: '영문/숫자/특수문자 중 2종 이상을 조합해야 합니다');
+
 /// [SignupRequest] 스키마입니다.
 final ZodObject<SignupRequest> signupRequestSchema = z.object<SignupRequest>({
   'email': z.string().pattern(
       RegExp(r"^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$"),
       format: 'email'),
-  'password': z.string().min(10).refine(
-      (v) =>
-          [RegExp(r'[a-zA-Z]'), RegExp(r'[0-9]'), RegExp(r'[^a-zA-Z0-9]')]
-              .where((p) => p.hasMatch(v as String))
-              .length >=
-          2,
-      message: '영문/숫자/특수문자 중 2종 이상을 조합해야 합니다'),
+  'password': buyerPasswordSchema,
   'name': z.string().min(1).max(50),
   'phone': z.string().pattern(RegExp(r'^01[0-9]{8,9}$')).optional(),
   'agreements': signupRequestAgreementsSchema,
   'cartToken': z.string().optional(),
+  'userinfo': userinfoInputSchema.optional(),
 }, SignupRequest._);
 
 /// SignupRequest 값입니다.
@@ -86,14 +91,16 @@ class SignupRequest extends ParsedObject {
       required String name,
       String? phone,
       required SignupRequestAgreements agreements,
-      String? cartToken})
+      String? cartToken,
+      UserinfoInput? userinfo})
       : super({
           'email': email,
           'password': password,
           'name': name,
           if (phone != null) 'phone': phone,
           'agreements': agreements,
-          if (cartToken != null) 'cartToken': cartToken
+          if (cartToken != null) 'cartToken': cartToken,
+          if (userinfo != null) 'userinfo': userinfo
         });
 
   SignupRequest._(super.json);
@@ -120,6 +127,9 @@ class SignupRequest extends ParsedObject {
 
   /// 비회원 장바구니 토큰 — 가입과 함께 회원 장바구니로 옮깁니다.
   String? get cartToken => _j['cartToken'] as String?;
+
+  /// 바꿀 OIDC 클레임 — 준 것만 바뀌고 null은 지웁니다.
+  UserinfoInput? get userinfo => _j['userinfo'] as UserinfoInput?;
 }
 
 /// [SignupRequestAgreements] 스키마입니다.
@@ -519,4 +529,178 @@ class LinkIdentityRequest extends ParsedObject {
 
   /// `codeVerifier` 값입니다.
   String get codeVerifier => _j['codeVerifier'] as String;
+}
+
+/// [PasswordResetRequest] 스키마입니다.
+///
+/// 비밀번호 재설정 요청 — `POST /auth/password-reset`(이슈 #400). 그 이메일로 비밀번호 재설정 메일을 보냅니다.
+/// 가입 여부를 드러내지 않도록 응답은 늘 204(본문 없음)다. 메일 링크는 sayren이 호스팅하는 재설정 화면입니다.
+final ZodObject<PasswordResetRequest> passwordResetRequestSchema = z.object<PasswordResetRequest>({
+  'email': z.string().pattern(
+      RegExp(r"^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$"),
+      format: 'email'),
+  'successUrl': z.string().url().optional(),
+}, PasswordResetRequest._);
+
+/// 비밀번호 재설정 요청 — `POST /auth/password-reset`(이슈 #400). 그 이메일로 비밀번호 재설정 메일을 보냅니다.
+/// 가입 여부를 드러내지 않도록 응답은 늘 204(본문 없음)다. 메일 링크는 sayren이 호스팅하는 재설정 화면입니다.
+class PasswordResetRequest extends ParsedObject {
+  /// [PasswordResetRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  PasswordResetRequest({required String email, String? successUrl})
+      : super({'email': email, if (successUrl != null) 'successUrl': successUrl});
+
+  PasswordResetRequest._(super.json);
+
+  /// JSON을 [passwordResetRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory PasswordResetRequest.fromJson(Map<String, Object?> json) => passwordResetRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `email` 값입니다.
+  String get email => _j['email'] as String;
+
+  /// 비밀번호를 바꾼 뒤 구매자를 보낼 스토어프론트 주소(https). 이 상점의 스토어프론트 도메인 안이어야 합니다(아니면 400 `INVALID_SUCCESS_URL`).
+  /// 바꾼 뒤 `?passwordReset=done`을 붙여 이동합니다. 생략하면 재설정 화면의 완료 안내에서 끝납니다.
+  String? get successUrl => _j['successUrl'] as String?;
+}
+
+/// [PasswordResetInspectRequest] 스키마입니다.
+///
+/// 재설정 토큰 조회 — `POST /password-resets/inspect`(재설정 화면 전용, 상점 헤더 없음).
+final ZodObject<PasswordResetInspectRequest> passwordResetInspectRequestSchema = z.object<PasswordResetInspectRequest>({
+  'token': z.string().min(1).max(200),
+}, PasswordResetInspectRequest._);
+
+/// 재설정 토큰 조회 — `POST /password-resets/inspect`(재설정 화면 전용, 상점 헤더 없음).
+class PasswordResetInspectRequest extends ParsedObject {
+  /// [PasswordResetInspectRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  PasswordResetInspectRequest({required String token}) : super({'token': token});
+
+  PasswordResetInspectRequest._(super.json);
+
+  /// JSON을 [passwordResetInspectRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory PasswordResetInspectRequest.fromJson(Map<String, Object?> json) =>
+      passwordResetInspectRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `token` 값입니다.
+  String get token => _j['token'] as String;
+}
+
+/// [PasswordResetInspectResponse] 스키마입니다.
+final ZodObject<PasswordResetInspectResponse> passwordResetInspectResponseSchema =
+    z.object<PasswordResetInspectResponse>({
+  'status': z.enum_(['VALID', 'EXPIRED']),
+  'store': passwordResetInspectResponseStoreSchema,
+  'maskedEmail': z.string().nullable(),
+}, PasswordResetInspectResponse._);
+
+/// PasswordResetInspectResponse 값입니다.
+class PasswordResetInspectResponse extends ParsedObject {
+  /// [PasswordResetInspectResponse]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  PasswordResetInspectResponse(
+      {required String status, required PasswordResetInspectResponseStore store, required String? maskedEmail})
+      : super({'status': status, 'store': store, 'maskedEmail': maskedEmail});
+
+  PasswordResetInspectResponse._(super.json);
+
+  /// JSON을 [passwordResetInspectResponseSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory PasswordResetInspectResponse.fromJson(Map<String, Object?> json) =>
+      passwordResetInspectResponseSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `VALID`: 변경할 수 있습니다, `EXPIRED`: 만료됐거나 이미 썼거나 없는 토큰.
+  String get status => _j['status'] as String;
+
+  /// `store` 값입니다.
+  PasswordResetInspectResponseStore get store => _j['store'] as PasswordResetInspectResponseStore;
+
+  /// 가린 계정 이메일(`th***@gmail.com`). `EXPIRED`면 null.
+  String? get maskedEmail => _j['maskedEmail'] as String?;
+}
+
+/// [PasswordResetInspectResponseStore] 스키마입니다.
+final ZodObject<PasswordResetInspectResponseStore> passwordResetInspectResponseStoreSchema =
+    z.object<PasswordResetInspectResponseStore>({
+  'name': z.string(),
+  'iconUrl': z.string().nullable(),
+  'url': z.string().nullable(),
+}, PasswordResetInspectResponseStore._);
+
+/// PasswordResetInspectResponseStore 값입니다.
+class PasswordResetInspectResponseStore extends ParsedObject {
+  /// [PasswordResetInspectResponseStore]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  PasswordResetInspectResponseStore({required String name, required String? iconUrl, required String? url})
+      : super({'name': name, 'iconUrl': iconUrl, 'url': url});
+
+  PasswordResetInspectResponseStore._(super.json);
+
+  /// JSON을 [passwordResetInspectResponseStoreSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory PasswordResetInspectResponseStore.fromJson(Map<String, Object?> json) =>
+      passwordResetInspectResponseStoreSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `name` 값입니다.
+  String get name => _j['name'] as String;
+
+  /// 상점 아이콘(정사각). 없으면 null — 화면은 상점 이름 첫 글자를 보입니다.
+  String? get iconUrl => _j['iconUrl'] as String?;
+
+  /// 스토어프론트 대표 주소. 없으면 null.
+  String? get url => _j['url'] as String?;
+}
+
+/// [PasswordResetConfirmRequest] 스키마입니다.
+///
+/// 재설정 확정 — `POST /password-resets/confirm`(재설정 화면 전용).
+final ZodObject<PasswordResetConfirmRequest> passwordResetConfirmRequestSchema = z.object<PasswordResetConfirmRequest>({
+  'token': z.string().min(1).max(200),
+  'password': buyerPasswordSchema,
+}, PasswordResetConfirmRequest._);
+
+/// 재설정 확정 — `POST /password-resets/confirm`(재설정 화면 전용).
+class PasswordResetConfirmRequest extends ParsedObject {
+  /// [PasswordResetConfirmRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  PasswordResetConfirmRequest({required String token, required String password})
+      : super({'token': token, 'password': password});
+
+  PasswordResetConfirmRequest._(super.json);
+
+  /// JSON을 [passwordResetConfirmRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory PasswordResetConfirmRequest.fromJson(Map<String, Object?> json) =>
+      passwordResetConfirmRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `token` 값입니다.
+  String get token => _j['token'] as String;
+
+  /// `password` 값입니다.
+  String get password => _j['password'] as String;
+}
+
+/// [PasswordResetConfirmResponse] 스키마입니다.
+final ZodObject<PasswordResetConfirmResponse> passwordResetConfirmResponseSchema =
+    z.object<PasswordResetConfirmResponse>({
+  'successUrl': z.string().nullable(),
+}, PasswordResetConfirmResponse._);
+
+/// PasswordResetConfirmResponse 값입니다.
+class PasswordResetConfirmResponse extends ParsedObject {
+  /// [PasswordResetConfirmResponse]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  PasswordResetConfirmResponse({required String? successUrl}) : super({'successUrl': successUrl});
+
+  PasswordResetConfirmResponse._(super.json);
+
+  /// JSON을 [passwordResetConfirmResponseSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory PasswordResetConfirmResponse.fromJson(Map<String, Object?> json) =>
+      passwordResetConfirmResponseSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 요청에 실린 복귀 주소에 `passwordReset=done`을 붙인 값. 요청에 없었으면 null.
+  String? get successUrl => _j['successUrl'] as String?;
 }

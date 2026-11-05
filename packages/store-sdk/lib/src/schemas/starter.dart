@@ -16,16 +16,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -35,6 +40,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -50,6 +56,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -172,7 +179,7 @@ final ZodObject<PutBrandBriefRequest> putBrandBriefRequestSchema = z.object<PutB
   'references': z.array<BrandBriefReference>(brandBriefReferenceSchema).max(5).withDefault(const []),
   'productSource': brandBriefProductSourceSchema.nullable().withDefault(null),
   'notes': z.string().trim().max(4000).nullable().withDefault(null),
-}, PutBrandBriefRequest._);
+}, PutBrandBriefRequest._, strictRequest: true);
 
 /// `PUT /v1/storefront/brand-brief` — 브리프 전체를 바꿉니다. 생략한 항목은 비웁니다.
 class PutBrandBriefRequest extends ParsedObject {
@@ -387,7 +394,6 @@ class StarterStatusBrief extends ParsedObject {
 final ZodObject<StarterStatusSite> starterStatusSiteSchema = z.object<StarterStatusSite>({
   'siteId': z.string(),
   'url': z.string(),
-  'templateId': z.string(),
   'visibility': z.enum_(['COMING_SOON', 'PUBLIC']),
   'status': z.string(),
   'synced': z.boolean(),
@@ -400,7 +406,6 @@ class StarterStatusSite extends ParsedObject {
   StarterStatusSite(
       {required String siteId,
       required String url,
-      required String templateId,
       required String visibility,
       required String status,
       required bool synced,
@@ -408,7 +413,6 @@ class StarterStatusSite extends ParsedObject {
       : super({
           'siteId': siteId,
           'url': url,
-          'templateId': templateId,
           'visibility': visibility,
           'status': status,
           'synced': synced,
@@ -428,9 +432,6 @@ class StarterStatusSite extends ParsedObject {
   /// `url` 값입니다.
   String get url => _j['url'] as String;
 
-  /// `templateId` 값입니다.
-  String get templateId => _j['templateId'] as String;
-
   /// `visibility` 값입니다.
   String get visibility => _j['visibility'] as String;
 
@@ -449,7 +450,6 @@ class StarterStatusSite extends ParsedObject {
 final ZodObject<StarterStatusSitePublishedVersion> starterStatusSitePublishedVersionSchema =
     z.object<StarterStatusSitePublishedVersion>({
   'versionId': z.string(),
-  'templateVersion': z.string(),
   'createdVia': z.string().nullable(),
   'publishedAt': z.string().nullable(),
 }, StarterStatusSitePublishedVersion._);
@@ -458,16 +458,8 @@ final ZodObject<StarterStatusSitePublishedVersion> starterStatusSitePublishedVer
 class StarterStatusSitePublishedVersion extends ParsedObject {
   /// [StarterStatusSitePublishedVersion]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   StarterStatusSitePublishedVersion(
-      {required String versionId,
-      required String templateVersion,
-      required String? createdVia,
-      required String? publishedAt})
-      : super({
-          'versionId': versionId,
-          'templateVersion': templateVersion,
-          'createdVia': createdVia,
-          'publishedAt': publishedAt
-        });
+      {required String versionId, required String? createdVia, required String? publishedAt})
+      : super({'versionId': versionId, 'createdVia': createdVia, 'publishedAt': publishedAt});
 
   StarterStatusSitePublishedVersion._(super.json);
 
@@ -479,9 +471,6 @@ class StarterStatusSitePublishedVersion extends ParsedObject {
 
   /// `versionId` 값입니다.
   String get versionId => _j['versionId'] as String;
-
-  /// `templateVersion` 값입니다.
-  String get templateVersion => _j['templateVersion'] as String;
 
   /// `createdVia` 값입니다.
   String? get createdVia => _j['createdVia'] as String?;

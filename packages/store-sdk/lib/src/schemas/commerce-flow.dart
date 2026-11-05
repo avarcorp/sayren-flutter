@@ -15,15 +15,20 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -198,6 +205,7 @@ class FlowInputFieldWhen extends ParsedObject {
 final ZodObject<FlowAction> flowActionSchema = z.object<FlowAction>({
   'key': z.string(),
   'label': z.string(),
+  'labelKey': z.string().optional(),
   'mode': z.enum_(['INSTANT', 'REQUEST', 'VIEW']),
   'enabled': z.boolean(),
   'disabled': flowActionDisabledSchema.optional(),
@@ -217,6 +225,7 @@ class FlowAction extends ParsedObject {
   FlowAction(
       {required String key,
       required String label,
+      String? labelKey,
       required String mode,
       required bool enabled,
       FlowActionDisabled? disabled,
@@ -228,6 +237,7 @@ class FlowAction extends ParsedObject {
       : super({
           'key': key,
           'label': label,
+          if (labelKey != null) 'labelKey': labelKey,
           'mode': mode,
           'enabled': enabled,
           if (disabled != null) 'disabled': disabled,
@@ -250,6 +260,9 @@ class FlowAction extends ParsedObject {
 
   /// 보여 줄 이름.
   String get label => _j['label'] as String;
+
+  /// 구매자 보기(#411) — 이름이 흐름 문구면 그 문구 key(`<노드>.<행동>.label`). 이름은 요청 언어로 번역된 값입니다. 플랫폼 기본 이름이면 없습니다.
+  String? get labelKey => _j['labelKey'] as String?;
 
   /// INSTANT 바로 실행 · REQUEST 승인 요청(클레임) · VIEW 보기.
   String get mode => _j['mode'] as String;
@@ -320,9 +333,11 @@ typedef FlowFieldValue = Object?;
 final ZodObject<FlowState> flowStateSchema = z.object<FlowState>({
   'key': z.string(),
   'label': z.string(),
+  'labelKey': z.string().optional(),
   'coreStatus': orderItemStatusSchema.optional(),
   'claimStatus': claimStatusSchema.optional(),
   'message': z.string().optional(),
+  'messageKey': z.string().optional(),
   'enteredAt': z.string(),
   'deadlineAt': z.string().optional(),
   'attachments': z.array<String>(z.string()).optional(),
@@ -338,9 +353,11 @@ class FlowState extends ParsedObject {
   FlowState(
       {required String key,
       required String label,
+      String? labelKey,
       String? coreStatus,
       String? claimStatus,
       String? message,
+      String? messageKey,
       required String enteredAt,
       String? deadlineAt,
       List<String>? attachments,
@@ -351,9 +368,11 @@ class FlowState extends ParsedObject {
       : super({
           'key': key,
           'label': label,
+          if (labelKey != null) 'labelKey': labelKey,
           if (coreStatus != null) 'coreStatus': coreStatus,
           if (claimStatus != null) 'claimStatus': claimStatus,
           if (message != null) 'message': message,
+          if (messageKey != null) 'messageKey': messageKey,
           'enteredAt': enteredAt,
           if (deadlineAt != null) 'deadlineAt': deadlineAt,
           if (attachments != null) 'attachments': attachments,
@@ -376,6 +395,9 @@ class FlowState extends ParsedObject {
   /// 보는 사람(셀러·구매자)의 상태 이름.
   String get label => _j['label'] as String;
 
+  /// 구매자 보기(#411) — 상태 이름의 문구 key(`<노드>.label`). 이름은 요청 언어로 번역된 값입니다.
+  String? get labelKey => _j['labelKey'] as String?;
+
   /// 공개 상태(8개).
   String? get coreStatus => _j['coreStatus'] as String?;
 
@@ -384,6 +406,9 @@ class FlowState extends ParsedObject {
 
   /// 보는 사람에게 보여 줄 안내문.
   String? get message => _j['message'] as String?;
+
+  /// 구매자 보기(#411) — 안내문의 문구 key(`<노드>.message`).
+  String? get messageKey => _j['messageKey'] as String?;
 
   /// 이 상태에 들어온 시각(ISO 8601).
   String get enteredAt => _j['enteredAt'] as String;
@@ -493,6 +518,12 @@ final ZodObject<OrderItemFlow> orderItemFlowSchema = z.object<OrderItemFlow>({
   'ended': z.boolean(),
   'moveTargets': z.array<OrderItemFlowMoveTargetsItem>(orderItemFlowMoveTargetsItemSchema).optional(),
   'branches': z.array<FlowState>(flowStateSchema).optional(),
+  'waiting': z.array<OrderItemFlowWaitingItem>(orderItemFlowWaitingItemSchema).optional(),
+  'claimable': z.array<OrderItemFlowClaimableItem>(orderItemFlowClaimableItemSchema).optional(),
+  'path': z.array<OrderItemFlowPathItem>(orderItemFlowPathItemSchema).optional(),
+  'attention': z.boolean().optional(),
+  'revisions': orderItemFlowRevisionsSchema.nullable().optional(),
+  'data': z.array<OrderItemFlowDataItem>(orderItemFlowDataItemSchema).optional(),
 }, OrderItemFlow._);
 
 /// OrderItemFlow 값입니다.
@@ -506,7 +537,13 @@ class OrderItemFlow extends ParsedObject {
       required List<OrderItemFlowTimersItem> timers,
       required bool ended,
       List<OrderItemFlowMoveTargetsItem>? moveTargets,
-      List<FlowState>? branches})
+      List<FlowState>? branches,
+      List<OrderItemFlowWaitingItem>? waiting,
+      List<OrderItemFlowClaimableItem>? claimable,
+      List<OrderItemFlowPathItem>? path,
+      bool? attention,
+      Nullable<OrderItemFlowRevisions>? revisions,
+      List<OrderItemFlowDataItem>? data})
       : super({
           'orderItemId': orderItemId,
           'flow': flow,
@@ -515,7 +552,13 @@ class OrderItemFlow extends ParsedObject {
           'timers': timers,
           'ended': ended,
           if (moveTargets != null) 'moveTargets': moveTargets,
-          if (branches != null) 'branches': branches
+          if (branches != null) 'branches': branches,
+          if (waiting != null) 'waiting': waiting,
+          if (claimable != null) 'claimable': claimable,
+          if (path != null) 'path': path,
+          if (attention != null) 'attention': attention,
+          if (revisions != null) 'revisions': revisions.value,
+          if (data != null) 'data': data
         });
 
   OrderItemFlow._(super.json);
@@ -543,24 +586,45 @@ class OrderItemFlow extends ParsedObject {
   /// `ended` 값입니다.
   bool get ended => _j['ended'] as bool;
 
-  /// 상태 직접 이동으로 옮길 수 있는 상태(셀러 보기). 흐름이 끝났으면 빈 배열.
+  /// 상태 직접 이동으로 옮길 수 있는 상태(셀러 보기). 흐름이 끝났으면 빈 배열. `coreStatus`가 `CANCELED`인 상태로 옮기면 판매자 취소와 같이 환불합니다(#301).
   List<OrderItemFlowMoveTargetsItem>? get moveTargets =>
       (_j['moveTargets'] as List?)?.cast<OrderItemFlowMoveTargetsItem>();
 
   /// 활성 위치가 둘 이상(병렬 가지·하위 흐름)이면 각 위치의 상태. `flowState`는 그 가운데 가장 앞 단계입니다.
   List<FlowState>? get branches => (_j['branches'] as List?)?.cast<FlowState>();
+
+  /// 지금 단계가 기다리는 것(#411) — 판매자 행동(`actions`) 말고 흐름을 넘기는 구매자 응답·타이머·이벤트·외부 API·추가 결제. 서버는 항상 싣습니다.
+  List<OrderItemFlowWaitingItem>? get waiting => (_j['waiting'] as List?)?.cast<OrderItemFlowWaitingItem>();
+
+  /// 구매자가 지금 신청할 수 있는 취소·반품·교환(#411). 스토어프론트 `step.claimable`과 같은 판정입니다. 진행 중 클레임이 있으면 빈 목록. 서버는 항상 싣습니다.
+  List<OrderItemFlowClaimableItem>? get claimable => (_j['claimable'] as List?)?.cast<OrderItemFlowClaimableItem>();
+
+  /// 진행 띠(#411) — 지나온 단계(진행 표시 단계, 실행 기록 순서) · 지금 단계 · 지금 단계에서 주 경로(각 단계의 첫 트리거, 분기는 첫 갈래)로 남은 단계. 서버는 항상 싣습니다.
+  List<OrderItemFlowPathItem>? get path => (_j['path'] as List?)?.cast<OrderItemFlowPathItem>();
+
+  /// 지금 단계가 조치 필요 단계인지입니다(#411) — 연동 실패처럼 판매자가 행동(`actions`)으로 처리해야 흐름이 넘어갑니다. 서버는 항상 싣습니다.
+  bool? get attention => _j['attention'] as bool?;
+
+  /// 지금 단계가 구매자 승인이면 수정 요청 횟수와 한도(#411). 한도를 넘는 요청은 그 단계의 「수정 횟수 초과」 결과로 갑니다. 아니면 null. 서버는 항상 싣습니다.
+  OrderItemFlowRevisions? get revisions => _j['revisions'] as OrderItemFlowRevisions?;
+
+  /// 흐름 데이터(#411) — 값 저장 작업(`core.data.*`의 `label`)·HTTP Request 응답 저장(`fieldLabels`)에서 판매자가 이름을 둔 필드의 지금 값. 이름이 없는 필드는 `flowState.fields`에만 있습니다. 서버는 항상 싣습니다.
+  List<OrderItemFlowDataItem>? get data => (_j['data'] as List?)?.cast<OrderItemFlowDataItem>();
 }
 
 /// [OrderItemFlowFlow] 스키마입니다.
 final ZodObject<OrderItemFlowFlow> orderItemFlowFlowSchema = z.object<OrderItemFlowFlow>({
   'flowId': z.string(),
+  'key': z.string().optional(),
+  'name': z.string().optional(),
   'version': z.number().int_(),
 }, OrderItemFlowFlow._);
 
 /// OrderItemFlowFlow 값입니다.
 class OrderItemFlowFlow extends ParsedObject {
   /// [OrderItemFlowFlow]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  OrderItemFlowFlow({required String flowId, required int version}) : super({'flowId': flowId, 'version': version});
+  OrderItemFlowFlow({required String flowId, String? key, String? name, required int version})
+      : super({'flowId': flowId, if (key != null) 'key': key, if (name != null) 'name': name, 'version': version});
 
   OrderItemFlowFlow._(super.json);
 
@@ -571,6 +635,12 @@ class OrderItemFlowFlow extends ParsedObject {
 
   /// `flowId` 값입니다.
   String get flowId => _j['flowId'] as String;
+
+  /// 흐름 key(#411). 서버는 항상 싣습니다.
+  String? get key => _j['key'] as String?;
+
+  /// 흐름 이름(#411). 서버는 항상 싣습니다.
+  String? get name => _j['name'] as String?;
 
   /// `version` 값입니다.
   int get version => _j['version'] as int;
@@ -638,18 +708,206 @@ class OrderItemFlowMoveTargetsItem extends ParsedObject {
   String? get coreStatus => _j['coreStatus'] as String?;
 }
 
+/// [OrderItemFlowWaitingItem] 스키마입니다.
+final ZodObject<OrderItemFlowWaitingItem> orderItemFlowWaitingItemSchema = z.object<OrderItemFlowWaitingItem>({
+  'type': z.string(),
+  'key': z.string(),
+  'label': z.string().nullable(),
+  'dueAt': z.string().nullable(),
+  'next': orderItemFlowWaitingItemNextSchema.nullable(),
+}, OrderItemFlowWaitingItem._);
+
+/// OrderItemFlowWaitingItem 값입니다.
+class OrderItemFlowWaitingItem extends ParsedObject {
+  /// [OrderItemFlowWaitingItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderItemFlowWaitingItem(
+      {required String type,
+      required String key,
+      required String? label,
+      required String? dueAt,
+      required OrderItemFlowWaitingItemNext? next})
+      : super({'type': type, 'key': key, 'label': label, 'dueAt': dueAt, 'next': next});
+
+  OrderItemFlowWaitingItem._(super.json);
+
+  /// JSON을 [orderItemFlowWaitingItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderItemFlowWaitingItem.fromJson(Map<String, Object?> json) => orderItemFlowWaitingItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// BUYER_ACTION 구매자 응답 · TIMER 기간 · DATE 일시 · EVENT 이벤트 · HTTP 외부 API 응답 · PAYMENT 추가 결제 (늘어날 수 있습니다).
+  String get type => _j['type'] as String;
+
+  /// 구매자 행동 key · 이벤트 key · 대기 결과 이름 · 연결선 id.
+  String get key => _j['key'] as String;
+
+  /// `label` 값입니다.
+  String? get label => _j['label'] as String?;
+
+  /// 타이머·일시면 걸린 시각(ISO 8601).
+  String? get dueAt => _j['dueAt'] as String?;
+
+  /// 넘어갈 다음 단계. 분기로 가면 null.
+  OrderItemFlowWaitingItemNext? get next => _j['next'] as OrderItemFlowWaitingItemNext?;
+}
+
+/// [OrderItemFlowWaitingItemNext] 스키마입니다.
+final ZodObject<OrderItemFlowWaitingItemNext> orderItemFlowWaitingItemNextSchema =
+    z.object<OrderItemFlowWaitingItemNext>({
+  'key': z.string(),
+  'label': z.string().nullable(),
+}, OrderItemFlowWaitingItemNext._);
+
+/// OrderItemFlowWaitingItemNext 값입니다.
+class OrderItemFlowWaitingItemNext extends ParsedObject {
+  /// [OrderItemFlowWaitingItemNext]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderItemFlowWaitingItemNext({required String key, required String? label}) : super({'key': key, 'label': label});
+
+  OrderItemFlowWaitingItemNext._(super.json);
+
+  /// JSON을 [orderItemFlowWaitingItemNextSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderItemFlowWaitingItemNext.fromJson(Map<String, Object?> json) =>
+      orderItemFlowWaitingItemNextSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `key` 값입니다.
+  String get key => _j['key'] as String;
+
+  /// `label` 값입니다.
+  String? get label => _j['label'] as String?;
+}
+
+/// [OrderItemFlowClaimableItem] 스키마입니다.
+final ZodObject<OrderItemFlowClaimableItem> orderItemFlowClaimableItemSchema = z.object<OrderItemFlowClaimableItem>({
+  'action': z.string(),
+  'until': z.string().optional(),
+}, OrderItemFlowClaimableItem._);
+
+/// OrderItemFlowClaimableItem 값입니다.
+class OrderItemFlowClaimableItem extends ParsedObject {
+  /// [OrderItemFlowClaimableItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderItemFlowClaimableItem({required String action, String? until})
+      : super({'action': action, if (until != null) 'until': until});
+
+  OrderItemFlowClaimableItem._(super.json);
+
+  /// JSON을 [orderItemFlowClaimableItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderItemFlowClaimableItem.fromJson(Map<String, Object?> json) =>
+      orderItemFlowClaimableItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// CANCEL · CANCEL_REQUEST · RETURN_REQUEST · EXCHANGE_REQUEST.
+  String get action => _j['action'] as String;
+
+  /// 이 시각까지만(ISO 8601).
+  String? get until => _j['until'] as String?;
+}
+
+/// [OrderItemFlowPathItem] 스키마입니다.
+final ZodObject<OrderItemFlowPathItem> orderItemFlowPathItemSchema = z.object<OrderItemFlowPathItem>({
+  'key': z.string(),
+  'label': z.string().nullable(),
+  'status': z.string(),
+  'more': z.number().int_(),
+}, OrderItemFlowPathItem._);
+
+/// OrderItemFlowPathItem 값입니다.
+class OrderItemFlowPathItem extends ParsedObject {
+  /// [OrderItemFlowPathItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderItemFlowPathItem({required String key, required String? label, required String status, required int more})
+      : super({'key': key, 'label': label, 'status': status, 'more': more});
+
+  OrderItemFlowPathItem._(super.json);
+
+  /// JSON을 [orderItemFlowPathItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderItemFlowPathItem.fromJson(Map<String, Object?> json) => orderItemFlowPathItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `key` 값입니다.
+  String get key => _j['key'] as String;
+
+  /// 셀러용 단계 이름.
+  String? get label => _j['label'] as String?;
+
+  /// DONE 지나온 단계 · CURRENT 지금 · NEXT 주 경로의 남은 단계.
+  String get status => _j['status'] as String;
+
+  /// 이 단계 앞 분기에서 접힌 다른 갈래 수.
+  int get more => _j['more'] as int;
+}
+
+/// [OrderItemFlowRevisions] 스키마입니다.
+final ZodObject<OrderItemFlowRevisions> orderItemFlowRevisionsSchema = z.object<OrderItemFlowRevisions>({
+  'used': z.number().int_(),
+  'limit': z.number().int_(),
+}, OrderItemFlowRevisions._);
+
+/// OrderItemFlowRevisions 값입니다.
+class OrderItemFlowRevisions extends ParsedObject {
+  /// [OrderItemFlowRevisions]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderItemFlowRevisions({required int used, required int limit}) : super({'used': used, 'limit': limit});
+
+  OrderItemFlowRevisions._(super.json);
+
+  /// JSON을 [orderItemFlowRevisionsSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderItemFlowRevisions.fromJson(Map<String, Object?> json) => orderItemFlowRevisionsSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 구매자가 수정을 요청한 횟수.
+  int get used => _j['used'] as int;
+
+  /// 구매자 승인 단계의 수정 요청 한도.
+  int get limit => _j['limit'] as int;
+}
+
+/// [OrderItemFlowDataItem] 스키마입니다.
+final ZodObject<OrderItemFlowDataItem> orderItemFlowDataItemSchema = z.object<OrderItemFlowDataItem>({
+  'key': z.string(),
+  'label': z.string(),
+  'value': z.string(),
+}, OrderItemFlowDataItem._);
+
+/// OrderItemFlowDataItem 값입니다.
+class OrderItemFlowDataItem extends ParsedObject {
+  /// [OrderItemFlowDataItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  OrderItemFlowDataItem({required String key, required String label, required String value})
+      : super({'key': key, 'label': label, 'value': value});
+
+  OrderItemFlowDataItem._(super.json);
+
+  /// JSON을 [orderItemFlowDataItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory OrderItemFlowDataItem.fromJson(Map<String, Object?> json) => orderItemFlowDataItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 필드 키(`fields.<키>`).
+  String get key => _j['key'] as String;
+
+  /// 판매자가 둔 이름.
+  String get label => _j['label'] as String;
+
+  /// 지금 값(글자).
+  String get value => _j['value'] as String;
+}
+
 /// [MoveFlowStateRequest] 스키마입니다.
 ///
 /// 상태 직접 이동(#115) — 연결선을 지나지 않고 다른 상태로 옮깁니다. 블록(재고·환불·송장)은 실행하지 않습니다.
 final ZodObject<MoveFlowStateRequest> moveFlowStateRequestSchema = z.object<MoveFlowStateRequest>({
   'to': z.string().min(1),
   'reason': z.string().trim().max(200).optional(),
-}, MoveFlowStateRequest._);
+  'restock': z.boolean().optional(),
+}, MoveFlowStateRequest._, strictRequest: true);
 
 /// 상태 직접 이동(#115) — 연결선을 지나지 않고 다른 상태로 옮깁니다. 블록(재고·환불·송장)은 실행하지 않습니다.
 class MoveFlowStateRequest extends ParsedObject {
   /// [MoveFlowStateRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  MoveFlowStateRequest({required String to, String? reason}) : super({'to': to, if (reason != null) 'reason': reason});
+  MoveFlowStateRequest({required String to, String? reason, bool? restock})
+      : super({'to': to, if (reason != null) 'reason': reason, if (restock != null) 'restock': restock});
 
   MoveFlowStateRequest._(super.json);
 
@@ -663,6 +921,9 @@ class MoveFlowStateRequest extends ParsedObject {
 
   /// 옮긴 사유(실행 기록에 남습니다).
   String? get reason => _j['reason'] as String?;
+
+  /// 취소 상태(`moveTargets[].coreStatus` `CANCELED`)로 옮길 때 재고를 되돌리는지입니다(#301). 취소 상태로 옮기면 판매자 취소와 같이 환불합니다. 발송 전은 생략하면 true, 발송 뒤는 생략하면 400 `RESTOCK_REQUIRED`입니다. 다른 상태로 옮길 때는 무시합니다.
+  bool? get restock => _j['restock'] as bool?;
 }
 
 /// [FlowRunStep] 스키마입니다.
@@ -1042,6 +1303,10 @@ final ZodObject<CommerceFlowSummary> commerceFlowSummarySchema = z.object<Commer
   'archivedAt': z.string().nullable(),
   'createdAt': z.string(),
   'updatedAt': z.string(),
+  'draftVersion': z.number().int_().nullable().optional(),
+  'stepCount': z.number().int_().optional(),
+  'assignment': commerceFlowSummaryAssignmentSchema.optional(),
+  'inProgress': commerceFlowSummaryInProgressSchema.optional(),
 }, CommerceFlowSummary._);
 
 /// CommerceFlowSummary 값입니다.
@@ -1059,7 +1324,11 @@ class CommerceFlowSummary extends ParsedObject {
       String? defaultFor,
       required String? archivedAt,
       required String createdAt,
-      required String updatedAt})
+      required String updatedAt,
+      Nullable<int>? draftVersion,
+      int? stepCount,
+      CommerceFlowSummaryAssignment? assignment,
+      CommerceFlowSummaryInProgress? inProgress})
       : super({
           'flowId': flowId,
           'key': key,
@@ -1072,7 +1341,11 @@ class CommerceFlowSummary extends ParsedObject {
           'defaultFor': defaultFor,
           'archivedAt': archivedAt,
           'createdAt': createdAt,
-          'updatedAt': updatedAt
+          'updatedAt': updatedAt,
+          if (draftVersion != null) 'draftVersion': draftVersion.value,
+          if (stepCount != null) 'stepCount': stepCount,
+          if (assignment != null) 'assignment': assignment,
+          if (inProgress != null) 'inProgress': inProgress
         });
 
   CommerceFlowSummary._(super.json);
@@ -1117,6 +1390,104 @@ class CommerceFlowSummary extends ParsedObject {
 
   /// `updatedAt` 값입니다.
   String get updatedAt => _j['updatedAt'] as String;
+
+  /// 게시하지 않은 초안 버전(#411). 없으면 null. 서버는 항상 싣습니다.
+  int? get draftVersion => _j['draftVersion'] as int?;
+
+  /// 단계 수(#411) — 게시 버전(없으면 초안) 그래프에서 주문이 머무는 노드 수(편집기 단계 탭의 카드 수). 서버는 항상 싣습니다.
+  int? get stepCount => _j['stepCount'] as int?;
+
+  /// 적용 대상(#411) — 이 흐름을 지정한 카테고리와 상품 수. 지정은 카테고리 설정(`flowId`)·상품 수정(`flowId`)에서 합니다. 서버는 항상 싣습니다.
+  CommerceFlowSummaryAssignment? get assignment => _j['assignment'] as CommerceFlowSummaryAssignment?;
+
+  /// 진행 중 주문(#411). 버전별 수는 흐름 상세 `versions[].inProgress`입니다. 서버는 항상 싣습니다.
+  CommerceFlowSummaryInProgress? get inProgress => _j['inProgress'] as CommerceFlowSummaryInProgress?;
+}
+
+/// [CommerceFlowSummaryAssignment] 스키마입니다.
+final ZodObject<CommerceFlowSummaryAssignment> commerceFlowSummaryAssignmentSchema =
+    z.object<CommerceFlowSummaryAssignment>({
+  'categories': z.array<CommerceFlowSummaryAssignmentCategoriesItem>(commerceFlowSummaryAssignmentCategoriesItemSchema),
+  'productCount': z.number().int_(),
+}, CommerceFlowSummaryAssignment._);
+
+/// CommerceFlowSummaryAssignment 값입니다.
+class CommerceFlowSummaryAssignment extends ParsedObject {
+  /// [CommerceFlowSummaryAssignment]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CommerceFlowSummaryAssignment(
+      {required List<CommerceFlowSummaryAssignmentCategoriesItem> categories, required int productCount})
+      : super({'categories': categories, 'productCount': productCount});
+
+  CommerceFlowSummaryAssignment._(super.json);
+
+  /// JSON을 [commerceFlowSummaryAssignmentSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CommerceFlowSummaryAssignment.fromJson(Map<String, Object?> json) =>
+      commerceFlowSummaryAssignmentSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `categories` 값입니다.
+  List<CommerceFlowSummaryAssignmentCategoriesItem> get categories =>
+      (_j['categories'] as List).cast<CommerceFlowSummaryAssignmentCategoriesItem>();
+
+  /// `productCount` 값입니다.
+  int get productCount => _j['productCount'] as int;
+}
+
+/// [CommerceFlowSummaryAssignmentCategoriesItem] 스키마입니다.
+final ZodObject<CommerceFlowSummaryAssignmentCategoriesItem> commerceFlowSummaryAssignmentCategoriesItemSchema =
+    z.object<CommerceFlowSummaryAssignmentCategoriesItem>({
+  'categoryId': z.string(),
+  'name': z.string(),
+}, CommerceFlowSummaryAssignmentCategoriesItem._);
+
+/// CommerceFlowSummaryAssignmentCategoriesItem 값입니다.
+class CommerceFlowSummaryAssignmentCategoriesItem extends ParsedObject {
+  /// [CommerceFlowSummaryAssignmentCategoriesItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CommerceFlowSummaryAssignmentCategoriesItem({required String categoryId, required String name})
+      : super({'categoryId': categoryId, 'name': name});
+
+  CommerceFlowSummaryAssignmentCategoriesItem._(super.json);
+
+  /// JSON을 [commerceFlowSummaryAssignmentCategoriesItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CommerceFlowSummaryAssignmentCategoriesItem.fromJson(Map<String, Object?> json) =>
+      commerceFlowSummaryAssignmentCategoriesItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `categoryId` 값입니다.
+  String get categoryId => _j['categoryId'] as String;
+
+  /// `name` 값입니다.
+  String get name => _j['name'] as String;
+}
+
+/// [CommerceFlowSummaryInProgress] 스키마입니다.
+final ZodObject<CommerceFlowSummaryInProgress> commerceFlowSummaryInProgressSchema =
+    z.object<CommerceFlowSummaryInProgress>({
+  'total': z.number().int_(),
+  'previousVersions': z.number().int_(),
+}, CommerceFlowSummaryInProgress._);
+
+/// CommerceFlowSummaryInProgress 값입니다.
+class CommerceFlowSummaryInProgress extends ParsedObject {
+  /// [CommerceFlowSummaryInProgress]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CommerceFlowSummaryInProgress({required int total, required int previousVersions})
+      : super({'total': total, 'previousVersions': previousVersions});
+
+  CommerceFlowSummaryInProgress._(super.json);
+
+  /// JSON을 [commerceFlowSummaryInProgressSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CommerceFlowSummaryInProgress.fromJson(Map<String, Object?> json) =>
+      commerceFlowSummaryInProgressSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 진행 중 주문상품 흐름 수(묶음 진행은 묶음 하나가 1).
+  int get total => _j['total'] as int;
+
+  /// 그 가운데 게시 중 버전이 아닌 이전 버전을 따르는 수 — 버전 옮기기 대상.
+  int get previousVersions => _j['previousVersions'] as int;
 }
 
 /// [CommerceFlowVersionView] 스키마입니다.
@@ -1144,8 +1515,13 @@ final ZodObject<CommerceFlow> commerceFlowSchema = z.object<CommerceFlow>({
   'archivedAt': z.string().nullable(),
   'createdAt': z.string(),
   'updatedAt': z.string(),
+  'draftVersion': z.number().int_().nullable().optional(),
+  'stepCount': z.number().int_().optional(),
+  'assignment': commerceFlowSummaryAssignmentSchema.optional(),
+  'inProgress': commerceFlowSummaryInProgressSchema.optional(),
   'draft': commerceFlowVersionViewSchema.nullable(),
   'active': commerceFlowVersionViewSchema.nullable(),
+  'publishedKeys': commerceFlowPublishedKeysSchema.optional(),
   'versions': z.array<CommerceFlowVersionsItem>(commerceFlowVersionsItemSchema),
 }, CommerceFlow._);
 
@@ -1165,8 +1541,13 @@ class CommerceFlow extends ParsedObject {
       required String? archivedAt,
       required String createdAt,
       required String updatedAt,
+      Nullable<int>? draftVersion,
+      int? stepCount,
+      CommerceFlowSummaryAssignment? assignment,
+      CommerceFlowSummaryInProgress? inProgress,
       required CommerceFlowVersionView? draft,
       required CommerceFlowVersionView? active,
+      CommerceFlowPublishedKeys? publishedKeys,
       required List<CommerceFlowVersionsItem> versions})
       : super({
           'flowId': flowId,
@@ -1181,8 +1562,13 @@ class CommerceFlow extends ParsedObject {
           'archivedAt': archivedAt,
           'createdAt': createdAt,
           'updatedAt': updatedAt,
+          if (draftVersion != null) 'draftVersion': draftVersion.value,
+          if (stepCount != null) 'stepCount': stepCount,
+          if (assignment != null) 'assignment': assignment,
+          if (inProgress != null) 'inProgress': inProgress,
           'draft': draft,
           'active': active,
+          if (publishedKeys != null) 'publishedKeys': publishedKeys,
           'versions': versions
         });
 
@@ -1229,14 +1615,55 @@ class CommerceFlow extends ParsedObject {
   /// `updatedAt` 값입니다.
   String get updatedAt => _j['updatedAt'] as String;
 
+  /// 게시하지 않은 초안 버전(#411). 없으면 null. 서버는 항상 싣습니다.
+  int? get draftVersion => _j['draftVersion'] as int?;
+
+  /// 단계 수(#411) — 게시 버전(없으면 초안) 그래프에서 주문이 머무는 노드 수(편집기 단계 탭의 카드 수). 서버는 항상 싣습니다.
+  int? get stepCount => _j['stepCount'] as int?;
+
+  /// 적용 대상(#411) — 이 흐름을 지정한 카테고리와 상품 수. 지정은 카테고리 설정(`flowId`)·상품 수정(`flowId`)에서 합니다. 서버는 항상 싣습니다.
+  CommerceFlowSummaryAssignment? get assignment => _j['assignment'] as CommerceFlowSummaryAssignment?;
+
+  /// 진행 중 주문(#411). 버전별 수는 흐름 상세 `versions[].inProgress`입니다. 서버는 항상 싣습니다.
+  CommerceFlowSummaryInProgress? get inProgress => _j['inProgress'] as CommerceFlowSummaryInProgress?;
+
   /// `draft` 값입니다.
   CommerceFlowVersionView? get draft => _j['draft'] as CommerceFlowVersionView?;
 
   /// `active` 값입니다.
   CommerceFlowVersionView? get active => _j['active'] as CommerceFlowVersionView?;
 
+  /// 게시한 버전(게시 중·이전 버전)에 나온 key(#411). 한 번 게시한 key는 다른 뜻으로 다시 쓰지 않습니다 — 진행 중 주문의 버전 옮기기와 key로 분기하는 스토어프론트가 이 값을 가리킵니다. 새 노드·행동의 key를 만들 때 이 목록을 피합니다. 서버는 항상 싣습니다.
+  CommerceFlowPublishedKeys? get publishedKeys => _j['publishedKeys'] as CommerceFlowPublishedKeys?;
+
   /// `versions` 값입니다.
   List<CommerceFlowVersionsItem> get versions => (_j['versions'] as List).cast<CommerceFlowVersionsItem>();
+}
+
+/// [CommerceFlowPublishedKeys] 스키마입니다.
+final ZodObject<CommerceFlowPublishedKeys> commerceFlowPublishedKeysSchema = z.object<CommerceFlowPublishedKeys>({
+  'states': z.array<String>(z.string()),
+  'actions': z.array<String>(z.string()),
+}, CommerceFlowPublishedKeys._);
+
+/// CommerceFlowPublishedKeys 값입니다.
+class CommerceFlowPublishedKeys extends ParsedObject {
+  /// [CommerceFlowPublishedKeys]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CommerceFlowPublishedKeys({required List<String> states, required List<String> actions})
+      : super({'states': states, 'actions': actions});
+
+  CommerceFlowPublishedKeys._(super.json);
+
+  /// JSON을 [commerceFlowPublishedKeysSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CommerceFlowPublishedKeys.fromJson(Map<String, Object?> json) => commerceFlowPublishedKeysSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 상태 key(노드 id).
+  List<String> get states => (_j['states'] as List).cast<String>();
+
+  /// 판매자·구매자 행동 key.
+  List<String> get actions => (_j['actions'] as List).cast<String>();
 }
 
 /// [CommerceFlowVersionsItem] 스키마입니다.
@@ -1334,7 +1761,7 @@ class CommerceFlowVersionView extends ParsedObject {
 /// 진행 중 주문을 활성 버전으로 옮기기(#115) — 한 번에 `limit`개까지. 남으면 다시 부릅니다.
 final ZodObject<MigrateFlowVersionRequest> migrateFlowVersionRequestSchema = z.object<MigrateFlowVersionRequest>({
   'limit': z.number().int_().greaterThan(1, inclusive: true).lessThan(500, inclusive: true).optional(),
-}, MigrateFlowVersionRequest._);
+}, MigrateFlowVersionRequest._, strictRequest: true);
 
 /// 진행 중 주문을 활성 버전으로 옮기기(#115) — 한 번에 `limit`개까지. 남으면 다시 부릅니다.
 class MigrateFlowVersionRequest extends ParsedObject {
@@ -1435,6 +1862,29 @@ class MigrateFlowVersionResultSkippedItem extends ParsedObject {
   String get reason => _j['reason'] as String;
 }
 
+/// [UpdateCommerceFlowRequest] 스키마입니다.
+///
+/// 흐름 고치기(#411) — 이름. 키는 바꿀 수 없습니다(스토어프론트·연동이 가리킵니다).
+final ZodObject<UpdateCommerceFlowRequest> updateCommerceFlowRequestSchema = z.object<UpdateCommerceFlowRequest>({
+  'name': z.string().trim().min(1).max(60),
+}, UpdateCommerceFlowRequest._, strictRequest: true);
+
+/// 흐름 고치기(#411) — 이름. 키는 바꿀 수 없습니다(스토어프론트·연동이 가리킵니다).
+class UpdateCommerceFlowRequest extends ParsedObject {
+  /// [UpdateCommerceFlowRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  UpdateCommerceFlowRequest({required String name}) : super({'name': name});
+
+  UpdateCommerceFlowRequest._(super.json);
+
+  /// JSON을 [updateCommerceFlowRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory UpdateCommerceFlowRequest.fromJson(Map<String, Object?> json) => updateCommerceFlowRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 흐름 이름.
+  String get name => _j['name'] as String;
+}
+
 /// [CreateCommerceFlowRequest] 스키마입니다.
 final ZodObject<CreateCommerceFlowRequest> createCommerceFlowRequestSchema = z.object<CreateCommerceFlowRequest>({
   'key': z.string().pattern(RegExp(r'^[a-z][a-z0-9-]{1,48}$')),
@@ -1443,7 +1893,7 @@ final ZodObject<CreateCommerceFlowRequest> createCommerceFlowRequestSchema = z.o
   'graph': z.record<Object?>(z.unknown()).optional(),
   'definition': z.record<Object?>(z.unknown()).optional(),
   'variables': z.record<Object?>(z.unknown()).optional(),
-}, CreateCommerceFlowRequest._);
+}, CreateCommerceFlowRequest._, strictRequest: true);
 
 /// CreateCommerceFlowRequest 값입니다.
 class CreateCommerceFlowRequest extends ParsedObject {
@@ -1495,7 +1945,7 @@ final ZodObject<SaveFlowDraftRequest> saveFlowDraftRequestSchema = z.object<Save
   'graph': z.record<Object?>(z.unknown()),
   'definition': z.record<Object?>(z.unknown()).optional(),
   'variables': z.record<Object?>(z.unknown()).optional(),
-}, SaveFlowDraftRequest._);
+}, SaveFlowDraftRequest._, strictRequest: true);
 
 /// SaveFlowDraftRequest 값입니다.
 class SaveFlowDraftRequest extends ParsedObject {
@@ -1525,64 +1975,45 @@ class SaveFlowDraftRequest extends ParsedObject {
   Map<String, Object?>? get variables => (_j['variables'] as Map?)?.cast<String, Object?>();
 }
 
-/// [CommerceFlowCheck] 스키마입니다.
-final ZodObject<CommerceFlowCheck> commerceFlowCheckSchema = z.object<CommerceFlowCheck>({
-  'publishable': z.boolean(),
-  'blocking': z.array<CommerceFlowCheckBlockingItem>(commerceFlowCheckBlockingItemSchema),
-  'warnings': z.array<CommerceFlowCheckBlockingItem>(commerceFlowCheckBlockingItemSchema),
-}, CommerceFlowCheck._);
-
-/// CommerceFlowCheck 값입니다.
-class CommerceFlowCheck extends ParsedObject {
-  /// [CommerceFlowCheck]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  CommerceFlowCheck(
-      {required bool publishable,
-      required List<CommerceFlowCheckBlockingItem> blocking,
-      required List<CommerceFlowCheckBlockingItem> warnings})
-      : super({'publishable': publishable, 'blocking': blocking, 'warnings': warnings});
-
-  CommerceFlowCheck._(super.json);
-
-  /// JSON을 [commerceFlowCheckSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
-  factory CommerceFlowCheck.fromJson(Map<String, Object?> json) => commerceFlowCheckSchema.parse(json);
-
-  Map<String, Object?> get _j => jsonOf(this);
-
-  /// 게시를 막는 오류(실행 불가·공개 계약·한도)가 없습니다.
-  bool get publishable => _j['publishable'] as bool;
-
-  /// `blocking` 값입니다.
-  List<CommerceFlowCheckBlockingItem> get blocking => (_j['blocking'] as List).cast<CommerceFlowCheckBlockingItem>();
-
-  /// 업무 논리 경고 — 게시를 막지 않습니다.
-  List<CommerceFlowCheckBlockingItem> get warnings => (_j['warnings'] as List).cast<CommerceFlowCheckBlockingItem>();
-}
-
-/// [CommerceFlowCheckBlockingItem] 스키마입니다.
-final ZodObject<CommerceFlowCheckBlockingItem> commerceFlowCheckBlockingItemSchema =
-    z.object<CommerceFlowCheckBlockingItem>({
+/// [FlowIssue] 스키마입니다.
+final ZodObject<FlowIssue> flowIssueSchema = z.object<FlowIssue>({
   'code': z.string(),
   'message': z.string(),
   'nodeId': z.string().optional(),
   'edgeId': z.string().optional(),
-}, CommerceFlowCheckBlockingItem._);
+  'pointer': z.string().optional(),
+  'opIndex': z.number().int_().optional(),
+  'hint': z.string().optional(),
+  'expected': z.unknown().optional(),
+}, FlowIssue._);
 
-/// CommerceFlowCheckBlockingItem 값입니다.
-class CommerceFlowCheckBlockingItem extends ParsedObject {
-  /// [CommerceFlowCheckBlockingItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  CommerceFlowCheckBlockingItem({required String code, required String message, String? nodeId, String? edgeId})
+/// FlowIssue 값입니다.
+class FlowIssue extends ParsedObject {
+  /// [FlowIssue]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowIssue(
+      {required String code,
+      required String message,
+      String? nodeId,
+      String? edgeId,
+      String? pointer,
+      int? opIndex,
+      String? hint,
+      Object? expected})
       : super({
           'code': code,
           'message': message,
           if (nodeId != null) 'nodeId': nodeId,
-          if (edgeId != null) 'edgeId': edgeId
+          if (edgeId != null) 'edgeId': edgeId,
+          if (pointer != null) 'pointer': pointer,
+          if (opIndex != null) 'opIndex': opIndex,
+          if (hint != null) 'hint': hint,
+          if (expected != null) 'expected': expected
         });
 
-  CommerceFlowCheckBlockingItem._(super.json);
+  FlowIssue._(super.json);
 
-  /// JSON을 [commerceFlowCheckBlockingItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
-  factory CommerceFlowCheckBlockingItem.fromJson(Map<String, Object?> json) =>
-      commerceFlowCheckBlockingItemSchema.parse(json);
+  /// JSON을 [flowIssueSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowIssue.fromJson(Map<String, Object?> json) => flowIssueSchema.parse(json);
 
   Map<String, Object?> get _j => jsonOf(this);
 
@@ -1597,6 +2028,556 @@ class CommerceFlowCheckBlockingItem extends ParsedObject {
 
   /// `edgeId` 값입니다.
   String? get edgeId => _j['edgeId'] as String?;
+
+  /// 위치(JSON Pointer) — 그래프 문서 안(`/nodes/3/config/buttons/0/key`). 조작 오류(`OP_*`)는 그 조작 안 위치.
+  String? get pointer => _j['pointer'] as String?;
+
+  /// 조작 묶음에서 몇 번째 조작(0부터)에서 났는지입니다.
+  int? get opIndex => _j['opIndex'] as int?;
+
+  /// 고치는 법·후보(가능한 값·비슷한 이름).
+  String? get hint => _j['hint'] as String?;
+
+  /// 그 위치의 설정 형식(JSON Schema 조각).
+  Object? get expected => _j['expected'];
+}
+
+/// [CommerceFlowCheck] 스키마입니다.
+final ZodObject<CommerceFlowCheck> commerceFlowCheckSchema = z.object<CommerceFlowCheck>({
+  'publishable': z.boolean(),
+  'blocking': z.array<FlowIssue>(flowIssueSchema),
+  'warnings': z.array<FlowIssue>(flowIssueSchema),
+}, CommerceFlowCheck._);
+
+/// CommerceFlowCheck 값입니다.
+class CommerceFlowCheck extends ParsedObject {
+  /// [CommerceFlowCheck]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CommerceFlowCheck({required bool publishable, required List<FlowIssue> blocking, required List<FlowIssue> warnings})
+      : super({'publishable': publishable, 'blocking': blocking, 'warnings': warnings});
+
+  CommerceFlowCheck._(super.json);
+
+  /// JSON을 [commerceFlowCheckSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CommerceFlowCheck.fromJson(Map<String, Object?> json) => commerceFlowCheckSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 게시를 막는 오류(실행 불가·공개 계약·한도)가 없습니다.
+  bool get publishable => _j['publishable'] as bool;
+
+  /// `blocking` 값입니다.
+  List<FlowIssue> get blocking => (_j['blocking'] as List).cast<FlowIssue>();
+
+  /// 업무 논리 경고 — 게시를 막지 않습니다.
+  List<FlowIssue> get warnings => (_j['warnings'] as List).cast<FlowIssue>();
+}
+
+/// [String] 스키마입니다.
+///
+/// 흐름 노드 id — 영문으로 시작, 영문·숫자·_·-.
+final ZodType<String> flowNodeIdSchema = z.string().pattern(RegExp(r'^[A-Za-z][A-Za-z0-9_-]*$'));
+
+/// [FlowDraftOperation] 스키마입니다.
+///
+/// 조작 하나(#120) — 원천은 여기 하나입니다(api 본문 검증과 flow-spec `applyFlowOps`가 같은 스키마를 씁니다). 모르는 키는 400입니다
+/// (지우고 성공하면 잘못 쓴 조작이 아무 일도 하지 않은 채 통과합니다).
+final ZodType<FlowDraftOperation> flowDraftOperationSchema = z.discriminatedUnion<FlowDraftOperation>('op', [
+  flowDraftOperationAddnodeSchema,
+  flowDraftOperationUpdatenodeSchema,
+  flowDraftOperationRemovenodeSchema,
+  flowDraftOperationConnectSchema,
+  flowDraftOperationUpdateedgeSchema,
+  flowDraftOperationDisconnectSchema,
+  flowDraftOperationSetstartSchema,
+  flowDraftOperationSetdefinitionSchema,
+]);
+
+/// 조작 하나(#120) — 원천은 여기 하나입니다(api 본문 검증과 flow-spec `applyFlowOps`가 같은 스키마를 씁니다). 모르는 키는 400입니다
+/// (지우고 성공하면 잘못 쓴 조작이 아무 일도 하지 않은 채 통과합니다).
+sealed class FlowDraftOperation {
+  /// JSON을 [flowDraftOperationSchema]로 검증해 맞는 형태로 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftOperation.fromJson(Map<String, Object?> json) => flowDraftOperationSchema.parse(json);
+
+  /// `op` 값입니다.
+  String get op;
+
+  /// JSON으로 바꿉니다.
+  Map<String, Object?> toJson();
+}
+
+/// [FlowDraftOperationAddnode] 스키마입니다.
+final ZodObject<FlowDraftOperationAddnode> flowDraftOperationAddnodeSchema = z.object<FlowDraftOperationAddnode>({
+  'op': z.literal<String>('addNode'),
+  'id': flowNodeIdSchema,
+  'type': z.string().min(1),
+  'config': z.record<Object?>(z.unknown()).optional(),
+  'position': flowDraftOperationAddnodePositionSchema.optional(),
+}, FlowDraftOperationAddnode._, strict: true);
+
+/// 노드 더하기 — version·outputs는 서버가 채웁니다.
+class FlowDraftOperationAddnode extends ParsedObject implements FlowDraftOperation {
+  /// [FlowDraftOperationAddnode]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftOperationAddnode(
+      {required String op,
+      required String id,
+      required String type,
+      Map<String, Object?>? config,
+      FlowDraftOperationAddnodePosition? position})
+      : super({
+          'op': op,
+          'id': id,
+          'type': type,
+          if (config != null) 'config': config,
+          if (position != null) 'position': position
+        });
+
+  FlowDraftOperationAddnode._(super.json);
+
+  /// JSON을 [flowDraftOperationAddnodeSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftOperationAddnode.fromJson(Map<String, Object?> json) => flowDraftOperationAddnodeSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `op` 값입니다.
+  @override
+  String get op => _j['op'] as String;
+
+  /// 새 노드 id(영문으로 시작, 영문·숫자·_·-).
+  String get id => _j['id'] as String;
+
+  /// 노드 종류(`GET /flow-node-types/{type}`).
+  String get type => _j['type'] as String;
+
+  /// 노드 설정.
+  Map<String, Object?>? get config => (_j['config'] as Map?)?.cast<String, Object?>();
+
+  /// 없으면 서버가 앞 노드 오른쪽에 둡니다.
+  FlowDraftOperationAddnodePosition? get position => _j['position'] as FlowDraftOperationAddnodePosition?;
+}
+
+/// [FlowDraftOperationAddnodePosition] 스키마입니다.
+final ZodObject<FlowDraftOperationAddnodePosition> flowDraftOperationAddnodePositionSchema =
+    z.object<FlowDraftOperationAddnodePosition>({
+  'x': z.number(),
+  'y': z.number(),
+}, FlowDraftOperationAddnodePosition._, strict: true);
+
+/// FlowDraftOperationAddnodePosition 값입니다.
+class FlowDraftOperationAddnodePosition extends ParsedObject {
+  /// [FlowDraftOperationAddnodePosition]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftOperationAddnodePosition({required num x, required num y}) : super({'x': x, 'y': y});
+
+  FlowDraftOperationAddnodePosition._(super.json);
+
+  /// JSON을 [flowDraftOperationAddnodePositionSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftOperationAddnodePosition.fromJson(Map<String, Object?> json) =>
+      flowDraftOperationAddnodePositionSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `x` 값입니다.
+  num get x => _j['x'] as num;
+
+  /// `y` 값입니다.
+  num get y => _j['y'] as num;
+}
+
+/// [FlowDraftOperationUpdatenode] 스키마입니다.
+final ZodObject<FlowDraftOperationUpdatenode> flowDraftOperationUpdatenodeSchema =
+    z.object<FlowDraftOperationUpdatenode>({
+  'op': z.literal<String>('updateNode'),
+  'id': z.string().min(1),
+  'set': z.record<Object?>(z.unknown()).optional(),
+  'unset': z.array<String>(z.string().pattern(RegExp(r'^\/'))).optional(),
+}, FlowDraftOperationUpdatenode._, strict: true);
+
+/// 노드 고치기.
+class FlowDraftOperationUpdatenode extends ParsedObject implements FlowDraftOperation {
+  /// [FlowDraftOperationUpdatenode]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftOperationUpdatenode({required String op, required String id, Map<String, Object?>? set, List<String>? unset})
+      : super({'op': op, 'id': id, if (set != null) 'set': set, if (unset != null) 'unset': unset});
+
+  FlowDraftOperationUpdatenode._(super.json);
+
+  /// JSON을 [flowDraftOperationUpdatenodeSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftOperationUpdatenode.fromJson(Map<String, Object?> json) =>
+      flowDraftOperationUpdatenodeSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `op` 값입니다.
+  @override
+  String get op => _j['op'] as String;
+
+  /// `id` 값입니다.
+  String get id => _j['id'] as String;
+
+  /// `/config/…`·`/position` 아래만.
+  Map<String, Object?>? get set => (_j['set'] as Map?)?.cast<String, Object?>();
+
+  /// 지울 위치(JSON Pointer) 목록.
+  List<String>? get unset => (_j['unset'] as List?)?.cast<String>();
+}
+
+/// [FlowDraftOperationRemovenode] 스키마입니다.
+final ZodObject<FlowDraftOperationRemovenode> flowDraftOperationRemovenodeSchema =
+    z.object<FlowDraftOperationRemovenode>({
+  'op': z.literal<String>('removeNode'),
+  'id': z.string().min(1),
+}, FlowDraftOperationRemovenode._, strict: true);
+
+/// 노드 지우기 — 드나드는 연결선도 지웁니다. 시작 노드는 400(먼저 setStart).
+class FlowDraftOperationRemovenode extends ParsedObject implements FlowDraftOperation {
+  /// [FlowDraftOperationRemovenode]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftOperationRemovenode({required String op, required String id}) : super({'op': op, 'id': id});
+
+  FlowDraftOperationRemovenode._(super.json);
+
+  /// JSON을 [flowDraftOperationRemovenodeSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftOperationRemovenode.fromJson(Map<String, Object?> json) =>
+      flowDraftOperationRemovenodeSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `op` 값입니다.
+  @override
+  String get op => _j['op'] as String;
+
+  /// `id` 값입니다.
+  String get id => _j['id'] as String;
+}
+
+/// [FlowDraftOperationConnect] 스키마입니다.
+final ZodObject<FlowDraftOperationConnect> flowDraftOperationConnectSchema = z.object<FlowDraftOperationConnect>({
+  'op': z.literal<String>('connect'),
+  'id': z.string().min(1).optional(),
+  'from': z.string().min(1),
+  'to': z.string().min(1),
+  'on': z.record<Object?>(z.unknown()).optional(),
+  'guard': z.string().optional(),
+  'do': z.array<Map<String, Object?>>(z.record<Object?>(z.unknown())).optional(),
+}, FlowDraftOperationConnect._, strict: true);
+
+/// 연결선 잇기.
+class FlowDraftOperationConnect extends ParsedObject implements FlowDraftOperation {
+  /// [FlowDraftOperationConnect]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftOperationConnect(
+      {required String op,
+      String? id,
+      required String from,
+      required String to,
+      Map<String, Object?>? on,
+      String? guard,
+      List<Map<String, Object?>>? do_})
+      : super({
+          'op': op,
+          if (id != null) 'id': id,
+          'from': from,
+          'to': to,
+          if (on != null) 'on': on,
+          if (guard != null) 'guard': guard,
+          if (do_ != null) 'do': do_
+        });
+
+  FlowDraftOperationConnect._(super.json);
+
+  /// JSON을 [flowDraftOperationConnectSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftOperationConnect.fromJson(Map<String, Object?> json) => flowDraftOperationConnectSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `op` 값입니다.
+  @override
+  String get op => _j['op'] as String;
+
+  /// 연결선 id. 주면 같은 묶음의 updateEdge·disconnect가 가리킬 수 있습니다. 없으면 서버가 만듭니다.
+  String? get id => _j['id'] as String?;
+
+  /// `노드` 또는 `노드:출력`.
+  String get from => _j['from'] as String;
+
+  /// `to` 값입니다.
+  String get to => _j['to'] as String;
+
+  /// 조건(트리거). 출력 연결선·즉시 노드에서는 두지 않습니다.
+  Map<String, Object?>? get on => (_j['on'] as Map?)?.cast<String, Object?>();
+
+  /// 조건식(CEL).
+  String? get guard => _j['guard'] as String?;
+
+  /// 지날 때 실행할 블록.
+  List<Map<String, Object?>>? get do_ => (_j['do'] as List?)?.cast<Map<String, Object?>>();
+}
+
+/// [FlowDraftOperationUpdateedge] 스키마입니다.
+final ZodObject<FlowDraftOperationUpdateedge> flowDraftOperationUpdateedgeSchema =
+    z.object<FlowDraftOperationUpdateedge>({
+  'op': z.literal<String>('updateEdge'),
+  'id': z.string().min(1),
+  'set': z.record<Object?>(z.unknown()).optional(),
+  'unset': z.array<String>(z.string().pattern(RegExp(r'^\/'))).optional(),
+}, FlowDraftOperationUpdateedge._, strict: true);
+
+/// 연결선 고치기.
+class FlowDraftOperationUpdateedge extends ParsedObject implements FlowDraftOperation {
+  /// [FlowDraftOperationUpdateedge]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftOperationUpdateedge({required String op, required String id, Map<String, Object?>? set, List<String>? unset})
+      : super({'op': op, 'id': id, if (set != null) 'set': set, if (unset != null) 'unset': unset});
+
+  FlowDraftOperationUpdateedge._(super.json);
+
+  /// JSON을 [flowDraftOperationUpdateedgeSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftOperationUpdateedge.fromJson(Map<String, Object?> json) =>
+      flowDraftOperationUpdateedgeSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `op` 값입니다.
+  @override
+  String get op => _j['op'] as String;
+
+  /// `id` 값입니다.
+  String get id => _j['id'] as String;
+
+  /// `/from`·`/to`·`/on`·`/guard`·`/do` 아래만.
+  Map<String, Object?>? get set => (_j['set'] as Map?)?.cast<String, Object?>();
+
+  /// 지울 위치(JSON Pointer) 목록.
+  List<String>? get unset => (_j['unset'] as List?)?.cast<String>();
+}
+
+/// [FlowDraftOperationDisconnect] 스키마입니다.
+final ZodObject<FlowDraftOperationDisconnect> flowDraftOperationDisconnectSchema =
+    z.object<FlowDraftOperationDisconnect>({
+  'op': z.literal<String>('disconnect'),
+  'id': z.string().min(1),
+}, FlowDraftOperationDisconnect._, strict: true);
+
+/// 연결선 지우기.
+class FlowDraftOperationDisconnect extends ParsedObject implements FlowDraftOperation {
+  /// [FlowDraftOperationDisconnect]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftOperationDisconnect({required String op, required String id}) : super({'op': op, 'id': id});
+
+  FlowDraftOperationDisconnect._(super.json);
+
+  /// JSON을 [flowDraftOperationDisconnectSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftOperationDisconnect.fromJson(Map<String, Object?> json) =>
+      flowDraftOperationDisconnectSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `op` 값입니다.
+  @override
+  String get op => _j['op'] as String;
+
+  /// `id` 값입니다.
+  String get id => _j['id'] as String;
+}
+
+/// [FlowDraftOperationSetstart] 스키마입니다.
+final ZodObject<FlowDraftOperationSetstart> flowDraftOperationSetstartSchema = z.object<FlowDraftOperationSetstart>({
+  'op': z.literal<String>('setStart'),
+  'id': z.string().min(1),
+}, FlowDraftOperationSetstart._, strict: true);
+
+/// 시작 노드 바꾸기.
+class FlowDraftOperationSetstart extends ParsedObject implements FlowDraftOperation {
+  /// [FlowDraftOperationSetstart]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftOperationSetstart({required String op, required String id}) : super({'op': op, 'id': id});
+
+  FlowDraftOperationSetstart._(super.json);
+
+  /// JSON을 [flowDraftOperationSetstartSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftOperationSetstart.fromJson(Map<String, Object?> json) =>
+      flowDraftOperationSetstartSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `op` 값입니다.
+  @override
+  String get op => _j['op'] as String;
+
+  /// `id` 값입니다.
+  String get id => _j['id'] as String;
+}
+
+/// [FlowDraftOperationSetdefinition] 스키마입니다.
+final ZodObject<FlowDraftOperationSetdefinition> flowDraftOperationSetdefinitionSchema =
+    z.object<FlowDraftOperationSetdefinition>({
+  'op': z.literal<String>('setDefinition'),
+  'set': flowDraftOperationSetdefinitionSetSchema.optional(),
+  'unset': z.array<String>(z.enum_(['progression', 'groupClaim', 'fulfillmentMethods'])).optional(),
+}, FlowDraftOperationSetdefinition._, strict: true);
+
+/// 흐름 설정(진행 단위·묶음 클레임·이행 방식) 바꾸기.
+class FlowDraftOperationSetdefinition extends ParsedObject implements FlowDraftOperation {
+  /// [FlowDraftOperationSetdefinition]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftOperationSetdefinition({required String op, FlowDraftOperationSetdefinitionSet? set, List<String>? unset})
+      : super({'op': op, if (set != null) 'set': set, if (unset != null) 'unset': unset});
+
+  FlowDraftOperationSetdefinition._(super.json);
+
+  /// JSON을 [flowDraftOperationSetdefinitionSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftOperationSetdefinition.fromJson(Map<String, Object?> json) =>
+      flowDraftOperationSetdefinitionSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `op` 값입니다.
+  @override
+  String get op => _j['op'] as String;
+
+  /// `set` 값입니다.
+  FlowDraftOperationSetdefinitionSet? get set => _j['set'] as FlowDraftOperationSetdefinitionSet?;
+
+  /// `unset` 값입니다.
+  List<String>? get unset => (_j['unset'] as List?)?.cast<String>();
+}
+
+/// [FlowDraftOperationSetdefinitionSet] 스키마입니다.
+final ZodObject<FlowDraftOperationSetdefinitionSet> flowDraftOperationSetdefinitionSetSchema =
+    z.object<FlowDraftOperationSetdefinitionSet>({
+  'progression': z.enum_(['ITEM', 'ORDER_GROUP']).optional(),
+  'groupClaim': z.enum_(['CONTINUE', 'PAUSE']).optional(),
+  'fulfillmentMethods': z.array<String>(z.enum_(['CARRIER', 'DIRECT', 'PICKUP', 'PROVIDED'])).min(1).optional(),
+}, FlowDraftOperationSetdefinitionSet._, strict: true);
+
+/// FlowDraftOperationSetdefinitionSet 값입니다.
+class FlowDraftOperationSetdefinitionSet extends ParsedObject {
+  /// [FlowDraftOperationSetdefinitionSet]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftOperationSetdefinitionSet({String? progression, String? groupClaim, List<String>? fulfillmentMethods})
+      : super({
+          if (progression != null) 'progression': progression,
+          if (groupClaim != null) 'groupClaim': groupClaim,
+          if (fulfillmentMethods != null) 'fulfillmentMethods': fulfillmentMethods
+        });
+
+  FlowDraftOperationSetdefinitionSet._(super.json);
+
+  /// JSON을 [flowDraftOperationSetdefinitionSetSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftOperationSetdefinitionSet.fromJson(Map<String, Object?> json) =>
+      flowDraftOperationSetdefinitionSetSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `progression` 값입니다.
+  String? get progression => _j['progression'] as String?;
+
+  /// `groupClaim` 값입니다.
+  String? get groupClaim => _j['groupClaim'] as String?;
+
+  /// `fulfillmentMethods` 값입니다.
+  List<String>? get fulfillmentMethods => (_j['fulfillmentMethods'] as List?)?.cast<String>();
+}
+
+/// [ApplyFlowOperationsRequest] 스키마입니다.
+final ZodObject<ApplyFlowOperationsRequest> applyFlowOperationsRequestSchema = z.object<ApplyFlowOperationsRequest>({
+  'operations': z.array<FlowDraftOperation>(flowDraftOperationSchema).min(1),
+}, ApplyFlowOperationsRequest._, strictRequest: true);
+
+/// ApplyFlowOperationsRequest 값입니다.
+class ApplyFlowOperationsRequest extends ParsedObject {
+  /// [ApplyFlowOperationsRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ApplyFlowOperationsRequest({required List<FlowDraftOperation> operations}) : super({'operations': operations});
+
+  ApplyFlowOperationsRequest._(super.json);
+
+  /// JSON을 [applyFlowOperationsRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ApplyFlowOperationsRequest.fromJson(Map<String, Object?> json) =>
+      applyFlowOperationsRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 차례대로 적용합니다. 묶음은 원자적입니다 — 하나라도 형식이 틀리면 아무것도 바꾸지 않습니다(400).
+  List<FlowDraftOperation> get operations => (_j['operations'] as List).cast<FlowDraftOperation>();
+}
+
+/// [FlowOperationsResult] 스키마입니다.
+final ZodObject<FlowOperationsResult> flowOperationsResultSchema = z.object<FlowOperationsResult>({
+  'revision': z.number().int_(),
+  'changed': flowOperationsResultChangedSchema,
+  'issues': z.array<FlowIssue>(flowIssueSchema),
+  'warnings': z.array<FlowIssue>(flowIssueSchema),
+}, FlowOperationsResult._);
+
+/// FlowOperationsResult 값입니다.
+class FlowOperationsResult extends ParsedObject {
+  /// [FlowOperationsResult]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowOperationsResult(
+      {required int revision,
+      required FlowOperationsResultChanged changed,
+      required List<FlowIssue> issues,
+      required List<FlowIssue> warnings})
+      : super({'revision': revision, 'changed': changed, 'issues': issues, 'warnings': warnings});
+
+  FlowOperationsResult._(super.json);
+
+  /// JSON을 [flowOperationsResultSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowOperationsResult.fromJson(Map<String, Object?> json) => flowOperationsResultSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 저장 뒤 초안 revision — 다음 조작의 If-Match.
+  int get revision => _j['revision'] as int;
+
+  /// `changed` 값입니다.
+  FlowOperationsResultChanged get changed => _j['changed'] as FlowOperationsResultChanged;
+
+  /// 게시를 막는 문제. 저장은 됐습니다(초안은 미완성일 수 있습니다).
+  List<FlowIssue> get issues => (_j['issues'] as List).cast<FlowIssue>();
+
+  /// 업무 논리 경고 — 게시를 막지 않습니다.
+  List<FlowIssue> get warnings => (_j['warnings'] as List).cast<FlowIssue>();
+}
+
+/// [FlowOperationsResultChanged] 스키마입니다.
+final ZodObject<FlowOperationsResultChanged> flowOperationsResultChangedSchema = z.object<FlowOperationsResultChanged>({
+  'nodes': z.array<String>(z.string()),
+  'edges': z.array<String>(z.string()),
+  'removedNodes': z.array<String>(z.string()),
+  'removedEdges': z.array<String>(z.string()),
+  'removedActions': z.array<String>(z.string()),
+}, FlowOperationsResultChanged._);
+
+/// FlowOperationsResultChanged 값입니다.
+class FlowOperationsResultChanged extends ParsedObject {
+  /// [FlowOperationsResultChanged]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowOperationsResultChanged(
+      {required List<String> nodes,
+      required List<String> edges,
+      required List<String> removedNodes,
+      required List<String> removedEdges,
+      required List<String> removedActions})
+      : super({
+          'nodes': nodes,
+          'edges': edges,
+          'removedNodes': removedNodes,
+          'removedEdges': removedEdges,
+          'removedActions': removedActions
+        });
+
+  FlowOperationsResultChanged._(super.json);
+
+  /// JSON을 [flowOperationsResultChangedSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowOperationsResultChanged.fromJson(Map<String, Object?> json) =>
+      flowOperationsResultChangedSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 더하거나 바꾼 노드.
+  List<String> get nodes => (_j['nodes'] as List).cast<String>();
+
+  /// 더하거나 바꾼 연결선.
+  List<String> get edges => (_j['edges'] as List).cast<String>();
+
+  /// `removedNodes` 값입니다.
+  List<String> get removedNodes => (_j['removedNodes'] as List).cast<String>();
+
+  /// 지운 연결선(노드와 함께 지워진 것 포함).
+  List<String> get removedEdges => (_j['removedEdges'] as List).cast<String>();
+
+  /// 그래프에서 사라진 셀러·구매자 행동(`seller.action:CONFIRM_ORDER`). 셀러에게 확인받습니다.
+  List<String> get removedActions => (_j['removedActions'] as List).cast<String>();
 }
 
 /// [ResolvedFlow] 스키마입니다.
@@ -1677,7 +2658,7 @@ final ZodObject<SaveFlowSecretRequest> saveFlowSecretRequestSchema = z.object<Sa
       .record<String>(z.string().max(2000))
       .refine((v) => keyCount(v) <= 10, message: '헤더는 10개까지입니다')
       .withDefault(const {}),
-}, SaveFlowSecretRequest._);
+}, SaveFlowSecretRequest._, strictRequest: true);
 
 /// SaveFlowSecretRequest 값입니다.
 class SaveFlowSecretRequest extends ParsedObject {
@@ -1788,7 +2769,7 @@ final ZodObject<SimulateFlowRequest> simulateFlowRequestSchema = z.object<Simula
       .optional(),
   'context': z.record<Object?>(z.unknown()).optional(),
   'steps': z.array<SimulateFlowRequestStepsItem>(simulateFlowRequestStepsItemSchema).min(1).max(100),
-}, SimulateFlowRequest._);
+}, SimulateFlowRequest._, strictRequest: true);
 
 /// SimulateFlowRequest 값입니다.
 class SimulateFlowRequest extends ParsedObject {
@@ -2049,17 +3030,14 @@ class SimulationStepLeavesItem extends ParsedObject {
 /// [SimulateFlowResult] 스키마입니다.
 final ZodObject<SimulateFlowResult> simulateFlowResultSchema = z.object<SimulateFlowResult>({
   'compiled': z.boolean(),
-  'errors': z.array<CommerceFlowCheckBlockingItem>(commerceFlowCheckBlockingItemSchema),
+  'errors': z.array<FlowIssue>(flowIssueSchema),
   'trace': z.array<SimulationStep>(simulationStepSchema),
 }, SimulateFlowResult._);
 
 /// SimulateFlowResult 값입니다.
 class SimulateFlowResult extends ParsedObject {
   /// [SimulateFlowResult]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  SimulateFlowResult(
-      {required bool compiled,
-      required List<CommerceFlowCheckBlockingItem> errors,
-      required List<SimulationStep> trace})
+  SimulateFlowResult({required bool compiled, required List<FlowIssue> errors, required List<SimulationStep> trace})
       : super({'compiled': compiled, 'errors': errors, 'trace': trace});
 
   SimulateFlowResult._(super.json);
@@ -2073,7 +3051,7 @@ class SimulateFlowResult extends ParsedObject {
   bool get compiled => _j['compiled'] as bool;
 
   /// `errors` 값입니다.
-  List<CommerceFlowCheckBlockingItem> get errors => (_j['errors'] as List).cast<CommerceFlowCheckBlockingItem>();
+  List<FlowIssue> get errors => (_j['errors'] as List).cast<FlowIssue>();
 
   /// `trace` 값입니다.
   List<SimulationStep> get trace => (_j['trace'] as List).cast<SimulationStep>();
@@ -2082,7 +3060,7 @@ class SimulateFlowResult extends ParsedObject {
 /// [ReplayFlowRequest] 스키마입니다.
 final ZodObject<ReplayFlowRequest> replayFlowRequestSchema = z.object<ReplayFlowRequest>({
   'orderItemId': z.string(),
-}, ReplayFlowRequest._);
+}, ReplayFlowRequest._, strictRequest: true);
 
 /// ReplayFlowRequest 값입니다.
 class ReplayFlowRequest extends ParsedObject {
@@ -2104,7 +3082,7 @@ class ReplayFlowRequest extends ParsedObject {
 final ZodObject<ReplayFlowResult> replayFlowResultSchema = z.object<ReplayFlowResult>({
   'orderItemId': z.string(),
   'compiled': z.boolean(),
-  'errors': z.array<CommerceFlowCheckBlockingItem>(commerceFlowCheckBlockingItemSchema),
+  'errors': z.array<FlowIssue>(flowIssueSchema),
   'steps': z.array<ReplayFlowResultStepsItem>(replayFlowResultStepsItemSchema),
   'divergedAt': z.number().int_().nullable(),
   'unsupported': z.number().int_(),
@@ -2116,7 +3094,7 @@ class ReplayFlowResult extends ParsedObject {
   ReplayFlowResult(
       {required String orderItemId,
       required bool compiled,
-      required List<CommerceFlowCheckBlockingItem> errors,
+      required List<FlowIssue> errors,
       required List<ReplayFlowResultStepsItem> steps,
       required int? divergedAt,
       required int unsupported})
@@ -2143,7 +3121,7 @@ class ReplayFlowResult extends ParsedObject {
   bool get compiled => _j['compiled'] as bool;
 
   /// `errors` 값입니다.
-  List<CommerceFlowCheckBlockingItem> get errors => (_j['errors'] as List).cast<CommerceFlowCheckBlockingItem>();
+  List<FlowIssue> get errors => (_j['errors'] as List).cast<FlowIssue>();
 
   /// `steps` 값입니다.
   List<ReplayFlowResultStepsItem> get steps => (_j['steps'] as List).cast<ReplayFlowResultStepsItem>();
@@ -2208,6 +3186,341 @@ class ReplayFlowResultStepsItem extends ParsedObject {
 
   /// `error` 값입니다.
   String? get error => _j['error'] as String?;
+}
+
+/// [FlowDraftNodes] 스키마입니다.
+final ZodObject<FlowDraftNodes> flowDraftNodesSchema = z.object<FlowDraftNodes>({
+  'revision': z.number().int_(),
+  'start': z.string(),
+  'publishedKeys': flowDraftNodesPublishedKeysSchema.optional(),
+  'nodes': z.array<FlowDraftNodesNodesItem>(flowDraftNodesNodesItemSchema),
+}, FlowDraftNodes._);
+
+/// FlowDraftNodes 값입니다.
+class FlowDraftNodes extends ParsedObject {
+  /// [FlowDraftNodes]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftNodes(
+      {required int revision,
+      required String start,
+      FlowDraftNodesPublishedKeys? publishedKeys,
+      required List<FlowDraftNodesNodesItem> nodes})
+      : super({
+          'revision': revision,
+          'start': start,
+          if (publishedKeys != null) 'publishedKeys': publishedKeys,
+          'nodes': nodes
+        });
+
+  FlowDraftNodes._(super.json);
+
+  /// JSON을 [flowDraftNodesSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftNodes.fromJson(Map<String, Object?> json) => flowDraftNodesSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 초안 revision — 조작의 If-Match 값. 초안이 없으면 게시 버전을 0으로 보여 줍니다(첫 쓰기가 초안을 엽니다).
+  int get revision => _j['revision'] as int;
+
+  /// 시작 노드 id.
+  String get start => _j['start'] as String;
+
+  /// 게시한 버전에 나온 key(#411). 새 노드 id·행동 key는 이 목록을 피합니다 — 다른 뜻의 노드가 옛 key를 받으면 진행 중 주문의 버전 옮기기가 그 노드로 옮깁니다. 서버는 항상 싣습니다.
+  FlowDraftNodesPublishedKeys? get publishedKeys => _j['publishedKeys'] as FlowDraftNodesPublishedKeys?;
+
+  /// `nodes` 값입니다.
+  List<FlowDraftNodesNodesItem> get nodes => (_j['nodes'] as List).cast<FlowDraftNodesNodesItem>();
+}
+
+/// [FlowDraftNodesPublishedKeys] 스키마입니다.
+final ZodObject<FlowDraftNodesPublishedKeys> flowDraftNodesPublishedKeysSchema = z.object<FlowDraftNodesPublishedKeys>({
+  'states': z.array<String>(z.string()),
+  'actions': z.array<String>(z.string()),
+}, FlowDraftNodesPublishedKeys._);
+
+/// FlowDraftNodesPublishedKeys 값입니다.
+class FlowDraftNodesPublishedKeys extends ParsedObject {
+  /// [FlowDraftNodesPublishedKeys]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftNodesPublishedKeys({required List<String> states, required List<String> actions})
+      : super({'states': states, 'actions': actions});
+
+  FlowDraftNodesPublishedKeys._(super.json);
+
+  /// JSON을 [flowDraftNodesPublishedKeysSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftNodesPublishedKeys.fromJson(Map<String, Object?> json) =>
+      flowDraftNodesPublishedKeysSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `states` 값입니다.
+  List<String> get states => (_j['states'] as List).cast<String>();
+
+  /// `actions` 값입니다.
+  List<String> get actions => (_j['actions'] as List).cast<String>();
+}
+
+/// [FlowDraftNodesNodesItem] 스키마입니다.
+final ZodObject<FlowDraftNodesNodesItem> flowDraftNodesNodesItemSchema = z.object<FlowDraftNodesNodesItem>({
+  'id': z.string(),
+  'type': z.string(),
+  'label': z.string().nullable(),
+  'kind': z.string().nullable(),
+  'outputs': z.array<String>(z.string()),
+}, FlowDraftNodesNodesItem._);
+
+/// FlowDraftNodesNodesItem 값입니다.
+class FlowDraftNodesNodesItem extends ParsedObject {
+  /// [FlowDraftNodesNodesItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftNodesNodesItem(
+      {required String id,
+      required String type,
+      required String? label,
+      required String? kind,
+      required List<String> outputs})
+      : super({'id': id, 'type': type, 'label': label, 'kind': kind, 'outputs': outputs});
+
+  FlowDraftNodesNodesItem._(super.json);
+
+  /// JSON을 [flowDraftNodesNodesItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftNodesNodesItem.fromJson(Map<String, Object?> json) => flowDraftNodesNodesItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `id` 값입니다.
+  String get id => _j['id'] as String;
+
+  /// `type` 값입니다.
+  String get type => _j['type'] as String;
+
+  /// 셀러용 이름(`config.label.seller`). 없으면 null.
+  String? get label => _j['label'] as String?;
+
+  /// start · state · wait · end · transient · call · fork · join (늘어날 수 있습니다). 모르는 종류면 null.
+  String? get kind => _j['kind'] as String?;
+
+  /// 출력 이름 — 연결선은 `노드:출력`으로 가리킵니다. 없으면 `노드`로 가리킵니다.
+  List<String> get outputs => (_j['outputs'] as List).cast<String>();
+}
+
+/// [FlowDraftNode] 스키마입니다.
+final ZodObject<FlowDraftNode> flowDraftNodeSchema = z.object<FlowDraftNode>({
+  'revision': z.number().int_(),
+  'node': flowDraftNodeNodeSchema,
+  'kind': z.string().nullable(),
+  'outputs': z.array<String>(z.string()),
+  'start': z.boolean(),
+  'incoming': z.array<String>(z.string()),
+  'outgoing': z.array<String>(z.string()),
+}, FlowDraftNode._);
+
+/// FlowDraftNode 값입니다.
+class FlowDraftNode extends ParsedObject {
+  /// [FlowDraftNode]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftNode(
+      {required int revision,
+      required FlowDraftNodeNode node,
+      required String? kind,
+      required List<String> outputs,
+      required bool start,
+      required List<String> incoming,
+      required List<String> outgoing})
+      : super({
+          'revision': revision,
+          'node': node,
+          'kind': kind,
+          'outputs': outputs,
+          'start': start,
+          'incoming': incoming,
+          'outgoing': outgoing
+        });
+
+  FlowDraftNode._(super.json);
+
+  /// JSON을 [flowDraftNodeSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftNode.fromJson(Map<String, Object?> json) => flowDraftNodeSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 초안 revision — 조작의 If-Match 값. 초안이 없으면 게시 버전을 0으로 보여 줍니다(첫 쓰기가 초안을 엽니다).
+  int get revision => _j['revision'] as int;
+
+  /// 노드 하나(설정 전체).
+  FlowDraftNodeNode get node => _j['node'] as FlowDraftNodeNode;
+
+  /// `kind` 값입니다.
+  String? get kind => _j['kind'] as String?;
+
+  /// 설정에서 계산한 출력.
+  List<String> get outputs => (_j['outputs'] as List).cast<String>();
+
+  /// 시작 노드인지입니다.
+  bool get start => _j['start'] as bool;
+
+  /// 들어오는 연결선 id.
+  List<String> get incoming => (_j['incoming'] as List).cast<String>();
+
+  /// 나가는 연결선 id.
+  List<String> get outgoing => (_j['outgoing'] as List).cast<String>();
+}
+
+/// [FlowDraftNodeNode] 스키마입니다.
+final ZodObject<FlowDraftNodeNode> flowDraftNodeNodeSchema = z.object<FlowDraftNodeNode>({
+  'id': z.string(),
+  'type': z.string(),
+  'version': z.number().int_(),
+  'config': z.record<Object?>(z.unknown()),
+  'outputs': z.array<String>(z.string()).optional(),
+  'position': flowDraftNodeNodePositionSchema.optional(),
+}, FlowDraftNodeNode._);
+
+/// 노드 하나(설정 전체).
+class FlowDraftNodeNode extends ParsedObject {
+  /// [FlowDraftNodeNode]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftNodeNode(
+      {required String id,
+      required String type,
+      required int version,
+      required Map<String, Object?> config,
+      List<String>? outputs,
+      FlowDraftNodeNodePosition? position})
+      : super({
+          'id': id,
+          'type': type,
+          'version': version,
+          'config': config,
+          if (outputs != null) 'outputs': outputs,
+          if (position != null) 'position': position
+        });
+
+  FlowDraftNodeNode._(super.json);
+
+  /// JSON을 [flowDraftNodeNodeSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftNodeNode.fromJson(Map<String, Object?> json) => flowDraftNodeNodeSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `id` 값입니다.
+  String get id => _j['id'] as String;
+
+  /// `type` 값입니다.
+  String get type => _j['type'] as String;
+
+  /// `version` 값입니다.
+  int get version => _j['version'] as int;
+
+  /// `config` 값입니다.
+  Map<String, Object?> get config => (_j['config'] as Map).cast<String, Object?>();
+
+  /// `outputs` 값입니다.
+  List<String>? get outputs => (_j['outputs'] as List?)?.cast<String>();
+
+  /// `position` 값입니다.
+  FlowDraftNodeNodePosition? get position => _j['position'] as FlowDraftNodeNodePosition?;
+}
+
+/// [FlowDraftNodeNodePosition] 스키마입니다.
+final ZodObject<FlowDraftNodeNodePosition> flowDraftNodeNodePositionSchema = z.object<FlowDraftNodeNodePosition>({
+  'x': z.number(),
+  'y': z.number(),
+}, FlowDraftNodeNodePosition._);
+
+/// FlowDraftNodeNodePosition 값입니다.
+class FlowDraftNodeNodePosition extends ParsedObject {
+  /// [FlowDraftNodeNodePosition]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftNodeNodePosition({required num x, required num y}) : super({'x': x, 'y': y});
+
+  FlowDraftNodeNodePosition._(super.json);
+
+  /// JSON을 [flowDraftNodeNodePositionSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftNodeNodePosition.fromJson(Map<String, Object?> json) => flowDraftNodeNodePositionSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `x` 값입니다.
+  num get x => _j['x'] as num;
+
+  /// `y` 값입니다.
+  num get y => _j['y'] as num;
+}
+
+/// [FlowDraftEdges] 스키마입니다.
+final ZodObject<FlowDraftEdges> flowDraftEdgesSchema = z.object<FlowDraftEdges>({
+  'revision': z.number().int_(),
+  'edges': z.array<FlowDraftEdgesEdgesItem>(flowDraftEdgesEdgesItemSchema),
+}, FlowDraftEdges._);
+
+/// FlowDraftEdges 값입니다.
+class FlowDraftEdges extends ParsedObject {
+  /// [FlowDraftEdges]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftEdges({required int revision, required List<FlowDraftEdgesEdgesItem> edges})
+      : super({'revision': revision, 'edges': edges});
+
+  FlowDraftEdges._(super.json);
+
+  /// JSON을 [flowDraftEdgesSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftEdges.fromJson(Map<String, Object?> json) => flowDraftEdgesSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 초안 revision — 조작의 If-Match 값. 초안이 없으면 게시 버전을 0으로 보여 줍니다(첫 쓰기가 초안을 엽니다).
+  int get revision => _j['revision'] as int;
+
+  /// `edges` 값입니다.
+  List<FlowDraftEdgesEdgesItem> get edges => (_j['edges'] as List).cast<FlowDraftEdgesEdgesItem>();
+}
+
+/// [FlowDraftEdgesEdgesItem] 스키마입니다.
+final ZodObject<FlowDraftEdgesEdgesItem> flowDraftEdgesEdgesItemSchema = z.object<FlowDraftEdgesEdgesItem>({
+  'id': z.string(),
+  'from': z.string(),
+  'to': z.string(),
+  'on': z.record<Object?>(z.unknown()).optional(),
+  'guard': z.string().optional(),
+  'do': z.array<Map<String, Object?>>(z.record<Object?>(z.unknown())).optional(),
+}, FlowDraftEdgesEdgesItem._);
+
+/// FlowDraftEdgesEdgesItem 값입니다.
+class FlowDraftEdgesEdgesItem extends ParsedObject {
+  /// [FlowDraftEdgesEdgesItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowDraftEdgesEdgesItem(
+      {required String id,
+      required String from,
+      required String to,
+      Map<String, Object?>? on,
+      String? guard,
+      List<Map<String, Object?>>? do_})
+      : super({
+          'id': id,
+          'from': from,
+          'to': to,
+          if (on != null) 'on': on,
+          if (guard != null) 'guard': guard,
+          if (do_ != null) 'do': do_
+        });
+
+  FlowDraftEdgesEdgesItem._(super.json);
+
+  /// JSON을 [flowDraftEdgesEdgesItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowDraftEdgesEdgesItem.fromJson(Map<String, Object?> json) => flowDraftEdgesEdgesItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `id` 값입니다.
+  String get id => _j['id'] as String;
+
+  /// `노드` 또는 `노드:출력`.
+  String get from => _j['from'] as String;
+
+  /// `to` 값입니다.
+  String get to => _j['to'] as String;
+
+  /// 조건 — `type`: seller.action · buyer.action · event · timer · immediate.
+  Map<String, Object?>? get on => (_j['on'] as Map?)?.cast<String, Object?>();
+
+  /// 조건식(CEL).
+  String? get guard => _j['guard'] as String?;
+
+  /// 지날 때 실행할 블록.
+  List<Map<String, Object?>>? get do_ => (_j['do'] as List?)?.cast<Map<String, Object?>>();
 }
 
 /// [FlowNodeTypes] 스키마입니다.
@@ -2394,4 +3707,472 @@ class FlowNodeTypesPlatformActionsItem extends ParsedObject {
 
   /// 권한 표에 행으로 보입니다.
   bool get listed => _j['listed'] as bool;
+}
+
+/// [FlowAuthoringGuide] 스키마입니다.
+final ZodObject<FlowAuthoringGuide> flowAuthoringGuideSchema = z.object<FlowAuthoringGuide>({
+  'nodes': z.array<FlowAuthoringGuideNodesItem>(flowAuthoringGuideNodesItemSchema),
+  'blocks': z.array<FlowAuthoringGuideBlocksItem>(flowAuthoringGuideBlocksItemSchema),
+  'triggers': z.array<FlowAuthoringGuideTriggersItem>(flowAuthoringGuideTriggersItemSchema),
+  'context': z.record<String>(z.string()),
+  'functions': z.array<FlowAuthoringGuideFunctionsItem>(flowAuthoringGuideFunctionsItemSchema),
+  'templateFilters': z.array<String>(z.string()),
+  'rules': z.array<String>(z.string()),
+  'expressionExamples':
+      z.array<FlowAuthoringGuideExpressionExamplesItem>(flowAuthoringGuideExpressionExamplesItemSchema),
+  'operationExample': z.array<Map<String, Object?>>(z.record<Object?>(z.unknown())),
+}, FlowAuthoringGuide._);
+
+/// FlowAuthoringGuide 값입니다.
+class FlowAuthoringGuide extends ParsedObject {
+  /// [FlowAuthoringGuide]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowAuthoringGuide(
+      {required List<FlowAuthoringGuideNodesItem> nodes,
+      required List<FlowAuthoringGuideBlocksItem> blocks,
+      required List<FlowAuthoringGuideTriggersItem> triggers,
+      required Map<String, String> context,
+      required List<FlowAuthoringGuideFunctionsItem> functions,
+      required List<String> templateFilters,
+      required List<String> rules,
+      required List<FlowAuthoringGuideExpressionExamplesItem> expressionExamples,
+      required List<Map<String, Object?>> operationExample})
+      : super({
+          'nodes': nodes,
+          'blocks': blocks,
+          'triggers': triggers,
+          'context': context,
+          'functions': functions,
+          'templateFilters': templateFilters,
+          'rules': rules,
+          'expressionExamples': expressionExamples,
+          'operationExample': operationExample
+        });
+
+  FlowAuthoringGuide._(super.json);
+
+  /// JSON을 [flowAuthoringGuideSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowAuthoringGuide.fromJson(Map<String, Object?> json) => flowAuthoringGuideSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 노드 종류 — 설정 형식은 `GET /flow-node-types/{type}`.
+  List<FlowAuthoringGuideNodesItem> get nodes => (_j['nodes'] as List).cast<FlowAuthoringGuideNodesItem>();
+
+  /// `blocks` 값입니다.
+  List<FlowAuthoringGuideBlocksItem> get blocks => (_j['blocks'] as List).cast<FlowAuthoringGuideBlocksItem>();
+
+  /// 연결선 조건(on) 형식.
+  List<FlowAuthoringGuideTriggersItem> get triggers => (_j['triggers'] as List).cast<FlowAuthoringGuideTriggersItem>();
+
+  /// 식·안내문 틀이 읽을 수 있는 값 — 점 경로 → 타입(int·string·bool·timestamp·dyn …).
+  Map<String, String> get context => (_j['context'] as Map).cast<String, String>();
+
+  /// 식 함수.
+  List<FlowAuthoringGuideFunctionsItem> get functions =>
+      (_j['functions'] as List).cast<FlowAuthoringGuideFunctionsItem>();
+
+  /// 안내문 틀 필터(`{{ 경로 | 필터 }}`).
+  List<String> get templateFilters => (_j['templateFilters'] as List).cast<String>();
+
+  /// 그래프 규칙.
+  List<String> get rules => (_j['rules'] as List).cast<String>();
+
+  /// `expressionExamples` 값입니다.
+  List<FlowAuthoringGuideExpressionExamplesItem> get expressionExamples =>
+      (_j['expressionExamples'] as List).cast<FlowAuthoringGuideExpressionExamplesItem>();
+
+  /// 조작 묶음 예시(`POST /commerce-flows/{flowId}/draft/operations`의 operations).
+  List<Map<String, Object?>> get operationExample => (_j['operationExample'] as List).cast<Map<String, Object?>>();
+}
+
+/// [FlowAuthoringGuideNodesItem] 스키마입니다.
+final ZodObject<FlowAuthoringGuideNodesItem> flowAuthoringGuideNodesItemSchema = z.object<FlowAuthoringGuideNodesItem>({
+  'type': z.string(),
+  'name': z.string(),
+  'kind': z.string(),
+  'outputs': z.array<String>(z.string()).nullable(),
+  'description': z.string(),
+}, FlowAuthoringGuideNodesItem._);
+
+/// FlowAuthoringGuideNodesItem 값입니다.
+class FlowAuthoringGuideNodesItem extends ParsedObject {
+  /// [FlowAuthoringGuideNodesItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowAuthoringGuideNodesItem(
+      {required String type,
+      required String name,
+      required String kind,
+      required List<String>? outputs,
+      required String description})
+      : super({'type': type, 'name': name, 'kind': kind, 'outputs': outputs, 'description': description});
+
+  FlowAuthoringGuideNodesItem._(super.json);
+
+  /// JSON을 [flowAuthoringGuideNodesItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowAuthoringGuideNodesItem.fromJson(Map<String, Object?> json) =>
+      flowAuthoringGuideNodesItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `type` 값입니다.
+  String get type => _j['type'] as String;
+
+  /// 표시 이름.
+  String get name => _j['name'] as String;
+
+  /// start · state · wait · end · transient · call · fork · join (늘어날 수 있습니다).
+  String get kind => _j['kind'] as String;
+
+  /// 고정 출력. 설정에서 나오면 null.
+  List<String>? get outputs => (_j['outputs'] as List?)?.cast<String>();
+
+  /// `description` 값입니다.
+  String get description => _j['description'] as String;
+}
+
+/// [FlowAuthoringGuideBlocksItem] 스키마입니다.
+final ZodObject<FlowAuthoringGuideBlocksItem> flowAuthoringGuideBlocksItemSchema =
+    z.object<FlowAuthoringGuideBlocksItem>({
+  'type': z.string(),
+  'effect': z.string(),
+  'description': z.string(),
+}, FlowAuthoringGuideBlocksItem._);
+
+/// FlowAuthoringGuideBlocksItem 값입니다.
+class FlowAuthoringGuideBlocksItem extends ParsedObject {
+  /// [FlowAuthoringGuideBlocksItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowAuthoringGuideBlocksItem({required String type, required String effect, required String description})
+      : super({'type': type, 'effect': effect, 'description': description});
+
+  FlowAuthoringGuideBlocksItem._(super.json);
+
+  /// JSON을 [flowAuthoringGuideBlocksItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowAuthoringGuideBlocksItem.fromJson(Map<String, Object?> json) =>
+      flowAuthoringGuideBlocksItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `type` 값입니다.
+  String get type => _j['type'] as String;
+
+  /// local · afterCommit · external.
+  String get effect => _j['effect'] as String;
+
+  /// `description` 값입니다.
+  String get description => _j['description'] as String;
+}
+
+/// [FlowAuthoringGuideTriggersItem] 스키마입니다.
+final ZodObject<FlowAuthoringGuideTriggersItem> flowAuthoringGuideTriggersItemSchema =
+    z.object<FlowAuthoringGuideTriggersItem>({
+  'type': z.string(),
+  'format': z.string(),
+  'description': z.string(),
+}, FlowAuthoringGuideTriggersItem._);
+
+/// FlowAuthoringGuideTriggersItem 값입니다.
+class FlowAuthoringGuideTriggersItem extends ParsedObject {
+  /// [FlowAuthoringGuideTriggersItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowAuthoringGuideTriggersItem({required String type, required String format, required String description})
+      : super({'type': type, 'format': format, 'description': description});
+
+  FlowAuthoringGuideTriggersItem._(super.json);
+
+  /// JSON을 [flowAuthoringGuideTriggersItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowAuthoringGuideTriggersItem.fromJson(Map<String, Object?> json) =>
+      flowAuthoringGuideTriggersItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `type` 값입니다.
+  String get type => _j['type'] as String;
+
+  /// `format` 값입니다.
+  String get format => _j['format'] as String;
+
+  /// `description` 값입니다.
+  String get description => _j['description'] as String;
+}
+
+/// [FlowAuthoringGuideFunctionsItem] 스키마입니다.
+final ZodObject<FlowAuthoringGuideFunctionsItem> flowAuthoringGuideFunctionsItemSchema =
+    z.object<FlowAuthoringGuideFunctionsItem>({
+  'name': z.string(),
+  'signature': z.string(),
+  'doc': z.string(),
+}, FlowAuthoringGuideFunctionsItem._);
+
+/// FlowAuthoringGuideFunctionsItem 값입니다.
+class FlowAuthoringGuideFunctionsItem extends ParsedObject {
+  /// [FlowAuthoringGuideFunctionsItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowAuthoringGuideFunctionsItem({required String name, required String signature, required String doc})
+      : super({'name': name, 'signature': signature, 'doc': doc});
+
+  FlowAuthoringGuideFunctionsItem._(super.json);
+
+  /// JSON을 [flowAuthoringGuideFunctionsItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowAuthoringGuideFunctionsItem.fromJson(Map<String, Object?> json) =>
+      flowAuthoringGuideFunctionsItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `name` 값입니다.
+  String get name => _j['name'] as String;
+
+  /// `signature` 값입니다.
+  String get signature => _j['signature'] as String;
+
+  /// `doc` 값입니다.
+  String get doc => _j['doc'] as String;
+}
+
+/// [FlowAuthoringGuideExpressionExamplesItem] 스키마입니다.
+final ZodObject<FlowAuthoringGuideExpressionExamplesItem> flowAuthoringGuideExpressionExamplesItemSchema =
+    z.object<FlowAuthoringGuideExpressionExamplesItem>({
+  'expr': z.string(),
+  'description': z.string(),
+}, FlowAuthoringGuideExpressionExamplesItem._);
+
+/// FlowAuthoringGuideExpressionExamplesItem 값입니다.
+class FlowAuthoringGuideExpressionExamplesItem extends ParsedObject {
+  /// [FlowAuthoringGuideExpressionExamplesItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowAuthoringGuideExpressionExamplesItem({required String expr, required String description})
+      : super({'expr': expr, 'description': description});
+
+  FlowAuthoringGuideExpressionExamplesItem._(super.json);
+
+  /// JSON을 [flowAuthoringGuideExpressionExamplesItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowAuthoringGuideExpressionExamplesItem.fromJson(Map<String, Object?> json) =>
+      flowAuthoringGuideExpressionExamplesItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `expr` 값입니다.
+  String get expr => _j['expr'] as String;
+
+  /// `description` 값입니다.
+  String get description => _j['description'] as String;
+}
+
+/// [FlowNodeTypeDetail] 스키마입니다.
+final ZodObject<FlowNodeTypeDetail> flowNodeTypeDetailSchema = z.object<FlowNodeTypeDetail>({
+  'type': z.string(),
+  'category': z.string(),
+  'version': z.number().int_(),
+  'kind': z.string().nullable(),
+  'effect': z.string().nullable(),
+  'outputs': z.array<String>(z.string()).nullable(),
+  'name': z.string(),
+  'description': z.string(),
+  'configSchema': z.record<Object?>(z.unknown()).nullable(),
+  'example': z.record<Object?>(z.unknown()),
+}, FlowNodeTypeDetail._);
+
+/// FlowNodeTypeDetail 값입니다.
+class FlowNodeTypeDetail extends ParsedObject {
+  /// [FlowNodeTypeDetail]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowNodeTypeDetail(
+      {required String type,
+      required String category,
+      required int version,
+      required String? kind,
+      required String? effect,
+      required List<String>? outputs,
+      required String name,
+      required String description,
+      required Map<String, Object?>? configSchema,
+      required Map<String, Object?> example})
+      : super({
+          'type': type,
+          'category': category,
+          'version': version,
+          'kind': kind,
+          'effect': effect,
+          'outputs': outputs,
+          'name': name,
+          'description': description,
+          'configSchema': configSchema,
+          'example': example
+        });
+
+  FlowNodeTypeDetail._(super.json);
+
+  /// JSON을 [flowNodeTypeDetailSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowNodeTypeDetail.fromJson(Map<String, Object?> json) => flowNodeTypeDetailSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `type` 값입니다.
+  String get type => _j['type'] as String;
+
+  /// node · block.
+  String get category => _j['category'] as String;
+
+  /// 최신 버전 — 조작이 노드를 더할 때 이 버전을 씁니다.
+  int get version => _j['version'] as int;
+
+  /// 노드 성격(블록은 null).
+  String? get kind => _j['kind'] as String?;
+
+  /// 블록 실행 성격(노드는 null).
+  String? get effect => _j['effect'] as String?;
+
+  /// 고정 출력. 설정에서 나오면 null.
+  List<String>? get outputs => (_j['outputs'] as List?)?.cast<String>();
+
+  /// `name` 값입니다.
+  String get name => _j['name'] as String;
+
+  /// `description` 값입니다.
+  String get description => _j['description'] as String;
+
+  /// 설정 형식(JSON Schema). 공통 설정(이름·권한·입력 칸·식 참조)은 `$defs`. 옮길 수 없으면 null.
+  Map<String, Object?>? get configSchema => (_j['configSchema'] as Map?)?.cast<String, Object?>();
+
+  /// 검사를 통과하는 예시 설정.
+  Map<String, Object?> get example => (_j['example'] as Map).cast<String, Object?>();
+}
+
+/// [FlowEditSessionView] 스키마입니다.
+final ZodObject<FlowEditSessionView> flowEditSessionViewSchema = z.object<FlowEditSessionView>({
+  'revision': z.number().int_(),
+  'session': flowEditSessionViewSessionSchema.nullable(),
+  'channel': flowEditSessionViewChannelSchema.nullable(),
+}, FlowEditSessionView._);
+
+/// FlowEditSessionView 값입니다.
+class FlowEditSessionView extends ParsedObject {
+  /// [FlowEditSessionView]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowEditSessionView(
+      {required int revision,
+      required FlowEditSessionViewSession? session,
+      required FlowEditSessionViewChannel? channel})
+      : super({'revision': revision, 'session': session, 'channel': channel});
+
+  FlowEditSessionView._(super.json);
+
+  /// JSON을 [flowEditSessionViewSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowEditSessionView.fromJson(Map<String, Object?> json) => flowEditSessionViewSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 지금 초안 revision(초안이 없으면 0).
+  int get revision => _j['revision'] as int;
+
+  /// 지금 편집권. 비어 있으면 null — 누구든 첫 쓰기가 잡습니다.
+  FlowEditSessionViewSession? get session => _j['session'] as FlowEditSessionViewSession?;
+
+  /// 흐름 채널 구독(SSE, `Authorization: Bearer streamToken`) — session·ops·saved·released 이벤트. 중계가 없는 환경이면 null.
+  FlowEditSessionViewChannel? get channel => _j['channel'] as FlowEditSessionViewChannel?;
+}
+
+/// [FlowEditSessionViewSession] 스키마입니다.
+final ZodObject<FlowEditSessionViewSession> flowEditSessionViewSessionSchema = z.object<FlowEditSessionViewSession>({
+  'holder': flowEditSessionViewSessionHolderSchema,
+  'expiresAt': z.string(),
+  'mine': z.boolean(),
+}, FlowEditSessionViewSession._);
+
+/// FlowEditSessionViewSession 값입니다.
+class FlowEditSessionViewSession extends ParsedObject {
+  /// [FlowEditSessionViewSession]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowEditSessionViewSession(
+      {required FlowEditSessionViewSessionHolder holder, required String expiresAt, required bool mine})
+      : super({'holder': holder, 'expiresAt': expiresAt, 'mine': mine});
+
+  FlowEditSessionViewSession._(super.json);
+
+  /// JSON을 [flowEditSessionViewSessionSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowEditSessionViewSession.fromJson(Map<String, Object?> json) =>
+      flowEditSessionViewSessionSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `holder` 값입니다.
+  FlowEditSessionViewSessionHolder get holder => _j['holder'] as FlowEditSessionViewSessionHolder;
+
+  /// 이때까지 연장하지 않으면 풀립니다(ISO 8601).
+  String get expiresAt => _j['expiresAt'] as String;
+
+  /// 요청한 주체의 편집권인지입니다.
+  bool get mine => _j['mine'] as bool;
+}
+
+/// [FlowEditSessionViewSessionHolder] 스키마입니다.
+final ZodObject<FlowEditSessionViewSessionHolder> flowEditSessionViewSessionHolderSchema =
+    z.object<FlowEditSessionViewSessionHolder>({
+  'kind': z.string(),
+  'name': z.string().nullable(),
+}, FlowEditSessionViewSessionHolder._);
+
+/// FlowEditSessionViewSessionHolder 값입니다.
+class FlowEditSessionViewSessionHolder extends ParsedObject {
+  /// [FlowEditSessionViewSessionHolder]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowEditSessionViewSessionHolder({required String kind, required String? name}) : super({'kind': kind, 'name': name});
+
+  FlowEditSessionViewSessionHolder._(super.json);
+
+  /// JSON을 [flowEditSessionViewSessionHolderSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowEditSessionViewSessionHolder.fromJson(Map<String, Object?> json) =>
+      flowEditSessionViewSessionHolderSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// USER 사람 · AI_ASSISTANT AI 도우미 · AGENT 외부 에이전트 (늘어날 수 있습니다).
+  String get kind => _j['kind'] as String;
+
+  /// `name` 값입니다.
+  String? get name => _j['name'] as String?;
+}
+
+/// [FlowEditSessionViewChannel] 스키마입니다.
+final ZodObject<FlowEditSessionViewChannel> flowEditSessionViewChannelSchema = z.object<FlowEditSessionViewChannel>({
+  'streamId': z.string(),
+  'streamUrl': z.string(),
+  'streamToken': z.string(),
+}, FlowEditSessionViewChannel._);
+
+/// FlowEditSessionViewChannel 값입니다.
+class FlowEditSessionViewChannel extends ParsedObject {
+  /// [FlowEditSessionViewChannel]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  FlowEditSessionViewChannel({required String streamId, required String streamUrl, required String streamToken})
+      : super({'streamId': streamId, 'streamUrl': streamUrl, 'streamToken': streamToken});
+
+  FlowEditSessionViewChannel._(super.json);
+
+  /// JSON을 [flowEditSessionViewChannelSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory FlowEditSessionViewChannel.fromJson(Map<String, Object?> json) =>
+      flowEditSessionViewChannelSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `streamId` 값입니다.
+  String get streamId => _j['streamId'] as String;
+
+  /// `streamUrl` 값입니다.
+  String get streamUrl => _j['streamUrl'] as String;
+
+  /// `streamToken` 값입니다.
+  String get streamToken => _j['streamToken'] as String;
+}
+
+/// [ClaimFlowEditSessionRequest] 스키마입니다.
+final ZodObject<ClaimFlowEditSessionRequest> claimFlowEditSessionRequestSchema = z.object<ClaimFlowEditSessionRequest>({
+  'takeover': z.boolean().optional(),
+}, ClaimFlowEditSessionRequest._, strictRequest: true);
+
+/// ClaimFlowEditSessionRequest 값입니다.
+class ClaimFlowEditSessionRequest extends ParsedObject {
+  /// [ClaimFlowEditSessionRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ClaimFlowEditSessionRequest({bool? takeover}) : super({if (takeover != null) 'takeover': takeover});
+
+  ClaimFlowEditSessionRequest._(super.json);
+
+  /// JSON을 [claimFlowEditSessionRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ClaimFlowEditSessionRequest.fromJson(Map<String, Object?> json) =>
+      claimFlowEditSessionRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 다른 주체가 잡고 있어도 넘겨받습니다. 앞 주체의 저장하지 않은 수정은 사라지고, AI 도우미면 그 실행이 멈춥니다.
+  bool? get takeover => _j['takeover'] as bool?;
 }

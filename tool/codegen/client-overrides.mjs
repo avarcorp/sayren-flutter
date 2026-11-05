@@ -50,12 +50,24 @@ export const CLIENT_OVERRIDES = {
 `,
   },
   "StoreClient:orderItems.cancelPreview": {
-    ts: "cancelPreview: (orderItemId: string, quantity?: number) => storeHttp.request( \"GET\", path`/order-items/${orderItemId}/cancel-preview`, sellerCancelPreviewSchema, { query: (quantity ? { quantity } : {}) as Query }, )",
-    doc: "`GET /v1/order-items/{orderItemId}/cancel-preview` — 셀러 취소의 환불 미리보기입니다. [quantity]를 주면 부분 취소입니다.",
+    ts: "cancelPreview: (orderItemId: string, query?: number | SellerCancelPreviewQuery) => { // 두 번째 인자는 수량(이전 호출) 또는 귀책·추가 차감까지 담은 쿼리(#301)다 const params: SellerCancelPreviewQuery = typeof query === \"number\" ? { quantity: query } : (query ?? {}); return storeHttp.request( \"GET\", path`/order-items/${orderItemId}/cancel-preview`, sellerCancelPreviewSchema, { query: Object.fromEntries( Object.entries(params).filter(([, value]) => value !== undefined && value !== 0), ) as Query, }, ); }",
+    doc: "`GET /v1/order-items/{orderItemId}/cancel-preview` — 판매자 취소를 하면 돌려줄 현금·적립금입니다. [query]는 수량(`int`) 또는 귀책·추가 차감까지 담은 [SellerCancelPreviewQuery]입니다. 생략한 수량은 남은 수량 전체입니다.",
     dart: `
-  Future<SellerCancelPreview> cancelPreview(String orderItemId, [int? quantity]) async => _http.store.request(
-      'GET', '/order-items/\${encodeURIComponent(orderItemId)}/cancel-preview', sellerCancelPreviewSchema,
-      RequestOptions(query: {if (truthy(quantity)) 'quantity': quantity}));
+  Future<SellerCancelPreview> cancelPreview(String orderItemId, [Object? query]) async {
+    // 두 번째 인자는 수량(이전 호출) 또는 귀책·추가 차감까지 담은 쿼리(#301)다
+    final params = switch (query) {
+      int() => SellerCancelPreviewQuery(quantity: query),
+      SellerCancelPreviewQuery() => query,
+      null => const SellerCancelPreviewQuery(),
+      _ => throw ArgumentError.value(query, 'query', 'int 또는 SellerCancelPreviewQuery'),
+    };
+    return _http.store.request(
+        'GET', '/order-items/\${encodeURIComponent(orderItemId)}/cancel-preview', sellerCancelPreviewSchema,
+        RequestOptions(query: {
+          for (final e in params.toJson().entries)
+            if (e.value != null && e.value != 0) e.key: e.value,
+        }));
+  }
 `,
   },
   "StoreClient:orderItems.dispatchBulk": {
@@ -106,16 +118,19 @@ export const CLIENT_OVERRIDES = {
 `,
   },
   "StoreClient:claims.approve": {
-    ts: "approve: ( claimId: string, deductAmount?: number, idempotencyKey?: string, options: { holdRefund?: boolean } = {}, ) => storeHttp.request(\"POST\", path`/claims/${claimId}/approve`, approveClaimResultSchema, { body: { ...(deductAmount !== undefined ? { deductAmount } : {}), ...(options.holdRefund ? { holdRefund: true } : {}), }, headers: idempotency(idempotencyKey), })",
-    doc: "`POST /v1/claims/{claimId}/approve` — 클레임을 승인합니다. [options]의 `holdRefund`면 승인만 하고 결제 환불은 대기로 남깁니다.",
+    ts: "approve: ( claimId: string, deductAmount?: number, idempotencyKey?: string, options: { holdRefund?: boolean; refundAmount?: number } = {}, ) => storeHttp.request(\"POST\", path`/claims/${claimId}/approve`, approveClaimResultSchema, { body: approveClaimRequestSchema.parse({ ...(deductAmount !== undefined ? { deductAmount } : {}), ...(options.refundAmount !== undefined ? { refundAmount: options.refundAmount } : {}), ...(options.holdRefund ? { holdRefund: true } : {}), }), headers: idempotency(idempotencyKey), })",
+    doc: "`POST /v1/claims/{claimId}/approve` — 클레임을 승인합니다. [options]의 `holdRefund`면 승인만 하고 결제 환불은 대기로 남깁니다(`payments.processRefund`로 따로 환불합니다). `refundAmount`는 최종 현금 환불액이고 [deductAmount]와 함께 줄 수 없습니다.",
     dart: `
   Future<ApproveClaimResult> approve(String claimId,
-          [int? deductAmount, String? idempotencyKey, ({bool? holdRefund})? options]) async =>
+          [int? deductAmount, String? idempotencyKey, ({bool? holdRefund, int? refundAmount})? options]) async =>
       _http.store.request('POST', '/claims/\${encodeURIComponent(claimId)}/approve', approveClaimResultSchema,
-          RequestOptions(body: {
-            if (deductAmount != null) 'deductAmount': deductAmount,
-            if (options?.holdRefund ?? false) 'holdRefund': true,
-          }, headers: _idempotency(idempotencyKey)));
+          RequestOptions(
+              body: approveClaimRequestSchema.parse({
+                if (deductAmount != null) 'deductAmount': deductAmount,
+                if (options?.refundAmount != null) 'refundAmount': options!.refundAmount,
+                if (options?.holdRefund ?? false) 'holdRefund': true,
+              }).toJson(),
+              headers: _idempotency(idempotencyKey)));
 `,
   },
   "StoreClient:claims.completeCollect": {
@@ -281,6 +296,47 @@ export const CLIENT_OVERRIDES = {
     dart: `
   Future<List<Invitation>> listInvitations({String? status}) async =>
       _http.store.request('GET', '/store/invitations', z.array<Invitation>(invitationSchema), RequestOptions(query: {'status': status}));
+`,
+  },
+  "StoreClient:orderItems.listShipping": {
+    ts: "listShipping: (params: ShippingOrderItemListParams) => storeHttp.request(\"GET\", \"/order-items/shipping\", pageSchema(shippingOrderItemSchema), { query: { ...params, status: Array.isArray(params.status) ? params.status.join(\",\") : params.status, orderItemNos: params.orderItemNos?.join(\",\"), } as Query, })",
+    doc: "`GET /v1/order-items/shipping` — 배송지가 필요한 주문상품을 주문번호·배송지·발송 정보와 함께, 주문 시각 최신순으로 돌려줍니다. 스코프 `order:r`입니다.",
+    dart: `
+  Future<Page<ShippingOrderItem>> listShipping(ShippingOrderItemListParams params) async {
+    final status = params.status;
+    return _http.store.request('GET', '/order-items/shipping', pageSchema<ShippingOrderItem>(shippingOrderItemSchema),
+        RequestOptions(query: {
+          ...params.toJson(),
+          'status': status is List ? status.join(',') : status,
+          'orderItemNos': params.orderItemNos?.join(','),
+        }));
+  }
+`,
+  },
+  "StoreClient:customers.export": {
+    ts: "export: ( params: PageParams & Omit<z.input<typeof customerListQuerySchema>, \"page\" | \"size\"> & { fields: readonly CustomerExportField[]; }, ) => storeHttp.request(\"GET\", \"/customers/export\", pageSchema(customerExportRowSchema), { query: { ...params, fields: params.fields.join(\",\") } as Query, })",
+    doc: "`GET /v1/customers/export` — 목록과 같은 조건으로 고른 필드([fields])만 페이지마다 돌려줍니다(기본 100, 최대 500). 휴대폰은 스코프 `privacy:r`이 있으면 전체 번호, 없으면 가린 번호입니다. 스코프 `customer:r`입니다.",
+    dart: `
+  Future<Page<CustomerExportRow>> export(
+          {int? page,
+          int? size,
+          String? q,
+          String? joinedFrom,
+          String? joinedTo,
+          String? marketing,
+          String? sort,
+          required List<String> fields}) async =>
+      _http.store.request('GET', '/customers/export', pageSchema<CustomerExportRow>(customerExportRowSchema),
+          RequestOptions(query: {
+            'page': page,
+            'size': size,
+            'q': q,
+            'joinedFrom': joinedFrom,
+            'joinedTo': joinedTo,
+            'marketing': marketing,
+            'sort': sort,
+            'fields': fields.join(','),
+          }));
 `,
   },
 };

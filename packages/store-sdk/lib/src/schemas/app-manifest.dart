@@ -16,16 +16,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -35,6 +40,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -51,6 +57,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -83,7 +90,7 @@ final ZodType<String> appHandleSchema = z.string().pattern(RegExp(r'^[a-z0-9](?:
     message: '쓸 수 없는 handle입니다');
 
 /// 설치 앱에 열지 않는 스코프 — 구성원(초대로 권한 상승), 상점 설정 전반(`storefrontOrigins`로 소셜 로그인 code 가로채기), 스토어 웹훅
-/// (앱 구독으로 대체, 제거 뒤에도 남는 문제), 스토어프론트 편집·발행, 감사 로그. 커스텀 연동은 계정 액세스 토큰(#71)이 맡습니다.
+/// (앱 구독으로 대체, 제거 뒤에도 남는 문제), 스토어프론트 편집·발행, 감사 로그, 구매자 개인정보 원문(#217). 커스텀 연동은 계정 액세스 토큰(#71)이 맡습니다.
 const NON_INSTALLABLE_SCOPES = <String>{
   'member:r',
   'member:rw',
@@ -92,7 +99,8 @@ const NON_INSTALLABLE_SCOPES = <String>{
   'webhook:rw',
   'storefront:r',
   'storefront:rw',
-  'audit:r'
+  'audit:r',
+  'privacy:r'
 };
 
 /// 앱이 요청할 수 있는 스코프 — 카탈로그 전체에서 위를 뺀 것.
@@ -197,6 +205,9 @@ const APP_EVENT_SCOPES = <String, String?>{
   'ORDER.CANCELED': 'order:r',
   'ORDER.FLOW_NOTIFICATION': 'order:r',
   'ORDER.FLOW_STATE_CHANGED': 'order:r',
+  'ORDER.PAYMENT_ADDED': 'order:r',
+  'ORDER.REFUNDED': 'order:r',
+  'ORDER.PAYMENT_REQUESTED': 'order:r',
   'CLAIM.CANCEL_REQUESTED': 'claim:r',
   'CLAIM.RETURN_REQUESTED': 'claim:r',
   'CLAIM.EXCHANGE_REQUESTED': 'claim:r',
@@ -233,6 +244,9 @@ const APP_EVENT_TYPES = <String>[
   'ORDER.FLOW_NOTIFICATION',
   'ORDER.FLOW_STATE_CHANGED',
   'INVENTORY.CHANGED',
+  'ORDER.PAYMENT_ADDED',
+  'ORDER.PAYMENT_REQUESTED',
+  'ORDER.REFUNDED',
   'APP.INSTALLED',
   'APP.UNINSTALLED',
   'APP.SETTINGS_UPDATED',
@@ -241,7 +255,7 @@ const APP_EVENT_TYPES = <String>[
   'APP.CUSTOMER_REDACT'
 ];
 
-/// [String] 스키마입니다. 값은 `ORDER.PAID`·`ORDER.CONFIRMED`·`ORDER.DISPATCHED`·`ORDER.DELIVERED`·`ORDER.PURCHASE_DECIDED`·`ORDER.ADDRESS_CHANGE_REQUESTED`·`ORDER.FULFILLED`·`ORDER.CANCELED`·`CLAIM.CANCEL_REQUESTED`·`CLAIM.RETURN_REQUESTED`·`CLAIM.EXCHANGE_REQUESTED`·`CLAIM.COMPLETED`·`INQUIRY.CREATED`·`REVIEW.CREATED`·`PRODUCT.OUT_OF_STOCK`·`ORDER.FLOW_NOTIFICATION`·`ORDER.FLOW_STATE_CHANGED`·`INVENTORY.CHANGED`·`APP.INSTALLED`·`APP.UNINSTALLED`·`APP.SETTINGS_UPDATED`·`APP.SCOPES_UPDATED`·`APP.STORE_REDACT`·`APP.CUSTOMER_REDACT`입니다.
+/// [String] 스키마입니다. 값은 `ORDER.PAID`·`ORDER.CONFIRMED`·`ORDER.DISPATCHED`·`ORDER.DELIVERED`·`ORDER.PURCHASE_DECIDED`·`ORDER.ADDRESS_CHANGE_REQUESTED`·`ORDER.FULFILLED`·`ORDER.CANCELED`·`CLAIM.CANCEL_REQUESTED`·`CLAIM.RETURN_REQUESTED`·`CLAIM.EXCHANGE_REQUESTED`·`CLAIM.COMPLETED`·`INQUIRY.CREATED`·`REVIEW.CREATED`·`PRODUCT.OUT_OF_STOCK`·`ORDER.FLOW_NOTIFICATION`·`ORDER.FLOW_STATE_CHANGED`·`INVENTORY.CHANGED`·`ORDER.PAYMENT_ADDED`·`ORDER.PAYMENT_REQUESTED`·`ORDER.REFUNDED`·`APP.INSTALLED`·`APP.UNINSTALLED`·`APP.SETTINGS_UPDATED`·`APP.SCOPES_UPDATED`·`APP.STORE_REDACT`·`APP.CUSTOMER_REDACT`입니다.
 final ZodEnum appEventTypeSchema = z.enum_([
   'ORDER.PAID',
   'ORDER.CONFIRMED',
@@ -261,6 +275,9 @@ final ZodEnum appEventTypeSchema = z.enum_([
   'ORDER.FLOW_NOTIFICATION',
   'ORDER.FLOW_STATE_CHANGED',
   'INVENTORY.CHANGED',
+  'ORDER.PAYMENT_ADDED',
+  'ORDER.PAYMENT_REQUESTED',
+  'ORDER.REFUNDED',
   'APP.INSTALLED',
   'APP.UNINSTALLED',
   'APP.SETTINGS_UPDATED',
@@ -308,7 +325,7 @@ final ZodObject<AppSettingField> appSettingFieldSchema = z.object<AppSettingFiel
     z.number(),
     z.boolean(),
   ]).optional(),
-}, AppSettingField._);
+}, AppSettingField._, strict: true);
 
 /// AppSettingField 값입니다.
 class AppSettingField extends ParsedObject {
@@ -364,7 +381,7 @@ class AppSettingField extends ParsedObject {
 final ZodObject<AppSettingFieldOptionsItem> appSettingFieldOptionsItemSchema = z.object<AppSettingFieldOptionsItem>({
   'value': z.string().min(1).max(60),
   'label': z.string().trim().min(1).max(60),
-}, AppSettingFieldOptionsItem._);
+}, AppSettingFieldOptionsItem._, strict: true);
 
 /// AppSettingFieldOptionsItem 값입니다.
 class AppSettingFieldOptionsItem extends ParsedObject {
@@ -440,7 +457,7 @@ final ZodObject<AppFlowParam> appFlowParamSchema = z.object<AppFlowParam>({
   'type': z.enum_(['string', 'number', 'boolean']),
   'label': z.string().trim().min(1).max(60),
   'required': z.boolean().optional(),
-}, AppFlowParam._);
+}, AppFlowParam._, strict: true);
 
 /// 흐름 알림 매개변수 — 셀러가 편집기에서 식으로 값을 연결합니다.
 class AppFlowParam extends ParsedObject {
@@ -473,7 +490,7 @@ final ZodObject<AppFlowNotification> appFlowNotificationSchema = z.object<AppFlo
       .record<AppFlowParam>(appFlowParamSchema)
       .refine((v) => keyCount(v) <= 20, message: '매개변수는 20개까지입니다')
       .withDefault(const {}),
-}, AppFlowNotification._);
+}, AppFlowNotification._, strict: true);
 
 /// AppFlowNotification 값입니다.
 class AppFlowNotification extends ParsedObject {
@@ -502,7 +519,7 @@ class AppFlowNotification extends ParsedObject {
 final ZodObject<AppFlowEvent> appFlowEventSchema = z.object<AppFlowEvent>({
   'label': z.string().trim().min(1).max(60),
   'description': z.string().trim().max(200).optional(),
-}, AppFlowEvent._);
+}, AppFlowEvent._, strict: true);
 
 /// AppFlowEvent 값입니다.
 class AppFlowEvent extends ParsedObject {
@@ -532,7 +549,7 @@ final ZodObject<AppToolInput> appToolInputSchema = z.object<AppToolInput>({
   'type': z.enum_(['string', 'number', 'boolean']),
   'description': z.string().trim().max(200).optional(),
   'required': z.boolean().optional(),
-}, AppToolInput._);
+}, AppToolInput._, strict: true);
 
 /// AppToolInput 값입니다.
 class AppToolInput extends ParsedObject {
@@ -568,7 +585,7 @@ final ZodObject<AppTool> appToolSchema = z.object<AppTool>({
       .record<AppToolInput>(appToolInputSchema)
       .refine((v) => keyCount(v) <= 20, message: '입력은 20개까지입니다')
       .withDefault(const {}),
-}, AppTool._);
+}, AppTool._, strict: true);
 
 /// AppTool 값입니다.
 class AppTool extends ParsedObject {
@@ -647,7 +664,7 @@ final ZodObject<AppManifest> appManifestSchema = z.object<AppManifest>({
       .refine((v) => keyCount(v) <= 30, message: '설정 필드는 30개까지입니다')
       .withDefault(const {}),
   'secrets': z.array<String>(z.string().pattern(RegExp(r'^[A-Z][A-Z0-9_]{0,63}$'))).max(20).withDefault(const []),
-}, AppManifest._);
+}, AppManifest._, strict: true);
 
 /// AppManifest 값입니다.
 class AppManifest extends ParsedObject {
@@ -763,7 +780,7 @@ class AppManifest extends ParsedObject {
 /// [AppManifestExternal] 스키마입니다.
 final ZodObject<AppManifestExternal> appManifestExternalSchema = z.object<AppManifestExternal>({
   'url': z.string().url().pattern(RegExp(r'^https:\/\/.*'), format: 'starts_with'),
-}, AppManifestExternal._);
+}, AppManifestExternal._, strict: true);
 
 /// AppManifestExternal 값입니다.
 class AppManifestExternal extends ParsedObject {
@@ -785,7 +802,7 @@ class AppManifestExternal extends ParsedObject {
 final ZodObject<AppManifestMcp> appManifestMcpSchema = z.object<AppManifestMcp>({
   'tools':
       z.record<AppTool>(appToolSchema).refine((v) => keyCount(v) <= 20, message: '도구는 20개까지입니다').withDefault(const {}),
-}, AppManifestMcp._);
+}, AppManifestMcp._, strict: true);
 
 /// AppManifestMcp 값입니다.
 class AppManifestMcp extends ParsedObject {
@@ -806,7 +823,7 @@ class AppManifestMcp extends ParsedObject {
 /// [AppManifestNetwork] 스키마입니다.
 final ZodObject<AppManifestNetwork> appManifestNetworkSchema = z.object<AppManifestNetwork>({
   'hosts': z.array<String>(appNetworkHostSchema).max(20),
-}, AppManifestNetwork._);
+}, AppManifestNetwork._, strict: true);
 
 /// AppManifestNetwork 값입니다.
 class AppManifestNetwork extends ParsedObject {
@@ -827,7 +844,7 @@ class AppManifestNetwork extends ParsedObject {
 /// [AppManifestUi] 스키마입니다.
 final ZodObject<AppManifestUi> appManifestUiSchema = z.object<AppManifestUi>({
   'adminPage': appManifestUiAdminPageSchema,
-}, AppManifestUi._);
+}, AppManifestUi._, strict: true);
 
 /// AppManifestUi 값입니다.
 class AppManifestUi extends ParsedObject {
@@ -848,7 +865,7 @@ class AppManifestUi extends ParsedObject {
 /// [AppManifestUiAdminPage] 스키마입니다.
 final ZodObject<AppManifestUiAdminPage> appManifestUiAdminPageSchema = z.object<AppManifestUiAdminPage>({
   'entry': z.string().pattern(RegExp(r'^ui\/[A-Za-z0-9._/-]+\.html$')),
-}, AppManifestUiAdminPage._);
+}, AppManifestUiAdminPage._, strict: true);
 
 /// AppManifestUiAdminPage 값입니다.
 class AppManifestUiAdminPage extends ParsedObject {
@@ -870,7 +887,7 @@ class AppManifestUiAdminPage extends ParsedObject {
 final ZodObject<AppManifestHttp> appManifestHttpSchema = z.object<AppManifestHttp>({
   'public':
       z.array<String>(z.string().pattern(RegExp(r'^(GET|POST|PUT|PATCH|DELETE) (\/[A-Za-z0-9._~:/-]*)$'))).max(20),
-}, AppManifestHttp._);
+}, AppManifestHttp._, strict: true);
 
 /// AppManifestHttp 값입니다.
 class AppManifestHttp extends ParsedObject {
@@ -891,7 +908,7 @@ class AppManifestHttp extends ParsedObject {
 /// [AppManifestSchedulesValue] 스키마입니다.
 final ZodObject<AppManifestSchedulesValue> appManifestSchedulesValueSchema = z.object<AppManifestSchedulesValue>({
   'every': z.enum_(['15m', '30m', '1h', '3h', '6h', '12h', '1d']),
-}, AppManifestSchedulesValue._);
+}, AppManifestSchedulesValue._, strict: true);
 
 /// AppManifestSchedulesValue 값입니다.
 class AppManifestSchedulesValue extends ParsedObject {
@@ -919,7 +936,7 @@ final ZodObject<AppManifestFlow> appManifestFlowSchema = z.object<AppManifestFlo
       .record<AppFlowEvent>(appFlowEventSchema)
       .refine((v) => keyCount(v) <= 20, message: '흐름 사건은 20개까지입니다')
       .withDefault(const {}),
-}, AppManifestFlow._);
+}, AppManifestFlow._, strict: true);
 
 /// AppManifestFlow 값입니다.
 class AppManifestFlow extends ParsedObject {

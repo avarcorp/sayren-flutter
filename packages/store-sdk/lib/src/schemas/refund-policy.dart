@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -34,6 +39,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -60,7 +67,7 @@ part 'refund-policy.manual.dart';
 final ZodObject<CurrencyRefundFees> currencyRefundFeesSchema = z.object<CurrencyRefundFees>({
   'returnDeliveryFee': z.number().int_().greaterThan(0, inclusive: true),
   'exchangeDeliveryFee': z.number().int_().greaterThan(0, inclusive: true),
-}, CurrencyRefundFees._);
+}, CurrencyRefundFees._, strict: true);
 
 /// 외화 한 통화의 반품·교환 배송비.
 class CurrencyRefundFees extends ParsedObject {
@@ -178,7 +185,7 @@ final ZodObject<RefundPolicyPatch> refundPolicyPatchSchema = z.object<RefundPoli
       .record<CurrencyRefundFees>(currencyRefundFeesSchema)
       .refine((v) => !jsMap(v).containsKey('KRW'), message: '기본 통화는 currencies에 넣지 않습니다')
       .optional(),
-}, RefundPolicyPatch._);
+}, RefundPolicyPatch._, strict: true);
 
 /// 부분 정책 — 상점 설정 요청과 상품별 덮어쓰기가 씁니다. 준 항목만 바뀝니다.
 ///
@@ -247,7 +254,7 @@ final ZodObject<ProductRefundPolicyPatch> productRefundPolicyPatchSchema = z.obj
       .record<CurrencyRefundFees>(currencyRefundFeesSchema)
       .refine((v) => !jsMap(v).containsKey('KRW'), message: '기본 통화는 currencies에 넣지 않습니다')
       .optional(),
-}, ProductRefundPolicyPatch._);
+}, ProductRefundPolicyPatch._, strict: true);
 
 /// 상품별 덮어쓰기 — 쿠폰 조건 미달 차감(`couponShortfallCharge`)은 주문 단위 규칙이라 상품이 정하지 않습니다.
 /// 상점 정책만 읽습니다(이슈 #47).

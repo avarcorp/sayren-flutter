@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -193,7 +200,7 @@ class LoginSettings extends ParsedObject {
 /// `PATCH /v1/store/login-settings`.
 final ZodObject<UpdateLoginSettingsRequest> updateLoginSettingsRequestSchema = z.object<UpdateLoginSettingsRequest>({
   'passwordLoginEnabled': z.boolean(),
-}, UpdateLoginSettingsRequest._);
+}, UpdateLoginSettingsRequest._, strictRequest: true);
 
 /// `PATCH /v1/store/login-settings`.
 class UpdateLoginSettingsRequest extends ParsedObject {
@@ -219,7 +226,7 @@ class UpdateLoginSettingsRequest extends ParsedObject {
 final ZodObject<SaveLoginProviderRequest> saveLoginProviderRequestSchema = z.object<SaveLoginProviderRequest>({
   'clientId': z.string().trim().min(1).max(200),
   'clientSecret': z.string().trim().min(1).max(500),
-}, SaveLoginProviderRequest._);
+}, SaveLoginProviderRequest._, strictRequest: true);
 
 /// `PUT /v1/store/auth-providers/{provider}` — 저장 전에 연결 테스트를 합니다.
 class SaveLoginProviderRequest extends ParsedObject {
@@ -246,7 +253,7 @@ class SaveLoginProviderRequest extends ParsedObject {
 /// `PATCH /v1/store/auth-providers/{provider}`.
 final ZodObject<UpdateLoginProviderRequest> updateLoginProviderRequestSchema = z.object<UpdateLoginProviderRequest>({
   'enabled': z.boolean(),
-}, UpdateLoginProviderRequest._);
+}, UpdateLoginProviderRequest._, strictRequest: true);
 
 /// `PATCH /v1/store/auth-providers/{provider}`.
 class UpdateLoginProviderRequest extends ParsedObject {

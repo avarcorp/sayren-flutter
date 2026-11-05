@@ -28,6 +28,9 @@ import 'points.dart';
 import 'product-options.dart';
 import 'review.dart';
 import 'stay.dart';
+import 'userinfo.dart';
+
+part 'store.manual.dart';
 
 /// [StorefrontMarket] 스키마입니다.
 ///
@@ -235,7 +238,7 @@ class StorefrontStore extends ParsedObject {
   /// 주문을 받을 때의 결제 환경. `TEST`면 테스트 결제라 돈이 오가지 않습니다. 주문을 받지 않으면 null. 서버는 항상 싣습니다.
   String? get checkoutMode => _j['checkoutMode'] as String?;
 
-  /// 주문을 받지 않는 사유. `PAYMENT_NOT_CONFIGURED`는 사용 중인 결제 수단이 없음, `PAYMENT_NOT_LIVE`는 공개한 쇼핑몰인데 실결제가 아직 열리지 않음입니다. 주문을 받으면 null. 서버는 항상 싣습니다.
+  /// 주문을 받지 않는 사유. `PAYMENT_NOT_CONFIGURED`는 사용 중인 결제 수단이 없음입니다. 주문을 받으면 null. 서버는 항상 싣습니다. `PAYMENT_NOT_LIVE`는 더 싣지 않습니다.
   String? get checkoutUnavailableReason => _j['checkoutUnavailableReason'] as String?;
 }
 
@@ -273,3 +276,6 @@ class StorefrontStoreMarket extends ParsedObject {
   /// 이 권역에서 쿠폰을 쓸 수 있는지입니다. false면 주문서·금액 미리보기의 쿠폰이 409 `COUPONS_UNAVAILABLE_IN_MARKET`입니다. 옛 서버 응답은 true.
   bool get couponsEnabled => _j['couponsEnabled'] as bool;
 }
+
+/// SellerInfoField 값입니다.
+typedef SellerInfoField = String;

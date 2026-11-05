@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'market.dart';
 import 'misc.dart';
 import 'order.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -365,7 +372,7 @@ final ZodObject<UpsertTossPaymentsProviderRequest> upsertTossPaymentsProviderReq
     z.object<UpsertTossPaymentsProviderRequest>({
   'environment': pgEnvironmentSchema,
   'credentials': tossPaymentsCredentialsInputSchema,
-}, UpsertTossPaymentsProviderRequest._);
+}, UpsertTossPaymentsProviderRequest._, strictRequest: true);
 
 /// UpsertTossPaymentsProviderRequest 값입니다.
 class UpsertTossPaymentsProviderRequest extends ParsedObject {
@@ -393,7 +400,7 @@ final ZodObject<UpsertPortOneProviderRequest> upsertPortOneProviderRequestSchema
     z.object<UpsertPortOneProviderRequest>({
   'environment': pgEnvironmentSchema,
   'credentials': portOneCredentialsInputSchema,
-}, UpsertPortOneProviderRequest._);
+}, UpsertPortOneProviderRequest._, strictRequest: true);
 
 /// UpsertPortOneProviderRequest 값입니다.
 class UpsertPortOneProviderRequest extends ParsedObject {
@@ -421,7 +428,7 @@ final ZodObject<UpsertKakaoPayProviderRequest> upsertKakaoPayProviderRequestSche
     z.object<UpsertKakaoPayProviderRequest>({
   'environment': pgEnvironmentSchema,
   'credentials': kakaoPayCredentialsInputSchema,
-}, UpsertKakaoPayProviderRequest._);
+}, UpsertKakaoPayProviderRequest._, strictRequest: true);
 
 /// UpsertKakaoPayProviderRequest 값입니다.
 class UpsertKakaoPayProviderRequest extends ParsedObject {
@@ -449,7 +456,7 @@ final ZodObject<UpsertNaverPayProviderRequest> upsertNaverPayProviderRequestSche
     z.object<UpsertNaverPayProviderRequest>({
   'environment': pgEnvironmentSchema,
   'credentials': naverPayCredentialsInputSchema,
-}, UpsertNaverPayProviderRequest._);
+}, UpsertNaverPayProviderRequest._, strictRequest: true);
 
 /// UpsertNaverPayProviderRequest 값입니다.
 class UpsertNaverPayProviderRequest extends ParsedObject {
@@ -476,7 +483,7 @@ class UpsertNaverPayProviderRequest extends ParsedObject {
 final ZodObject<UpsertPayPalProviderRequest> upsertPayPalProviderRequestSchema = z.object<UpsertPayPalProviderRequest>({
   'environment': pgEnvironmentSchema,
   'credentials': payPalCredentialsInputSchema,
-}, UpsertPayPalProviderRequest._);
+}, UpsertPayPalProviderRequest._, strictRequest: true);
 
 /// UpsertPayPalProviderRequest 값입니다.
 class UpsertPayPalProviderRequest extends ParsedObject {
@@ -505,7 +512,7 @@ final ZodObject<UpdatePaymentProviderRequest> updatePaymentProviderRequestSchema
   'enabled': z.boolean().optional(),
   'sandboxMode': z.boolean().optional(),
   'easyPayProviders': z.array<String>(easyPayProviderSchema).max(5).optional(),
-}, UpdatePaymentProviderRequest._).refine((v) {
+}, UpdatePaymentProviderRequest._, strictRequest: true).refine((v) {
   final j = jsonOf(v as ParsedObject);
   return j.containsKey('enabled') || j.containsKey('sandboxMode') || j.containsKey('easyPayProviders');
 }, message: 'enabled·sandboxMode·easyPayProviders 중 하나는 보내야 합니다');
@@ -542,7 +549,7 @@ class UpdatePaymentProviderRequest extends ParsedObject {
 final ZodObject<VerifyPaymentProviderRequest> verifyPaymentProviderRequestSchema =
     z.object<VerifyPaymentProviderRequest>({
   'environment': pgEnvironmentSchema.optional(),
-}, VerifyPaymentProviderRequest._);
+}, VerifyPaymentProviderRequest._, strictRequest: true);
 
 /// VerifyPaymentProviderRequest 값입니다.
 class VerifyPaymentProviderRequest extends ParsedObject {
@@ -566,7 +573,7 @@ final ZodObject<UpdatePaymentSettingsRequest> updatePaymentSettingsRequestSchema
     z.object<UpdatePaymentSettingsRequest>({
   'priority': z.array<String>(pgProviderSchema).min(1).max(50).optional(),
   'checkoutOrigins': z.array<String>(z.string().max(200)).max(20).optional(),
-}, UpdatePaymentSettingsRequest._).refine((v) {
+}, UpdatePaymentSettingsRequest._, strictRequest: true).refine((v) {
   final j = jsonOf(v as ParsedObject);
   return j.containsKey('priority') || j.containsKey('checkoutOrigins');
 }, message: 'priority 또는 checkoutOrigins 중 하나는 보내야 합니다');
@@ -862,20 +869,19 @@ class PaymentCredentialSetLastVerification extends ParsedObject {
   String get checkedAt => _j['checkedAt'] as String;
 }
 
-/// [String] 스키마입니다. 값은 `TEST_CONNECTION`·`SANDBOX_PAYMENT`·`SANDBOX_REFUND`·`LIVE_CONNECTION`·`PLATFORM_LIVE_ENABLED`·`NOT_TEMPLATE_STORE`·`NOT_DEVELOPMENT_STORE`입니다.
+/// [String] 스키마입니다. 값은 `TEST_CONNECTION`·`SANDBOX_PAYMENT`·`SANDBOX_REFUND`·`LIVE_CONNECTION`·`PLATFORM_LIVE_ENABLED`·`NOT_DEVELOPMENT_STORE`입니다.
 final ZodEnum liveGateConditionCodeSchema = z.enum_([
   'TEST_CONNECTION',
   'SANDBOX_PAYMENT',
   'SANDBOX_REFUND',
   'LIVE_CONNECTION',
   'PLATFORM_LIVE_ENABLED',
-  'NOT_TEMPLATE_STORE',
   'NOT_DEVELOPMENT_STORE'
 ]);
 
 /// LiveGateConditionCode 값입니다.
 ///
-/// 값은 `TEST_CONNECTION`·`SANDBOX_PAYMENT`·`SANDBOX_REFUND`·`LIVE_CONNECTION`·`PLATFORM_LIVE_ENABLED`·`NOT_TEMPLATE_STORE`·`NOT_DEVELOPMENT_STORE`입니다.
+/// 값은 `TEST_CONNECTION`·`SANDBOX_PAYMENT`·`SANDBOX_REFUND`·`LIVE_CONNECTION`·`PLATFORM_LIVE_ENABLED`·`NOT_DEVELOPMENT_STORE`입니다.
 typedef LiveGateConditionCode = String;
 
 /// [LiveGateCondition] 스키마입니다.
@@ -898,7 +904,7 @@ class LiveGateCondition extends ParsedObject {
 
   Map<String, Object?> get _j => jsonOf(this);
 
-  /// 라이브 개방 조건. `TEST_CONNECTION`=TEST 세트 연결 테스트 성공, `SANDBOX_PAYMENT`=현재 TEST 세트로 샌드박스 결제 1건 승인, `SANDBOX_REFUND`=그 샌드박스 결제의 환불 1건 성공, `LIVE_CONNECTION`=LIVE 세트 연결 테스트 성공, `PLATFORM_LIVE_ENABLED`=플랫폼이 실결제를 열어 둠(늘 충족), `NOT_TEMPLATE_STORE`=템플릿 상점이 아님(템플릿 상점에만 싣고 늘 미충족), `NOT_DEVELOPMENT_STORE`=앱 개발 상점이 아님(앱 개발 상점에만 싣고 늘 미충족).
+  /// 라이브 개방 조건. `TEST_CONNECTION`=TEST 세트 연결 테스트 성공, `SANDBOX_PAYMENT`=현재 TEST 세트로 샌드박스 결제 1건 승인, `SANDBOX_REFUND`=그 샌드박스 결제의 환불 1건 성공, `LIVE_CONNECTION`=LIVE 세트 연결 테스트 성공, `PLATFORM_LIVE_ENABLED`=플랫폼이 실결제를 열어 둠(늘 충족), `NOT_DEVELOPMENT_STORE`=앱 개발 상점이 아님(앱 개발 상점에만 싣고 늘 미충족).
   String get code => _j['code'] as String;
 
   /// 충족 여부.
@@ -1087,7 +1093,7 @@ class PaymentProvider extends ParsedObject {
   /// 보관된(가맹점 교체·연결 해제로 새 결제에 더 쓰이지 않는) 자격 증명 수. 그 가맹점으로 받은 결제의 환불·대사에 계속 쓰입니다.
   int get retiredCredentialCount => _j['retiredCredentialCount'] as int;
 
-  /// 지금 새 결제의 후보가 아닌 사유. 후보면 null. 판정 원천은 서버 라우팅입니다(상점 플랫폼이 다시 계산하지 않습니다). 후보가 아닌 PG에는 항상 사유 코드를 붙입니다(연결 안 된 PG 포함) — 모든 PG는 `candidates`에 있거나 이 값이 null이 아니다. 현재 값: `NOT_CONNECTED`(연결 안 됨) · `DISABLED`(사용 중지) · `CREDENTIAL_MISSING`(활성 환경 자격 증명 없음) · `SANDBOX_IN_LIVE_STORE`(다른 PG가 라이브라 이 샌드박스 PG는 실구매자 결제에 쓰지 않음) · `PLATFORM_BLOCKED`(플랫폼이 실결제를 막음) · `MODE_MISMATCH`(라이브를 연 서버 모드와 현재 모드가 다름). 값이 추가될 수 있어 문자열로 받습니다 — 모르는 값은 후보 아님으로 다룹니다. 서버는 항상 싣습니다. 이 필드가 없는 이전 서버 응답은 기본값(null)으로 읽습니다.
+  /// 지금 새 결제의 후보가 아닌 사유. 후보면 null. 판정 원천은 서버 라우팅입니다(상점 플랫폼이 다시 계산하지 않습니다). 후보가 아닌 PG에는 항상 사유 코드를 붙입니다(연결 안 된 PG 포함) — 모든 PG는 `candidates`에 있거나 이 값이 null이 아니다. 현재 값: `NOT_CONNECTED`(연결 안 됨) · `DISABLED`(사용 중지) · `CREDENTIAL_MISSING`(활성 환경 자격 증명 없음) · `SANDBOX_IN_LIVE_STORE`(더는 반환하지 않음 — PG는 각자 쓰입니다) · `PLATFORM_BLOCKED`(플랫폼이 실결제를 막음) · `MODE_MISMATCH`(라이브를 연 서버 모드와 현재 모드가 다름). 값이 추가될 수 있어 문자열로 받습니다 — 모르는 값은 후보 아님으로 다룹니다. 서버는 항상 싣습니다. 이 필드가 없는 이전 서버 응답은 기본값(null)으로 읽습니다.
   String? get routingExclusion => _j['routingExclusion'] as String?;
 }
 
@@ -1868,7 +1874,7 @@ class PaymentRecord extends ParsedObject {
   /// 환불 완료 금액 합계. 실패한 환불은 빼고 셉니다.
   int get refundedAmount => _j['refundedAmount'] as int;
 
-  /// 환불 대기 금액 합계(#115) — 주문만 취소하고 아직 환불하지 않은 몫. 결제 상세에서 환불 처리합니다.
+  /// 환불 대기 금액 합계(#115) — 주문만 취소하고 아직 환불하지 않은 몫(`HELD`)과 다시 요청할 수 있는 실패 환불(`FAILED`, 결제 잔액 안의 것). 결제 상세에서 환불 처리합니다.
   int get heldRefundAmount => _j['heldRefundAmount'] as int;
 
   /// 승인한 PG. 승인 전에 끝났으면 마지막 시도의 PG.
@@ -2083,6 +2089,7 @@ final ZodObject<PaymentRefundRecord> paymentRefundRecordSchema = z.object<Paymen
   'refundId': z.string(),
   'amount': z.number().int_(),
   'pointRefundAmount': z.number().int_().optional().withDefault(0),
+  'calculatedAmount': z.number().int_().nullable().optional().withDefault(null),
   'reason': z.string(),
   'kind': z.string(),
   'status': z.string(),
@@ -2098,6 +2105,7 @@ class PaymentRefundRecord extends ParsedObject {
       {required String refundId,
       required int amount,
       int pointRefundAmount = 0,
+      int? calculatedAmount,
       required String reason,
       required String kind,
       required String status,
@@ -2108,6 +2116,7 @@ class PaymentRefundRecord extends ParsedObject {
           'refundId': refundId,
           'amount': amount,
           'pointRefundAmount': pointRefundAmount,
+          'calculatedAmount': calculatedAmount,
           'reason': reason,
           'kind': kind,
           'status': status,
@@ -2132,10 +2141,13 @@ class PaymentRefundRecord extends ParsedObject {
   /// 같은 환불에서 돌려준 적립금 (#93). 적립금을 쓰지 않은 결제는 0.
   int get pointRefundAmount => _j['pointRefundAmount'] as int;
 
+  /// 서버가 계산한 현금 환불액 (#365). 판매자가 최종 금액을 정했으면 `amount`와 다릅니다. 계산이 없는 환불(결제 오류 보상 등)과 이전 환불은 null입니다.
+  int? get calculatedAmount => _j['calculatedAmount'] as int?;
+
   /// 환불 사유 코드.
   String get reason => _j['reason'] as String;
 
-  /// 환불 원인 — SELLER_CANCEL·CLAIM·COMPENSATION·DUPLICATE. 새 값이 추가될 수 있습니다.
+  /// 환불 원인 — SELLER_CANCEL·CLAIM·SELLER_REFUND(금액만 환불)·COMPENSATION·DUPLICATE. 새 값이 추가될 수 있습니다.
   String get kind => _j['kind'] as String;
 
   /// SUCCEEDED 환불됨 · FAILED 실패 · HELD 환불 대기(주문만 취소, #115) · PROCESSING 처리 중. 합계(`refundedAmount`)는 SUCCEEDED만 셉니다.
@@ -2176,6 +2188,7 @@ final ZodObject<PaymentRecordDetail> paymentRecordDetailSchema = z.object<Paymen
   'createdAt': z.string(),
   'cashReceiptStatus': z.string().nullable().optional().withDefault(null),
   'refundableAmount': z.number().int_(),
+  'availableRefundAmount': z.number().int_().optional(),
   'merchantId': z.string().nullable(),
   'attempts': z.array<PaymentAttemptRecord>(paymentAttemptRecordSchema),
   'refunds': z.array<PaymentRefundRecord>(paymentRefundRecordSchema),
@@ -2209,6 +2222,7 @@ class PaymentRecordDetail extends ParsedObject {
       required String createdAt,
       String? cashReceiptStatus,
       required int refundableAmount,
+      int? availableRefundAmount,
       required String? merchantId,
       required List<PaymentAttemptRecord> attempts,
       required List<PaymentRefundRecord> refunds,
@@ -2237,6 +2251,7 @@ class PaymentRecordDetail extends ParsedObject {
           'createdAt': createdAt,
           'cashReceiptStatus': cashReceiptStatus,
           'refundableAmount': refundableAmount,
+          if (availableRefundAmount != null) 'availableRefundAmount': availableRefundAmount,
           'merchantId': merchantId,
           'attempts': attempts,
           'refunds': refunds,
@@ -2271,7 +2286,7 @@ class PaymentRecordDetail extends ParsedObject {
   /// 환불 완료 금액 합계. 실패한 환불은 빼고 셉니다.
   int get refundedAmount => _j['refundedAmount'] as int;
 
-  /// 환불 대기 금액 합계(#115) — 주문만 취소하고 아직 환불하지 않은 몫. 결제 상세에서 환불 처리합니다.
+  /// 환불 대기 금액 합계(#115) — 주문만 취소하고 아직 환불하지 않은 몫(`HELD`)과 다시 요청할 수 있는 실패 환불(`FAILED`, 결제 잔액 안의 것). 결제 상세에서 환불 처리합니다.
   int get heldRefundAmount => _j['heldRefundAmount'] as int;
 
   /// 승인한 PG. 승인 전에 끝났으면 마지막 시도의 PG.
@@ -2318,6 +2333,9 @@ class PaymentRecordDetail extends ParsedObject {
 
   /// 환불 가능 잔액 = 승인 금액 - 환불 완료 금액.
   int get refundableAmount => _j['refundableAmount'] as int;
+
+  /// 지금 더 환불할 수 있는 금액 = 승인 금액 - (환불 완료 + 처리 중 + 대기 환불). 이보다 큰 환불은 409 `REFUND_EXCEEDS_BALANCE`입니다. 승인되지 않은 결제는 0. 이 필드가 없는 이전 api는 `refundableAmount`로 읽습니다.
+  int? get availableRefundAmount => _j['availableRefundAmount'] as int?;
 
   /// 가맹점 식별자 지문 (토스 clientKey, 포트원 Store ID). 비밀 값은 없습니다.
   String? get merchantId => _j['merchantId'] as String?;
@@ -2403,7 +2421,7 @@ class PaymentListQuery extends ParsedObject {
   /// 테스트 결제 포함 여부 (`true`·`false`. 기본 false — 실결제만).
   String? get includeTest => _j['includeTest'] as String?;
 
-  /// `true`면 환불 대기가 있는 결제만(#115).
+  /// `true`면 환불 대기(`heldRefundAmount` > 0)가 있는 결제만(#115). 다시 요청할 수 있는 실패 환불도 포함합니다.
   String? get refundHeld => _j['refundHeld'] as String?;
 
   /// 페이지 번호 (1부터).
@@ -2473,7 +2491,7 @@ class PaymentListParams extends PageParams {
 /// 테스트모드 키 활성화 요청(2026-10-14) — `PUT /v1/store/payment-providers/{provider}/platform-test-keys`.
 final ZodObject<SetPlatformTestKeysRequest> setPlatformTestKeysRequestSchema = z.object<SetPlatformTestKeysRequest>({
   'enabled': z.boolean(),
-}, SetPlatformTestKeysRequest._);
+}, SetPlatformTestKeysRequest._, strictRequest: true);
 
 /// 테스트모드 키 활성화 요청(2026-10-14) — `PUT /v1/store/payment-providers/{provider}/platform-test-keys`.
 class SetPlatformTestKeysRequest extends ParsedObject {

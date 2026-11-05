@@ -15,16 +15,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -34,6 +39,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,12 +55,13 @@ import 'store.dart';
 import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
 part 'upload.manual.dart';
 
-/// [String] 스키마입니다. 값은 `product-image`·`description`·`flow-attachment`·`ai-attachment`입니다.
+/// [String] 스키마입니다. 값은 `product-image`·`description`·`flow-attachment`·`ai-attachment`·`store-icon`입니다.
 ///
 /// 업로드 용도. 허용 확장자와 크기 상한이 용도별로 다릅니다.
 ///
@@ -62,11 +69,13 @@ part 'upload.manual.dart';
 /// - `description`: 상세설명 본문에 삽입하는 미디어. 동영상과 svg도 받습니다.
 /// - `flow-attachment`: 주문 흐름 행동의 첨부(시안 등, 이슈 #115). 구매자에게 보이므로 정지 이미지와 PDF만 받습니다.
 /// - `ai-attachment`: 상점 플랫폼 AI 채팅에 붙이는 자료(이슈 #124). 모델이 읽는 정지 이미지와 PDF만 받습니다.
-final ZodEnum uploadPurposeSchema = z.enum_(['product-image', 'description', 'flow-attachment', 'ai-attachment']);
+/// - `store-icon`: 상점 아이콘(정사각, 이슈 #400). 메일에도 실리므로 메일 클라이언트가 그리는 PNG·JPG만 받습니다.
+final ZodEnum uploadPurposeSchema =
+    z.enum_(['product-image', 'description', 'flow-attachment', 'ai-attachment', 'store-icon']);
 
 /// UploadPurpose 값입니다.
 ///
-/// 값은 `product-image`·`description`·`flow-attachment`·`ai-attachment`입니다.
+/// 값은 `product-image`·`description`·`flow-attachment`·`ai-attachment`·`store-icon`입니다.
 typedef UploadPurpose = String;
 
 /// UploadPurposeLimit 값입니다.
@@ -104,6 +113,10 @@ const UPLOAD_PURPOSE_LIMITS = <String, Map<String, Object?>>{
   'ai-attachment': <String, Object?>{
     'extensions': <String>['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf'],
     'maxBytes': 10485760
+  },
+  'store-icon': <String, Object?>{
+    'extensions': <String>['jpg', 'jpeg', 'png'],
+    'maxBytes': 5242880
   }
 };
 
@@ -136,7 +149,7 @@ final ZodObject<UploadRequest> uploadRequestSchema = z.object<UploadRequest>({
   'filename': z.string().min(1).max(255),
   'purpose': uploadPurposeSchema.withDefault('description'),
   'size': z.number().int_().greaterThan(0, inclusive: false).optional(),
-}, UploadRequest._);
+}, UploadRequest._, strictRequest: true);
 
 /// 미디어 업로드 자리 발급 — `POST /v1/uploads`.
 ///

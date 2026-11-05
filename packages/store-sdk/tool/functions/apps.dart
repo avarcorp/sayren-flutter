@@ -49,12 +49,16 @@ final Map<String, Object? Function(List<Object?> a)> appsFunctions = {
   'describeScope': (a) => describeScope(a[0] as String),
   'isAiAgentNotesPath': (a) => isAiAgentNotesPath(a[0] as String),
   'isAiDesignPath': (a) => isAiDesignPath(a[0] as String),
+  'isAiWorkspaceDocPath': (a) => isAiWorkspaceDocPath(a[0] as String),
+  'isAiChoiceAnswer': (a) => isAiChoiceAnswer([
+        for (final p in (a[0] as List).cast<Map<Object?, Object?>>())
+          (type: p['type'] as String, choice: p['choice'] as String?),
+      ]),
   'normalizeLocale': (a) => normalizeLocale(a[0] as String?),
   'isWebOrigin': (a) => isWebOrigin(a[0] as String),
   'isReservedStoreCode': (a) => isReservedStoreCode(a[0] as String),
   'normalizeBusinessNumber': (a) => normalizeBusinessNumber(a[0] as String),
   // storefront-hosting
-  'isShowcaseStorefrontSlug': (a) => isShowcaseStorefrontSlug(a[0] as String),
   'isReservedStorefrontSlug': (a) => isReservedStorefrontSlug(a[0] as String),
   'storefrontEditPreviewLabelOf': (a) => storefrontEditPreviewLabelOf(a[0] as String),
   'storefrontVersionPreviewLabelOf': (a) => storefrontVersionPreviewLabelOf(a[0] as String, a[1] as int),
@@ -65,6 +69,14 @@ final Map<String, Object? Function(List<Object?> a)> appsFunctions = {
   'storefrontDomainTxtNameOf': (a) => storefrontDomainTxtNameOf(a[0] as String),
   'normalizeStorefrontPath': (a) => normalizeStorefrontPath(a[0] as String),
   'isEditableStorefrontPath': (a) => isEditableStorefrontPath(a[0] as String),
+  'storefrontSiteVarKeyProblem': (a) => storefrontSiteVarKeyProblem(a[0] as String),
+  'resolveStorefrontDeployProduction': (a) =>
+      resolveStorefrontDeployProduction(a[0] as bool?, a[1] as bool?, a.length > 2 ? a[2] as bool? : null),
+  // flow-localization
+  'flowLocalizationNeedsTranslation': (a) => flowLocalizationNeedsTranslation(
+        [for (final t in a[0] as List) FlowText.fromJson((t as Map).cast<String, Object?>())],
+        (a[1] as Map?)?.cast<String, String>(),
+      ),
   // webhook-event
   'parseWebhookEvent': (a) => parseWebhookEvent(a[0]).toJson(),
   // app-manifest
@@ -74,7 +86,7 @@ final Map<String, Object? Function(List<Object?> a)> appsFunctions = {
   'appHttpKeyMatches': (a) => appHttpKeyMatches(a[0] as String, a[1] as String, a[2] as String),
   'appScheduleIntervalLabel': (a) => appScheduleIntervalLabel(a[0] as String),
   'appScheduleListOf': (a) => [
-        for (final s in appScheduleListOf(_caps(a[0]))) {'name': s.name, 'every': s.every}
+        for (final s in appScheduleListOf(_caps(a[0]))) {'name': s.name, 'every': s.every},
       ],
   'appFlowSummaryOf': (a) {
     final s = appFlowSummaryOf(_caps(a[0]));
@@ -85,17 +97,17 @@ final Map<String, Object? Function(List<Object?> a)> appsFunctions = {
             'name': n.name,
             'label': n.label,
             'params': [
-              for (final p in n.params) {'name': p.name, 'type': p.type, 'label': p.label, 'required': p.required}
+              for (final p in n.params) {'name': p.name, 'type': p.type, 'label': p.label, 'required': p.required},
             ],
-          }
+          },
       ],
       'flowEvents': [
-        for (final e in s.flowEvents) {'name': e.name, 'label': e.label}
+        for (final e in s.flowEvents) {'name': e.name, 'label': e.label},
       ],
     };
   },
   'appToolListOf': (a) => [
-        for (final t in appToolListOf(_caps(a[0]))) {'name': t.name, 'description': t.description}
+        for (final t in appToolListOf(_caps(a[0]))) {'name': t.name, 'description': t.description},
       ],
   'appManifestWidens': (a) => appManifestWidens(_caps(a[0]), _caps(a[1])),
   'appManifestProblems': (a) => [for (final p in appManifestProblems(AppManifest.fromJson(_map(a[0])))) p.toJson()],

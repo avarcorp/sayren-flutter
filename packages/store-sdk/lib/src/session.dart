@@ -91,14 +91,14 @@ class StoreAuthServer {
 class StoreSessionOptions {
   /// 옵션을 만듭니다.
   const StoreSessionOptions({
-    required this.baseUrl,
+    this.baseUrl = SAYREN_API_BASE_URL,
     required this.authServer,
     required this.clientId,
     required this.storage,
     this.fetch,
   });
 
-  /// API 주소입니다(예: `https://api.sayren.io/v1`). [StoreSession.userinfo]의 `GET /me`에 사용합니다.
+  /// API 주소(버전 경로 포함)입니다. [StoreSession.userinfo]의 `GET /me`에 사용합니다. 생략하면 운영 주소([SAYREN_API_BASE_URL])입니다.
   final String baseUrl;
 
   /// 인가 서버(accounts) 주소입니다.

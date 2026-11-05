@@ -15,15 +15,20 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -33,6 +38,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -49,6 +55,7 @@ import 'storefront-hosting.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -167,6 +174,7 @@ final ZodObject<Claim> claimSchema = z.object<Claim>({
   'completedAt': z.string().nullable(),
   'holdExpiresAt': z.string().nullable(),
   'holdUsed': z.boolean(),
+  'rejection': claimRejectionSchema.nullable().optional().withDefault(null),
   'returnAddress': claimReturnAddressSchema.nullable(),
 }, Claim._);
 
@@ -196,6 +204,7 @@ class Claim extends ParsedObject {
       required String? completedAt,
       required String? holdExpiresAt,
       required bool holdUsed,
+      ClaimRejection? rejection,
       required ClaimReturnAddress? returnAddress})
       : super({
           'claimId': claimId,
@@ -220,6 +229,7 @@ class Claim extends ParsedObject {
           'completedAt': completedAt,
           'holdExpiresAt': holdExpiresAt,
           'holdUsed': holdUsed,
+          'rejection': rejection,
           'returnAddress': returnAddress
         });
 
@@ -296,6 +306,9 @@ class Claim extends ParsedObject {
   /// 보류를 이미 썼는지 — 보류는 클레임당 1회라 해제·만료 뒤에도 true.
   bool get holdUsed => _j['holdUsed'] as bool;
 
+  /// 판매자가 거절한 사유. 거절(`REJECTED`) 클레임만 값이 있고 그 밖에는 null입니다. 서버는 항상 싣습니다.
+  ClaimRejection? get rejection => _j['rejection'] as ClaimRejection?;
+
   /// 수거 안내에 쓸 반품지(이슈 #30). 상품이 지정한 반품지, 없으면 상점 기본 반품지입니다. 취소 클레임과 반품지를 등록하지 않은 상점은 null.
   ClaimReturnAddress? get returnAddress => _j['returnAddress'] as ClaimReturnAddress?;
 }
@@ -354,6 +367,31 @@ class ClaimCollect extends ParsedObject {
 
   /// `trackingNumber` 값입니다.
   String? get trackingNumber => _j['trackingNumber'] as String?;
+}
+
+/// [ClaimRejection] 스키마입니다.
+final ZodObject<ClaimRejection> claimRejectionSchema = z.object<ClaimRejection>({
+  'reason': z.string(),
+  'detail': z.string(),
+}, ClaimRejection._);
+
+/// ClaimRejection 값입니다.
+class ClaimRejection extends ParsedObject {
+  /// [ClaimRejection]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ClaimRejection({required String reason, required String detail}) : super({'reason': reason, 'detail': detail});
+
+  ClaimRejection._(super.json);
+
+  /// JSON을 [claimRejectionSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ClaimRejection.fromJson(Map<String, Object?> json) => claimRejectionSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 거절 사유 코드 — `USED_PRODUCT`·`MISSING_COMPONENT`·`PERIOD_EXPIRED`·`BUYER_FAULT_DAMAGE`·`ETC`. 값이 추가될 수 있어 문자열로 받습니다.
+  String get reason => _j['reason'] as String;
+
+  /// 거절 상세 사유. 구매자에게 그대로 보입니다.
+  String get detail => _j['detail'] as String;
 }
 
 /// ClaimListParams 값입니다.
@@ -479,6 +517,7 @@ final ZodObject<ClaimDetail> claimDetailSchema = z.object<ClaimDetail>({
   'completedAt': z.string().nullable(),
   'holdExpiresAt': z.string().nullable(),
   'holdUsed': z.boolean(),
+  'rejection': claimRejectionSchema.nullable().optional().withDefault(null),
   'returnAddress': claimReturnAddressSchema.nullable(),
   'histories': z.array<ClaimDetailHistoriesItem>(claimDetailHistoriesItemSchema).optional(),
 }, ClaimDetail._);
@@ -509,6 +548,7 @@ class ClaimDetail extends ParsedObject {
       required String? completedAt,
       required String? holdExpiresAt,
       required bool holdUsed,
+      ClaimRejection? rejection,
       required ClaimReturnAddress? returnAddress,
       List<ClaimDetailHistoriesItem>? histories})
       : super({
@@ -534,6 +574,7 @@ class ClaimDetail extends ParsedObject {
           'completedAt': completedAt,
           'holdExpiresAt': holdExpiresAt,
           'holdUsed': holdUsed,
+          'rejection': rejection,
           'returnAddress': returnAddress,
           if (histories != null) 'histories': histories
         });
@@ -611,6 +652,9 @@ class ClaimDetail extends ParsedObject {
   /// `holdUsed` 값입니다.
   bool get holdUsed => _j['holdUsed'] as bool;
 
+  /// 판매자가 거절한 사유. 거절(`REJECTED`) 클레임만 값이 있고 그 밖에는 null입니다. 서버는 항상 싣습니다.
+  ClaimRejection? get rejection => _j['rejection'] as ClaimRejection?;
+
   /// 수거 안내에 쓸 반품지(이슈 #30). 상품이 지정한 반품지, 없으면 상점 기본 반품지입니다. 취소 클레임과 반품지를 등록하지 않은 상점은 null.
   ClaimReturnAddress? get returnAddress => _j['returnAddress'] as ClaimReturnAddress?;
 
@@ -681,7 +725,7 @@ final ZodObject<RejectClaimRequest> rejectClaimRequestSchema = z.object<RejectCl
   'reason': z.enum_(['USED_PRODUCT', 'MISSING_COMPONENT', 'PERIOD_EXPIRED', 'BUYER_FAULT_DAMAGE', 'ETC']),
   'detail': z.string().min(10).max(1000),
   'evidenceImages': z.array<String>(z.string().url()).max(5).optional(),
-}, RejectClaimRequest._);
+}, RejectClaimRequest._, strictRequest: true);
 
 /// RejectClaimRequest 값입니다.
 class RejectClaimRequest extends ParsedObject {
@@ -706,10 +750,50 @@ class RejectClaimRequest extends ParsedObject {
   List<String>? get evidenceImages => (_j['evidenceImages'] as List?)?.cast<String>();
 }
 
+/// [ApproveClaimRequest] 스키마입니다.
+///
+/// `POST /v1/claims/{claimId}/approve` 요청 — 본문은 생략할 수 있습니다.
+final ZodObject<ApproveClaimRequest> approveClaimRequestSchema = z.object<ApproveClaimRequest>({
+  'deductAmount': z.number().int_().greaterThan(0, inclusive: true).optional(),
+  'refundAmount': z.number().int_().greaterThan(0, inclusive: true).optional(),
+  'holdRefund': z.boolean().optional(),
+}, ApproveClaimRequest._, strict: true, strictRequest: true).refine((v) {
+  final j = jsonOf(v as ParsedObject);
+  return !j.containsKey('refundAmount') || !j.containsKey('deductAmount');
+}, message: 'refundAmount와 deductAmount는 함께 줄 수 없습니다', path: ['refundAmount']);
+
+/// `POST /v1/claims/{claimId}/approve` 요청 — 본문은 생략할 수 있습니다.
+class ApproveClaimRequest extends ParsedObject {
+  /// [ApproveClaimRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ApproveClaimRequest({int? deductAmount, int? refundAmount, bool? holdRefund})
+      : super({
+          if (deductAmount != null) 'deductAmount': deductAmount,
+          if (refundAmount != null) 'refundAmount': refundAmount,
+          if (holdRefund != null) 'holdRefund': holdRefund
+        });
+
+  ApproveClaimRequest._(super.json);
+
+  /// JSON을 [approveClaimRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ApproveClaimRequest.fromJson(Map<String, Object?> json) => approveClaimRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 환불액에서 뺄 추가 차감(원). 생략하면 주문 흐름이 접수 때 계산한 차감액, 그것도 없으면 0입니다.
+  int? get deductAmount => _j['deductAmount'] as int?;
+
+  /// 최종 현금 환불액(#365, 원). 생략하면 서버 계산값입니다. 배송비 환불 여부·귀책과 무관하게 판매자가 정합니다. 배송비·쿠폰 정산 기록과 적립금 반환은 계산값대로 하고 현금만 이 값입니다. 결제 잔액(`availableRefundAmount`)을 넘으면 409 `REFUND_EXCEEDS_BALANCE`. `deductAmount`와 함께 주면 400입니다. 응답·웹훅의 `calculatedRefundAmount`가 서버 계산값입니다.
+  int? get refundAmount => _j['refundAmount'] as int?;
+
+  /// true면 승인만 하고 결제 환불은 대기로 남깁니다(#115). 결제 상세의 `POST /v1/payments/refunds/{refundId}/process`로 따로 환불합니다.
+  bool? get holdRefund => _j['holdRefund'] as bool?;
+}
+
 /// [ApproveClaimResult] 스키마입니다.
 final ZodObject<ApproveClaimResult> approveClaimResultSchema = z.object<ApproveClaimResult>({
   'claimId': z.string(),
   'refundAmount': z.number().int_(),
+  'calculatedRefundAmount': z.number().int_().optional(),
   'deductAmount': z.number().int_(),
   'quantity': z.number().int_(),
   'deliveryFeeRefundAmount': z.number().int_(),
@@ -719,6 +803,7 @@ final ZodObject<ApproveClaimResult> approveClaimResultSchema = z.object<ApproveC
   'pointRefundAmount': z.number().int_().optional().withDefault(0),
   'refundedAt': z.string(),
   'refundHeld': z.boolean().optional().withDefault(false),
+  'refundStatus': z.string().nullable().optional().withDefault(null),
 }, ApproveClaimResult._);
 
 /// ApproveClaimResult 값입니다.
@@ -727,6 +812,7 @@ class ApproveClaimResult extends ParsedObject {
   ApproveClaimResult(
       {required String claimId,
       required int refundAmount,
+      int? calculatedRefundAmount,
       required int deductAmount,
       required int quantity,
       required int deliveryFeeRefundAmount,
@@ -735,10 +821,12 @@ class ApproveClaimResult extends ParsedObject {
       int couponChargeRefundAmount = 0,
       int pointRefundAmount = 0,
       required String refundedAt,
-      bool refundHeld = false})
+      bool refundHeld = false,
+      String? refundStatus})
       : super({
           'claimId': claimId,
           'refundAmount': refundAmount,
+          if (calculatedRefundAmount != null) 'calculatedRefundAmount': calculatedRefundAmount,
           'deductAmount': deductAmount,
           'quantity': quantity,
           'deliveryFeeRefundAmount': deliveryFeeRefundAmount,
@@ -747,7 +835,8 @@ class ApproveClaimResult extends ParsedObject {
           'couponChargeRefundAmount': couponChargeRefundAmount,
           'pointRefundAmount': pointRefundAmount,
           'refundedAt': refundedAt,
-          'refundHeld': refundHeld
+          'refundHeld': refundHeld,
+          'refundStatus': refundStatus
         });
 
   ApproveClaimResult._(super.json);
@@ -760,8 +849,11 @@ class ApproveClaimResult extends ParsedObject {
   /// `claimId` 값입니다.
   String get claimId => _j['claimId'] as String;
 
-  /// 실제 환불한 금액 — 수량 비율 상품 실결제 금액(쿠폰 배분을 뺀 금액) + 배송비 환불 − 반품 배송비 − 조건부 무료배송 미달 차감 − 쿠폰 조건 미달 차감(`couponChargeAmount`) + 되돌린 쿠폰 차감(`couponChargeRefundAmount`) − 추가 차감(`deductAmount`).
+  /// 실제 환불한 금액 — 수량 비율 상품 실결제 금액(쿠폰 배분을 뺀 금액) + 배송비 환불 − 반품 배송비 − 조건부 무료배송 미달 차감 − 쿠폰 조건 미달 차감(`couponChargeAmount`) + 되돌린 쿠폰 차감(`couponChargeRefundAmount`) − 추가 차감(`deductAmount`). 판매자가 `refundAmount`를 정했으면 그 값입니다.
   int get refundAmount => _j['refundAmount'] as int;
+
+  /// 서버가 계산한 현금 환불액(#365). 판매자가 `refundAmount`를 정하지 않았으면 `refundAmount`와 같습니다. 이 필드가 없는 이전 응답은 `refundAmount`와 같다고 읽습니다.
+  int? get calculatedRefundAmount => _j['calculatedRefundAmount'] as int?;
 
   /// 승인 때 셀러가 추가로 차감한 금액.
   int get deductAmount => _j['deductAmount'] as int;
@@ -789,4 +881,7 @@ class ApproveClaimResult extends ParsedObject {
 
   /// 결제 환불을 대기로 남겼습니다(`holdRefund`, #115). 결제 상세에서 환불 처리합니다.
   bool get refundHeld => _j['refundHeld'] as bool;
+
+  /// 이번 취소의 결제 환불 원장 상태 — SUCCEEDED 환불됨 · FAILED 실패(결제 상세에서 다시 요청) · PROCESSING 결과 불명(PG 확인 필요) · HELD 환불 대기. 환불할 PG 결제가 없으면(금액 0·적립금 전액) null. 새 값이 추가될 수 있습니다.
+  String? get refundStatus => _j['refundStatus'] as String?;
 }

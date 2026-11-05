@@ -20,12 +20,7 @@ final errorDetailSchema = z.plainObject({
 
 /// 표준 응답 엔벨로프 — $.meta / $.data / $.error
 final envelopeSchema = z.plainObject({
-  'meta': z.plainObject({
-    'status': z.number(),
-    'code': z.string(),
-    'message': z.string(),
-    'isSuccess': z.boolean(),
-  }),
+  'meta': z.plainObject({'status': z.number(), 'code': z.string(), 'message': z.string(), 'isSuccess': z.boolean()}),
   'data': z.unknown().optional(),
   'content': z.unknown().optional(),
   'error': errorDetailSchema.nullable(),
@@ -82,13 +77,16 @@ class ApiError implements Exception {
 }
 
 /// OAuth 프로토콜 표면의 평면 에러 (RFC 6749 §5.2, RFC 7591 §3.2.2)
-final _oauthErrorSchema = z.plainObject({
-  'error': z.string(),
-  'error_description': z.string().optional(),
-});
+final _oauthErrorSchema = z.plainObject({'error': z.string(), 'error_description': z.string().optional()});
 
 /// 에이전트 쓰기가 승인 대기로 보류됐다(202)는 응답 코드입니다.
 const APPROVAL_REQUIRED_CODE = 'APPROVAL_REQUIRED';
+
+/// 운영 관리 API 주소(버전 경로 포함)입니다. 클라이언트·세션의 `baseUrl` 기본값이고, 개발·로컬에서만 다른 주소를 지정합니다.
+const SAYREN_API_BASE_URL = 'https://api.sayren.io/v1';
+
+/// 운영 api 오리진입니다. 경로를 스스로 붙이는 함수([delegateMember])의 `baseUrl` 기본값입니다.
+const SAYREN_API_ORIGIN = 'https://api.sayren.io';
 
 /// 같은 멱등키의 승인 요청이 이미 끝났다(200)는 응답 코드입니다. 결과는 승인 요청의 `status`·`result`입니다.
 const APPROVAL_ALREADY_DECIDED_CODE = 'APPROVAL_ALREADY_DECIDED';

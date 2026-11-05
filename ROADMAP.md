@@ -4,7 +4,7 @@ sayren 공개 API를 Flutter(Dart)에서 쓰는 SDK다. Node SDK(`@sayren/storef
 엔트리포인트, export, 팩토리, 옵션 필드, 네임스페이스, 메서드 이름은 Node SDK와 1:1로 대응한다. 예외는 두 가지다.
 Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 기능을 대신하는 이름은 아래 설계 규칙이 정한 것만 더한다.
 
-- 기준 소스: `avarcorp/sayren` `490c9e3`, `@sayren/storefront-sdk` 0.24.0 · `@sayren/store-sdk` 0.36.0
+- 기준 소스: `avarcorp/sayren` `2a6e55a`, `@sayren/storefront-sdk` 0.40.0 · `@sayren/store-sdk` 0.71.0
 - 이 문서의 목록은 Node SDK 소스(`src/**/*.ts`의 export, `client.ts`의 반환 객체, 옵션 인터페이스)에서 스크립트로 뽑았다. Node SDK가 바뀌면 같은 방식으로 다시 뽑아 맞춘다.
 
 ## 네이밍 규칙
@@ -40,6 +40,7 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
   - `string | 객체` 인자(`apps.installations.install`)는 `Object`로 받고 실행 중 형태를 본다. `T & { … }` 원소(`dispatchBulk`)는 `(orderItemId:, dispatch: T)` 레코드다.
   - `Omit<T, …>`·`PageParams & Omit<…>` 인자는 T 클래스 또는 네임드 인자다. 모델·인터페이스 인자의 기본값 `= {}`는 생략 가능 인자로 받고 빈 객체로 바꾼다.
 - 위치 인자는 같은 순서의 위치 인자다. Node의 선택 인자(`params?`)는 Dart 선택 위치 인자(`[params]`)이고, 기본값(`input = {}`)도 같다.
+- 생략 가능한 `baseUrl`(Node `options.baseUrl ?? SAYREN_*`)은 같은 상수를 기본값으로 둔 선택 인자다.
 - `TokenSource`는 `String` 또는 `String? Function()`을 받는다(Dart에 union이 없어 `Object?`로 받고 실행 중 검사한다).
 - nullable이면서 선택인 요청 필드(「null을 주면 지운다」)는 `Nullable<T>?`로 받는다. 생략하면 보내지 않고, `Nullable(null)`이면 null, `Nullable(값)`이면 그 값을 보낸다. 그 밖의 선택 필드는 `T?`이고 null이면 보내지 않는다.
 
@@ -63,6 +64,13 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
   - transform으로 바로 다른 모델이 되는 객체(모르는 이행 유형의 입력 등)는 클래스를 두지 않는다.
 - intersection(`paymentOptionSchema.and({...})`)은 zod처럼 양쪽을 따로 검증하고, 출력은 형태마다 객체를 합친 판별 union 클래스다.
 - 제네릭 익명 타입인 `pageSchema(item)`의 출력은 `Page<T>`(`PageInfo` + `contents`)다.
+- `z.tuple([...])`은 `List<T>`다(자리마다 타입이 다르면 `List<Object?>`). 길이 검사와 이슈는 zod와 같다.
+- 익명 클래스 이름이 export 이름과 겹치면 export가 그 이름을 갖고 익명 클래스는 끝에 `Field`를 붙인다(`orderSchema.payment` → `OrderPaymentField`, export `OrderPayment`가 따로 있다).
+- 스키마 출력 클래스와 이름이 같은 TS 인터페이스(`ConditionRule`, `CouponTargetTree`)는 만들지 않고 스키마 모델이 그 이름을 갖는다.
+  인터페이스가 스키마보다 넓으면(`CouponFacts`는 구매자 클레임을 더 싣는다) 인터페이스가 이름을 갖고 스키마 모델 이름은 생성기 `SCHEMA_OUTPUT_NAMES`가 정한다(`couponFactsSchema` → `CouponFactsSnapshot`).
+- 고정 단계로 펼친 재귀 스키마(`conditionGroupSchema`, 3단 그룹)는 manual part가 스키마와 모델을 함께 쓴다(생성기 `MANUAL_SCHEMAS`). 모델은 TS 타입처럼 `ConditionGroup` 하나이고 규칙·그룹은 `ConditionNode`를 구현한다.
+- `extends Omit<T, "a" | "b">` 인터페이스는 T의 나머지 필드를 펼친 클래스다(Dart는 필드를 뺀 상속이 없다).
+- 제네릭 TS 인터페이스(`ConditionFieldDef<Ctx>`)는 manual part의 제네릭 클래스다.
 - 클라이언트 네임스페이스(`client.catalog` 등)는 공개 클래스다. pub 문서에 메서드가 나오게 하려는 것이다. 이름은 `{클라이언트 타입}{네임스페이스 PascalCase}`다(`StorefrontClientCatalog`, `client.me.customerInquiries`는 `StorefrontClientMeCustomerInquiries`). 생성자는 비공개다.
 
 ### 검증과 오류
@@ -72,6 +80,10 @@ Node에서 `@deprecated`인 이름은 만들지 않고, Dart에 없는 언어 �
 - 기본 HTTP(`fetch` 생략)는 클라이언트마다 `http.Client` 하나를 재사용한다.
 - 검증 실패는 `ZodError`를 던진다. Node SDK는 `zod`의 `ZodError`를 그대로 던지므로, Dart SDK는 같은 이름의 클래스(`issues`)를 기본 엔트리포인트에서 export한다.
 - HTTP 실패는 `ApiError`, 관리 API의 승인 대기(202)는 `ApprovalPendingError`다.
+- 관리 API 요청 스키마(Node `strictRequest`)는 Dart에서도 안쪽 객체까지 모르는 키를 `unrecognized_keys` 이슈로 거른다(`z.looseObject`는 그대로).
+  객체 스키마는 `strictRequest: true`, 객체가 아닌 스키마는 `z.strictRequest(...)`로 감싼다. `z.strictObject`는 그 객체만 거르는 `strict: true`다.
+  생성기는 Node 로더 훅(`tool/codegen/strict-hooks.mjs`)으로 strictRequest 복제본을 원본 스키마에 이어, 공유 하위 스키마를 같은 클래스로 둔다.
+- Dart에 시간대·로캘 데이터가 없어 `Intl.DateTimeFormat({ timeZone })`·`Intl.getCanonicalLocales` 검사는 형식만 본다(IANA 이름·UTC 오프셋, BCP 47 태그). 있는 시간대인지는 서버가 판정한다.
 
 ### 세션 저장소
 
@@ -117,12 +129,12 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 
 ### `createStorefrontClient`
 
-- [x] `StorefrontClientOptions`: `baseUrl`, `storeCode?`, `accessToken?`, `auth?`, `cartToken?`, `visitorId?`, `sessionId?`, `country?`, `host?`, `locale?`, `onCartToken?`, `session?`, `fetch?` — `session?`은 세션(`createStorefrontSession`)과 함께 만든다
+- [x] `StorefrontClientOptions`: `baseUrl?`, `storeCode?`, `accessToken?`, `auth?`, `cartToken?`, `visitorId?`, `sessionId?`, `country?`, `host?`, `locale?`, `onCartToken?`, `session?`, `fetch?` — `session?`은 세션(`createStorefrontSession`)과 함께 만든다
 - [x] 최상위 멤버: `accessToken`, `refreshToken`, `userinfo()`
 
-엔드포인트 78개(경로는 `/storefront/v1` 기준):
+엔드포인트 84개(경로는 `/storefront/v1` 기준):
 
-#### `auth` (12)
+#### `auth` (13)
 
 - [x] `auth.anonymous` · `POST /storefront/v1/auth/anonymous`
 - [x] `auth.signup` · `POST /storefront/v1/auth/signup`
@@ -131,6 +143,7 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 - [x] `auth.logout` · `POST /storefront/v1/auth/logout`
 - [x] `auth.idpAuthorize` · `POST /storefront/v1/auth/idp/{provider}/authorize`
 - [x] `auth.idpToken` · `POST /storefront/v1/auth/idp/token`
+- [x] `auth.requestPasswordReset` · `POST /storefront/v1/auth/password-reset`
 - [x] `auth.withdraw` · `POST /storefront/v1/auth/withdraw`
 - [x] `auth.identities` · `GET /storefront/v1/me/identities`
 - [x] `auth.linkIdentityAuthorize` · `POST /storefront/v1/me/identities/{provider}/authorize`
@@ -141,7 +154,7 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 
 - [x] `store.get` · `GET /storefront/v1/store`
 
-#### `catalog` (12)
+#### `catalog` (14)
 
 - [x] `catalog.listCategories` · `GET /storefront/v1/categories`
 - [x] `catalog.getPointPolicy` · `GET /storefront/v1/point-policy`
@@ -151,8 +164,10 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 - [x] `catalog.listProductInquiries` · `GET /storefront/v1/products/{productId}/inquiries`
 - [x] `catalog.getProductCalendar` · `GET /storefront/v1/products/{productId}/calendar`
 - [x] `catalog.createInquiry` · `POST /storefront/v1/products/{productId}/inquiries`
+- [x] `catalog.listSitemapProducts` · `GET /storefront/v1/sitemap/products`
 - [x] `catalog.listCollections` · `GET /storefront/v1/collections`
 - [x] `catalog.listCoupons` · `GET /storefront/v1/coupons`
+- [x] `catalog.getCouponBenefit` · `GET /storefront/v1/products/{productId}/coupon-benefit`
 - [x] `catalog.getCollection` · `GET /storefront/v1/collections/{slug}`
 - [x] `catalog.listCollectionProducts` · `GET /storefront/v1/collections/{slug}/products`
 
@@ -168,13 +183,15 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 - [x] `cart.removeItem` · `DELETE /storefront/v1/cart/items/{cartItemId}`
 - [x] `cart.createInputImageUpload` · `POST /storefront/v1/uploads/order-inputs`
 
-#### `checkout` (5)
+#### `checkout` (7)
 
 - [x] `checkout.create` · `POST /storefront/v1/checkout`
+- [x] `checkout.get` · `GET /storefront/v1/checkout/{checkoutId}`
 - [x] `checkout.quoteDelivery` · `POST /storefront/v1/checkout/{checkoutId}/delivery-quote`
 - [x] `checkout.startPayment` · `POST /storefront/v1/checkout/{checkoutId}/payment`
 - [x] `checkout.pricing` · `POST /storefront/v1/checkout/{checkoutId}/pricing`
 - [x] `checkout.applicableCoupons` · `GET /storefront/v1/checkout/{checkoutId}/coupons`
+- [x] `checkout.bestCoupons` · `GET /storefront/v1/checkout/{checkoutId}/best-coupons`
 
 #### `payments` (4)
 
@@ -231,10 +248,11 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 
 - [x] `inquiries.listMine` · `GET /storefront/v1/me/inquiries`
 
-#### `me` (2)
+#### `me` (3)
 
 - [x] `me.coupons` · `GET /storefront/v1/me/coupons`
 - [x] `me.downloadCoupon` · `POST /storefront/v1/coupons/{couponId}/download`
+- [x] `me.registerCoupon` · `POST /storefront/v1/coupons/register`
 
 #### `me.customerInquiries` (3)
 
@@ -244,27 +262,30 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 
 ### `createStorefrontSession`
 
-- [x] `StorefrontSessionOptions`: `baseUrl`, `storeCode?`, `storage`, `fetch?`
+- [x] `StorefrontSessionOptions`: `baseUrl?`, `storeCode?`, `storage`, `fetch?`
 - [x] `StorefrontSession`: `login()`, `signup()`, `refresh()`, `accessToken`, `refreshToken`, `userinfo()`, `clear()`, `subscribe()`
 
 ### export
 
-총 375개.
+총 419개.
 
+- [x] `src/analytics-ids.ts` → `lib/src/analytics-ids.dart` (1): `analyticsIdsFromCookie`
+- [x] `src/client.ts` → `lib/src/client.dart` (3): `StorefrontClientOptions`, `createStorefrontClient`, `StorefrontClient`
+- [x] `src/http.ts` → `lib/src/http.dart` (5): `ApiError`, `TokenSource`, `Query`, `buildQuery`, `SAYREN_STOREFRONT_API_BASE_URL`
 - [x] `src/schemas/analytics.ts` → `lib/src/schemas/analytics.dart` (15): `analyticsIdSchema`, `ANALYTICS_VISITOR_COOKIE`, `ANALYTICS_SESSION_COOKIE`, `ANALYTICS_VISITOR_HEADER`, `ANALYTICS_SESSION_HEADER`, `analyticsClientEventNameSchema`, `AnalyticsClientEventName`, `analyticsServerEventNameSchema`, `AnalyticsServerEventName`, `AnalyticsEventName`, `analyticsClientEventSchema`, `AnalyticsClientEvent`, `analyticsBatchSchema`, `AnalyticsBatch`, `ANALYTICS_MAX_BATCH_BYTES`
-- [x] `src/schemas/auth.ts` → `lib/src/schemas/auth.dart` (25): `tokenPairSchema`, `TokenPair`, `signupRequestSchema`, `SignupRequest`, `loginRequestSchema`, `LoginRequest`, `anonymousSessionSchema`, `AnonymousSession`, `withdrawRequestSchema`, `WithdrawRequest`, `withdrawalBlockedDetailsSchema`, `WithdrawalBlockedDetails`, `socialProviderSchema`, `SocialProvider`, `idpAgreementsSchema`, `IdpAgreements`, `idpAuthorizeRequestSchema`, `IdpAuthorizeRequest`, `idpAuthorizeResponseSchema`, `idpTokenRequestSchema`, `IdpTokenRequest`, `memberIdentitiesSchema`, `MemberIdentities`, `linkIdentityRequestSchema`, `LinkIdentityRequest`
+- [x] `src/schemas/auth.ts` → `lib/src/schemas/auth.dart` (33): `tokenPairSchema`, `TokenPair`, `buyerPasswordSchema`, `signupRequestSchema`, `SignupRequest`, `loginRequestSchema`, `LoginRequest`, `anonymousSessionSchema`, `AnonymousSession`, `withdrawRequestSchema`, `WithdrawRequest`, `withdrawalBlockedDetailsSchema`, `WithdrawalBlockedDetails`, `socialProviderSchema`, `SocialProvider`, `idpAgreementsSchema`, `IdpAgreements`, `idpAuthorizeRequestSchema`, `IdpAuthorizeRequest`, `idpAuthorizeResponseSchema`, `idpTokenRequestSchema`, `IdpTokenRequest`, `memberIdentitiesSchema`, `MemberIdentities`, `linkIdentityRequestSchema`, `LinkIdentityRequest`, `passwordResetRequestSchema`, `PasswordResetRequest`, `passwordResetInspectRequestSchema`, `passwordResetInspectResponseSchema`, `PasswordResetInspectResponse`, `passwordResetConfirmRequestSchema`, `passwordResetConfirmResponseSchema`
 - [x] `src/schemas/cart.ts` → `lib/src/schemas/cart.dart` (8): `cartItemSchema`, `CartItem`, `cartSchema`, `Cart`, `addCartItemRequestSchema`, `AddCartItemRequest`, `updateCartItemRequestSchema`, `UpdateCartItemRequest`
-- [x] `src/schemas/catalog.ts` → `lib/src/schemas/catalog.dart` (30): `CategoryNode`, `categoryNodeSchema`, `productCardSchema`, `ProductCard`, `productNoticeViewSchema`, `ProductNoticeView`, `productCertificationsViewSchema`, `ProductCertificationsView`, `infoSectionViewSchema`, `InfoSectionView`, `productDetailSchema`, `ProductDetail`, `productSortSchema`, `ProductSort`, `ProductSearchParams`, `productFacetsSchema`, `ProductFacets`, `productPageSchema`, `ProductPage`, `storefrontCollectionSchema`, `StorefrontCollection`, `collectionProductSortSchema`, `CollectionProductSortParam`, `storefrontCollectionDetailSchema`, `StorefrontCollectionDetail`, `CollectionProductParams`, `collectionProductQuerySchema`, `collectionProductPageSchema`, `CollectionProductPage`, `storefrontCollectionListQuerySchema`
+- [x] `src/schemas/catalog.ts` → `lib/src/schemas/catalog.dart` (41): `CategoryNode`, `categoryNodeSchema`, `productCardSchema`, `ProductCard`, `productNoticeViewSchema`, `ProductNoticeView`, `productCertificationsViewSchema`, `ProductCertificationsView`, `infoSectionViewSchema`, `InfoSectionView`, `productDetailSchema`, `ProductDetail`, `PriceView`, `priceViewOf`, `ProductVariant`, `findVariant`, `OptionValueState`, `OptionChoices`, `optionChoicesOf`, `productSortSchema`, `ProductSort`, `ProductSearchParams`, `productFacetsSchema`, `ProductFacets`, `productPageSchema`, `ProductPage`, `sitemapProductSchema`, `SitemapProduct`, `sitemapProductPageSchema`, `SitemapProductPage`, `storefrontCollectionSchema`, `StorefrontCollection`, `collectionProductSortSchema`, `CollectionProductSortParam`, `storefrontCollectionDetailSchema`, `StorefrontCollectionDetail`, `CollectionProductParams`, `collectionProductQuerySchema`, `collectionProductPageSchema`, `CollectionProductPage`, `storefrontCollectionListQuerySchema`
 - [x] `src/schemas/checkout.ts` → `lib/src/schemas/checkout.dart` (73): `createCheckoutRequestSchema`, `CreateCheckoutRequest`, `remoteAreaSchema`, `RemoteArea`, `checkoutDeliverySchema`, `CheckoutDelivery`, `checkoutSessionSchema`, `CheckoutSession`, `deliveryQuoteRequestSchema`, `DeliveryQuoteRequest`, `deliveryQuoteSchema`, `DeliveryQuoteResult`, `paymentMethodSchema`, `PaymentMethod`, `responsePaymentMethodSchema`, `ResponsePaymentMethod`, `pgProviderSchema`, `PgProvider`, `easyPayProviderSchema`, `EasyPayProvider`, `easyPayProviderResponseSchema`, `paymentOptionSchema`, `PaymentOption`, `availablePaymentOptionSchema`, `AvailablePaymentOption`, `paymentOptionListSchema`, `paymentOptionKey`, `CONTACT_PHONE_PATTERN`, `shippingAddressInputSchema`, `ShippingAddressInput`, `INTERNATIONAL_PHONE_PATTERN`, `internationalShippingAddressInputSchema`, `InternationalShippingAddressInput`, `ORDERER_PHONE_PATTERN`, `guestInfoSchema`, `GuestInfo`, `CASH_RECEIPT_METHODS`, `cashReceiptAvailable`, `cashReceiptTypeSchema`, `CashReceiptType`, `CashReceiptIdentityType`, `residentNumberLike`, `cashReceiptIdentityTypeOf`, `cashReceiptRequestSchema`, `CashReceiptRequest`, `startPaymentRequestSchema`, `StartPaymentRequest`, `retryPaymentRequestSchema`, `RetryPaymentRequest`, `paymentLaunchSchema`, `PaymentLaunch`, `confirmPaymentRequestSchema`, `ConfirmPaymentRequest`, `paymentConfirmResultSchema`, `PaymentConfirmResult`, `reportPaymentFailureRequestSchema`, `ReportPaymentFailureRequest`, `paymentFailureResultSchema`, `PaymentFailureResult`, `PAYMENT_START_STATUS_VALUES`, `KnownPaymentStartStatus`, `paymentStartSchema`, `PaymentStart`, `paymentFailureCategorySchema`, `PaymentFailureCategory`, `PAYMENT_STATUS_VALUES`, `KnownPaymentStatus`, `PAYMENT_RESULT_VALUES`, `KnownPaymentResult`, `paymentStatusSchema`, `PaymentStatus`, `paymentMessageSchema`, `PaymentMessage`
 - [x] `src/schemas/claim.ts` → `lib/src/schemas/claim.dart` (14): `claimTypeSchema`, `ClaimType`, `claimReasonSchema`, `ClaimReason`, `createClaimRequestSchema`, `CreateClaimRequest`, `createClaimResultSchema`, `CreateClaimResult`, `claimPreviewSchema`, `ClaimPreview`, `claimReturnAddressSchema`, `ClaimReturnAddress`, `myClaimSchema`, `MyClaim`
 - [x] `src/schemas/commerce-flow.ts` → `lib/src/schemas/commerce-flow.dart` (19): `flowInputFieldSchema`, `FlowInputField`, `flowActionSchema`, `FlowAction`, `flowFieldValueSchema`, `FlowFieldValue`, `flowStateSchema`, `FlowState`, `ORDER_STEP_TYPES`, `orderStepSchema`, `OrderStep`, `flowActionRequestSchema`, `FlowActionRequest`, `guestFlowActionRequestSchema`, `GuestFlowActionRequest`, `flowActionResultSchema`, `FlowActionResult`, `orderFlowActionResultSchema`, `OrderFlowActionResult`
 - [x] `src/schemas/commerce-number.ts` → `lib/src/schemas/commerce-number.dart` (3): `formatOrderNo`, `parseOrderNo`, `commerceNumberField`
 - [x] `src/schemas/common.ts` → `lib/src/schemas/common.dart` (8): `pageInfoSchema`, `PageInfo`, `pageSchema`, `PageParams`, `orderItemStatusSchema`, `OrderItemStatus`, `claimStatusSchema`, `ClaimStatus`
 - [x] `src/schemas/consent.ts` → `lib/src/schemas/consent.dart` (12): `consentKindSchema`, `ConsentKind`, `consentActionSchema`, `ConsentAction`, `consentSourceSchema`, `ConsentSource`, `consentStateSchema`, `ConsentState`, `memberConsentsSchema`, `MemberConsents`, `consentUpdateRequestSchema`, `ConsentUpdateRequest`
-- [x] `src/schemas/coupon.ts` → `lib/src/schemas/coupon.dart` (23): `couponApplicationSchema`, `CouponApplication`, `MAX_COUPONS_PER_CHECKOUT`, `couponApplicationListSchema`, `couponBenefitViewSchema`, `couponResultSchema`, `CouponResult`, `pricingAmountsSchema`, `checkoutPricingRequestSchema`, `CheckoutPricingRequest`, `MIN_PAYMENT_AMOUNT`, `checkoutPricingSchema`, `CheckoutPricing`, `applicableCouponSchema`, `ApplicableCoupon`, `myCouponSchema`, `MyCoupon`, `myCouponListQuerySchema`, `storefrontCouponTargetSchema`, `storefrontCouponSchema`, `StorefrontCoupon`, `storefrontCouponListQuerySchema`, `StorefrontCouponListParams`
+- [x] `src/schemas/coupon.ts` → `lib/src/schemas/coupon.dart` (36): `couponApplicationSchema`, `CouponApplication`, `MAX_COUPONS_PER_CHECKOUT`, `couponApplicationListSchema`, `couponBenefitViewSchema`, `couponRewardViewSchema`, `CouponRewardView`, `couponResultSchema`, `CouponResult`, `pricingAmountsSchema`, `checkoutPricingRequestSchema`, `CheckoutPricingRequest`, `MIN_PAYMENT_AMOUNT`, `checkoutPricingSchema`, `CheckoutPricing`, `couponRequirementSchema`, `CouponRequirement`, `applicableCouponSchema`, `ApplicableCoupon`, `registerCouponRequestSchema`, `RegisterCouponRequest`, `myCouponSchema`, `MyCoupon`, `myCouponListQuerySchema`, `storefrontCouponTargetSchema`, `storefrontCouponSchema`, `StorefrontCoupon`, `storefrontCouponListQuerySchema`, `StorefrontCouponListParams`, `bestCouponEntrySchema`, `BestCouponEntry`, `productCouponBenefitSchema`, `ProductCouponBenefit`, `productCouponBenefitQuerySchema`, `checkoutBestCouponsSchema`, `CheckoutBestCoupons`
 - [x] `src/schemas/currency.ts` → `lib/src/schemas/currency.dart` (20): `CurrencySpec`, `CURRENCIES`, `CurrencyCode`, `CURRENCY_CODES`, `BASE_CURRENCY`, `currencyCodeSchema`, `isCurrencyCode`, `currencySpecOf`, `toMinor`, `minorToMajor`, `toDecimalString`, `fromDecimalString`, `floorToSaleUnit`, `isSaleUnitPrice`, `InvalidPriceUnitError`, `assertSaleUnit`, `minPaymentOf`, `MoneyRules`, `moneyRulesOf`, `KRW_MONEY_RULES`
 - [x] `src/schemas/customer-inquiry.ts` → `lib/src/schemas/customer-inquiry.dart` (6): `customerInquiryCategorySchema`, `CustomerInquiryCategory`, `customerInquirySchema`, `CustomerInquiry`, `createCustomerInquiryRequestSchema`, `CreateCustomerInquiryRequest`
-- [x] `src/schemas/fulfillment.ts` → `lib/src/schemas/fulfillment.dart` (11): `UnknownFulfillmentView`, `productCardFulfillmentSchema`, `ProductCardFulfillment`, `productFulfillmentViewSchema`, `ProductFulfillmentView`, `lineFulfillmentSchema`, `LineFulfillment`, `pickupLocationViewSchema`, `PickupLocationView`, `myOrderItemFulfillmentSnapshotSchema`, `MyOrderItemFulfillmentSnapshot`
+- [x] `src/schemas/fulfillment.ts` → `lib/src/schemas/fulfillment.dart` (13): `UnknownFulfillmentView`, `productCardFulfillmentSchema`, `ProductCardFulfillment`, `productFulfillmentViewSchema`, `ProductFulfillmentView`, `DeliveryNotice`, `deliveryNoticeOf`, `lineFulfillmentSchema`, `LineFulfillment`, `pickupLocationViewSchema`, `PickupLocationView`, `myOrderItemFulfillmentSnapshotSchema`, `MyOrderItemFulfillmentSnapshot`
 - [x] `src/schemas/inquiry.ts` → `lib/src/schemas/inquiry.dart` (8): `productInquiryCategorySchema`, `ProductInquiryCategory`, `publicInquirySchema`, `PublicInquiry`, `createInquiryRequestSchema`, `CreateInquiryRequest`, `createInquiryResultSchema`, `CreateInquiryResult`
 - [x] `src/schemas/member.ts` → `lib/src/schemas/member.dart` (14): `memberSchema`, `Member`, `updateProfileRequestSchema`, `UpdateProfileRequest`, `memberAddressSchema`, `MemberAddress`, `memberAddressRequestSchema`, `MemberAddressRequest`, `internationalMemberAddressRequestSchema`, `InternationalMemberAddressRequest`, `memberAddressWriteSchema`, `MemberAddressWrite`, `wishlistAddResultSchema`, `WishlistAddResult`
 - [x] `src/schemas/order.ts` → `lib/src/schemas/order.dart` (11): `myOrderItemSchema`, `MyOrderItem`, `orderShippingAddressSchema`, `OrderShippingAddress`, `myOrderSchema`, `MyOrder`, `trackingStageResponseSchema`, `deliveryTrackingSchema`, `DeliveryTracking`, `purchaseDecisionResultSchema`, `PurchaseDecisionResult`
@@ -272,28 +293,26 @@ pub.dev API 문서(dartdoc)로 SDK를 익힐 수 있게 한다.
 - [x] `src/schemas/product-options.ts` → `lib/src/schemas/product-options.dart` (19): `addonGroupViewSchema`, `AddonGroupView`, `customInputViewSchema`, `CustomInputView`, `parseCustomInputValue`, `normalizeCustomInputValue`, `customInputLength`, `customInputEntrySchema`, `CustomInputEntry`, `addonSelectionSchema`, `AddonSelection`, `lineSelectionRequestShape`, `optionSelectionViewSchema`, `OptionSelectionView`, `customInputValueViewSchema`, `CustomInputValueView`, `lineSelectionResponseShape`, `orderInputUploadRequestSchema`, `OrderInputUploadRequest`
 - [x] `src/schemas/review.ts` → `lib/src/schemas/review.dart` (26): `publicReviewSchema`, `PublicReview`, `reviewSummarySchema`, `ReviewSummary`, `myReviewSchema`, `MyReview`, `writableReviewSchema`, `WritableReview`, `createReviewRequestSchema`, `CreateReviewRequest`, `createReviewResultSchema`, `CreateReviewResult`, `updateReviewRequestSchema`, `UpdateReviewRequest`, `productReviewSortSchema`, `ProductReviewSort`, `productReviewQuerySchema`, `ProductReviewParams`, `reviewImageUploadRequestSchema`, `ReviewImageUploadRequest`, `uploadTicketSchema`, `UploadTicket`, `reviewPageSchema`, `ReviewPage`, `updateReviewResultSchema`, `UpdateReviewResult`
 - [x] `src/schemas/stay.ts` → `lib/src/schemas/stay.dart` (6): `stayRequestSchema`, `StayRequest`, `stayViewSchema`, `StayView`, `calendarDayViewSchema`, `CalendarDayView`
-- [x] `src/schemas/store.ts` → `lib/src/schemas/store.dart` (4): `storefrontMarketSchema`, `StorefrontMarket`, `storefrontStoreSchema`, `StorefrontStore`
-- [x] `src/analytics-ids.ts` → `lib/src/analytics-ids.dart` (1): `analyticsIdsFromCookie`
-- [x] `src/client.ts` → `lib/src/client.dart` (3): `StorefrontClient`, `StorefrontClientOptions`, `createStorefrontClient`
-- [x] `src/http.ts` → `lib/src/http.dart` (4): `Query`, `TokenSource`, `ApiError`, `buildQuery`
-- [x] `src/session.ts` → `lib/src/session.dart` (5): `createStorefrontSession`, `SessionStorage`, `STOREFRONT_SESSION_KEYS`, `StorefrontSession`, `StorefrontSessionOptions`
+- [x] `src/schemas/store.ts` → `lib/src/schemas/store.dart` (7): `storefrontMarketSchema`, `StorefrontMarket`, `storefrontStoreSchema`, `StorefrontStore`, `formatBusinessNumber`, `SellerInfoField`, `sellerInfoOf`
+- [x] `src/schemas/userinfo.ts` → `lib/src/schemas/userinfo.dart` (6): `BIRTHDATE_PATTERN`, `userinfoAddressSchema`, `userinfoSchema`, `Userinfo`, `userinfoInputSchema`, `UserinfoInput`
+- [x] `src/session.ts` → `lib/src/session.dart` (5): `SessionStorage`, `STOREFRONT_SESSION_KEYS`, `StorefrontSessionOptions`, `StorefrontSession`, `createStorefrontSession`
 - [x] `ZodError` (설계 규칙 「검증과 오류」)
 
 ## `@sayren/storefront-sdk/auth` → `auth.dart`
 
 ### `createStorefrontAuth`
 
-- [x] `StorefrontAuthOptions`: `baseUrl`, `storeCode`, `fetch?`
-- [x] `StorefrontAuth`: `anonymous()`, `session()`, `signUp()`, `idp()`, `idpCallback()`, `identities()`, `linkIdp()`, `linkIdpCallback()`, `unlinkIdp()`, `refresh()`, `signOut()`, `withdraw()`
+- [x] `StorefrontAuthOptions`: `baseUrl?`, `storeCode`, `fetch?`
+- [x] `StorefrontAuth`: `anonymous()`, `session()`, `requestPasswordReset()`, `signUp()`, `idp()`, `idpCallback()`, `identities()`, `linkIdp()`, `linkIdpCallback()`, `unlinkIdp()`, `refresh()`, `signOut()`, `withdraw()`
 - [x] `idp`·`linkIdp`의 복귀는 앱 딥링크로 받아 `idpCallback`·`linkIdpCallback`에 넘긴다(PKCE·state 흐름은 같다)
 
 ### export
 
-총 15개.
+총 16개.
 
 - [x] `src/auth/index.ts` → `lib/src/auth/index.dart` (6): `IdpStart`, `IdpCallbackInput`, `IdpCallbackError`, `StorefrontAuthOptions`, `createStorefrontAuth`, `StorefrontAuth`
 - [x] `src/http.ts` → `lib/src/http.dart` (1): `ApiError`
-- [x] `src/schemas/auth.ts` → `lib/src/schemas/auth.dart` (8): `AnonymousSession`, `LoginRequest`, `MemberIdentities`, `SignupRequest`, `SocialProvider`, `TokenPair`, `WithdrawalBlockedDetails`, `WithdrawRequest`
+- [x] `src/schemas/auth.ts` → `lib/src/schemas/auth.dart` (9): `TokenPair`, `SignupRequest`, `LoginRequest`, `AnonymousSession`, `WithdrawRequest`, `WithdrawalBlockedDetails`, `SocialProvider`, `MemberIdentities`, `PasswordResetRequest`
 
 ## `@sayren/storefront-sdk/payments` → `payments.dart`
 
@@ -343,7 +362,7 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 
 - [x] `PaymentsOptions`: `client`, `returnUrl?`, `env?`
 - [x] `Payments`: `start()`, `retry()`, `open()`, `result()`, `getStatus()`
-- [x] `StartOptions`: `option?`, `shippingAddress?`, `guest?`, `cashReceipt?`, `coupons?`, `pointAmount?`, `returnUrl?`
+- [x] `StartOptions`: `option?`, `shippingAddress?`, `guest?`, `orderPassword?`, `cashReceipt?`, `coupons?`, `pointAmount?`, `returnUrl?`
 - [x] `RetryOptions`: `option`, `returnUrl?`, `cashReceipt?`
 
 ### export
@@ -358,7 +377,7 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 
 ### `createAnalytics`
 
-- [x] `AnalyticsOptions`: `baseUrl`, `storeCode`, `consent?`, `autoPageViews?`, `debug?`, `cookieDomain?`, `flushIntervalMs?`
+- [x] `AnalyticsOptions`: `baseUrl?`, `storeCode`, `consent?`, `autoPageViews?`, `debug?`, `cookieDomain?`, `flushIntervalMs?`
 - [x] `Analytics`: `track()`, `page()`, `setConsent()`, `ids()`, `flush()`, `destroy()`
 - [x] Node는 브라우저가 아니면 아무것도 하지 않는 객체를 돌려준다. Dart는 Flutter 기본 `AnalyticsEnv`로 동작한다
 - [x] 방문자·세션 ID는 쿠키 대신 앱 저장소에 둔다. `ids()` 값을 `StorefrontClientOptions(visitorId:, sessionId:)`에 넘기는 사용법은 같다
@@ -373,17 +392,30 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 
 - [x] `src/analytics/index.ts` → `lib/src/analytics/index.dart` (7): `AnalyticsConsent`, `AnalyticsOptions`, `AnalyticsTrackInput`, `Analytics`, `AnalyticsEnv`, `createAnalytics`, `createAnalyticsWith`
 
+## `@sayren/storefront-sdk/server` → `server.dart`
+
+sayren 호스팅에서 도는 사이트의 서버 코드가 구매자 세션을 다룬다. 이름은 Node와 같고 서버 코드 전용이다.
+
+- [x] `buyerTokenOf`는 Node `Request` 대신 요청 헤더 맵(`Map<String, String>`, 이름은 대소문자 무시)을 받는다
+- [x] `sessionSetHeader`·`sessionClearHeader`의 `[이름, 값]` 튜플은 레코드 `(String, String)`이다
+
+### export
+
+총 6개.
+
+- [x] `src/server/index.ts` → `lib/src/server/index.dart` (6): `BUYER_TOKEN_HEADER`, `SESSION_HEADER`, `SessionTokens`, `buyerTokenOf`, `sessionSetHeader`, `sessionClearHeader`
+
 ---
 
 ## `@sayren/store-sdk` → `sayren_store_sdk.dart`
 
 ### `createStoreClient`
 
-- [x] `StoreClientOptions`: `baseUrl`, `accessToken?`, `storeId?`, `session?`, `refresh?`, `onUnauthorized?`, `fetch?`
+- [x] `StoreClientOptions`: `baseUrl?`, `accessToken?`, `storeId?`, `session?`, `refresh?`, `onUnauthorized?`, `fetch?`
 - [x] 최상위 멤버: `accessToken`, `refreshToken`, `authorize()`, `userinfo()`
 - [x] `uploads.upload(file, (purpose:, filename:))`: Node의 `Blob`·`File` 자리에 `XFile`(`cross_file`)을 받는다. 파일 이름은 `filename`, 없으면 `XFile.name`이다
 
-엔드포인트 308개(경로는 `/v1` 기준):
+엔드포인트 360개(경로는 `/v1` 기준):
 
 #### `auth` (2)
 
@@ -393,7 +425,7 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 #### `uploads` (2)
 
 - [x] `uploads.create` · `POST /v1/uploads`
-- [x] `uploads.upload` · `POST /v1/uploads` + `PUT {uploadUrl}` (자리 발급과 바이트 업로드 합성, 용도별 확장자·크기 선검사)
+- [x] `uploads.upload` · `POST /v1/uploads`
 
 #### `products` (15)
 
@@ -418,6 +450,14 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `products.localizations.list` · `GET /v1/products/{productId}/localizations`
 - [x] `products.localizations.put` · `PUT /v1/products/{productId}/localizations/{locale}`
 - [x] `products.localizations.remove` · `DELETE /v1/products/{productId}/localizations/{locale}`
+
+#### `products.imports` (5)
+
+- [x] `products.imports.create` · `POST /v1/product-imports`
+- [x] `products.imports.addItems` · `POST /v1/product-imports/{importId}/items`
+- [x] `products.imports.start` · `POST /v1/product-imports/{importId}/start`
+- [x] `products.imports.get` · `GET /v1/product-imports/{importId}`
+- [x] `products.imports.lookup` · `POST /v1/product-imports/products`
 
 #### `savedOptionSets` (6)
 
@@ -456,6 +496,14 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `infoSections.localizations.put` · `PUT /v1/info-sections/{infoSectionId}/localizations/{locale}`
 - [x] `infoSections.localizations.remove` · `DELETE /v1/info-sections/{infoSectionId}/localizations/{locale}`
 
+#### `noticeTemplates` (5)
+
+- [x] `noticeTemplates.list` · `GET /v1/notice-templates`
+- [x] `noticeTemplates.get` · `GET /v1/notice-templates/{templateId}`
+- [x] `noticeTemplates.create` · `POST /v1/notice-templates`
+- [x] `noticeTemplates.update` · `PUT /v1/notice-templates/{templateId}`
+- [x] `noticeTemplates.remove` · `DELETE /v1/notice-templates/{templateId}`
+
 #### `collections` (10)
 
 - [x] `collections.list` · `GET /v1/collections`
@@ -492,16 +540,19 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `categories.localizations.put` · `PUT /v1/categories/{categoryId}/localizations/{locale}`
 - [x] `categories.localizations.remove` · `DELETE /v1/categories/{categoryId}/localizations/{locale}`
 
-#### `orders` (4)
+#### `orders` (6)
 
 - [x] `orders.list` · `GET /v1/orders`
 - [x] `orders.get` · `GET /v1/orders/{orderId}`
+- [x] `orders.create` · `POST /v1/orders`
 - [x] `orders.reissueCashReceipt` · `POST /v1/orders/{orderId}/cash-receipt/reissue`
+- [x] `orders.refund` · `POST /v1/orders/{orderId}/refunds`
 - [x] `orders.act` · `POST /v1/orders/{orderId}/actions/{key}`
 
-#### `orderItems` (23)
+#### `orderItems` (24)
 
 - [x] `orderItems.listChanged` · `GET /v1/order-items`
+- [x] `orderItems.listShipping` · `GET /v1/order-items/shipping`
 - [x] `orderItems.confirm` · `POST /v1/order-items/{orderItemId}/confirm`
 - [x] `orderItems.confirmBulk` · `POST /v1/order-items/confirm`
 - [x] `orderItems.hold` · `POST /v1/order-items/{orderItemId}/hold`
@@ -529,13 +580,16 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 
 - [x] `flowRuns.get` · `GET /v1/flow-runs/{runId}`
 
-#### `commerceFlows` (17)
+#### `commerceFlows` (29)
 
 - [x] `commerceFlows.presets` · `GET /v1/flow-presets`
 - [x] `commerceFlows.preset` · `GET /v1/flow-presets/{key}`
 - [x] `commerceFlows.list` · `GET /v1/commerce-flows`
+- [x] `commerceFlows.texts` · `GET /v1/commerce-flows/{flowId}/texts`
 - [x] `commerceFlows.get` · `GET /v1/commerce-flows/{flowId}`
 - [x] `commerceFlows.create` · `POST /v1/commerce-flows`
+- [x] `commerceFlows.update` · `PATCH /v1/commerce-flows/{flowId}`
+- [x] `commerceFlows.discardDraft` · `DELETE /v1/commerce-flows/{flowId}/draft`
 - [x] `commerceFlows.saveDraft` · `PUT /v1/commerce-flows/{flowId}/draft`
 - [x] `commerceFlows.check` · `POST /v1/commerce-flows/{flowId}/draft/check`
 - [x] `commerceFlows.publish` · `POST /v1/commerce-flows/{flowId}/draft/publish`
@@ -548,6 +602,21 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `commerceFlows.simulate` · `POST /v1/commerce-flows/{flowId}/draft/simulate`
 - [x] `commerceFlows.replay` · `POST /v1/commerce-flows/{flowId}/draft/replay`
 - [x] `commerceFlows.nodeTypes` · `GET /v1/flow-node-types`
+- [x] `commerceFlows.authoringGuide` · `GET /v1/flow-authoring-guide`
+- [x] `commerceFlows.nodeType` · `GET /v1/flow-node-types/{type}`
+- [x] `commerceFlows.draftNodes` · `GET /v1/commerce-flows/{flowId}/draft/nodes`
+- [x] `commerceFlows.draftNode` · `GET /v1/commerce-flows/{flowId}/draft/nodes/{nodeId}`
+- [x] `commerceFlows.draftEdges` · `GET /v1/commerce-flows/{flowId}/draft/edges`
+- [x] `commerceFlows.editSession` · `GET /v1/commerce-flows/{flowId}/draft/edit-session`
+- [x] `commerceFlows.claimEditSession` · `POST /v1/commerce-flows/{flowId}/draft/edit-session`
+- [x] `commerceFlows.releaseEditSession` · `DELETE /v1/commerce-flows/{flowId}/draft/edit-session`
+- [x] `commerceFlows.applyOperations` · `POST /v1/commerce-flows/{flowId}/draft/operations`
+
+#### `commerceFlows.localizations` (3)
+
+- [x] `commerceFlows.localizations.list` · `GET /v1/commerce-flows/{flowId}/localizations`
+- [x] `commerceFlows.localizations.put` · `PUT /v1/commerce-flows/{flowId}/localizations/{locale}`
+- [x] `commerceFlows.localizations.remove` · `DELETE /v1/commerce-flows/{flowId}/localizations/{locale}`
 
 #### `carriers` (1)
 
@@ -586,19 +655,23 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 
 - [x] `points.listHistory` · `GET /v1/points/history`
 
-#### `customers` (9)
+#### `customers` (13)
 
 - [x] `customers.getPoints` · `GET /v1/customers/{customerId}/points`
 - [x] `customers.listPointHistory` · `GET /v1/customers/{customerId}/points/history`
 - [x] `customers.adjustPoints` · `POST /v1/customers/{customerId}/points/adjustments`
 - [x] `customers.list` · `GET /v1/customers`
+- [x] `customers.export` · `GET /v1/customers/export`
 - [x] `customers.get` · `GET /v1/customers/{customerId}`
+- [x] `customers.update` · `PATCH /v1/customers/{customerId}`
 - [x] `customers.orders` · `GET /v1/customers/{customerId}/orders`
 - [x] `customers.consents` · `GET /v1/customers/{customerId}/consents`
 - [x] `customers.coupons` · `GET /v1/customers/{customerId}/coupons`
+- [x] `customers.sendPasswordReset` · `POST /v1/customers/{customerId}/password-reset`
+- [x] `customers.unlock` · `POST /v1/customers/{customerId}/unlock`
 - [x] `customers.withdraw` · `POST /v1/customers/{customerId}/withdraw`
 
-#### `coupons` (12)
+#### `coupons` (16)
 
 - [x] `coupons.list` · `GET /v1/coupons`
 - [x] `coupons.create` · `POST /v1/coupons`
@@ -608,6 +681,10 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `coupons.resume` · `POST /v1/coupons/{couponId}/resume`
 - [x] `coupons.end` · `POST /v1/coupons/{couponId}/end`
 - [x] `coupons.issue` · `POST /v1/coupons/{couponId}/issues`
+- [x] `coupons.voucherCodes` · `GET /v1/coupons/{couponId}/voucher-codes`
+- [x] `coupons.distribute` · `POST /v1/coupons/{couponId}/distributions`
+- [x] `coupons.distributions` · `GET /v1/coupons/{couponId}/distributions`
+- [x] `coupons.distribution` · `GET /v1/coupons/{couponId}/distributions/{distributionId}`
 - [x] `coupons.issues` · `GET /v1/coupons/{couponId}/issues`
 - [x] `coupons.redemptions` · `GET /v1/coupons/{couponId}/redemptions`
 - [x] `coupons.stats` · `GET /v1/coupons/{couponId}/stats`
@@ -650,13 +727,13 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `paymentSettings.upsertKakaoPay` · `PUT /v1/store/payment-providers/kakaopay`
 - [x] `paymentSettings.upsertNaverPay` · `PUT /v1/store/payment-providers/naverpay`
 - [x] `paymentSettings.upsertPayPal` · `PUT /v1/store/payment-providers/paypal`
+- [x] `paymentSettings.updateProvider`
+- [x] `paymentSettings.setSandboxMode`
 - [x] `paymentSettings.setPlatformTestKeys` · `PUT /v1/store/payment-providers/{provider}/platform-test-keys`
 - [x] `paymentSettings.status` · `GET /v1/store/payment-status`
 - [x] `paymentSettings.disconnect` · `DELETE /v1/store/payment-providers/{provider}`
 - [x] `paymentSettings.removeCredentialSet` · `DELETE /v1/store/payment-providers/{provider}/credentials/{environment}`
 - [x] `paymentSettings.verify` · `POST /v1/store/payment-providers/{provider}/verify`
-- [x] `paymentSettings.updateProvider` · `PATCH /v1/store/payment-providers/{provider}`
-- [x] `paymentSettings.setSandboxMode` · `PATCH /v1/store/payment-providers/{provider}` (`updateProvider`에 `{ sandboxMode }`만 싣는 합성)
 
 #### `appTools` (2)
 
@@ -737,6 +814,13 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `sellerAddresses.remove` · `DELETE /v1/seller-addresses/{addressId}`
 - [x] `sellerAddresses.setDefault` · `POST /v1/seller-addresses/{addressId}/default`
 
+#### `inventory` (4)
+
+- [x] `inventory.levels` · `GET /v1/inventory/levels`
+- [x] `inventory.movements` · `GET /v1/inventory/movements`
+- [x] `inventory.adjust` · `POST /v1/inventory/adjustments`
+- [x] `inventory.transfer` · `POST /v1/inventory/transfers`
+
 #### `inventory.locations` (4)
 
 - [x] `inventory.locations.list` · `GET /v1/inventory-locations`
@@ -744,12 +828,13 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `inventory.locations.update` · `PUT /v1/inventory-locations/{inventoryLocationId}`
 - [x] `inventory.locations.remove` · `DELETE /v1/inventory-locations/{inventoryLocationId}`
 
-#### `inventory` (4)
+#### `inventory.lowStock` (5)
 
-- [x] `inventory.levels` · `GET /v1/inventory/levels`
-- [x] `inventory.movements` · `GET /v1/inventory/movements`
-- [x] `inventory.adjust` · `POST /v1/inventory/adjustments`
-- [x] `inventory.transfer` · `POST /v1/inventory/transfers`
+- [x] `inventory.lowStock.list` · `GET /v1/inventory/low-stock`
+- [x] `inventory.lowStock.settings` · `GET /v1/inventory/low-stock-settings`
+- [x] `inventory.lowStock.updateSettings` · `PUT /v1/inventory/low-stock-settings`
+- [x] `inventory.lowStock.thresholds` · `GET /v1/inventory/low-stock-thresholds`
+- [x] `inventory.lowStock.setThresholds` · `PUT /v1/inventory/low-stock-thresholds`
 
 #### `markets` (5)
 
@@ -766,6 +851,13 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `pickupLocations.update` · `PUT /v1/pickup-locations/{locationId}`
 - [x] `pickupLocations.remove` · `DELETE /v1/pickup-locations/{locationId}`
 
+#### `checkouts` (4)
+
+- [x] `checkouts.create` · `POST /v1/checkouts`
+- [x] `checkouts.list` · `GET /v1/checkouts`
+- [x] `checkouts.get` · `GET /v1/checkouts/{checkoutId}`
+- [x] `checkouts.expire` · `POST /v1/checkouts/{checkoutId}/expire`
+
 #### `ai` (8)
 
 - [x] `ai.listConversations` · `GET /v1/ai/conversations`
@@ -777,11 +869,8 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `ai.getRunFileDiff` · `GET /v1/ai/runs/{runId}/file-changes`
 - [x] `ai.revertRun` · `POST /v1/ai/runs/{runId}/revert`
 
-#### `storefront` (41)
+#### `storefront` (50)
 
-- [x] `storefront.listTemplates` · `GET /v1/storefront/templates`
-- [x] `storefront.getStoreTemplate` · `GET /v1/storefront/template`
-- [x] `storefront.updateStoreTemplate` · `PUT /v1/storefront/template`
 - [x] `storefront.get` · `GET /v1/storefront/site`
 - [x] `storefront.checkSlug` · `GET /v1/storefront/slug-availability`
 - [x] `storefront.create` · `POST /v1/storefront/site`
@@ -799,6 +888,9 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `storefront.verifyDomain` · `POST /v1/storefront/site/domains/{domainId}/verify`
 - [x] `storefront.setPrimaryDomain` · `POST /v1/storefront/site/domains/{domainId}/primary`
 - [x] `storefront.removeDomain` · `DELETE /v1/storefront/site/domains/{domainId}`
+- [x] `storefront.listVars` · `GET /v1/storefront/site/env`
+- [x] `storefront.putVar` · `PUT /v1/storefront/site/env/{key}`
+- [x] `storefront.deleteVar` · `DELETE /v1/storefront/site/env/{key}`
 - [x] `storefront.disable` · `POST /v1/storefront/site/disable`
 - [x] `storefront.getEditing` · `GET /v1/storefront/site/editing`
 - [x] `storefront.startEditing` · `POST /v1/storefront/site/editing`
@@ -818,16 +910,17 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `storefront.getBuild` · `GET /v1/storefront/site/builds/{buildId}`
 - [x] `storefront.getSource` · `GET /v1/storefront/site/source`
 - [x] `storefront.getSourceArchive` · `GET /v1/storefront/site/source/archive`
-- [x] `storefront.uploadSourceBlobs` · `POST /v1/storefront/site/source/blobs`
+- [x] `storefront.uploadSourcePack` · `POST /v1/storefront/site/source/pack`
+- [x] `storefront.createSourceUploads` · `POST /v1/storefront/site/source/uploads`
 - [x] `storefront.replaceSource` · `PUT /v1/storefront/site/source`
-
-#### `subscription` (1)
-
-- [x] `subscription.get` · `GET /v1/store/subscription`
-
-#### `plans` (1)
-
-- [x] `plans.listPublic` · `GET /v1/public/plans`
+- [x] `storefront.setAutoPublish` · `PUT /v1/storefront/site/auto-publish`
+- [x] `storefront.setDeployApproval` · `PUT /v1/storefront/site/deploy-approval`
+- [x] `storefront.getGit` · `GET /v1/storefront/site/git`
+- [x] `storefront.createGitConnectState` · `POST /v1/storefront/site/git/installations/state`
+- [x] `storefront.linkGitInstallation` · `POST /v1/storefront/site/git/installations`
+- [x] `storefront.listGitRepositories` · `GET /v1/storefront/site/git/installations/{installationId}/repositories`
+- [x] `storefront.connectGit` · `POST /v1/storefront/site/git/connect`
+- [x] `storefront.disconnectGit` · `POST /v1/storefront/site/git/disconnect`
 
 #### `store` (11)
 
@@ -845,7 +938,7 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 
 ### `createStoreSession`
 
-- [x] `StoreSessionOptions`: `baseUrl`, `authServer`, `clientId`, `storage`, `fetch?`
+- [x] `StoreSessionOptions`: `baseUrl?`, `authServer`, `clientId`, `storage`, `fetch?`
 - [x] `StoreAuthServer`: `authorizeUrl`, `tokenUrl`, `revokeUrl`, `resource?`
 - [x] `AuthorizeOptions`: `redirectUri`, `scope?`, `prompt?`
 - [x] `StoreSession`: `getToken()`, `setTokens()`, `refresh()`, `clear()`, `logout()`, `subscribe()`, `accessToken`, `refreshToken`, `authorize()`, `handleCallback()`, `userinfo()`
@@ -854,58 +947,65 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 
 ### export
 
-총 1611개.
+총 1882개.
 
-- [x] `src/schemas/ai.ts` → `lib/src/schemas/ai.dart` (99): `aiAttachmentSchema`, `aiPreviewSelectionSchema`, `AiPreviewSelection`, `aiRunStatusSchema`, `AiRunStatus`, `AI_RUN_ACTIVE_STATUSES`, `aiStreamAccessSchema`, `AiStreamAccess`, `aiRunSchema`, `AiRun`, `aiActivitySchema`, `AiActivity`, `aiToolChangeSchema`, `AiToolChange`, `AI_AGENT_PHASES`, `aiAgentPhaseSchema`, `AiAgentPhase`, `AI_AGENT_NOTES_DIR`, `AI_TODO_STATUSES`, `aiTodoSchema`, `AiTodo`, `AI_TODOS_MAX`, `isAiAgentNotesPath`, `AI_DESIGN_DIR`, `AI_DESIGN_CANVAS_PATH`, `isAiDesignPath`, `AI_DESIGN_BOARD_FILE_PATTERN`, `AI_DESIGN_BOARD_KINDS`, `AI_DESIGN_VIEWPORTS`, `AI_DESIGN_BOARDS_MAX`, `aiDesignBoardSchema`, `AiDesignBoard`, `aiDesignCanvasSchema`, `AiDesignCanvas`, `aiDesignSelectionSchema`, `AiDesignSelection`, `STORE_SHOP_TYPES`, `storeShopTypeSchema`, `StoreShopType`, `aiChoiceOptionSchema`, `AiChoiceOption`, `aiSetupConfirmItemSchema`, `AiSetupConfirmItem`, `AI_SETUP_CONFIRM_APPROVE`, `aiDesignConfirmBoardSchema`, `AiDesignConfirmBoard`, `AI_DESIGN_CONFIRM_APPROVE`, `aiMessagePartSchema`, `AiMessagePart`, `aiMessageSchema`, `AiMessage`, `aiConversationSummarySchema`, `AiConversationSummary`, `aiConversationSchema`, `AiConversation`, `storeSetupBriefSchema`, `StoreSetupBrief`, `createAiConversationRequestSchema`, `CreateAiConversationRequest`, `createAiConversationResponseSchema`, `CreateAiConversationResponse`, `sendAiMessageRequestSchema`, `SendAiMessageRequest`, `sendAiMessageResponseSchema`, `SendAiMessageResponse`, `aiFocusAreaSchema`, `AiFocusArea`, `aiFocusSchema`, `AiFocus`, `AI_RUN_FILE_CHANGES_RETENTION_DAYS`, `aiRunChangesStatusSchema`, `AiRunChangesStatus`, `aiFileChangeKindSchema`, `AiFileChangeKind`, `aiRunChangesSchema`, `AiRunChanges`, `aiConversationFileChangesSchema`, `AiConversationFileChanges`, `aiRunFileDiffSchema`, `AiRunFileDiff`, `aiRunRevertResultSchema`, `AiRunRevertResult`, `aiRunRevertConflictDetailsSchema`, `AiRunRevertConflictDetails`, `aiStreamEventSchema`, `AiStreamEvent`, `aiStreamRecordSchema`, `AiStreamRecord`, `STORE_DRAFT_MAX_ATTACHMENTS`, `STORE_DRAFT_ATTACHMENT_MAX_BYTES`, `STORE_DRAFT_RETENTION_DAYS`, `createStoreDraftRequestSchema`, `CreateStoreDraftRequest`, `createStoreDraftResponseSchema`, `CreateStoreDraftResponse`, `storeDraftSchema`, `StoreDraft`, `storeDraftPreviewSchema`, `StoreDraftPreview`
+- [x] `src/client.ts` → `lib/src/client.dart` (3): `StoreClientOptions`, `createStoreClient`, `StoreClient`
+- [x] `src/http.ts` → `lib/src/http.dart` (9): `ApiError`, `APPROVAL_REQUIRED_CODE`, `APPROVAL_ALREADY_DECIDED_CODE`, `ApprovalPendingError`, `TokenSource`, `Query`, `buildQuery`, `SAYREN_API_BASE_URL`, `SAYREN_API_ORIGIN`
+- [x] `src/oauth.ts` → `lib/src/oauth.dart` (6): `oauthTokenResponseSchema`, `OAuthTokenResponse`, `createPkcePair`, `buildAuthorizeUrl`, `exchangeAuthorizationCode`, `refreshUserToken`
+- [x] `src/schemas/ai.ts` → `lib/src/schemas/ai.dart` (114): `aiAttachmentSchema`, `AiAttachment`, `AI_MESSAGE_MAX_CHARS`, `AI_MESSAGE_MAX_ATTACHMENTS`, `aiPreviewSelectionSchema`, `AiPreviewSelection`, `aiRunStatusSchema`, `AiRunStatus`, `AI_RUN_ACTIVE_STATUSES`, `aiStreamAccessSchema`, `AiStreamAccess`, `aiRunSchema`, `AiRun`, `aiActivitySchema`, `AiActivity`, `AI_TOOL_CHANGE_LINE_MAX`, `AI_TOOL_CHANGE_RANGES_MAX`, `aiToolChangeSchema`, `AiToolChange`, `AI_AGENT_PHASES`, `aiAgentPhaseSchema`, `AiAgentPhase`, `AI_AGENT_NOTES_DIR`, `AI_DESIGN_GUIDE_PATH`, `AI_SITEMAP_PATH`, `isAiWorkspaceDocPath`, `AI_RUN_RESUME_CHOICE`, `AI_TODO_STATUSES`, `aiTodoSchema`, `AiTodo`, `isAiAgentNotesPath`, `AI_DESIGN_DIR`, `AI_DESIGN_CANVAS_PATH`, `isAiDesignPath`, `AI_DESIGN_BOARD_FILE_PATTERN`, `AI_DESIGN_BOARD_KINDS`, `AI_DESIGN_VIEWPORTS`, `AI_DESIGN_BOARDS_MAX`, `aiDesignBoardSchema`, `AiDesignBoard`, `aiDesignCanvasSchema`, `AiDesignCanvas`, `aiDesignSelectionSchema`, `AiDesignSelection`, `STORE_SHOP_TYPES`, `storeShopTypeSchema`, `StoreShopType`, `aiChoiceOptionSchema`, `AiChoiceOption`, `aiSetupConfirmItemSchema`, `AiSetupConfirmItem`, `AI_SETUP_CONFIRM_APPROVE`, `AI_TRIAL_START`, `AI_TRIAL_LATER`, `aiDesignConfirmBoardSchema`, `AiDesignConfirmBoard`, `AI_DESIGN_CONFIRM_APPROVE`, `aiMessagePartSchema`, `AiMessagePart`, `aiMessageSchema`, `AiMessage`, `AI_AGENTS`, `aiAgentSchema`, `AiAgent`, `aiConversationSummarySchema`, `AiConversationSummary`, `aiConversationSchema`, `AiConversation`, `storeSetupBriefSchema`, `StoreSetupBrief`, `aiTimeZoneSchema`, `createAiConversationRequestSchema`, `CreateAiConversationRequest`, `createAiConversationResponseSchema`, `CreateAiConversationResponse`, `sendAiMessageRequestSchema`, `SendAiMessageRequest`, `sendAiMessageResponseSchema`, `SendAiMessageResponse`, `aiFocusAreaSchema`, `AiFocusArea`, `aiFocusSchema`, `AiFocus`, `AI_RUN_FILE_CHANGES_RETENTION_DAYS`, `aiRunChangesStatusSchema`, `AiRunChangesStatus`, `aiFileChangeKindSchema`, `AiFileChangeKind`, `aiRunChangesSchema`, `AiRunChanges`, `aiConversationFileChangesSchema`, `AiConversationFileChanges`, `aiRunFileDiffSchema`, `AiRunFileDiff`, `aiRunRevertResultSchema`, `AiRunRevertResult`, `aiRunRevertConflictDetailsSchema`, `AiRunRevertConflictDetails`, `aiStreamEventSchema`, `AiStreamEvent`, `aiStreamRecordSchema`, `AiStreamRecord`, `STORE_DRAFT_MAX_ATTACHMENTS`, `STORE_DRAFT_ATTACHMENT_MAX_BYTES`, `STORE_DRAFT_RETENTION_DAYS`, `createStoreDraftRequestSchema`, `CreateStoreDraftRequest`, `createStoreDraftResponseSchema`, `CreateStoreDraftResponse`, `storeDraftSchema`, `StoreDraft`, `storeDraftPreviewSchema`, `StoreDraftPreview`, `isAiChoiceAnswer`
 - [x] `src/schemas/analytics.ts` → `lib/src/schemas/analytics.dart` (44): `analyticsRangeQuerySchema`, `AnalyticsRangeParams`, `analyticsTotalsSchema`, `AnalyticsTotals`, `analyticsFunnelStepSchema`, `AnalyticsFunnelStep`, `analyticsOverviewSchema`, `AnalyticsOverview`, `analyticsProductSortSchema`, `AnalyticsProductSort`, `analyticsProductsQuerySchema`, `AnalyticsProductsParams`, `analyticsProductRowSchema`, `AnalyticsProductRow`, `analyticsProductsSchema`, `AnalyticsProducts`, `analyticsChannelSchema`, `AnalyticsChannel`, `analyticsSourceGroupBySchema`, `AnalyticsSourceGroupBy`, `analyticsSourcesQuerySchema`, `AnalyticsSourcesParams`, `analyticsSourceRowSchema`, `AnalyticsSourceRow`, `analyticsSourcesSchema`, `AnalyticsSources`, `analyticsRealtimeSchema`, `AnalyticsRealtime`, `analyticsDeviceRowSchema`, `AnalyticsDeviceRow`, `analyticsDevicesSchema`, `AnalyticsDevices`, `analyticsPagesQuerySchema`, `AnalyticsPagesParams`, `analyticsPagesSchema`, `AnalyticsPages`, `analyticsSearchQuerySchema`, `AnalyticsSearchParams`, `analyticsSearchSchema`, `AnalyticsSearch`, `analyticsCheckoutOutcomeSchema`, `AnalyticsCheckoutOutcome`, `analyticsCheckoutSchema`, `AnalyticsCheckout`
 - [x] `src/schemas/api-log.ts` → `lib/src/schemas/api-log.dart` (17): `apiLogPrincipalTypeSchema`, `ApiLogPrincipalType`, `apiLogPrincipalSchema`, `ApiLogPrincipal`, `apiLogErrorSchema`, `ApiLogError`, `apiLogSchema`, `ApiLog`, `apiLogStatusFilterSchema`, `ApiLogStatusFilter`, `apiLogListQuerySchema`, `ApiLogListParams`, `ApiLogListOptions`, `apiLogPageSchema`, `ApiLogPage`, `apiLogSummarySchema`, `ApiLogSummary`
 - [x] `src/schemas/app-manifest.ts` → `lib/src/schemas/app-manifest.dart` (74): `APP_HANDLE_PATTERN`, `APP_RESERVED_HANDLES`, `appHandleSchema`, `NON_INSTALLABLE_SCOPES`, `INSTALLABLE_SCOPES`, `isInstallableScope`, `appScopeSchema`, `APP_LIFECYCLE_EVENT_TYPES`, `AppLifecycleEventType`, `AppEventType`, `AppLifecycleEventDataMap`, `AppEventDataOf`, `APP_EVENT_SCOPES`, `APP_EVENT_TYPES`, `appEventTypeSchema`, `scopesCoverEvent`, `APP_NETWORK_DENIED_SUFFIXES`, `appNetworkHostProblem`, `appNetworkHostSchema`, `APP_SETTING_FIELD_TYPES`, `AppSettingFieldType`, `APP_SETTINGS_MAX_FIELDS`, `APP_SETTING_KEY_PATTERN`, `appSettingFieldSchema`, `AppSettingField`, `APP_SECRET_NAME_PATTERN`, `APP_SECRETS_MAX`, `APP_EVENTS_MAX`, `APP_NETWORK_HOSTS_MAX`, `APP_PUBLIC_HTTP_MAX`, `APP_SCHEDULES_MAX`, `APP_HTTP_KEY_PATTERN`, `APP_SCHEDULE_NAME_PATTERN`, `APP_SCHEDULE_INTERVALS`, `AppScheduleInterval`, `APP_FLOW_NOTIFICATION_PATTERN`, `APP_FLOW_EVENT_PATTERN`, `APP_FLOW_ITEMS_MAX`, `appFlowParamSchema`, `AppFlowParam`, `appFlowNotificationSchema`, `AppFlowNotification`, `appFlowEventSchema`, `AppFlowEvent`, `APP_TOOL_NAME_PATTERN`, `appToolInputSchema`, `AppToolInput`, `appToolSchema`, `AppTool`, `APP_ICON_MAX_BYTES`, `APP_ICON_MIN_PX`, `APP_README_MAX_BYTES`, `APP_ICON_CONTENT_TYPES`, `AppIconContentType`, `appIconProblem`, `appManifestSchema`, `AppManifest`, `AppManifestInput`, `APP_SECRET_PATTERNS`, `APP_SERVER_BUNDLE_MAX_GZIP_BYTES`, `APP_UI_MAX_BYTES`, `APP_UI_MAX_FILES`, `AppManifestProblem`, `appManifestProblems`, `AppCapabilities`, `appCapabilitiesOf`, `AppCapabilityDefinition`, `APP_CAPABILITIES`, `appHttpKeyMatches`, `appScheduleListOf`, `appFlowSummaryOf`, `appToolListOf`, `appScheduleIntervalLabel`, `appManifestWidens`
-- [x] `src/schemas/apps.ts` → `lib/src/schemas/apps.dart` (93): `appDistributionSchema`, `AppDistribution`, `appRuntimeSchema`, `AppRuntime`, `appStatusSchema`, `AppStatus`, `appInstallationStatusSchema`, `AppInstallationStatus`, `appVisibilitySchema`, `AppVisibility`, `appInstallationAppSchema`, `AppInstallationApp`, `appInstallationSettingsSchema`, `AppInstallationSettings`, `appInstallationSettingsUpdateSchema`, `AppInstallationSettingsUpdate`, `appScheduleSummarySchema`, `AppScheduleSummary`, `appFlowNotificationSummarySchema`, `AppFlowNotificationSummary`, `appFlowEventSummarySchema`, `AppFlowEventSummary`, `appInstallationSchema`, `AppInstallation`, `appInstallationRunSchema`, `AppInstallationRun`, `appInstallationActivitySchema`, `AppInstallationActivity`, `appInstallRequestSchema`, `AppInstallRequest`, `appListingSchema`, `AppListing`, `storeAppSchema`, `StoreApp`, `storeAppDetailSchema`, `StoreAppDetail`, `appSessionSchema`, `AppSession`, `appInstallationSelfSchema`, `AppInstallationSelf`, `appToolSummarySchema`, `AppToolSummary`, `appToolCallSchema`, `AppToolCall`, `appToolResultSchema`, `AppToolResult`, `APP_STORAGE_KEY_PATTERN`, `APP_STORAGE_MAX_KEYS`, `APP_STORAGE_MAX_BYTES`, `appStorageEntrySchema`, `AppStorageEntry`, `appStorageKeysSchema`, `AppStorageKeys`, `appStoragePutSchema`, `AppStoragePut`, `appStorageListQuerySchema`, `appBuildStageSchema`, `AppBuildStage`, `appBuildSchema`, `AppBuild`, `appVersionSchema`, `AppVersion`, `appListingReviewStatusSchema`, `AppListingReviewStatus`, `appListingReviewSchema`, `AppListingReview`, `developerAppSchema`, `DeveloperApp`, `developerAppCreateSchema`, `DeveloperAppCreate`, `appArtifactUploadSchema`, `AppArtifactUpload`, `appReleaseResultSchema`, `AppReleaseResult`, `appSecretSummarySchema`, `AppSecretSummary`, `devStoreSchema`, `DevStore`, `developerStoreSchema`, `DeveloperStore`, `developerInstallationSchema`, `DeveloperInstallation`, `appDevTokenSchema`, `AppDevToken`, `appInvocationSchema`, `AppInvocation`, `appDeployKeySchema`, `AppDeployKey`, `appDeployKeyCreatedSchema`, `AppDeployKeyCreated`, `appDeployKeyCreateSchema`, `APP_DEPLOY_KEY_PATTERN`, `APP_DEPLOY_KEY_PREFIX`
+- [x] `src/schemas/apps.ts` → `lib/src/schemas/apps.dart` (97): `appDistributionSchema`, `AppDistribution`, `appRuntimeSchema`, `AppRuntime`, `appStatusSchema`, `AppStatus`, `appInstallationStatusSchema`, `AppInstallationStatus`, `appVisibilitySchema`, `AppVisibility`, `appInstallationAppSchema`, `AppInstallationApp`, `appInstallationSettingsSchema`, `AppInstallationSettings`, `appInstallationSettingsUpdateSchema`, `AppInstallationSettingsUpdate`, `appScheduleSummarySchema`, `AppScheduleSummary`, `appFlowNotificationSummarySchema`, `AppFlowNotificationSummary`, `appFlowEventSummarySchema`, `AppFlowEventSummary`, `appInstallationSchema`, `AppInstallation`, `appInstallationRunSchema`, `AppInstallationRun`, `appInstallationActivitySchema`, `AppInstallationActivity`, `appInstallRequestSchema`, `AppInstallRequest`, `appListingSchema`, `AppListing`, `storeAppSchema`, `StoreApp`, `storeAppDetailSchema`, `StoreAppDetail`, `appSessionSchema`, `AppSession`, `appInstallationSelfSchema`, `AppInstallationSelf`, `appToolSummarySchema`, `AppToolSummary`, `appToolCallSchema`, `AppToolCall`, `appToolResultSchema`, `AppToolResult`, `APP_STORAGE_KEY_PATTERN`, `APP_STORAGE_MAX_KEYS`, `APP_STORAGE_MAX_BYTES`, `appStorageEntrySchema`, `AppStorageEntry`, `appStorageKeysSchema`, `AppStorageKeys`, `appStoragePutSchema`, `AppStoragePut`, `appStorageListQuerySchema`, `developerOrgSchema`, `DeveloperOrg`, `appVersionStatusSchema`, `AppVersionStatus`, `appBuildStageSchema`, `AppBuildStage`, `appBuildSchema`, `AppBuild`, `appVersionSchema`, `AppVersion`, `appListingReviewStatusSchema`, `AppListingReviewStatus`, `appListingReviewSchema`, `AppListingReview`, `developerAppSchema`, `DeveloperApp`, `developerAppCreateSchema`, `DeveloperAppCreate`, `appArtifactUploadSchema`, `AppArtifactUpload`, `appReleaseResultSchema`, `AppReleaseResult`, `appSecretSummarySchema`, `AppSecretSummary`, `devStoreSchema`, `DevStore`, `developerStoreSchema`, `DeveloperStore`, `developerInstallationSchema`, `DeveloperInstallation`, `appDevTokenSchema`, `AppDevToken`, `appInvocationSchema`, `AppInvocation`, `appDeployKeySchema`, `AppDeployKey`, `appDeployKeyCreatedSchema`, `AppDeployKeyCreated`, `appDeployKeyCreateSchema`, `APP_DEPLOY_KEY_PATTERN`, `APP_DEPLOY_KEY_PREFIX`
 - [x] `src/schemas/audit.ts` → `lib/src/schemas/audit.dart` (32): `auditActorTypeSchema`, `AuditActorType`, `auditActorSchema`, `AuditActor`, `auditLogSourceSchema`, `AuditLogSource`, `auditLogOutcomeSchema`, `AuditLogOutcome`, `auditLogSchema`, `AuditLog`, `auditLogListQuerySchema`, `AuditLogListParams`, `AuditLogListOptions`, `auditLogPageSchema`, `AuditLogPage`, `agentPolicyDecisionSchema`, `AgentPolicyDecision`, `writePreviewSchema`, `WritePreview`, `writeDryRunResultSchema`, `WriteDryRunResult`, `approvalStatusSchema`, `ApprovalStatus`, `approvalRequestSchema`, `ApprovalRequest`, `approvalListQuerySchema`, `ApprovalListParams`, `ApprovalListOptions`, `approvalPageSchema`, `ApprovalPage`, `approvalDecisionRequestSchema`, `ApprovalDecisionRequest`
 - [x] `src/schemas/auth.ts` → `lib/src/schemas/auth.dart` (6): `storeRoleSchema`, `StoreRole`, `myStoreSchema`, `MyStore`, `myAccountSchema`, `MyAccount`
 - [x] `src/schemas/category.ts` → `lib/src/schemas/category.dart` (24): `categoryProductSortSchema`, `CategoryProductSort`, `categorySchema`, `Category`, `CategoryTreeNode`, `categoryTreeNodeSchema`, `categoryWithPathSchema`, `CategoryWithPath`, `categorySearchResultSchema`, `CategorySearchResult`, `categoryAttributeSchema`, `CategoryAttribute`, `categoryCreateRequestSchema`, `CategoryCreateRequest`, `categoryPatchRequestSchema`, `CategoryPatchRequest`, `categoryDeleteStrategySchema`, `CategoryDeleteStrategy`, `categoryListQuerySchema`, `categoryDeleteQuerySchema`, `categoryLocalizationSchema`, `CategoryLocalization`, `categoryLocalizationRequestSchema`, `CategoryLocalizationRequest`
-- [x] `src/schemas/claim.ts` → `lib/src/schemas/claim.dart` (20): `claimTypeSchema`, `ClaimType`, `claimStatusSchema`, `ClaimStatus`, `claimReasonSchema`, `ClaimReason`, `claimReturnAddressSchema`, `ClaimReturnAddress`, `claimSchema`, `Claim`, `ClaimListParams`, `claimListQuerySchema`, `claimDetailSchema`, `ClaimDetail`, `claimHoldResultSchema`, `ClaimHoldResult`, `rejectClaimRequestSchema`, `RejectClaimRequest`, `approveClaimResultSchema`, `ApproveClaimResult`
+- [x] `src/schemas/checkout.ts` → `lib/src/schemas/checkout.dart` (13): `sellerCheckoutLineSchema`, `SellerCheckoutLineRequest`, `createSellerCheckoutRequestSchema`, `CreateSellerCheckoutRequest`, `sellerCheckoutSchema`, `SellerCheckout`, `sellerCheckoutPageSchema`, `SellerCheckoutPage`, `directOrderShippingAddressSchema`, `createOrderRequestSchema`, `CreateOrderRequest`, `createdOrderSchema`, `CreatedOrder`
+- [x] `src/schemas/claim.ts` → `lib/src/schemas/claim.dart` (22): `claimTypeSchema`, `ClaimType`, `claimStatusSchema`, `ClaimStatus`, `claimReasonSchema`, `ClaimReason`, `claimReturnAddressSchema`, `ClaimReturnAddress`, `claimSchema`, `Claim`, `ClaimListParams`, `claimListQuerySchema`, `claimDetailSchema`, `ClaimDetail`, `claimHoldResultSchema`, `ClaimHoldResult`, `rejectClaimRequestSchema`, `RejectClaimRequest`, `approveClaimRequestSchema`, `ApproveClaimRequest`, `approveClaimResultSchema`, `ApproveClaimResult`
 - [x] `src/schemas/collection.ts` → `lib/src/schemas/collection.dart` (64): `MAX_COLLECTIONS`, `MAX_COLLECTION_PRODUCTS`, `MAX_COLLECTION_PRODUCTS_PER_ADD`, `MAX_COLLECTION_TITLE`, `MAX_COLLECTION_DESCRIPTION`, `COLLECTION_SLUG_PATTERN`, `COLLECTION_TYPES`, `CollectionType`, `COLLECTION_PRODUCT_SORTS`, `CollectionProductSort`, `collectionProductSortRequestSchema`, `collectionStateSchema`, `CollectionState`, `collectionStateOf`, `MAX_COLLECTION_RULES`, `MAX_COLLECTION_RULE_CATEGORIES`, `MAX_COLLECTION_CREATED_WITHIN_DAYS`, `COLLECTION_PREVIEW_SIZE`, `COLLECTION_BEST_SELLING_DAYS`, `CollectionBestSellingDays`, `MAX_COLLECTION_BEST_SELLING_TOP`, `COLLECTION_SALES_SORT_DEFAULT_DAYS`, `collectionRuleSchema`, `CollectionRule`, `CollectionRuleField`, `collectionRulesSchema`, `collectionRuleViewSchema`, `CollectionRuleView`, `CollectionRuleProduct`, `CollectionRuleContext`, `descendantCategoryIdsOf`, `collectionRulesPredicate`, `matchesCollectionRules`, `bestSellingRuleOf`, `compareBySales`, `rankBestSelling`, `collectionRuleCategoryIds`, `collectionSchema`, `Collection`, `collectionCreateRequestSchema`, `CollectionCreateRequest`, `CollectionCreateRequestInput`, `collectionPatchRequestSchema`, `CollectionPatchRequest`, `collectionProductsReplaceRequestSchema`, `CollectionProductsReplaceRequest`, `collectionProductsAddRequestSchema`, `CollectionProductsAddRequest`, `collectionProductSchema`, `CollectionProduct`, `collectionStateCountsSchema`, `collectionPageSchema`, `CollectionPage`, `CollectionListParams`, `collectionListQuerySchema`, `collectionProductListQuerySchema`, `collectionPreviewRequestSchema`, `CollectionPreviewRequest`, `collectionPreviewSchema`, `CollectionPreview`, `collectionLocalizationSchema`, `CollectionLocalization`, `collectionLocalizationRequestSchema`, `CollectionLocalizationRequest`
-- [x] `src/schemas/commerce-flow.ts` → `lib/src/schemas/commerce-flow.dart` (60): `flowInputFieldSchema`, `FlowInputField`, `flowActionSchema`, `FlowAction`, `flowFieldValueSchema`, `FlowFieldValue`, `flowStateSchema`, `FlowState`, `orderItemFlowSchema`, `OrderItemFlow`, `moveFlowStateRequestSchema`, `MoveFlowStateRequest`, `flowRunStepSchema`, `flowRunSchema`, `FlowRun`, `flowActionRequestSchema`, `FlowActionRequest`, `flowActionResultSchema`, `FlowActionResult`, `flowPresetSummarySchema`, `FlowPresetSummary`, `flowPresetDetailSchema`, `FlowPresetDetail`, `commerceFlowSummarySchema`, `CommerceFlowSummary`, `commerceFlowVersionViewSchema`, `commerceFlowSchema`, `CommerceFlow`, `CommerceFlowVersionView`, `migrateFlowVersionRequestSchema`, `MigrateFlowVersionRequest`, `migrateFlowVersionResultSchema`, `MigrateFlowVersionResult`, `createCommerceFlowRequestSchema`, `CreateCommerceFlowRequest`, `saveFlowDraftRequestSchema`, `SaveFlowDraftRequest`, `commerceFlowCheckSchema`, `CommerceFlowCheck`, `resolvedFlowSchema`, `ResolvedFlow`, `flowSecretNameSchema`, `flowSecretSchema`, `FlowSecret`, `saveFlowSecretRequestSchema`, `SaveFlowSecretRequest`, `orderFlowActionResultSchema`, `OrderFlowActionResult`, `simulateFlowRequestSchema`, `SimulateFlowRequest`, `simulationStepSchema`, `SimulationStep`, `simulateFlowResultSchema`, `SimulateFlowResult`, `replayFlowRequestSchema`, `ReplayFlowRequest`, `replayFlowResultSchema`, `ReplayFlowResult`, `flowNodeTypesSchema`, `FlowNodeTypes`
+- [x] `src/schemas/commerce-flow.ts` → `lib/src/schemas/commerce-flow.dart` (85): `flowInputFieldSchema`, `FlowInputField`, `flowActionSchema`, `FlowAction`, `flowFieldValueSchema`, `FlowFieldValue`, `flowStateSchema`, `FlowState`, `orderItemFlowSchema`, `OrderItemFlow`, `moveFlowStateRequestSchema`, `MoveFlowStateRequest`, `flowRunStepSchema`, `flowRunSchema`, `FlowRun`, `flowActionRequestSchema`, `FlowActionRequest`, `flowActionResultSchema`, `FlowActionResult`, `flowPresetSummarySchema`, `FlowPresetSummary`, `flowPresetDetailSchema`, `FlowPresetDetail`, `commerceFlowSummarySchema`, `CommerceFlowSummary`, `commerceFlowVersionViewSchema`, `commerceFlowSchema`, `CommerceFlow`, `CommerceFlowVersionView`, `migrateFlowVersionRequestSchema`, `MigrateFlowVersionRequest`, `migrateFlowVersionResultSchema`, `MigrateFlowVersionResult`, `updateCommerceFlowRequestSchema`, `UpdateCommerceFlowRequest`, `createCommerceFlowRequestSchema`, `CreateCommerceFlowRequest`, `saveFlowDraftRequestSchema`, `SaveFlowDraftRequest`, `flowIssueSchema`, `FlowIssue`, `commerceFlowCheckSchema`, `CommerceFlowCheck`, `flowNodeIdSchema`, `flowDraftOperationSchema`, `FlowDraftOperation`, `applyFlowOperationsRequestSchema`, `ApplyFlowOperationsRequest`, `flowOperationsResultSchema`, `FlowOperationsResult`, `resolvedFlowSchema`, `ResolvedFlow`, `flowSecretNameSchema`, `flowSecretSchema`, `FlowSecret`, `saveFlowSecretRequestSchema`, `SaveFlowSecretRequest`, `orderFlowActionResultSchema`, `OrderFlowActionResult`, `simulateFlowRequestSchema`, `SimulateFlowRequest`, `simulationStepSchema`, `SimulationStep`, `simulateFlowResultSchema`, `SimulateFlowResult`, `replayFlowRequestSchema`, `ReplayFlowRequest`, `replayFlowResultSchema`, `ReplayFlowResult`, `flowDraftNodesSchema`, `FlowDraftNodes`, `flowDraftNodeSchema`, `FlowDraftNode`, `flowDraftEdgesSchema`, `FlowDraftEdges`, `flowNodeTypesSchema`, `FlowNodeTypes`, `flowAuthoringGuideSchema`, `FlowAuthoringGuide`, `flowNodeTypeDetailSchema`, `FlowNodeTypeDetail`, `flowEditSessionViewSchema`, `FlowEditSessionView`, `claimFlowEditSessionRequestSchema`, `ClaimFlowEditSessionRequest`
 - [x] `src/schemas/commerce-number.ts` → `lib/src/schemas/commerce-number.dart` (3): `formatOrderNo`, `parseOrderNo`, `commerceNumberField`
 - [x] `src/schemas/common.ts` → `lib/src/schemas/common.dart` (11): `pageInfoSchema`, `PageInfo`, `pageSchema`, `pageQueryShape`, `PageParams`, `bulkResultSchema`, `BulkResult`, `orderItemStatusSchema`, `OrderItemStatus`, `changeTypeSchema`, `ChangeType`
-- [x] `src/schemas/coupon.ts` → `lib/src/schemas/coupon.dart` (30): `couponStatusSchema`, `CouponStatus`, `couponIssueMethodSchema`, `CouponIssueMethod`, `COUPON_CODE_PATTERN`, `normalizeCouponCode`, `couponConditionsInputSchema`, `couponTargetInputSchema`, `createCouponRequestSchema`, `CreateCouponRequest`, `updateCouponRequestSchema`, `UpdateCouponRequest`, `couponSchema`, `Coupon`, `couponListQuerySchema`, `couponIssueStatusSchema`, `couponIssueSchema`, `CouponIssue`, `couponIssueListQuerySchema`, `issueCouponRequestSchema`, `IssueCouponRequest`, `issueCouponResultSchema`, `IssueCouponResult`, `couponRedemptionSchema`, `CouponRedemption`, `couponRedemptionListQuerySchema`, `couponStatsSchema`, `CouponStats`, `customerCouponSchema`, `CustomerCoupon`
-- [x] `src/schemas/currency.ts` → `lib/src/schemas/currency.dart` (20): `CurrencySpec`, `CURRENCIES`, `CurrencyCode`, `CURRENCY_CODES`, `BASE_CURRENCY`, `currencyCodeSchema`, `isCurrencyCode`, `currencySpecOf`, `toMinor`, `minorToMajor`, `toDecimalString`, `fromDecimalString`, `floorToSaleUnit`, `isSaleUnitPrice`, `InvalidPriceUnitError`, `assertSaleUnit`, `minPaymentOf`, `MoneyRules`, `moneyRulesOf`, `KRW_MONEY_RULES`
+- [x] `src/schemas/condition-tree.ts` → `lib/src/schemas/condition-tree.dart` (28): `ConditionCombinator`, `ConditionValue`, `ConditionRule`, `ConditionGroup`, `ConditionNode`, `isConditionGroup`, `ConditionValueType`, `ConditionOperator`, `BirthdateFact`, `birthdateFactOf`, `CONDITION_OPERATORS_BY_TYPE`, `ConditionFieldDef`, `ConditionCatalog`, `conditionCatalog`, `ConditionLimits`, `DEFAULT_CONDITION_LIMITS`, `conditionValueSchema`, `conditionRuleSchema`, `conditionGroupSchema`, `ConditionIssue`, `conditionIssues`, `canonicalizeConditionGroup`, `canonicalizeConditionRule`, `conditionFields`, `evaluateConditionNode`, `ConditionEvaluation`, `evaluateCondition`, `anyConditionHolds`
+- [x] `src/schemas/coupon-rules.ts` → `lib/src/schemas/coupon-rules.dart` (60): `COUPON_WEEKDAYS`, `CouponWeekday`, `COUPON_TIME_ZONE`, `CouponCustomerFacts`, `CouponClaimFacts`, `canonicalLocale`, `couponClaimFactsOf`, `CouponTimeFacts`, `CouponFacts`, `couponFactsSchema`, `couponTodayAt`, `couponTimeFactsAt`, `daysBetween`, `CouponCartFacts`, `CouponOrderContext`, `CouponLineContext`, `couponLineContextOf`, `CouponConditionSlot`, `CouponConditionFieldInfo`, `COUPON_ORDER_CONDITIONS`, `COUPON_LINE_CONDITIONS`, `COUPON_CONDITION_FIELDS`, `couponTargetRulesSchema`, `CouponTargetRules`, `COUPON_TARGET_RULES_ALL`, `couponTargetTreeSchema`, `CouponTargetTree`, `EMPTY_CONDITION_GROUP`, `couponConditionTreeSchema`, `couponStackingSchema`, `CouponStacking`, `COUPON_STACKING_DEFAULTS`, `canonicalizeCouponTargetRules`, `canonicalizeCouponTargetTree`, `couponTargetTreeFromRules`, `couponTargetRulesFromTree`, `canonicalizeCouponStacking`, `LegacyCouponConditions`, `LegacyCouponTarget`, `CouponRuleTrees`, `couponTargetTreeOf`, `couponRulesFromLegacy`, `legacyFromCouponRules`, `couponTargetTreeMatches`, `couponLineMatches`, `CouponConditionRejectReason`, `evaluateCouponEligibility`, `assumeCouponFactRules`, `couponAudienceMatches`, `couponCustomerFactNames`, `pickCouponFacts`, `CouponRuleIssue`, `couponRuleIssues`, `canonicalizeCouponTrees`, `CouponRequirement`, `describeCouponRule`, `describeCouponGroup`, `describeCouponTargetRules`, `describeCouponTargetTree`, `couponRequirementsOf`
+- [x] `src/schemas/coupon-selection.ts` → `lib/src/schemas/coupon-selection.dart` (4): `CouponSelectionInput`, `CouponSelection`, `maxWeightAssignment`, `bestCouponSelection`
+- [x] `src/schemas/coupon.ts` → `lib/src/schemas/coupon.dart` (38): `couponStatusSchema`, `CouponStatus`, `couponIssueMethodSchema`, `CouponIssueMethod`, `VOUCHER_PREFIX_PATTERN`, `VOUCHER_COUNT_MAX`, `couponVoucherInputSchema`, `COUPON_CODE_PATTERN`, `normalizeCouponCode`, `couponRequestRuleIssues`, `couponConditionsInputSchema`, `couponTargetInputSchema`, `createCouponRequestSchema`, `CreateCouponRequest`, `updateCouponRequestSchema`, `UpdateCouponRequest`, `couponSchema`, `Coupon`, `couponListQuerySchema`, `couponIssueStatusSchema`, `couponIssueSchema`, `CouponIssue`, `couponIssueListQuerySchema`, `couponVoucherCodesSchema`, `CouponVoucherCodes`, `couponDistributionSchema`, `CouponDistribution`, `issueCouponRequestSchema`, `IssueCouponRequest`, `issueCouponResultSchema`, `IssueCouponResult`, `couponRedemptionSchema`, `CouponRedemption`, `couponRedemptionListQuerySchema`, `couponStatsSchema`, `CouponStats`, `customerCouponSchema`, `CustomerCoupon`
 - [x] `src/schemas/currency-prices.ts` → `lib/src/schemas/currency-prices.dart` (11): `productCurrencyPriceSchema`, `productCurrencyPricesSchema`, `ProductCurrencyPrice`, `shippingCurrencyPriceSchema`, `shippingCurrencyPricesSchema`, `storedShippingCurrencyPriceSchema`, `storedProductCurrencyPriceSchema`, `additionalCurrencyPriceSchema`, `additionalCurrencyPricesSchema`, `AdditionalCurrencyPrice`, `storedAdditionalCurrencyPriceSchema`
-- [x] `src/schemas/customer.ts` → `lib/src/schemas/customer.dart` (28): `customerSortSchema`, `CustomerSort`, `customerListQuerySchema`, `customerStatsSchema`, `customerSummarySchema`, `CustomerSummary`, `customerAddressSchema`, `consentKindSchema`, `ConsentKind`, `consentActionSchema`, `ConsentAction`, `consentSourceSchema`, `ConsentSource`, `customerConsentSchema`, `CustomerConsent`, `customerConsentStateSchema`, `CustomerConsentState`, `customerConsentsSchema`, `CustomerConsents`, `customerConsentListQuerySchema`, `customerDetailSchema`, `CustomerDetail`, `customerOrderSchema`, `CustomerOrder`, `withdrawCustomerRequestSchema`, `WithdrawCustomerRequest`, `customerWithdrawalBlockedDetailsSchema`, `CustomerWithdrawalBlockedDetails`
+- [x] `src/schemas/currency.ts` → `lib/src/schemas/currency.dart` (20): `CurrencySpec`, `CURRENCIES`, `CurrencyCode`, `CURRENCY_CODES`, `BASE_CURRENCY`, `currencyCodeSchema`, `isCurrencyCode`, `currencySpecOf`, `toMinor`, `minorToMajor`, `toDecimalString`, `fromDecimalString`, `floorToSaleUnit`, `isSaleUnitPrice`, `InvalidPriceUnitError`, `assertSaleUnit`, `minPaymentOf`, `MoneyRules`, `moneyRulesOf`, `KRW_MONEY_RULES`
 - [x] `src/schemas/customer-delegation.ts` → `lib/src/schemas/customer-delegation.dart` (4): `customerDelegationRequestSchema`, `CustomerDelegationRequest`, `customerDelegationSchema`, `CustomerDelegation`
+- [x] `src/schemas/customer.ts` → `lib/src/schemas/customer.dart` (37): `customerSortSchema`, `CustomerSort`, `customerListQuerySchema`, `customerStatsSchema`, `customerSummarySchema`, `CustomerSummary`, `customerExportFieldSchema`, `CustomerExportField`, `CUSTOMER_EXPORT_MAX_SIZE`, `customerExportQuerySchema`, `customerExportAddressSchema`, `customerExportRowSchema`, `CustomerExportRow`, `customerAddressSchema`, `consentKindSchema`, `ConsentKind`, `consentActionSchema`, `ConsentAction`, `consentSourceSchema`, `ConsentSource`, `customerConsentSchema`, `CustomerConsent`, `customerConsentStateSchema`, `CustomerConsentState`, `customerConsentsSchema`, `CustomerConsents`, `customerConsentListQuerySchema`, `customerDetailSchema`, `CustomerDetail`, `customerOrderSchema`, `CustomerOrder`, `withdrawCustomerRequestSchema`, `WithdrawCustomerRequest`, `customerWithdrawalBlockedDetailsSchema`, `CustomerWithdrawalBlockedDetails`, `updateCustomerRequestSchema`, `UpdateCustomerRequest`
+- [x] `src/schemas/flow-localization.ts` → `lib/src/schemas/flow-localization.dart` (7): `flowTextSchema`, `FlowText`, `flowLocalizationSchema`, `FlowLocalization`, `flowLocalizationRequestSchema`, `FlowLocalizationRequest`, `flowLocalizationNeedsTranslation`
 - [x] `src/schemas/fulfillment.ts` → `lib/src/schemas/fulfillment.dart` (45): `fulfillmentTypeSchema`, `FulfillmentType`, `fulfillmentTypeResponseSchema`, `FulfillmentRule`, `FULFILLMENT_RULES`, `fulfillmentTypeOf`, `fulfillmentRuleOf`, `FULFILLMENT_METHODS`, `fulfillmentMethodSchema`, `FulfillmentMethod`, `FulfillmentMethodRule`, `FULFILLMENT_METHOD_RULES`, `FULFILLMENT_METHODS_BY_TYPE`, `defaultFulfillmentMethodOf`, `fulfillmentMethodsOf`, `fulfillmentMethodOf`, `requiresShipping`, `requiresCollection`, `NO_SHIPPING_BUNDLE_KEY`, `deliveryTypeSchema`, `DeliveryType`, `productFulfillmentCreateSchema`, `ProductFulfillmentCreate`, `ProductFulfillmentCreateInput`, `productFulfillmentUpdateSchema`, `ProductFulfillmentUpdate`, `productFulfillmentSchema`, `ProductFulfillment`, `ProductFulfillmentOf`, `UnknownFulfillment`, `openFulfillmentUnion`, `productFulfillmentResponseSchema`, `ProductFulfillmentView`, `pickupLocationSnapshotSchema`, `PickupLocationSnapshot`, `orderItemFulfillmentSnapshotSchema`, `OrderItemFulfillmentSnapshot`, `orderItemFulfillmentSnapshotResponseSchema`, `OrderItemFulfillmentSnapshotView`, `MAX_PICKUP_LOCATIONS`, `pickupLocationSchema`, `PickupLocation`, `pickupLocationRequestSchema`, `PickupLocationRequest`, `PickupLocationRequestInput`
-- [x] `src/schemas/inventory.ts` → `lib/src/schemas/inventory.dart` (32): `inventoryAdjustmentReasonSchema`, `InventoryAdjustmentReason`, `inventoryLocationSchema`, `InventoryLocation`, `inventoryLocationRequestSchema`, `InventoryLocationRequest`, `inventoryLevelSchema`, `InventoryLevel`, `inventoryLevelListQuerySchema`, `InventoryLevelListQuery`, `inventoryLevelPageSchema`, `InventoryLevelPage`, `inventoryMovementKindSchema`, `InventoryMovementKind`, `inventoryMovementSchema`, `InventoryMovement`, `inventoryMovementListQuerySchema`, `InventoryMovementListQuery`, `inventoryMovementPageSchema`, `InventoryMovementPage`, `MAX_INVENTORY_OPERATION_LINES`, `inventoryAdjustmentLineSchema`, `inventoryAdjustmentRequestSchema`, `InventoryAdjustmentRequest`, `inventoryTransferRequestSchema`, `InventoryTransferRequest`, `inventoryOperationResultSchema`, `InventoryOperationResult`, `claimCollectCompleteRequestSchema`, `ClaimCollectCompleteRequest`, `claimRedeliveryRequestSchema`, `ClaimRedeliveryRequest`
+- [x] `src/schemas/inventory.ts` → `lib/src/schemas/inventory.dart` (54): `inventoryAdjustmentReasonSchema`, `InventoryAdjustmentReason`, `inventoryLocationSchema`, `InventoryLocation`, `inventoryLocationRequestSchema`, `InventoryLocationRequest`, `inventoryLevelSchema`, `InventoryLevel`, `inventoryLevelListQuerySchema`, `InventoryLevelListQuery`, `inventoryLevelPageSchema`, `InventoryLevelPage`, `inventoryMovementKindSchema`, `InventoryMovementKind`, `inventoryMovementSchema`, `InventoryMovement`, `inventoryMovementListQuerySchema`, `InventoryMovementListQuery`, `inventoryMovementPageSchema`, `InventoryMovementPage`, `MAX_INVENTORY_OPERATION_LINES`, `inventoryAdjustmentLineSchema`, `inventoryAdjustmentRequestSchema`, `InventoryAdjustmentRequest`, `inventoryTransferRequestSchema`, `InventoryTransferRequest`, `inventoryOperationResultSchema`, `InventoryOperationResult`, `claimCollectCompleteRequestSchema`, `ClaimCollectCompleteRequest`, `claimRedeliveryRequestSchema`, `ClaimRedeliveryRequest`, `lowStockScopeSchema`, `LowStockScope`, `lowStockSettingsSchema`, `LowStockSettings`, `lowStockSettingsRequestSchema`, `LowStockSettingsRequest`, `lowStockVariantThresholdSchema`, `LowStockVariantThreshold`, `lowStockThresholdListQuerySchema`, `LowStockThresholdListQuery`, `lowStockThresholdPageSchema`, `LowStockThresholdPage`, `lowStockThresholdsRequestSchema`, `LowStockThresholdsRequest`, `lowStockThresholdsResultSchema`, `LowStockThresholdsResult`, `lowStockItemSchema`, `LowStockItem`, `lowStockListQuerySchema`, `LowStockListQuery`, `lowStockPageSchema`, `LowStockPage`
 - [x] `src/schemas/locale.ts` → `lib/src/schemas/locale.dart` (3): `normalizeLocale`, `DEFAULT_STORE_LOCALE`, `localeCodeSchema`
 - [x] `src/schemas/login.ts` → `lib/src/schemas/login.dart` (13): `loginProviderSchema`, `LoginProvider`, `loginProviderStatusSchema`, `LoginProviderStatus`, `loginSettingsSchema`, `LoginSettings`, `updateLoginSettingsRequestSchema`, `UpdateLoginSettingsRequest`, `saveLoginProviderRequestSchema`, `SaveLoginProviderRequest`, `updateLoginProviderRequestSchema`, `loginProviderTestSchema`, `LoginProviderTest`
 - [x] `src/schemas/market.ts` → `lib/src/schemas/market.dart` (8): `marketSchema`, `Market`, `createMarketRequestSchema`, `CreateMarketRequest`, `CreateMarketRequestInput`, `updateMarketRequestSchema`, `UpdateMarketRequest`, `UpdateMarketRequestInput`
 - [x] `src/schemas/misc.ts` → `lib/src/schemas/misc.dart` (66): `inquirySchema`, `Inquiry`, `customerInquiryCategorySchema`, `CustomerInquiryCategory`, `sellerCustomerInquirySchema`, `SellerCustomerInquiry`, `inquiryListQuerySchema`, `customerInquiryListQuerySchema`, `settlementStatusSchema`, `SettlementStatus`, `settlementSummarySchema`, `SettlementSummary`, `settlementDetailSchema`, `SettlementDetail`, `settlementWithDetailsSchema`, `SettlementWithDetails`, `settlementListQuerySchema`, `settlementDetailQuerySchema`, `SettlementListParams`, `eventTypeSchema`, `EventType`, `webhookStatusSchema`, `WebhookStatus`, `webhookSchema`, `Webhook`, `webhookCreatedSchema`, `WebhookCreated`, `webhookSecretRotatedSchema`, `WebhookSecretRotated`, `webhookDeliveryStatusSchema`, `WebhookDeliveryStatus`, `webhookDeliveryErrorCodeSchema`, `WebhookDeliveryErrorCode`, `WEBHOOK_FAILURE_REASONS`, `WebhookFailureReason`, `webhookFailureReasonSchema`, `WEBHOOK_RESOURCE_TYPES`, `WebhookResourceType`, `webhookResourceTypeSchema`, `webhookDeliveryResourceSchema`, `WebhookDeliveryResource`, `webhookRequestHeaderSchema`, `WebhookRequestHeader`, `webhookDeliverySchema`, `WebhookDelivery`, `WEBHOOK_PAYLOAD_EXCERPT_MAX_BYTES`, `webhookDeliveryDetailSchema`, `WebhookDeliveryDetail`, `webhookDeliveryListQuerySchema`, `WebhookDeliveryListParams`, `webhookRedeliverFailedResultSchema`, `WebhookRedeliverFailedResult`, `webhookTestRequestSchema`, `WebhookTestRequest`, `webhookTestResultSchema`, `WebhookTestResult`, `webhookRequestSchema`, `WebhookRequest`, `reviewSchema`, `Review`, `reviewSortSchema`, `ReviewSort`, `ReviewListParams`, `reviewListQuerySchema`, `reviewReportResultSchema`, `ReviewReportResult`
-- [x] `src/schemas/order.ts` → `lib/src/schemas/order.dart` (52): `orderSummarySchema`, `OrderSummary`, `shippingAddressSchema`, `ShippingAddress`, `orderItemFulfillmentSchema`, `OrderItemFulfillment`, `orderItemSchema`, `OrderItem`, `orderDiscountSchema`, `OrderDiscount`, `orderSchema`, `Order`, `orderSummaryPageSchema`, `OrderSummaryPage`, `orderItemPageSchema`, `OrderItemPage`, `orderListQuerySchema`, `orderItemListQuerySchema`, `OrderListParams`, `OrderItemListParams`, `deliveryMethodSchema`, `DeliveryMethod`, `dispatchRequestSchema`, `DispatchRequest`, `deliveryInfoSchema`, `DeliveryInfo`, `trackingStageResponseSchema`, `deliveryStatusSchema`, `DeliveryStatus`, `trackingUpdateResultSchema`, `TrackingUpdateResult`, `carrierSchema`, `Carrier`, `holdOrderItemRequestSchema`, `HoldOrderItemRequest`, `cancelBySellerRequestSchema`, `CancelBySellerRequest`, `fulfillRequestSchema`, `FulfillRequest`, `fulfillBulkRequestSchema`, `FulfillBulkRequest`, `cancelBySellerResultSchema`, `CancelBySellerResult`, `sellerCancelPreviewSchema`, `SellerCancelPreview`, `orderItemMemoResultSchema`, `OrderItemMemoResult`, `purchaseDecisionRequestResultSchema`, `PurchaseDecisionRequestResult`, `purchaseDecisionExtendResultSchema`, `PurchaseDecisionExtendResult`, `addressChangeRequestListSchema`
+- [x] `src/schemas/order.ts` → `lib/src/schemas/order.dart` (63): `orderSummarySchema`, `OrderSummary`, `shippingAddressSchema`, `ShippingAddress`, `orderItemFulfillmentSchema`, `OrderItemFulfillment`, `orderItemSchema`, `OrderItem`, `orderDiscountSchema`, `OrderDiscount`, `orderPaymentSchema`, `OrderPayment`, `orderSchema`, `Order`, `orderSummaryPageSchema`, `OrderSummaryPage`, `orderItemPageSchema`, `OrderItemPage`, `orderListQuerySchema`, `orderItemListQuerySchema`, `OrderListParams`, `OrderItemListParams`, `deliveryMethodSchema`, `DeliveryMethod`, `dispatchRequestSchema`, `DispatchRequest`, `deliveryInfoSchema`, `DeliveryInfo`, `shippingOrderItemSchema`, `ShippingOrderItem`, `shippingOrderItemPageSchema`, `ShippingOrderItemPage`, `shippingOrderItemListQuerySchema`, `ShippingOrderItemListParams`, `trackingStageResponseSchema`, `deliveryStatusSchema`, `DeliveryStatus`, `trackingUpdateResultSchema`, `TrackingUpdateResult`, `carrierSchema`, `Carrier`, `holdOrderItemRequestSchema`, `HoldOrderItemRequest`, `cancelBySellerRequestSchema`, `CancelBySellerRequest`, `sellerRefundRequestSchema`, `SellerRefundRequest`, `fulfillRequestSchema`, `FulfillRequest`, `fulfillBulkRequestSchema`, `FulfillBulkRequest`, `cancelBySellerResultSchema`, `CancelBySellerResult`, `SellerCancelPreviewQuery`, `sellerCancelPreviewSchema`, `SellerCancelPreview`, `orderItemMemoResultSchema`, `OrderItemMemoResult`, `purchaseDecisionRequestResultSchema`, `PurchaseDecisionRequestResult`, `purchaseDecisionExtendResultSchema`, `PurchaseDecisionExtendResult`, `addressChangeRequestListSchema`
 - [x] `src/schemas/payment.ts` → `lib/src/schemas/payment.dart` (108): `pgProviderSchema`, `PgProvider`, `pgProviderResponseSchema`, `DEDICATED_EASY_PAY_PROVIDER`, `pgPaymentMethodSchema`, `PgPaymentMethod`, `easyPayProviderSchema`, `EasyPayProvider`, `easyPayProviderResponseSchema`, `pgEnvironmentSchema`, `PgEnvironment`, `pgVerificationResultSchema`, `PgVerificationResult`, `TOSS_WIDGET_CLIENT_KEY_PATTERN`, `TOSS_WIDGET_SECRET_KEY_PATTERN`, `TOSS_WIDGET_KEY_MESSAGE`, `tossPaymentsCredentialsInputSchema`, `TossPaymentsCredentialsInput`, `PORTONE_MIN_CHANNELS`, `PORTONE_MAX_CHANNELS`, `PORTONE_CHANNEL_NAME_MAX_LENGTH`, `portOneChannelSchema`, `PortOneChannel`, `portOneCredentialsInputSchema`, `PortOneCredentialsInput`, `KAKAOPAY_TEST_CID`, `kakaoPayCredentialsInputSchema`, `KakaoPayCredentialsInput`, `naverPayCredentialsInputSchema`, `NaverPayCredentialsInput`, `PAYPAL_CURRENCIES`, `payPalCredentialsInputSchema`, `PayPalCredentialsInput`, `upsertTossPaymentsProviderRequestSchema`, `UpsertTossPaymentsProviderRequest`, `upsertPortOneProviderRequestSchema`, `UpsertPortOneProviderRequest`, `upsertKakaoPayProviderRequestSchema`, `UpsertKakaoPayProviderRequest`, `upsertNaverPayProviderRequestSchema`, `UpsertNaverPayProviderRequest`, `upsertPayPalProviderRequestSchema`, `UpsertPayPalProviderRequest`, `updatePaymentProviderRequestSchema`, `UpdatePaymentProviderRequest`, `verifyPaymentProviderRequestSchema`, `VerifyPaymentProviderRequest`, `updatePaymentSettingsRequestSchema`, `UpdatePaymentSettingsRequest`, `maskedSecretSchema`, `MaskedSecret`, `paymentCredentialSetSchema`, `PaymentCredentialSet`, `liveGateConditionCodeSchema`, `LiveGateConditionCode`, `liveGateConditionSchema`, `LiveGateCondition`, `liveGateSchema`, `LiveGate`, `liveGateErrorDetailsSchema`, `LiveGateErrorDetails`, `paymentProviderSchema`, `PaymentProvider`, `PAYMENT_ROUTING_EXCLUSION_CODES`, `KnownPaymentRoutingExclusion`, `paymentFailureWarningSchema`, `PaymentFailureWarning`, `paymentSettingsSchema`, `PaymentSettings`, `paymentProviderVerificationSchema`, `PaymentProviderVerification`, `salesReportGroupBySchema`, `SalesReportGroupBy`, `salesReportQuerySchema`, `SalesReportParams`, `salesTotalsSchema`, `SalesTotals`, `salesReportRowSchema`, `SalesReportRow`, `salesReportCurrencySchema`, `SalesReportCurrency`, `salesReportSchema`, `SalesReport`, `paymentRecordStatusSchema`, `PaymentRecordStatus`, `paymentAttemptStatusSchema`, `CASH_RECEIPT_STATUS_VALUES`, `KnownCashReceiptStatus`, `cashReceiptSchema`, `CashReceipt`, `paymentRecordSchema`, `PaymentRecord`, `paymentRecordPageSchema`, `PaymentRecordPage`, `paymentAttemptRecordSchema`, `PaymentAttemptRecord`, `paymentRefundRecordSchema`, `PaymentRefundRecord`, `paymentRecordDetailSchema`, `PaymentRecordDetail`, `paymentListQuerySchema`, `PaymentListParams`, `setPlatformTestKeysRequestSchema`, `SetPlatformTestKeysRequest`, `paymentStatusProviderSchema`, `PaymentStatusProvider`, `paymentStatusSchema`, `PaymentStatus`
-- [ ] `src/schemas/plans.ts` → `lib/src/schemas/plans.dart` (6, npm 0.36.0에 없음 — 다음 npm 릴리스 뒤 생성): `planEntitlementsSchema`, `PlanEntitlementValues`, `publicPlanSchema`, `PublicPlan`, `publicPlansSchema`, `PublicPlans`
 - [x] `src/schemas/points.ts` → `lib/src/schemas/points.dart` (48): `POINT_REVIEW_REWARD_MAX`, `POINT_EXPIRY_DAYS_MIN`, `POINT_EXPIRY_DAYS_MAX`, `POINT_EARN_RATE_BP_MAX`, `pointEarnRateBpSchema`, `reviewRewardPolicySchema`, `ReviewRewardPolicy`, `purchaseEarnPolicySchema`, `PurchaseEarnPolicy`, `POINT_USE_UNITS`, `pointUsePolicySchema`, `PointUsePolicy`, `pointPolicySchema`, `PointPolicy`, `POINT_POLICY_DEFAULTS`, `resolvePointPolicy`, `pointEarningEnabled`, `purchaseEarnRateOf`, `pointEarnOf`, `reviewRewardPointOf`, `pointExpiresAtOf`, `POINT_LOT_SOURCES`, `PointLotSource`, `POINT_ENTRY_TYPES`, `PointEntryType`, `pointPolicyNoticeSchema`, `PointPolicyNotice`, `storePointPolicySchema`, `StorePointPolicy`, `updatePointPolicyRequestSchema`, `UpdatePointPolicyRequest`, `responsePointEntryTypeSchema`, `pointEntrySchema`, `PointEntry`, `pointLotSchema`, `PointLot`, `customerPointsSchema`, `CustomerPoints`, `pointHistoryQuerySchema`, `PointHistoryQuery`, `POINT_ADJUSTMENT_MAX`, `pointAdjustmentRequestSchema`, `PointAdjustmentRequest`, `pointAdjustmentResultSchema`, `PointAdjustmentResult`, `PointLotUsage`, `pointRestoreExpiresAtOf`, `splitRefund`
-- [x] `src/schemas/product.ts` → `lib/src/schemas/product.dart` (75): `productStatusSchema`, `ProductStatus`, `productSummarySchema`, `ProductSummary`, `optionValueSchema`, `OptionValue`, `optionGroupSchema`, `OptionGroup`, `productVariantSchema`, `ProductVariant`, `MAX_OPTION_GROUPS`, `MAX_VALUES_PER_GROUP`, `MAX_VARIANTS`, `MAX_ADDON_GROUPS`, `MAX_CUSTOM_INPUTS`, `MAX_CUSTOM_INPUT_LENGTH`, `VARIANT_COUNT_WARNING`, `optionSortSchema`, `OptionSort`, `addonValueSchema`, `AddonValue`, `addonGroupSchema`, `AddonGroup`, `CUSTOM_INPUT_TYPES`, `customInputSchema`, `CustomInput`, `CUSTOM_INPUT_FORBIDDEN_WORDS`, `customInputLabelForbiddenWord`, `addonValueRequestSchema`, `AddonValueRequest`, `addonGroupRequestSchema`, `AddonGroupRequest`, `customInputRequestSchema`, `CustomInputRequest`, `optionSelectionSchema`, `OptionSelection`, `customInputValueSchema`, `CustomInputValue`, `discountSchema`, `Discount`, `productSchema`, `Product`, `MAX_PRODUCT_IMAGES`, `productImageUrlSchema`, `ProductImageRejection`, `productImageRejection`, `optionValueRequestSchema`, `OptionValueRequest`, `optionGroupRequestSchema`, `OptionGroupRequest`, `productVariantRequestSchema`, `ProductVariantRequest`, `optionModelRequestSchema`, `OptionModelRequest`, `optionModelSchema`, `OptionModel`, `VARIANT_STOCK_EXCLUSIVE_MESSAGE`, `variantStockRequestSchema`, `VariantStockRequest`, `variantStockSchema`, `VariantStock`, `productCreateRequestSchema`, `ProductCreateRequest`, `ProductCreateRequestInput`, `productReplaceRequestSchema`, `ProductReplaceRequest`, `ProductReplaceRequestInput`, `productPatchRequestSchema`, `ProductPatchRequest`, `productSortSchema`, `ProductSort`, `ProductListParams`, `productListQuerySchema`, `discountRequestSchema`, `DiscountRequest`
-- [x] `src/schemas/product-info.ts` → `lib/src/schemas/product-info.dart` (33): `infoFieldSourceSchema`, `InfoFieldSource`, `infoSchemaFieldSchema`, `InfoSchemaField`, `infoSchemaSchema`, `InfoSchema`, `platformCodeSchema`, `PlatformCode`, `PLATFORM_CODE_SETS`, `productNoticeSchema`, `ProductNotice`, `MAX_NOTICE_VALUE_LENGTH`, `productNoticeRequestSchema`, `ProductNoticeRequest`, `CERTIFICATION_STATUSES`, `CertificationStatus`, `MAX_CERTIFICATION_ITEMS`, `productCertificationsSchema`, `ProductCertifications`, `productCertificationsRequestSchema`, `ProductCertificationsRequest`, `ProductCertificationsRequestInput`, `MAX_PRODUCT_INFO_SECTIONS`, `MAX_INFO_SECTION_TITLE`, `infoSectionSchema`, `InfoSection`, `infoSectionRequestSchema`, `InfoSectionRequest`, `InfoSectionRequestInput`, `infoSectionLocalizationSchema`, `InfoSectionLocalization`, `infoSectionLocalizationRequestSchema`, `InfoSectionLocalizationRequest`
+- [x] `src/schemas/product-import.ts` → `lib/src/schemas/product-import.dart` (16): `MAX_PRODUCT_IMPORT_ITEMS`, `MAX_PRODUCT_IMPORT_ITEMS_PER_REQUEST`, `productImportStatusSchema`, `ProductImportStatus`, `productImportItemSchema`, `ProductImportItem`, `ProductImportItemInput`, `productImportItemsRequestSchema`, `ProductImportItemsRequest`, `MAX_PRODUCT_LOOKUP`, `productLookupRequestSchema`, `ProductLookupRequest`, `productImportErrorSchema`, `ProductImportError`, `productImportSchema`, `ProductImport`
+- [x] `src/schemas/product-info.ts` → `lib/src/schemas/product-info.dart` (39): `infoFieldSourceSchema`, `InfoFieldSource`, `infoSchemaFieldSchema`, `InfoSchemaField`, `infoSchemaSchema`, `InfoSchema`, `platformCodeSchema`, `PlatformCode`, `PLATFORM_CODE_SETS`, `productNoticeSchema`, `ProductNotice`, `MAX_NOTICE_VALUE_LENGTH`, `productNoticeRequestSchema`, `ProductNoticeRequest`, `CERTIFICATION_STATUSES`, `CertificationStatus`, `MAX_CERTIFICATION_ITEMS`, `productCertificationsSchema`, `ProductCertifications`, `productCertificationsRequestSchema`, `ProductCertificationsRequest`, `ProductCertificationsRequestInput`, `MAX_PRODUCT_INFO_SECTIONS`, `MAX_INFO_SECTION_TITLE`, `infoSectionSchema`, `InfoSection`, `infoSectionRequestSchema`, `InfoSectionRequest`, `InfoSectionRequestInput`, `infoSectionLocalizationSchema`, `InfoSectionLocalization`, `infoSectionLocalizationRequestSchema`, `InfoSectionLocalizationRequest`, `MAX_NOTICE_TEMPLATE_NAME`, `noticeTemplateSchema`, `NoticeTemplate`, `noticeTemplateRequestSchema`, `NoticeTemplateRequest`, `NoticeTemplateRequestInput`
 - [x] `src/schemas/product-localization.ts` → `lib/src/schemas/product-localization.dart` (5): `productLocalizationSchema`, `ProductLocalization`, `productLocalizationRequestSchema`, `ProductLocalizationRequest`, `productLocalizationNeedsTranslation`
-- [x] `src/schemas/promotion.ts` → `lib/src/schemas/promotion.dart` (42): `couponKindSchema`, `CouponKind`, `couponBenefitSchema`, `CouponBenefit`, `couponConditionsSchema`, `CouponConditions`, `COUPON_CONDITIONS_DEFAULTS`, `COUPON_TARGET_LIST_MAX`, `couponTargetSchema`, `CouponTarget`, `COUPON_TARGET_ALL`, `couponRuleSchema`, `CouponRule`, `couponRejectReasonSchema`, `CouponRejectReason`, `MIN_PAYMENT_AMOUNT`, `PricingLine`, `PricingCoupon`, `PricingDelivery`, `PricingPoints`, `PointRejectReason`, `PricingInput`, `CouponAllocation`, `PricingLineResult`, `PricingCouponResult`, `PricingBundleResult`, `PricingResult`, `couponDiscountOf`, `allocateByWeight`, `isCouponTargetLine`, `quotePricing`, `pointUseOf`, `AppliedCouponSnapshot`, `CouponSettlementLine`, `CouponSettlementState`, `CouponSettlementInput`, `CouponSettlementEntry`, `CouponSettlementResult`, `NO_COUPON_SETTLEMENT`, `settleCouponShortfall`, `proratedPaidRefundBase`, `proratedPointRefund`
+- [x] `src/schemas/product.ts` → `lib/src/schemas/product.dart` (75): `productStatusSchema`, `ProductStatus`, `productSummarySchema`, `ProductSummary`, `optionValueSchema`, `OptionValue`, `optionGroupSchema`, `OptionGroup`, `productVariantSchema`, `ProductVariant`, `MAX_OPTION_GROUPS`, `MAX_VALUES_PER_GROUP`, `MAX_VARIANTS`, `MAX_ADDON_GROUPS`, `MAX_CUSTOM_INPUTS`, `MAX_CUSTOM_INPUT_LENGTH`, `VARIANT_COUNT_WARNING`, `optionSortSchema`, `OptionSort`, `addonValueSchema`, `AddonValue`, `addonGroupSchema`, `AddonGroup`, `CUSTOM_INPUT_TYPES`, `customInputSchema`, `CustomInput`, `CUSTOM_INPUT_FORBIDDEN_WORDS`, `customInputLabelForbiddenWord`, `addonValueRequestSchema`, `AddonValueRequest`, `addonGroupRequestSchema`, `AddonGroupRequest`, `customInputRequestSchema`, `CustomInputRequest`, `optionSelectionSchema`, `OptionSelection`, `customInputValueSchema`, `CustomInputValue`, `discountSchema`, `Discount`, `productSchema`, `Product`, `MAX_PRODUCT_IMAGES`, `productImageUrlSchema`, `ProductImageRejection`, `productImageRejection`, `optionValueRequestSchema`, `OptionValueRequest`, `optionGroupRequestSchema`, `OptionGroupRequest`, `productVariantRequestSchema`, `ProductVariantRequest`, `optionModelRequestSchema`, `OptionModelRequest`, `optionModelSchema`, `OptionModel`, `VARIANT_STOCK_EXCLUSIVE_MESSAGE`, `variantStockRequestSchema`, `VariantStockRequest`, `variantStockSchema`, `VariantStock`, `productCreateRequestSchema`, `ProductCreateRequest`, `ProductCreateRequestInput`, `productReplaceRequestSchema`, `ProductReplaceRequest`, `ProductReplaceRequestInput`, `productPatchRequestSchema`, `ProductPatchRequest`, `productSortSchema`, `ProductSort`, `ProductListParams`, `productListQuerySchema`, `discountRequestSchema`, `DiscountRequest`
+- [x] `src/schemas/promotion.ts` → `lib/src/schemas/promotion.dart` (54): `couponKindSchema`, `CouponKind`, `couponBenefitSchema`, `CouponBenefit`, `COUPON_REWARD_TIER_MAX`, `couponRewardSchema`, `CouponReward`, `COUPON_REWARD_KINDS`, `couponBenefitOfReward`, `couponTierOf`, `couponRuleDiscountOf`, `couponPointRewardOf`, `couponConditionsSchema`, `CouponConditions`, `COUPON_CONDITIONS_DEFAULTS`, `COUPON_TARGET_LIST_MAX`, `couponTargetSchema`, `CouponTarget`, `COUPON_TARGET_ALL`, `couponRuleSchema`, `CouponRule`, `couponTreesOf`, `couponStackingOf`, `couponsCombinable`, `couponRejectReasonSchema`, `CouponRejectReason`, `MIN_PAYMENT_AMOUNT`, `PricingLine`, `PricingCoupon`, `PricingDelivery`, `PricingPoints`, `PointRejectReason`, `PricingInput`, `CouponAllocation`, `PricingLineResult`, `PricingCouponResult`, `PricingBundleResult`, `PricingResult`, `couponDiscountOf`, `allocateByWeight`, `isCouponTargetLine`, `quotePricing`, `pointUseOf`, `AppliedCouponSnapshot`, `CouponSettlementLine`, `CouponSettlementState`, `CouponSettlementInput`, `CouponSettlementEntry`, `CouponSettlementResult`, `NO_COUPON_SETTLEMENT`, `recomputeOrderCoupons`, `settleCouponShortfall`, `proratedPaidRefundBase`, `proratedPointRefund`
 - [x] `src/schemas/refund-policy.ts` → `lib/src/schemas/refund-policy.dart` (13): `currencyRefundFeesSchema`, `CurrencyRefundFees`, `refundPolicySchema`, `RefundPolicy`, `REFUND_POLICY_DEFAULTS`, `refundPolicyPatchSchema`, `RefundPolicyPatch`, `productRefundPolicyPatchSchema`, `RefundPolicyProductInput`, `resolveRefundPolicy`, `productRefundPolicyOverride`, `REFUND_POLICY_DELIVERY_FEE_KEYS`, `proratedRefundBase`
 - [x] `src/schemas/saved-option-set.ts` → `lib/src/schemas/saved-option-set.dart` (32): `MAX_SAVED_OPTION_SETS`, `MAX_SAVED_OPTION_SET_NAME`, `optionGroupKindSchema`, `OptionGroupKind`, `savedOptionValueSchema`, `savedOptionGroupSchema`, `SavedOptionGroup`, `savedCustomInputSchema`, `SavedCustomInput`, `savedOptionSetSchema`, `SavedOptionSet`, `savedOptionValueRequestSchema`, `savedOptionGroupRequestSchema`, `SavedOptionGroupRequest`, `savedCustomInputRequestSchema`, `savedOptionSetRequestSchema`, `SavedOptionSetRequest`, `SavedOptionSetRequestInput`, `savedOptionSetFromProductRequestSchema`, `SavedOptionSetFromProductRequest`, `SavedOptionSetFromProductRequestInput`, `savedOptionSetFromProductResultSchema`, `SavedOptionSetFromProductResult`, `savedOptionSetCompositionSchema`, `savedOptionSetSortSchema`, `SavedOptionSetSort`, `SavedOptionSetListParams`, `savedOptionSetListQuerySchema`, `savedOptionSetLocalizationSchema`, `SavedOptionSetLocalization`, `savedOptionSetLocalizationRequestSchema`, `SavedOptionSetLocalizationRequest`
-- [x] `src/schemas/scope.ts` → `lib/src/schemas/scope.dart` (7): `scopeAccessSchema`, `ScopeAccess`, `STORE_SCOPE_RESOURCES`, `StoreScopeResource`, `storeScopeResourceSchema`, `isStoreScope`, `STORE_ROLE_SCOPES`
 - [x] `src/schemas/scope-descriptions.ts` → `lib/src/schemas/scope-descriptions.dart` (2): `SCOPE_DESCRIPTIONS`, `describeScope`
+- [x] `src/schemas/scope.ts` → `lib/src/schemas/scope.dart` (7): `scopeAccessSchema`, `ScopeAccess`, `STORE_SCOPE_RESOURCES`, `StoreScopeResource`, `storeScopeResourceSchema`, `isStoreScope`, `STORE_ROLE_SCOPES`
 - [x] `src/schemas/shipping-policy.ts` → `lib/src/schemas/shipping-policy.dart` (23): `currencyShippingPolicySchema`, `CurrencyShippingPolicy`, `shippingPolicySchema`, `ShippingPolicy`, `SHIPPING_POLICY_DEFAULTS`, `shippingPolicyPatchSchema`, `ShippingPolicyPatch`, `resolveShippingPolicy`, `remoteAreaSchema`, `RemoteArea`, `REMOTE_AREA_ZIP_RANGES`, `remoteAreaOf`, `remoteAreaLabelOf`, `remoteSurchargeOf`, `DeliveryBundleProduct`, `deliveryBundleKeyOf`, `DeliveryFeeLine`, `deliveryFeeWaiverSchema`, `DeliveryFeeWaiver`, `DeliveryBundleQuote`, `DeliveryQuote`, `DeliveryQuoteInput`, `quoteDelivery`
 - [x] `src/schemas/starter.ts` → `lib/src/schemas/starter.dart` (22): `storeIndustrySchema`, `StoreIndustry`, `brandBriefProductSourceSchema`, `BrandBriefProductSource`, `BRAND_BRIEF_MAX_REFERENCES`, `brandBriefReferenceSchema`, `BrandBriefReference`, `brandBriefSchema`, `BrandBrief`, `putBrandBriefRequestSchema`, `PutBrandBriefRequest`, `brandBriefViewSchema`, `BrandBriefView`, `STARTER_STAGES`, `starterStageSchema`, `StarterStage`, `STARTER_SELLER_TASKS`, `starterSellerTaskSchema`, `StarterSellerTask`, `starterStoreInfoFieldSchema`, `starterStatusSchema`, `StarterStatus`
 - [x] `src/schemas/stay.ts` → `lib/src/schemas/stay.dart` (15): `calendarDateSchema`, `MAX_STAY_NIGHTS`, `MAX_CALENDAR_DAYS`, `inventoryModeSchema`, `InventoryMode`, `stayRangeSchema`, `StayRange`, `staySnapshotSchema`, `StaySnapshot`, `nightsOf`, `calendarDaySchema`, `CalendarDay`, `calendarQuerySchema`, `setCalendarRequestSchema`, `SetCalendarRequest`
 - [x] `src/schemas/store.ts` → `lib/src/schemas/store.dart` (40): `STORE_CODE_PATTERN`, `RESERVED_STORE_CODES`, `isReservedStoreCode`, `storeCodeSchema`, `isWebOrigin`, `analyticsOriginSchema`, `MAX_ANALYTICS_ALLOWED_ORIGINS`, `MAX_AUTO_TRANSITION_DAYS`, `policyVersionSchema`, `policyDocumentUrlSchema`, `BUSINESS_NUMBER_PATTERN`, `normalizeBusinessNumber`, `businessNumberSchema`, `BUSINESS_INFO_MAX_LENGTH`, `businessInfoPatchShape`, `businessInfoResponseShape`, `updateStoreRequestSchema`, `UpdateStoreRequest`, `storeSchema`, `Store`, `storeMemberSchema`, `StoreMember`, `invitationDeliveryStatusSchema`, `InvitationDeliveryStatus`, `invitationSchema`, `Invitation`, `inviteMemberRequestSchema`, `InviteMemberRequest`, `updateMemberRoleRequestSchema`, `UpdateMemberRoleRequest`, `invitationListQuerySchema`, `storeMemberRoleUpdatedSchema`, `StoreMemberRoleUpdated`, `addressTypeSchema`, `AddressType`, `sellerAddressListQuerySchema`, `sellerAddressSchema`, `SellerAddress`, `sellerAddressRequestSchema`, `SellerAddressRequest`
-- [x] `src/schemas/storefront-hosting.ts` → `lib/src/schemas/storefront-hosting.dart` (184): `STOREFRONT_SLUG_PATTERN`, `RESERVED_STOREFRONT_SLUGS`, `STOREFRONT_EDIT_PREVIEW_SUFFIX`, `STOREFRONT_SHOWCASE_SLUG_PREFIX`, `isShowcaseStorefrontSlug`, `isReservedStorefrontSlug`, `storefrontEditPreviewLabelOf`, `storefrontVersionPreviewLabelOf`, `storefrontSlugSchema`, `STOREFRONT_SLUG_HOLD_DAYS`, `STOREFRONT_CLOSED_SITE_HOLD_DAYS`, `STOREFRONT_SLUG_CHANGE_WINDOW_DAYS`, `STOREFRONT_SLUG_CHANGE_LIMIT`, `STOREFRONT_SITE_CREATE_LIMIT`, `storefrontTemplateSchema`, `StorefrontTemplate`, `storeTemplateSchema`, `StoreTemplate`, `TEMPLATE_STORE_LOCKED_BUSINESS_FIELDS`, `updateStoreTemplateRequestSchema`, `UpdateStoreTemplateRequest`, `storefrontVersionStatusSchema`, `StorefrontVersionStatus`, `storefrontVersionSchema`, `StorefrontVersion`, `storefrontSiteStatusSchema`, `StorefrontSiteStatus`, `storefrontVisibilitySchema`, `StorefrontVisibility`, `storefrontSourceModeSchema`, `storefrontDomainSchema`, `StorefrontDomain`, `storefrontProvisioningSchema`, `StorefrontProvisioning`, `storefrontEditPreviewSchema`, `StorefrontEditPreview`, `storefrontSuspensionSchema`, `StorefrontSuspension`, `storefrontSiteSnapshotSchema`, `StorefrontSiteSnapshot`, `storefrontSiteSchema`, `StorefrontSite`, `storefrontHostingSchema`, `StorefrontHosting`, `storefrontSlugAvailabilitySchema`, `StorefrontSlugAvailability`, `storefrontDeploymentStepSchema`, `StorefrontDeploymentStep`, `storefrontDeploymentLogSchema`, `StorefrontDeploymentLog`, `storefrontDeploymentSchema`, `StorefrontDeployment`, `createStorefrontSiteRequestSchema`, `CreateStorefrontSiteRequest`, `publishStorefrontVersionRequestSchema`, `PublishStorefrontVersionRequest`, `rollbackStorefrontRequestSchema`, `RollbackStorefrontRequest`, `changeStorefrontSlugRequestSchema`, `ChangeStorefrontSlugRequest`, `setStorefrontVisibilityRequestSchema`, `SetStorefrontVisibilityRequest`, `disableStorefrontHostingRequestSchema`, `DisableStorefrontHostingRequest`, `storefrontSlugAvailabilityQuerySchema`, `createStorefrontPreviewLinkRequestSchema`, `CreateStorefrontPreviewLinkRequest`, `storefrontPreviewLinkSchema`, `StorefrontPreviewLink`, `STOREFRONT_PLATFORM_DOMAINS`, `STOREFRONT_PUBLIC_SUFFIXES`, `STOREFRONT_CUSTOM_DOMAIN_LIMIT_DEFAULT`, `STOREFRONT_DOMAIN_DNS_WAIT_DAYS`, `STOREFRONT_DOMAIN_DNS_GRACE_DAYS`, `STOREFRONT_DOMAIN_TXT_LABEL`, `normalizeStorefrontHostname`, `StorefrontHostnameProblem`, `storefrontCustomHostnameProblem`, `storefrontDomainTxtNameOf`, `storefrontCustomDomainStatusSchema`, `StorefrontCustomDomainStatus`, `storefrontDnsRecordSchema`, `StorefrontDnsRecord`, `storefrontSiteDomainSchema`, `StorefrontSiteDomain`, `storefrontSiteDomainsSchema`, `StorefrontSiteDomains`, `addStorefrontDomainRequestSchema`, `AddStorefrontDomainRequest`, `STOREFRONT_EDIT_CAPACITY`, `STOREFRONT_EDIT_IDLE_MINUTES`, `STOREFRONT_EDIT_ACTIVITY_TIMEOUT_MINUTES`, `STOREFRONT_FILE_MAX_BYTES`, `STOREFRONT_WORKSPACE_MAX_BYTES`, `STOREFRONT_FILE_BATCH_MAX`, `STOREFRONT_BLOCKED_PATH_SEGMENTS`, `STOREFRONT_PATH_SEGMENT_PATTERN`, `normalizeStorefrontPath`, `isEditableStorefrontPath`, `storefrontFilePathSchema`, `storefrontFileHashSchema`, `storefrontFileEncodingSchema`, `storefrontEditSessionStatusSchema`, `STOREFRONT_EDIT_START_STAGES`, `storefrontEditSessionSchema`, `StorefrontEditSession`, `storefrontDevLogsSchema`, `StorefrontDevLogs`, `storefrontEditingSchema`, `StorefrontEditing`, `storefrontFileEntrySchema`, `StorefrontFileEntry`, `storefrontFileListSchema`, `StorefrontFileList`, `storefrontFileListQuerySchema`, `storefrontFileContentQuerySchema`, `storefrontFileContentSchema`, `StorefrontFileContent`, `writeStorefrontFilesRequestSchema`, `WriteStorefrontFilesRequest`, `storefrontFileWriteResultSchema`, `StorefrontFileWriteResult`, `storefrontFileConflictDetailsSchema`, `StorefrontFileConflictDetails`, `deleteStorefrontFileRequestSchema`, `DeleteStorefrontFileRequest`, `storefrontFileDeleteResultSchema`, `StorefrontFileDeleteResult`, `moveStorefrontFileRequestSchema`, `MoveStorefrontFileRequest`, `storefrontFileMoveResultSchema`, `StorefrontFileMoveResult`, `STOREFRONT_SEARCH_REGEX_MAX_LENGTH`, `searchStorefrontFilesRequestSchema`, `SearchStorefrontFilesRequest`, `storefrontFileSearchResultSchema`, `StorefrontFileSearchResult`, `runStorefrontCheckRequestSchema`, `RunStorefrontCheckRequest`, `storefrontCheckStatusSchema`, `StorefrontCheckStatus`, `STOREFRONT_CHECK_TERMINAL_STATUSES`, `storefrontCheckSchema`, `StorefrontCheck`, `storefrontRuleSeveritySchema`, `StorefrontRuleSeverity`, `storefrontRuleResultSchema`, `StorefrontRuleResult`, `storefrontVerifyReportSchema`, `StorefrontVerifyReport`, `storefrontBuildStatusSchema`, `StorefrontBuildStatus`, `STOREFRONT_BUILD_TERMINAL_STATUSES`, `STOREFRONT_BUILD_STAGES`, `storefrontDependencyFindingSchema`, `StorefrontDependencyFinding`, `storefrontBuildDependenciesSchema`, `StorefrontBuildDependencies`, `storefrontBuildSchema`, `StorefrontBuild`, `storefrontBuildListQuerySchema`, `createStorefrontVersionRequestSchema`, `CreateStorefrontVersionRequest`, `storefrontVersionCreatedSchema`, `StorefrontVersionCreated`, `createStorefrontEditPreviewLinkRequestSchema`, `CreateStorefrontEditPreviewLinkRequest`, `STOREFRONT_SOURCE_PART_BYTES`, `STOREFRONT_SOURCE_BLOB_BATCH_MAX`, `STOREFRONT_WORKSPACE_MAX_FILES`, `storefrontSourceRefSchema`, `storefrontSourceSchema`, `StorefrontSource`, `storefrontSourceArchiveQuerySchema`, `storefrontSourceArchivePartSchema`, `StorefrontSourceArchivePart`, `uploadStorefrontSourceBlobsRequestSchema`, `UploadStorefrontSourceBlobsRequest`, `storefrontSourceBlobsResultSchema`, `StorefrontSourceBlobsResult`, `replaceStorefrontSourceRequestSchema`, `ReplaceStorefrontSourceRequest`, `storefrontSourceReplacedSchema`, `StorefrontSourceReplaced`
-- [x] `src/schemas/subscription.ts` → `lib/src/schemas/subscription.dart` (14): `planCodeSchema`, `PlanCode`, `responsePlanCodeSchema`, `ResponsePlanCode`, `subscriptionStatusSchema`, `SubscriptionStatus`, `subscriptionLimitsSchema`, `SubscriptionLimits`, `subscriptionUsageSchema`, `SubscriptionUsage`, `storeSubscriptionSchema`, `StoreSubscription`, `planErrorDetailsSchema`, `PlanErrorDetails`
+- [x] `src/schemas/storefront-hosting.ts` → `lib/src/schemas/storefront-hosting.dart` (213): `STOREFRONT_SLUG_PATTERN`, `RESERVED_STOREFRONT_SLUGS`, `STOREFRONT_EDIT_PREVIEW_SUFFIX`, `isReservedStorefrontSlug`, `storefrontEditPreviewLabelOf`, `storefrontVersionPreviewLabelOf`, `storefrontSlugSchema`, `STOREFRONT_SLUG_HOLD_DAYS`, `STOREFRONT_CLOSED_SITE_HOLD_DAYS`, `STOREFRONT_SLUG_CHANGE_WINDOW_DAYS`, `STOREFRONT_SLUG_CHANGE_LIMIT`, `STOREFRONT_SITE_CREATE_LIMIT`, `storefrontVersionStatusSchema`, `StorefrontVersionStatus`, `storefrontVersionSchema`, `StorefrontVersion`, `storefrontSiteStatusSchema`, `StorefrontSiteStatus`, `storefrontVisibilitySchema`, `StorefrontVisibility`, `storefrontDomainSchema`, `StorefrontDomain`, `storefrontProvisioningSchema`, `StorefrontProvisioning`, `storefrontEditPreviewSchema`, `StorefrontEditPreview`, `storefrontSuspensionSchema`, `StorefrontSuspension`, `storefrontSiteSnapshotSchema`, `StorefrontSiteSnapshot`, `storefrontSiteSchema`, `StorefrontSite`, `storefrontHostingSchema`, `StorefrontHosting`, `storefrontSlugAvailabilitySchema`, `StorefrontSlugAvailability`, `storefrontDeploymentStepSchema`, `StorefrontDeploymentStep`, `storefrontDeploymentLogSchema`, `StorefrontDeploymentLog`, `storefrontDeploymentSchema`, `StorefrontDeployment`, `storefrontInitialSourceSchema`, `StorefrontInitialSource`, `createStorefrontSiteRequestSchema`, `CreateStorefrontSiteRequest`, `publishStorefrontVersionRequestSchema`, `PublishStorefrontVersionRequest`, `rollbackStorefrontRequestSchema`, `RollbackStorefrontRequest`, `changeStorefrontSlugRequestSchema`, `ChangeStorefrontSlugRequest`, `setStorefrontVisibilityRequestSchema`, `SetStorefrontVisibilityRequest`, `disableStorefrontHostingRequestSchema`, `DisableStorefrontHostingRequest`, `storefrontSlugAvailabilityQuerySchema`, `createStorefrontPreviewLinkRequestSchema`, `CreateStorefrontPreviewLinkRequest`, `storefrontPreviewLinkSchema`, `StorefrontPreviewLink`, `STOREFRONT_PLATFORM_DOMAINS`, `STOREFRONT_PUBLIC_SUFFIXES`, `STOREFRONT_CUSTOM_DOMAIN_LIMIT_DEFAULT`, `STOREFRONT_DOMAIN_DNS_WAIT_DAYS`, `STOREFRONT_DOMAIN_DNS_GRACE_DAYS`, `STOREFRONT_DOMAIN_TXT_LABEL`, `normalizeStorefrontHostname`, `StorefrontHostnameProblem`, `storefrontCustomHostnameProblem`, `storefrontDomainTxtNameOf`, `storefrontCustomDomainStatusSchema`, `StorefrontCustomDomainStatus`, `storefrontDnsRecordSchema`, `StorefrontDnsRecord`, `storefrontSiteDomainSchema`, `StorefrontSiteDomain`, `storefrontSiteDomainsSchema`, `StorefrontSiteDomains`, `addStorefrontDomainRequestSchema`, `AddStorefrontDomainRequest`, `STOREFRONT_SITE_VAR_KEY_PATTERN`, `STOREFRONT_SITE_VAR_RESERVED_PREFIX`, `STOREFRONT_SITE_VAR_RESERVED_NAMES`, `STOREFRONT_SITE_VAR_LIMIT`, `STOREFRONT_SITE_VAR_MAX_BYTES`, `storefrontSiteVarSchema`, `StorefrontSiteVar`, `storefrontSiteVarsSchema`, `StorefrontSiteVars`, `putStorefrontSiteVarRequestSchema`, `PutStorefrontSiteVarRequest`, `storefrontSiteVarKeyProblem`, `STOREFRONT_EDIT_CAPACITY`, `STOREFRONT_EDIT_IDLE_MINUTES`, `STOREFRONT_EDIT_ACTIVITY_TIMEOUT_MINUTES`, `STOREFRONT_FILE_MAX_BYTES`, `STOREFRONT_WORKSPACE_MAX_BYTES`, `STOREFRONT_SOURCE_PACK_MAX_BYTES`, `STOREFRONT_FILE_BATCH_MAX`, `STOREFRONT_BLOCKED_PATH_SEGMENTS`, `STOREFRONT_PATH_SEGMENT_PATTERN`, `normalizeStorefrontPath`, `isEditableStorefrontPath`, `storefrontFilePathSchema`, `storefrontFileHashSchema`, `storefrontFileEncodingSchema`, `storefrontEditSessionStatusSchema`, `STOREFRONT_EDIT_START_STAGES`, `storefrontEditSessionSchema`, `StorefrontEditSession`, `storefrontGitMergeRequestSchema`, `StorefrontGitMergeRequest`, `storefrontGitMergeSchema`, `StorefrontGitMerge`, `storefrontDevLogsSchema`, `StorefrontDevLogs`, `storefrontEditFailureSchema`, `StorefrontEditFailure`, `storefrontEditingSchema`, `StorefrontEditing`, `storefrontFileEntrySchema`, `StorefrontFileEntry`, `storefrontFileListSchema`, `StorefrontFileList`, `storefrontFileListQuerySchema`, `storefrontFileContentQuerySchema`, `storefrontFileContentSchema`, `StorefrontFileContent`, `writeStorefrontFilesRequestSchema`, `WriteStorefrontFilesRequest`, `storefrontFileWriteResultSchema`, `StorefrontFileWriteResult`, `storefrontFileConflictDetailsSchema`, `StorefrontFileConflictDetails`, `deleteStorefrontFileRequestSchema`, `DeleteStorefrontFileRequest`, `storefrontFileDeleteResultSchema`, `StorefrontFileDeleteResult`, `moveStorefrontFileRequestSchema`, `MoveStorefrontFileRequest`, `storefrontFileMoveResultSchema`, `StorefrontFileMoveResult`, `STOREFRONT_SEARCH_REGEX_MAX_LENGTH`, `searchStorefrontFilesRequestSchema`, `SearchStorefrontFilesRequest`, `storefrontFileSearchResultSchema`, `StorefrontFileSearchResult`, `runStorefrontCheckRequestSchema`, `RunStorefrontCheckRequest`, `storefrontCheckStatusSchema`, `StorefrontCheckStatus`, `STOREFRONT_CHECK_TERMINAL_STATUSES`, `storefrontCheckSchema`, `StorefrontCheck`, `storefrontRuleSeveritySchema`, `StorefrontRuleSeverity`, `storefrontRuleResultSchema`, `StorefrontRuleResult`, `storefrontVerifyReportSchema`, `StorefrontVerifyReport`, `storefrontBuildStatusSchema`, `StorefrontBuildStatus`, `STOREFRONT_BUILD_TERMINAL_STATUSES`, `STOREFRONT_BUILD_STAGES`, `storefrontDependencyFindingSchema`, `StorefrontDependencyFinding`, `storefrontBuildDependenciesSchema`, `StorefrontBuildDependencies`, `storefrontBuildSchema`, `StorefrontBuild`, `storefrontBuildListQuerySchema`, `createStorefrontVersionRequestSchema`, `CreateStorefrontVersionRequest`, `storefrontVersionCreatedSchema`, `StorefrontVersionCreated`, `createStorefrontEditPreviewLinkRequestSchema`, `CreateStorefrontEditPreviewLinkRequest`, `STOREFRONT_SOURCE_PART_BYTES`, `STOREFRONT_WORKSPACE_MAX_FILES`, `storefrontSourceRefSchema`, `storefrontSourceSchema`, `StorefrontSource`, `storefrontSourceArchiveQuerySchema`, `storefrontSourceArchivePartSchema`, `StorefrontSourceArchivePart`, `uploadStorefrontSourcePackRequestSchema`, `UploadStorefrontSourcePackRequest`, `storefrontSourcePackSchema`, `StorefrontSourcePack`, `createStorefrontSourceUploadsRequestSchema`, `CreateStorefrontSourceUploadsRequest`, `storefrontSourceUploadsSchema`, `StorefrontSourceUploads`, `replaceStorefrontSourceRequestSchema`, `ReplaceStorefrontSourceRequest`, `storefrontSourceReplacedSchema`, `StorefrontSourceReplaced`, `storefrontGitStatusSchema`, `StorefrontGitStatus`, `storefrontGitRepositorySchema`, `StorefrontGitRepository`, `linkStorefrontGitInstallationRequestSchema`, `storefrontGitConnectStateSchema`, `StorefrontGitConnectState`, `LinkStorefrontGitInstallationRequest`, `connectStorefrontGitRequestSchema`, `ConnectStorefrontGitRequest`, `setStorefrontAutoPublishRequestSchema`, `SetStorefrontAutoPublishRequest`, `resolveStorefrontDeployProduction`, `setStorefrontDeployApprovalRequestSchema`, `SetStorefrontDeployApprovalRequest`
+- [x] `src/schemas/subscription.ts` → `lib/src/schemas/subscription.dart` (6): `planCodeSchema`, `PlanCode`, `responsePlanCodeSchema`, `ResponsePlanCode`, `planErrorDetailsSchema`, `PlanErrorDetails`
 - [x] `src/schemas/telemetry.ts` → `lib/src/schemas/telemetry.dart` (5): `mcpRuleResultSchema`, `McpRuleResult`, `MCP_TELEMETRY_MAX_RESULTS`, `mcpToolEventSchema`, `McpToolEvent`
 - [x] `src/schemas/upload.ts` → `lib/src/schemas/upload.dart` (11): `uploadPurposeSchema`, `UploadPurpose`, `UploadPurposeLimit`, `UPLOAD_PURPOSE_LIMITS`, `uploadExtensionOf`, `UploadRejection`, `uploadRejection`, `uploadRequestSchema`, `UploadRequest`, `uploadTicketSchema`, `UploadTicket`
-- [x] `src/schemas/webhook-event.ts` → `lib/src/schemas/webhook-event.dart` (37): `orderWebhookEventDataSchema`, `OrderWebhookEventData`, `orderFulfilledWebhookEventDataSchema`, `OrderFulfilledWebhookEventData`, `orderCanceledWebhookEventDataSchema`, `OrderCanceledWebhookEventData`, `claimWebhookEventDataSchema`, `ClaimWebhookEventData`, `inquiryWebhookEventDataSchema`, `InquiryWebhookEventData`, `reviewWebhookEventDataSchema`, `ReviewWebhookEventData`, `productOutOfStockWebhookEventDataSchema`, `ProductOutOfStockWebhookEventData`, `inventoryChangedWebhookEventDataSchema`, `InventoryChangedWebhookEventData`, `orderWebhookEventSchema`, `orderFulfilledWebhookEventSchema`, `orderCanceledWebhookEventSchema`, `claimWebhookEventSchema`, `inquiryWebhookEventSchema`, `reviewWebhookEventSchema`, `productOutOfStockWebhookEventSchema`, `inventoryChangedWebhookEventSchema`, `flowNotificationWebhookEventDataSchema`, `flowNotificationWebhookEventSchema`, `flowStateChangedWebhookEventDataSchema`, `flowStateChangedWebhookEventSchema`, `webhookEventSchema`, `WebhookEvent`, `WebhookEventType`, `WebhookEventOf`, `KNOWN_WEBHOOK_EVENT_TYPES`, `unknownWebhookEventSchema`, `UnknownWebhookEvent`, `ParsedWebhookEvent`, `parseWebhookEvent`
-- [x] `src/webhook-headers.ts` → `lib/src/webhook-headers.dart` (7): `WEBHOOK_DEFAULT_TOLERANCE_SEC`, `WEBHOOK_DELIVERY_ID_HEADER`, `WEBHOOK_EVENT_ID_HEADER`, `WEBHOOK_EVENT_TYPE_HEADER`, `WEBHOOK_HEADERS`, `WEBHOOK_SIGNATURE_HEADER`, `WEBHOOK_USER_AGENT`
-- [x] `src/client.ts` → `lib/src/client.dart` (3): `StoreClient`, `StoreClientOptions`, `createStoreClient`
-- [x] `src/http.ts` → `lib/src/http.dart` (7): `Query`, `TokenSource`, `APPROVAL_ALREADY_DECIDED_CODE`, `APPROVAL_REQUIRED_CODE`, `ApiError`, `ApprovalPendingError`, `buildQuery`
-- [x] `src/oauth.ts` → `lib/src/oauth.dart` (6): `buildAuthorizeUrl`, `createPkcePair`, `exchangeAuthorizationCode`, `OAuthTokenResponse`, `oauthTokenResponseSchema`, `refreshUserToken`
-- [x] `src/session.ts` → `lib/src/session.dart` (7): `AuthorizeOptions`, `createStoreSession`, `SessionStorage`, `STORE_SESSION_KEYS`, `StoreAuthServer`, `StoreSession`, `StoreSessionOptions`
+- [x] `src/schemas/userinfo.ts` → `lib/src/schemas/userinfo.dart` (6): `CUSTOMER_BIRTHDATE_PATTERN`, `customerUserinfoAddressSchema`, `customerUserinfoSchema`, `CustomerUserinfo`, `customerUserinfoInputSchema`, `CustomerUserinfoInput`
+- [x] `src/schemas/webhook-event.ts` → `lib/src/schemas/webhook-event.dart` (43): `orderWebhookEventDataSchema`, `OrderWebhookEventData`, `orderFulfilledWebhookEventDataSchema`, `OrderFulfilledWebhookEventData`, `orderCanceledWebhookEventDataSchema`, `OrderCanceledWebhookEventData`, `claimWebhookEventDataSchema`, `ClaimWebhookEventData`, `inquiryWebhookEventDataSchema`, `InquiryWebhookEventData`, `reviewWebhookEventDataSchema`, `ReviewWebhookEventData`, `productOutOfStockWebhookEventDataSchema`, `ProductOutOfStockWebhookEventData`, `inventoryChangedWebhookEventDataSchema`, `InventoryChangedWebhookEventData`, `orderWebhookEventSchema`, `orderFulfilledWebhookEventSchema`, `orderCanceledWebhookEventSchema`, `claimWebhookEventSchema`, `inquiryWebhookEventSchema`, `reviewWebhookEventSchema`, `productOutOfStockWebhookEventSchema`, `inventoryChangedWebhookEventSchema`, `flowNotificationWebhookEventDataSchema`, `flowNotificationWebhookEventSchema`, `flowStateChangedWebhookEventDataSchema`, `flowStateChangedWebhookEventSchema`, `orderPaymentAddedWebhookEventDataSchema`, `orderPaymentAddedWebhookEventSchema`, `orderPaymentRequestedWebhookEventDataSchema`, `orderPaymentRequestedWebhookEventSchema`, `orderRefundedWebhookEventDataSchema`, `orderRefundedWebhookEventSchema`, `webhookEventSchema`, `WebhookEvent`, `WebhookEventType`, `WebhookEventOf`, `KNOWN_WEBHOOK_EVENT_TYPES`, `unknownWebhookEventSchema`, `UnknownWebhookEvent`, `ParsedWebhookEvent`, `parseWebhookEvent`
+- [x] `src/session.ts` → `lib/src/session.dart` (7): `SessionStorage`, `STORE_SESSION_KEYS`, `StoreAuthServer`, `StoreSessionOptions`, `AuthorizeOptions`, `StoreSession`, `createStoreSession`
+- [x] `src/webhook-headers.ts` → `lib/src/webhook-headers.dart` (7): `WEBHOOK_SIGNATURE_HEADER`, `WEBHOOK_EVENT_ID_HEADER`, `WEBHOOK_EVENT_TYPE_HEADER`, `WEBHOOK_DELIVERY_ID_HEADER`, `WEBHOOK_USER_AGENT`, `WEBHOOK_DEFAULT_TOLERANCE_SEC`, `WEBHOOK_HEADERS`
+- [ ] `src/schemas/plans.ts` → `lib/src/schemas/plans.dart` (6, npm 0.36.0에 없음 — 다음 npm 릴리스 뒤 생성): `planEntitlementsSchema`, `PlanEntitlementValues`, `publicPlanSchema`, `PublicPlan`, `publicPlansSchema`, `PublicPlans`
 - [x] `ZodError` (설계 규칙 「검증과 오류」)
 
 ## `@sayren/store-sdk/server` → `server.dart`
@@ -919,9 +1019,9 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 - [x] `WebhookSignatureVerification`(판별 값 `ok: true/false`)의 하위 클래스는 `WebhookSignatureVerificationOk`·`WebhookSignatureVerificationFailed`다
 - [x] `delegateMember`의 인라인 옵션은 네임드 인자다
 
-- [x] `src/member-delegation.ts` → `lib/src/member-delegation.dart` (3): `DelegatedMemberToken`, `delegateMember`, `MemberDelegationError`
-- [x] `src/webhook-headers.ts` → `lib/src/webhook-headers.dart` (7): `WEBHOOK_DEFAULT_TOLERANCE_SEC`, `WEBHOOK_DELIVERY_ID_HEADER`, `WEBHOOK_EVENT_ID_HEADER`, `WEBHOOK_EVENT_TYPE_HEADER`, `WEBHOOK_HEADERS`, `WEBHOOK_SIGNATURE_HEADER`, `WEBHOOK_USER_AGENT`
-- [x] `src/webhook-signature.ts` → `lib/src/webhook-signature.dart` (8): `ParsedWebhookSignature`, `parseWebhookSignatureHeader`, `SignWebhookPayloadOptions`, `signWebhookPayload`, `VerifyWebhookSignatureOptions`, `verifyWebhookSignature`, `WebhookSignatureFailureReason`, `WebhookSignatureVerification`
+- [x] `src/member-delegation.ts` → `lib/src/member-delegation.dart` (3): `DelegatedMemberToken`, `MemberDelegationError`, `delegateMember`
+- [x] `src/webhook-headers.ts` → `lib/src/webhook-headers.dart` (7): `WEBHOOK_SIGNATURE_HEADER`, `WEBHOOK_EVENT_ID_HEADER`, `WEBHOOK_EVENT_TYPE_HEADER`, `WEBHOOK_DELIVERY_ID_HEADER`, `WEBHOOK_USER_AGENT`, `WEBHOOK_DEFAULT_TOLERANCE_SEC`, `WEBHOOK_HEADERS`
+- [x] `src/webhook-signature.ts` → `lib/src/webhook-signature.dart` (8): `SignWebhookPayloadOptions`, `signWebhookPayload`, `ParsedWebhookSignature`, `parseWebhookSignatureHeader`, `WebhookSignatureFailureReason`, `WebhookSignatureVerification`, `VerifyWebhookSignatureOptions`, `verifyWebhookSignature`
 
 ---
 
@@ -935,8 +1035,9 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 | `StartOptions.mode`·`window`, `RetryOptions.mode`·`window`, `open`의 `options` | `payments` 옵션 | 〃 |
 | `PaymentsEnv.openPopup`·`subscribe`·`now`·`setInterval`·`clearInterval` | `payments` 의존부 | 〃 |
 | `settlements.list` · `settlements.get` | `createStoreClient` | `salesReport.get`으로 대체 |
-| `storefront.changeTemplate` · `changeStorefrontTemplateRequestSchema` · `ChangeStorefrontTemplateRequest` | `createStoreClient`·export | 서버가 항상 409 |
 | `analyticsAllowedOrigins` 필드 | 상점 수정 요청 스키마(`schemas/store.ts`) | `storefrontOrigins`로 대체 |
+| `testOrderReviewsAllowed` 필드 | 상점 응답·수정 요청 스키마(`schemas/store.ts`) | 효과 없음 |
+| `AI_TODOS_MAX` | export(`schemas/ai.ts`) | 할 일 개수 상한 폐지 |
 
 목록 대조 스크립트는 이 표의 이름을 Node 목록에서 빼고 비교한다.
 
@@ -949,6 +1050,7 @@ Node는 결제창이 뜨면 페이지가 떠나므로 끝나지 않는 Promise�
 | Phase 2 | `@sayren/storefront-sdk/auth` · `/payments` · `/analytics` |
 | Phase 3 | `@sayren/store-sdk` 기본 엔트리포인트 |
 | Phase 4 | `@sayren/store-sdk/server` |
+| 최신화 | Node SDK `@sayren/storefront-sdk` 0.40.0 · `@sayren/store-sdk` 0.71.0 기준으로 다시 생성(새 엔트리 `@sayren/storefront-sdk/server` 포함) |
 
 Phase 0~4가 모두 끝났다. `sayren_store_sdk`는 Flutter 의존이 없는 Dart 패키지다(테스트는 `dart test`).
 

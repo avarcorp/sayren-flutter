@@ -44,7 +44,7 @@ Future<void> main(List<String> argv) async {
               : {
                   'ok': false,
                   'issues': [
-                    for (final i in r.error!.issues) {'code': i.code, 'path': i.path}
+                    for (final i in r.error!.issues) {'code': i.code, 'path': i.path},
                   ],
                 },
         };
@@ -92,12 +92,14 @@ Future<void> main(List<String> argv) async {
     }
 
     final o = {...defaults, ...?(s['options'] as Map?)?.cast<String, Object?>()};
-    final client = createStoreClient(StoreClientOptions(
-      baseUrl: o['baseUrl'] as String,
-      accessToken: o['accessToken'],
-      storeId: o['storeId'],
-      fetch: fetch,
-    ));
+    final client = createStoreClient(
+      StoreClientOptions(
+        baseUrl: o['baseUrl'] as String,
+        accessToken: o['accessToken'],
+        storeId: o['storeId'],
+        fetch: fetch,
+      ),
+    );
     Map<String, Object?> outcome;
     try {
       final call = handCalls[s['call']] ?? calls[s['call']]!;
@@ -110,13 +112,15 @@ Future<void> main(List<String> argv) async {
 
   final sessionResults = await runSessions(dir);
 
-  stdout.write(jsonEncode({
-    'schemaCases': schemaResults,
-    'functions': functionResults,
-    'scenarios': scenarioResults,
-    'sessions': sessionResults,
-    'server': await runServer(dir),
-  }));
+  stdout.write(
+    jsonEncode({
+      'schemaCases': schemaResults,
+      'functions': functionResults,
+      'scenarios': scenarioResults,
+      'sessions': sessionResults,
+      'server': await runServer(dir),
+    }),
+  );
 }
 
 /// 요청 기록 — 폼 본문은 키·값 목록, JSON 본문은 값, 그 밖의 바이트는 `{bytes}`다
@@ -176,7 +180,7 @@ Map<String, Object?> describeError(Object error) => switch (error) {
       ZodError() => {
           'type': 'ZodError',
           'issues': [
-            for (final i in error.issues) {'code': i.code, 'path': i.path}
+            for (final i in error.issues) {'code': i.code, 'path': i.path},
           ],
         },
       StateError() => {'type': 'Error', 'message': error.message},
@@ -220,29 +224,36 @@ Future<List<Object?>> runSessions(String dir) async {
       return toResponse(queue.isEmpty ? {'status': 500, 'body': null} : queue.removeAt(0));
     }
 
-    final session = createStoreSession(StoreSessionOptions(
-      baseUrl: defaults['baseUrl'] as String,
-      authServer: StoreAuthServer(
-        authorizeUrl: server['authorizeUrl'] as String,
-        tokenUrl: server['tokenUrl'] as String,
-        revokeUrl: server['revokeUrl'] as String,
-        resource: server['resource'] as String?,
+    final session = createStoreSession(
+      StoreSessionOptions(
+        baseUrl: defaults['baseUrl'] as String,
+        authServer: StoreAuthServer(
+          authorizeUrl: server['authorizeUrl'] as String,
+          tokenUrl: server['tokenUrl'] as String,
+          revokeUrl: server['revokeUrl'] as String,
+          resource: server['resource'] as String?,
+        ),
+        clientId: defaults['clientId'] as String,
+        storage: storage,
+        fetch: fetch,
       ),
-      clientId: defaults['clientId'] as String,
-      storage: storage,
-      fetch: fetch,
-    ));
+    );
     var notified = 0;
     session.subscribe(() => notified++);
-    final client = createStoreClient(StoreClientOptions(
-      baseUrl: defaults['baseUrl'] as String,
-      fetch: fetch,
-      session: s['noSession'] == true ? null : session,
-    ));
+    final client = createStoreClient(
+      StoreClientOptions(
+        baseUrl: defaults['baseUrl'] as String,
+        fetch: fetch,
+        session: s['noSession'] == true ? null : session,
+      ),
+    );
     AuthorizeOptions authorizeOptions(Object? v) {
       final m = (v as Map).cast<String, Object?>();
       return AuthorizeOptions(
-          redirectUri: m['redirectUri'] as String, scope: m['scope'] as String?, prompt: m['prompt'] as String?);
+        redirectUri: m['redirectUri'] as String,
+        scope: m['scope'] as String?,
+        prompt: m['prompt'] as String?,
+      );
     }
 
     final steps = <Object?>[];
@@ -268,7 +279,9 @@ Future<List<Object?>> runSessions(String dir) async {
             session.clear();
           case 'setTokens':
             session.setTokens(
-                access_token: m(0)['access_token'] as String, refresh_token: m(0)['refresh_token'] as String?);
+              access_token: m(0)['access_token'] as String,
+              refresh_token: m(0)['refresh_token'] as String?,
+            );
           case 'getToken':
             value = session.getToken();
           case 'userinfo':
@@ -328,12 +341,14 @@ Future<List<Object?>> runSessions(String dir) async {
         outcome = {'ok': false, 'error': describeError(error)};
       }
       await Future<void>.delayed(Duration.zero);
-      steps.add(mask({
-        'op': step['op'],
-        'outcome': outcome,
-        'notified': notified,
-        'storage': Map.fromEntries(store.entries.toList()..sort((a, b) => a.key.compareTo(b.key))),
-      }));
+      steps.add(
+        mask({
+          'op': step['op'],
+          'outcome': outcome,
+          'notified': notified,
+          'storage': Map.fromEntries(store.entries.toList()..sort((a, b) => a.key.compareTo(b.key))),
+        }),
+      );
     }
     results.add({'name': s['name'], 'requests': mask(requests), 'steps': steps});
   }
@@ -375,28 +390,42 @@ Future<List<Object?>> runServer(String dir) async {
       Object? value;
       switch (s['op']) {
         case 'sign':
-          value = await signWebhookPayload(SignWebhookPayloadOptions(
-              payload: a['payload'] as String, secret: secret(a['secret']), timestamp: a['timestamp'] as int?));
+          value = await signWebhookPayload(
+            SignWebhookPayloadOptions(
+              payload: a['payload'] as String,
+              secret: secret(a['secret']),
+              timestamp: a['timestamp'] as int?,
+            ),
+          );
         case 'parse':
           value = parseWebhookSignatureHeader(a['header'] as String?);
         case 'verify':
-          value = await verifyWebhookSignature(VerifyWebhookSignatureOptions(
-            payload: a['payload'] as String,
-            header: a['header'] as String?,
-            secret: secret(a['secret']),
-            toleranceSec: a['toleranceSec'] as int?,
-            now: DateTime.parse(a['now'] as String),
-          ));
+          value = await verifyWebhookSignature(
+            VerifyWebhookSignatureOptions(
+              payload: a['payload'] as String,
+              header: a['header'] as String?,
+              secret: secret(a['secret']),
+              toleranceSec: a['toleranceSec'] as int?,
+              now: DateTime.parse(a['now'] as String),
+            ),
+          );
         case 'roundtrip':
-          final header = await signWebhookPayload(SignWebhookPayloadOptions(
-              payload: a['payload'] as String, secret: secret(a['signSecret']), timestamp: a['timestamp'] as int?));
-          value = await verifyWebhookSignature(VerifyWebhookSignatureOptions(
-            payload: (a['verifyPayload'] ?? a['payload']) as String,
-            header: header,
-            secret: secret(a['verifySecret']),
-            toleranceSec: a['toleranceSec'] as int?,
-            now: DateTime.parse(a['now'] as String),
-          ));
+          final header = await signWebhookPayload(
+            SignWebhookPayloadOptions(
+              payload: a['payload'] as String,
+              secret: secret(a['signSecret']),
+              timestamp: a['timestamp'] as int?,
+            ),
+          );
+          value = await verifyWebhookSignature(
+            VerifyWebhookSignatureOptions(
+              payload: (a['verifyPayload'] ?? a['payload']) as String,
+              header: header,
+              secret: secret(a['verifySecret']),
+              toleranceSec: a['toleranceSec'] as int?,
+              now: DateTime.parse(a['now'] as String),
+            ),
+          );
         case 'delegate':
           value = await delegateMember(
             baseUrl: a['baseUrl'] as String,
@@ -424,7 +453,7 @@ Future<List<Object?>> runServer(String dir) async {
     } on ArgumentError catch (e) {
       outcome = {
         'ok': false,
-        'error': {'type': 'Error', 'message': e.message}
+        'error': {'type': 'Error', 'message': e.message},
       };
     }
     results.add({'name': s['name'], 'requests': requests, 'outcome': outcome});

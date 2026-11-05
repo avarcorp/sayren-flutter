@@ -27,6 +27,7 @@ import 'schemas/product-options.dart';
 import 'schemas/review.dart';
 import 'schemas/stay.dart';
 import 'schemas/store.dart';
+import 'schemas/userinfo.dart';
 import 'session.dart';
 import 'zod.dart';
 
@@ -284,6 +285,12 @@ class StorefrontClientAuth {
   Future<TokenPair> idpToken(IdpTokenRequest body) async => _http.request(
       'POST', '/auth/idp/token', tokenPairSchema, RequestOptions(body: idpTokenRequestSchema.parse(body).toJson()));
 
+  /// 비밀번호 재설정 메일 요청(이슈 #400) — 가입 여부와 무관하게 늘 성공합니다.
+  ///
+  /// `POST /storefront/v1/auth/password-reset`
+  Future<void> requestPasswordReset(PasswordResetRequest body) async => _http.requestVoid(
+      'POST', '/auth/password-reset', RequestOptions(body: passwordResetRequestSchema.parse(body).toJson()));
+
   /// 구매자 탈퇴 — 로그인 상태(accessToken)에서 비밀번호로 본인 확인. 성공하면 토큰은 모두 무효.
   ///
   /// `POST /storefront/v1/auth/withdraw`
@@ -382,6 +389,11 @@ class StorefrontClientCatalog {
   Future<void> createInquiry(String productId, CreateInquiryRequest body) async => _http.requestVoid(
       'POST', '/products/${encodeURIComponent('$productId')}/inquiries', RequestOptions(body: body.toJson()));
 
+  /// `GET /sitemap/products` — 사이트맵용 판매 중 상품(id·이름·수정 시각, 상품 id 순, 페이지 최대 500).
+  /// 주소 조립과 XML 변환은 스토어프론트가 합니다.
+  Future<SitemapProductPage> listSitemapProducts([PageParams? params]) async =>
+      _http.request('GET', '/sitemap/products', sitemapProductPageSchema, RequestOptions(query: params?.toJson()));
+
   /// 노출 중인 컬렉션(노출 켜짐 + 기간 안) — 셀러가 정한 순서.
   ///
   /// `GET /storefront/v1/collections`
@@ -392,6 +404,12 @@ class StorefrontClientCatalog {
   /// 회원 토큰이 있으면 항목마입니다 `downloaded`·`downloadable`을 싣습니다. 받기는 `me.downloadCoupon`입니다.
   Future<Page<StorefrontCoupon>> listCoupons([StorefrontCouponListParams? params]) async => _http.request(
       'GET', '/coupons', pageSchema<StorefrontCoupon>(storefrontCouponSchema), RequestOptions(query: params?.toJson()));
+
+  /// `GET /products/{productId}/coupon-benefit` — 이 상품의 최대 쿠폰 할인(이슈 #222). 가진 쿠폰 + 받을 수 있는 쿠폰 중 함께 쓸 수 있는
+  /// 조합을 서버가 고릅니다(「받으면 최대 n원 할인」). 회원 토큰이 없으면 `loginRequired`입니다.
+  Future<ProductCouponBenefit> getCouponBenefit(String productId, {int? quantity, String? optionId}) async =>
+      _http.request('GET', '/products/${encodeURIComponent('$productId')}/coupon-benefit', productCouponBenefitSchema,
+          RequestOptions(query: compact({'quantity': quantity, 'optionId': optionId})));
 
   /// 숨김·기간 밖·없음은 모두 404 `COLLECTION_NOT_FOUND`.
   ///
@@ -469,6 +487,12 @@ class StorefrontClientCheckout {
   Future<CheckoutSession> create(CreateCheckoutRequest body) async => _http.request('POST', '/checkout',
       checkoutSessionSchema, RequestOptions(body: createCheckoutRequestSchema.parse(body).toJson()));
 
+  /// `GET /checkout/{checkoutId}` — 만들어 둔 주문서 조회(이슈 #116). 셀러가 만든 주문서 링크로 들어온 구매자가 그 주문서로 결제할 때 씁니다.
+  ///
+  /// 에러(`ApiError.code`): 404 `CHECKOUT_NOT_FOUND`, 409 `CHECKOUT_EXPIRED`, 409 `ALREADY_PAID`.
+  Future<CheckoutSession> get(String checkoutId) async =>
+      _http.request('GET', '/checkout/${encodeURIComponent('$checkoutId')}', checkoutSessionSchema);
+
   /// `POST /checkout/{checkoutId}/delivery-quote` — 배송비 미리보기. 배송지 우편번호로 배송비를 다시 계산합니다.
   ///
   /// 주문서를 만들 때는 배송지를 모르므로 제주·도서산간 추가 배송비가 빠져 있습니다. 구매자가 배송지를 입력하거나
@@ -511,6 +535,11 @@ class StorefrontClientCheckout {
   /// `GET /checkout/{checkoutId}/coupons` — 이 주문서에 쓸 수 있는 내 쿠폰과 예상 할인(회원 전용).
   Future<List<ApplicableCoupon>> applicableCoupons(String checkoutId) async => _http.request('GET',
       '/checkout/${encodeURIComponent('$checkoutId')}/coupons', z.array<ApplicableCoupon>(applicableCouponSchema));
+
+  /// `GET /checkout/{checkoutId}/best-coupons` — 가진 쿠폰으로 할인이 가장 큰 조합(이슈 #222, 회원 전용). `applications`를 그대로
+  /// `pricing`·결제 시작의 `coupons`에 넣습니다.
+  Future<CheckoutBestCoupons> bestCoupons(String checkoutId) async =>
+      _http.request('GET', '/checkout/${encodeURIComponent('$checkoutId')}/best-coupons', checkoutBestCouponsSchema);
 }
 
 /// `client.payments` 네임스페이스입니다.
@@ -836,4 +865,11 @@ class StorefrontClientMe {
   /// `COUPON_EXPIRED`, 429 `TOO_MANY_REQUESTS`.
   Future<MyCoupon> downloadCoupon(String couponId) async =>
       _http.request('POST', '/coupons/${encodeURIComponent('$couponId')}/download', myCouponSchema);
+
+  /// `POST /coupons/register` — 쿠폰 번호 등록(이슈 #264, 회원 전용). 셀러가 나눠 준 1회용 번호를 내 쿠폰으로 옮기고 그 한 장을 돌려줍니다.
+  ///
+  /// 에러(`ApiError.code`): 404 `COUPON_CODE_NOT_FOUND`(없는 번호·중지·종료·대상 아님), 409 `COUPON_CODE_USED`(이미 등록된 번호)·
+  /// `COUPON_LIMIT_REACHED`(1인 발급 한도)·`COUPON_SOLD_OUT`·`COUPON_EXPIRED`, 429 `TOO_MANY_REQUESTS`(회원당 분당 10회).
+  Future<MyCoupon> registerCoupon(RegisterCouponRequest body) async => _http.request('POST', '/coupons/register',
+      myCouponSchema, RequestOptions(body: registerCouponRequestSchema.parse(body).toJson()));
 }

@@ -124,5 +124,80 @@
   "args": [
    "src/site"
   ]
+ },
+ {
+  "name": "isAiWorkspaceDocPath [\"src/site/sitemap.json\"]",
+  "fn": "isAiWorkspaceDocPath",
+  "args": [
+   "src/site/sitemap.json"
+  ]
+ },
+ {
+  "name": "isAiWorkspaceDocPath [\"src/site/agent/design.md\"]",
+  "fn": "isAiWorkspaceDocPath",
+  "args": [
+   "src/site/agent/design.md"
+  ]
+ },
+ {
+  "name": "isAiWorkspaceDocPath [\"src/app.tsx\"]",
+  "fn": "isAiWorkspaceDocPath",
+  "args": [
+   "src/app.tsx"
+  ]
+ },
+ {
+  "name": "isAiChoiceAnswer [[{\"type\": \"text\", \"choice\": \"run:resume\"}]]",
+  "fn": "isAiChoiceAnswer",
+  "args": [
+   [
+    {
+     "type": "text",
+     "choice": "run:resume"
+    }
+   ]
+  ]
+ },
+ {
+  "name": "isAiChoiceAnswer [[{\"type\": \"text\"}]]",
+  "fn": "isAiChoiceAnswer",
+  "args": [
+   [
+    {
+     "type": "text"
+    }
+   ]
+  ]
+ },
+ {
+  "name": "isAiChoiceAnswer [[{\"type\": \"image\", \"choice\": \"x\"}]]",
+  "fn": "isAiChoiceAnswer",
+  "args": [
+   [
+    {
+     "type": "image",
+     "choice": "x"
+    }
+   ]
+  ]
+ },
+ {
+  "name": "isAiChoiceAnswer [[{\"type\": \"text\", \"choice\": \"\"}]]",
+  "fn": "isAiChoiceAnswer",
+  "args": [
+   [
+    {
+     "type": "text",
+     "choice": ""
+    }
+   ]
+  ]
+ },
+ {
+  "name": "isAiChoiceAnswer [[]]",
+  "fn": "isAiChoiceAnswer",
+  "args": [
+   []
+  ]
  }
 ]

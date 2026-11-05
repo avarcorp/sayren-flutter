@@ -360,6 +360,7 @@ final Map<String, Future<Object?> Function(StorefrontAuth auth, List<Object?> a)
   'anonymous': (x, a) => x.anonymous(),
   'session': (x, a) => x.session(LoginRequest.fromJson(_m(a[0]))),
   'signUp': (x, a) => x.signUp(SignupRequest.fromJson(_m(a[0]))),
+  'requestPasswordReset': (x, a) => x.requestPasswordReset(PasswordResetRequest.fromJson(_m(a[0]))),
   'idp': (x, a) {
     final o = _m(a[1]);
     final agreements = o['agreements'] as Map?;

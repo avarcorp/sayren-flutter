@@ -5,6 +5,7 @@
 /// @docImport '../client.dart';
 library;
 
+import 'dart:convert';
 import '../url.dart';
 import 'package:unorm_dart/unorm_dart.dart' as unorm;
 import '../http.dart';
@@ -17,16 +18,21 @@ import 'apps.dart';
 import 'audit.dart';
 import 'auth.dart';
 import 'category.dart';
+import 'checkout.dart';
 import 'claim.dart';
 import 'collection.dart';
 import 'commerce-flow.dart';
 import 'commerce-number.dart';
 import 'common.dart';
+import 'condition-tree.dart';
+import 'coupon-rules.dart';
+import 'coupon-selection.dart';
 import 'coupon.dart';
 import 'currency-prices.dart';
 import 'currency.dart';
 import 'customer-delegation.dart';
 import 'customer.dart';
+import 'flow-localization.dart';
 import 'fulfillment.dart';
 import 'inventory.dart';
 import 'locale.dart';
@@ -36,6 +42,7 @@ import 'misc.dart';
 import 'order.dart';
 import 'payment.dart';
 import 'points.dart';
+import 'product-import.dart';
 import 'product-info.dart';
 import 'product-localization.dart';
 import 'product.dart';
@@ -51,6 +58,7 @@ import 'store.dart';
 import 'subscription.dart';
 import 'telemetry.dart';
 import 'upload.dart';
+import 'userinfo.dart';
 import 'webhook-event.dart';
 import '../webhook-headers.dart';
 
@@ -127,10 +135,6 @@ const RESERVED_STOREFRONT_SLUGS = <String>[
 /// 1단계 이름이라 슬러그가 이 모양이면 남의 편집 미리보기 주소와 겹칠 수 있어 슬러그로 쓰지 못합니다.
 const STOREFRONT_EDIT_PREVIEW_SUFFIX = '-preview';
 
-/// 공식 쇼케이스 슬러그 접두사(이슈 #72) — `demo-{템플릿 id}`는 템플릿 미리보기용 쇼케이스 사이트 주소입니다. 쇼케이스로 지정된
-/// 상점만 쓸 수 있습니다(서버가 상점 용도로 판정합니다). 공식 미리보기를 흉내 내는 주소를 막습니다.
-const STOREFRONT_SHOWCASE_SLUG_PREFIX = 'demo-';
-
 /// [String] 스키마입니다.
 final ZodType<String> storefrontSlugSchema = z
     .string()
@@ -153,191 +157,6 @@ const STOREFRONT_SLUG_CHANGE_LIMIT = 3;
 /// 사이트 만들기 한도 — 같은 창(30일) 안의 횟수(상점 단위). 끄고 만들기를 되풀이해 이름을 묶어 두지 못하게 합니다.
 const STOREFRONT_SITE_CREATE_LIMIT = 3;
 
-/// [StorefrontTemplate] 스키마입니다.
-final ZodObject<StorefrontTemplate> storefrontTemplateSchema = z.object<StorefrontTemplate>({
-  'templateId': z.string(),
-  'name': z.string(),
-  'industry': z.string(),
-  'description': z.string(),
-  'thumbnailUrl': z.string().nullable(),
-  'version': z.string(),
-  'isDefault': z.boolean(),
-  'tags': z.array<String>(z.string()).withDefault(const []),
-  'supportsCheckout': z.boolean().withDefault(true),
-  'previewUrl': z.string().nullable().withDefault(null),
-  'source': z.enum_(['CATALOG', 'STORE']).withDefault('CATALOG'),
-}, StorefrontTemplate._);
-
-/// StorefrontTemplate 값입니다.
-class StorefrontTemplate extends ParsedObject {
-  /// [StorefrontTemplate]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  StorefrontTemplate(
-      {required String templateId,
-      required String name,
-      required String industry,
-      required String description,
-      required String? thumbnailUrl,
-      required String version,
-      required bool isDefault,
-      List<String> tags = const [],
-      bool supportsCheckout = true,
-      String? previewUrl,
-      String source = 'CATALOG'})
-      : super({
-          'templateId': templateId,
-          'name': name,
-          'industry': industry,
-          'description': description,
-          'thumbnailUrl': thumbnailUrl,
-          'version': version,
-          'isDefault': isDefault,
-          'tags': tags,
-          'supportsCheckout': supportsCheckout,
-          'previewUrl': previewUrl,
-          'source': source
-        });
-
-  StorefrontTemplate._(super.json);
-
-  /// JSON을 [storefrontTemplateSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
-  factory StorefrontTemplate.fromJson(Map<String, Object?> json) => storefrontTemplateSchema.parse(json);
-
-  Map<String, Object?> get _j => jsonOf(this);
-
-  /// 템플릿 id (예: `basic`).
-  String get templateId => _j['templateId'] as String;
-
-  /// 템플릿 이름.
-  String get name => _j['name'] as String;
-
-  /// 업종 (예: `general`·`fashion`·`food`). 목록 필터에 씁니다.
-  String get industry => _j['industry'] as String;
-
-  /// 템플릿 설명.
-  String get description => _j['description'] as String;
-
-  /// 썸네일 이미지 주소. 없으면 null.
-  String? get thumbnailUrl => _j['thumbnailUrl'] as String?;
-
-  /// 현재 템플릿 버전. 새 사이트는 이 버전으로 만듭니다.
-  String get version => _j['version'] as String;
-
-  /// 기본 템플릿인가 (상점 생성 시 자동 생성에 씁니다).
-  bool get isDefault => _j['isDefault'] as bool;
-
-  /// 템플릿 특징 태그 (예: `후기 강조`). 목록 카드에 보입니다. 옛 서버 응답은 빈 배열로 읽습니다.
-  List<String> get tags => (_j['tags'] as List).cast<String>();
-
-  /// 주문을 받는 템플릿인지입니다. false는 가격·문의 중심의 카탈로그형입니다. 옛 서버 응답은 true로 읽습니다.
-  bool get supportsCheckout => _j['supportsCheckout'] as bool;
-
-  /// 미리보기 사이트 주소. 공식 템플릿은 연결된 쇼케이스, 템플릿 상점의 템플릿은 그 상점의 사이트가 공개 중일 때만 싣고 그 밖에는 null.
-  String? get previewUrl => _j['previewUrl'] as String?;
-
-  /// `CATALOG` 공식 템플릿 · `STORE` 템플릿 상점의 템플릿(사이트를 만들 때 `copyContent`로 콘텐츠를 복사할 수 있습니다). 옛 서버 응답은 `CATALOG`로 읽습니다.
-  String get source => _j['source'] as String;
-}
-
-/// [StoreTemplate] 스키마입니다.
-///
-/// 템플릿 상점의 템플릿 정보 — 상점을 만들 때 템플릿 상점으로 고른 상점만 있습니다. 발행한 스토어프론트가 템플릿이 되고, 이 이름·소개·
-/// 썸네일로 모든 셀러의 템플릿 목록에 보입니다.
-final ZodObject<StoreTemplate> storeTemplateSchema = z.object<StoreTemplate>({
-  'templateId': z.string(),
-  'name': z.string(),
-  'description': z.string(),
-  'thumbnailUrl': z.string().nullable(),
-  'status': z.enum_(['DRAFT', 'ACTIVE', 'RETIRED']),
-  'version': z.string().nullable(),
-}, StoreTemplate._);
-
-/// 템플릿 상점의 템플릿 정보 — 상점을 만들 때 템플릿 상점으로 고른 상점만 있습니다. 발행한 스토어프론트가 템플릿이 되고, 이 이름·소개·
-/// 썸네일로 모든 셀러의 템플릿 목록에 보입니다.
-class StoreTemplate extends ParsedObject {
-  /// [StoreTemplate]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  StoreTemplate(
-      {required String templateId,
-      required String name,
-      required String description,
-      required String? thumbnailUrl,
-      required String status,
-      required String? version})
-      : super({
-          'templateId': templateId,
-          'name': name,
-          'description': description,
-          'thumbnailUrl': thumbnailUrl,
-          'status': status,
-          'version': version
-        });
-
-  StoreTemplate._(super.json);
-
-  /// JSON을 [storeTemplateSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
-  factory StoreTemplate.fromJson(Map<String, Object?> json) => storeTemplateSchema.parse(json);
-
-  Map<String, Object?> get _j => jsonOf(this);
-
-  /// 템플릿 id. 다른 상점이 사이트를 만들 때 이 값을 씁니다.
-  String get templateId => _j['templateId'] as String;
-
-  /// 템플릿 이름.
-  String get name => _j['name'] as String;
-
-  /// 템플릿 소개.
-  String get description => _j['description'] as String;
-
-  /// 썸네일 이미지 주소. 없으면 null.
-  String? get thumbnailUrl => _j['thumbnailUrl'] as String?;
-
-  /// `DRAFT` 아직 편집한 스토어프론트를 발행하지 않아 목록에 보이지 않음 · `ACTIVE` 목록에 보임 · `RETIRED` 상점을 닫아 내려감.
-  String get status => _j['status'] as String;
-
-  /// 목록에 보이는 템플릿 버전. 발행한 스토어프론트 버전에서 정해집니다. `DRAFT`면 null.
-  String? get version => _j['version'] as String?;
-}
-
-/// 템플릿 상점의 고정 사업자 정보 필드 — 상점 수정에서 다른 값을 보내면 409 `TEMPLATE_STORE_BUSINESS_LOCKED`입니다(값은 플랫폼이 정합니다).
-const TEMPLATE_STORE_LOCKED_BUSINESS_FIELDS = <String>[
-  'businessName',
-  'representativeName',
-  'businessNumber',
-  'mailOrderSalesNumber',
-  'customerCenterPhone',
-  'customerCenterEmail'
-];
-
-/// [UpdateStoreTemplateRequest] 스키마입니다.
-final ZodObject<UpdateStoreTemplateRequest> updateStoreTemplateRequestSchema = z.object<UpdateStoreTemplateRequest>({
-  'name': z.string().trim().min(1).max(40),
-  'description': z.string().trim().max(200),
-  'thumbnailUrl': z.string().url().max(2048).nullable(),
-}, UpdateStoreTemplateRequest._);
-
-/// UpdateStoreTemplateRequest 값입니다.
-class UpdateStoreTemplateRequest extends ParsedObject {
-  /// [UpdateStoreTemplateRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  UpdateStoreTemplateRequest({required String name, required String description, required String? thumbnailUrl})
-      : super({'name': name, 'description': description, 'thumbnailUrl': thumbnailUrl});
-
-  UpdateStoreTemplateRequest._(super.json);
-
-  /// JSON을 [updateStoreTemplateRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
-  factory UpdateStoreTemplateRequest.fromJson(Map<String, Object?> json) =>
-      updateStoreTemplateRequestSchema.parse(json);
-
-  Map<String, Object?> get _j => jsonOf(this);
-
-  /// 템플릿 이름(1~40자).
-  String get name => _j['name'] as String;
-
-  /// 템플릿 소개(200자까지).
-  String get description => _j['description'] as String;
-
-  /// 썸네일 이미지 주소(https). 이미지 업로드(`POST /v1/uploads`)로 받은 주소를 씁니다. 없으면 null.
-  String? get thumbnailUrl => _j['thumbnailUrl'] as String?;
-}
-
 /// [String] 스키마입니다. 값은 `BUILDING`·`READY`·`FAILED`입니다.
 ///
 /// 버전 상태 — 템플릿 버전(`source: TEMPLATE`)은 템플릿 산출물을 그대로 쓰므로 만들 때 곧바로 `READY`입니다. 편집 버전
@@ -355,8 +174,6 @@ typedef StorefrontVersionStatus = String;
 final ZodObject<StorefrontVersion> storefrontVersionSchema = z.object<StorefrontVersion>({
   'versionId': z.string(),
   'number': z.number().int_().greaterThan(1, inclusive: true),
-  'templateId': z.string(),
-  'templateVersion': z.string(),
   'status': storefrontVersionStatusSchema,
   'published': z.boolean(),
   'publishedAt': z.string().nullable(),
@@ -365,6 +182,11 @@ final ZodObject<StorefrontVersion> storefrontVersionSchema = z.object<Storefront
   'buildId': z.string().nullable(),
   'createdByType': z.string(),
   'createdVia': z.string().nullable().optional(),
+  'gitRef': z.string().nullable().optional(),
+  'commitSha': z.string().nullable().optional(),
+  'excludedPaths': z.array<String>(z.string()).nullable().optional(),
+  'mainChanged': z.boolean().optional(),
+  'buildCanceled': z.boolean().optional(),
   'createdAt': z.string(),
   'previewable': z.boolean().optional(),
 }, StorefrontVersion._);
@@ -375,8 +197,6 @@ class StorefrontVersion extends ParsedObject {
   StorefrontVersion(
       {required String versionId,
       required int number,
-      required String templateId,
-      required String templateVersion,
       required String status,
       required bool published,
       required String? publishedAt,
@@ -385,13 +205,16 @@ class StorefrontVersion extends ParsedObject {
       required String? buildId,
       required String createdByType,
       Nullable<String>? createdVia,
+      Nullable<String>? gitRef,
+      Nullable<String>? commitSha,
+      Nullable<List<String>>? excludedPaths,
+      bool? mainChanged,
+      bool? buildCanceled,
       required String createdAt,
       bool? previewable})
       : super({
           'versionId': versionId,
           'number': number,
-          'templateId': templateId,
-          'templateVersion': templateVersion,
           'status': status,
           'published': published,
           'publishedAt': publishedAt,
@@ -400,6 +223,11 @@ class StorefrontVersion extends ParsedObject {
           'buildId': buildId,
           'createdByType': createdByType,
           if (createdVia != null) 'createdVia': createdVia.value,
+          if (gitRef != null) 'gitRef': gitRef.value,
+          if (commitSha != null) 'commitSha': commitSha.value,
+          if (excludedPaths != null) 'excludedPaths': excludedPaths.value,
+          if (mainChanged != null) 'mainChanged': mainChanged,
+          if (buildCanceled != null) 'buildCanceled': buildCanceled,
           'createdAt': createdAt,
           if (previewable != null) 'previewable': previewable
         });
@@ -416,12 +244,6 @@ class StorefrontVersion extends ParsedObject {
 
   /// 사이트 안에서 1부터 늘어나는 번호 (v1, v2…).
   int get number => _j['number'] as int;
-
-  /// 이 버전의 기준 템플릿.
-  String get templateId => _j['templateId'] as String;
-
-  /// 이 버전의 기준 템플릿 버전.
-  String get templateVersion => _j['templateVersion'] as String;
 
   /// `BUILDING` 빌드 중 · `READY` 발행 가능 · `FAILED` 빌드 실패.
   String get status => _j['status'] as String;
@@ -444,13 +266,28 @@ class StorefrontVersion extends ParsedObject {
   /// 만든 행위자 유형 (`USER`·`AGENT`·`APP`·`TOKEN`·`SYSTEM`). 늘어날 수 있습니다.
   String get createdByType => _j['createdByType'] as String;
 
-  /// 만든 경로 (`CONSOLE` 상점 플랫폼 · `AI` AI 에이전트(MCP) · `CLI` `sayren` CLI · `API` 관리 API · `SYSTEM` 자동). 늘어날 수 있습니다.
+  /// 만든 경로 (`CONSOLE` 상점 플랫폼 · `AI` AI 에이전트(MCP) · `CLI` `sayren` CLI · `API` 관리 API · `SYSTEM` 자동 · `GIT` 연결한 저장소 push). 늘어날 수 있습니다.
   String? get createdVia => _j['createdVia'] as String?;
+
+  /// 연결한 저장소의 push로 만든 버전의 브랜치. 그 밖은 null.
+  String? get gitRef => _j['gitRef'] as String?;
+
+  /// 이 버전 소스를 담은 저장소 커밋(Git 원천 사이트). 저장소에 없는 버전은 null.
+  String? get commitSha => _j['commitSha'] as String?;
+
+  /// 저장소 push로 만든 버전에서 경로 규칙 밖이라 빼고 배포한 파일(`.env`·서버 코드 등, 앞 20개). README·`.github/` 같은 저장소 관리 파일은 싣지 않습니다. 없으면 null.
+  List<String>? get excludedPaths => (_j['excludedPaths'] as List?)?.cast<String>();
+
+  /// 이 버전을 만든 뒤 운영 브랜치가 바뀌어 발행할 수 없습니다(발행하면 409 `STOREFRONT_MAIN_CHANGED`). 최신 운영 브랜치를 합친 버전을 만듭니다. 버전 목록에만 싣습니다.
+  bool? get mainChanged => _j['mainChanged'] as bool?;
+
+  /// 같은 브랜치의 새 push가 이 버전의 빌드를 끊었습니다(`status`는 `FAILED`, 빌드 `errorCode` `BUILD_CANCELED`). 버전 목록에만 싣습니다.
+  bool? get buildCanceled => _j['buildCanceled'] as bool?;
 
   /// 만든 시각 (ISO 8601).
   String get createdAt => _j['createdAt'] as String;
 
-  /// 미리보기 주소로 열 수 있는가 (`POST /v1/storefront/site/preview-link`의 `versionId`). 보관 기간이 지난 버전은 false.
+  /// 미리보기 주소로 열 수 있는가 (`POST /v1/storefront/site/preview-link`의 `versionId`). 빌드가 끝난 버전은 true입니다 — 오래된 버전은 링크를 요청할 때 다시 올립니다.
   bool? get previewable => _j['previewable'] as bool?;
 }
 
@@ -469,9 +306,6 @@ final ZodEnum storefrontVisibilitySchema = z.enum_(['COMING_SOON', 'PUBLIC']);
 ///
 /// 값은 `COMING_SOON`·`PUBLIC`입니다.
 typedef StorefrontVisibility = String;
-
-/// [String] 스키마입니다. 값은 `MANAGED`·`CUSTOM`입니다.
-final ZodEnum storefrontSourceModeSchema = z.enum_(['MANAGED', 'CUSTOM']);
 
 /// [StorefrontDomain] 스키마입니다.
 final ZodObject<StorefrontDomain> storefrontDomainSchema = z.object<StorefrontDomain>({
@@ -640,12 +474,13 @@ class StorefrontSiteSnapshot extends ParsedObject {
 /// [StorefrontSite] 스키마입니다.
 final ZodObject<StorefrontSite> storefrontSiteSchema = z.object<StorefrontSite>({
   'siteId': z.string(),
+  'versionHistory': z.boolean().optional(),
+  'autoPublish': z.boolean().nullable().optional(),
+  'deployWithoutApproval': z.boolean().optional(),
   'slug': z.string(),
   'hostname': z.string(),
   'url': z.string(),
   'domains': z.array<StorefrontDomain>(storefrontDomainSchema),
-  'templateId': z.string(),
-  'sourceMode': storefrontSourceModeSchema,
   'status': storefrontSiteStatusSchema,
   'visibility': storefrontVisibilitySchema,
   'publishedVersion': storefrontVersionSchema.nullable(),
@@ -663,12 +498,13 @@ class StorefrontSite extends ParsedObject {
   /// [StorefrontSite]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   StorefrontSite(
       {required String siteId,
+      bool? versionHistory,
+      Nullable<bool>? autoPublish,
+      bool? deployWithoutApproval,
       required String slug,
       required String hostname,
       required String url,
       required List<StorefrontDomain> domains,
-      required String templateId,
-      required String sourceMode,
       required String status,
       required String visibility,
       required StorefrontVersion? publishedVersion,
@@ -681,12 +517,13 @@ class StorefrontSite extends ParsedObject {
       required String updatedAt})
       : super({
           'siteId': siteId,
+          if (versionHistory != null) 'versionHistory': versionHistory,
+          if (autoPublish != null) 'autoPublish': autoPublish.value,
+          if (deployWithoutApproval != null) 'deployWithoutApproval': deployWithoutApproval,
           'slug': slug,
           'hostname': hostname,
           'url': url,
           'domains': domains,
-          'templateId': templateId,
-          'sourceMode': sourceMode,
           'status': status,
           'visibility': visibility,
           'publishedVersion': publishedVersion,
@@ -709,6 +546,15 @@ class StorefrontSite extends ParsedObject {
   /// `siteId` 값입니다.
   String get siteId => _j['siteId'] as String;
 
+  /// 사이트 버전 저장·되돌리기를 쓰는 요금제인지입니다. false면 배포(CLI `sayren deploy`·Git 운영 브랜치 push)가 곧 발행이고 발행본보다 옛 버전은 7일 뒤 정리됩니다.
+  bool? get versionHistory => _j['versionHistory'] as bool?;
+
+  /// 배포 뒤 바로 게시 — CLI `sayren deploy`·Git 운영 브랜치 push가 만든 버전을 곧바로 게시합니다. null이면 소스의 `sayren.json` `deploy.production`, 그것도 없으면 저장만. 상점 플랫폼에서 OWNER·ADMIN만 바꿉니다.
+  bool? get autoPublish => _j['autoPublish'] as bool?;
+
+  /// 승인 없이 배포 — 켜져 있으면 AI 에이전트의 발행·되돌리기가 승인 없이 실행됩니다. 상점 플랫폼에서 OWNER·ADMIN만 바꿉니다.
+  bool? get deployWithoutApproval => _j['deployWithoutApproval'] as bool?;
+
   /// 주소 슬러그.
   String get slug => _j['slug'] as String;
 
@@ -720,12 +566,6 @@ class StorefrontSite extends ParsedObject {
 
   /// 사용 중·보류 중인 호스트 이름.
   List<StorefrontDomain> get domains => (_j['domains'] as List).cast<StorefrontDomain>();
-
-  /// 지금 발행된 버전의 템플릿 (발행 전이면 만든 템플릿).
-  String get templateId => _j['templateId'] as String;
-
-  /// `MANAGED` 템플릿 그대로 · `CUSTOM` 한 번이라도 편집함.
-  String get sourceMode => _j['sourceMode'] as String;
 
   /// `ACTIVE` 운영 중 · `SUSPENDED` 운영자 정지 · `CLOSED` 호스팅 끔·상점 폐쇄.
   String get status => _j['status'] as String;
@@ -889,7 +729,7 @@ class StorefrontDeploymentLog extends ParsedObject {
   /// `level` 값입니다.
   String get level => _j['level'] as String;
 
-  /// 기록 종류 (`SITE_CREATED`·`ADDRESS_RESERVED`·`WAITING`·`SYNCING`·`VERSION_UPLOADED`·`SYNC_FAILED`·`RETRY_SCHEDULED`·`PUBLISHED`, 템플릿 상점의 템플릿은 `BUILDING`·`BUILD_FAILED`·`CONTENT_COPYING`·`CONTENT_COPIED`·`CONTENT_COPY_FAILED`).
+  /// 기록 종류 (`SITE_CREATED`·`ADDRESS_RESERVED`·`WAITING`·`SYNCING`·`VERSION_UPLOADED`·`SYNC_FAILED`·`RETRY_SCHEDULED`·`PUBLISHED`, 템플릿 없이 만든 사이트는 `BUILDING`·`BUILD_FAILED`, 템플릿 없이 빈 트리로 만든 사이트의 첫 업로드 전은 `WAITING_SOURCE`).
   String get code => _j['code'] as String;
 
   /// 사람이 읽는 문장.
@@ -975,22 +815,27 @@ class StorefrontDeployment extends ParsedObject {
   String? get nextAttemptAt => _j['nextAttemptAt'] as String?;
 }
 
+/// [String] 스키마입니다. 값은 `NONE`·`STARTER`입니다.
+///
+/// 사이트의 첫 소스(#315) — `NONE` 빈 작업 트리(CLI link) · `STARTER` sayren 시작 코드(웹 시작).
+final ZodEnum storefrontInitialSourceSchema = z.enum_(['NONE', 'STARTER']);
+
+/// StorefrontInitialSource 값입니다.
+///
+/// 값은 `NONE`·`STARTER`입니다.
+typedef StorefrontInitialSource = String;
+
 /// [CreateStorefrontSiteRequest] 스키마입니다.
 final ZodObject<CreateStorefrontSiteRequest> createStorefrontSiteRequestSchema = z.object<CreateStorefrontSiteRequest>({
-  'templateId': z.string().min(1).max(64),
+  'initialSource': storefrontInitialSourceSchema.optional(),
   'slug': storefrontSlugSchema.optional(),
-  'copyContent': z.boolean().optional(),
-}, CreateStorefrontSiteRequest._);
+}, CreateStorefrontSiteRequest._, strictRequest: true);
 
 /// CreateStorefrontSiteRequest 값입니다.
 class CreateStorefrontSiteRequest extends ParsedObject {
   /// [CreateStorefrontSiteRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  CreateStorefrontSiteRequest({required String templateId, String? slug, bool? copyContent})
-      : super({
-          'templateId': templateId,
-          if (slug != null) 'slug': slug,
-          if (copyContent != null) 'copyContent': copyContent
-        });
+  CreateStorefrontSiteRequest({String? initialSource, String? slug})
+      : super({if (initialSource != null) 'initialSource': initialSource, if (slug != null) 'slug': slug});
 
   CreateStorefrontSiteRequest._(super.json);
 
@@ -1000,14 +845,11 @@ class CreateStorefrontSiteRequest extends ParsedObject {
 
   Map<String, Object?> get _j => jsonOf(this);
 
-  /// 템플릿 id.
-  String get templateId => _j['templateId'] as String;
+  /// 첫 소스 (기본 `NONE`). `NONE`은 빈 작업 트리로 시작하고 첫 소스 업로드가 첫 소스입니다. `STARTER`는 sayren 시작 코드의 최신 게시 버전으로 첫 작업 트리를 만들고 빌드합니다.
+  String? get initialSource => _j['initialSource'] as String?;
 
   /// 주소 슬러그. 생략하면 상점 코드.
   String? get slug => _j['slug'] as String?;
-
-  /// 템플릿 상점의 템플릿일 때만 — true면 템플릿 상점의 콘텐츠(레이아웃, 상품·카테고리·컬렉션·주문 흐름·배송·환불 정책)를 이 상점으로 복사합니다. 쿠폰·적립금·리뷰는 복사하지 않습니다. 생략하거나 false면 레이아웃 콘텐츠를 비우고 빌드합니다.
-  bool? get copyContent => _j['copyContent'] as bool?;
 }
 
 /// [PublishStorefrontVersionRequest] 스키마입니다.
@@ -1018,7 +860,7 @@ class CreateStorefrontSiteRequest extends ParsedObject {
 final ZodObject<PublishStorefrontVersionRequest> publishStorefrontVersionRequestSchema =
     z.object<PublishStorefrontVersionRequest>({
   'expectedPublishedVersionId': z.string().nullable().optional(),
-}, PublishStorefrontVersionRequest._);
+}, PublishStorefrontVersionRequest._, strictRequest: true);
 
 /// 발행·되돌리기 — 발행은 사이트의 발행 포인터를 바꾸는 조건부 쓰기입니다. `expectedPublishedVersionId`를 주면
 /// 지금 발행 버전이 그 값일 때만 바꿉니다(화면을 본 뒤 다른 사람이 바꿨으면 409 `STOREFRONT_SITE_CHANGED`).
@@ -1044,7 +886,7 @@ class PublishStorefrontVersionRequest extends ParsedObject {
 final ZodObject<RollbackStorefrontRequest> rollbackStorefrontRequestSchema = z.object<RollbackStorefrontRequest>({
   'versionId': z.string().optional(),
   'expectedPublishedVersionId': z.string().nullable().optional(),
-}, RollbackStorefrontRequest._);
+}, RollbackStorefrontRequest._, strictRequest: true);
 
 /// RollbackStorefrontRequest 값입니다.
 class RollbackStorefrontRequest extends ParsedObject {
@@ -1072,7 +914,7 @@ class RollbackStorefrontRequest extends ParsedObject {
 /// [ChangeStorefrontSlugRequest] 스키마입니다.
 final ZodObject<ChangeStorefrontSlugRequest> changeStorefrontSlugRequestSchema = z.object<ChangeStorefrontSlugRequest>({
   'slug': storefrontSlugSchema,
-}, ChangeStorefrontSlugRequest._);
+}, ChangeStorefrontSlugRequest._, strictRequest: true);
 
 /// ChangeStorefrontSlugRequest 값입니다.
 class ChangeStorefrontSlugRequest extends ParsedObject {
@@ -1096,7 +938,7 @@ final ZodObject<SetStorefrontVisibilityRequest> setStorefrontVisibilityRequestSc
     z.object<SetStorefrontVisibilityRequest>({
   'visibility': storefrontVisibilitySchema,
   'expectedVisibility': storefrontVisibilitySchema.optional(),
-}, SetStorefrontVisibilityRequest._);
+}, SetStorefrontVisibilityRequest._, strictRequest: true);
 
 /// SetStorefrontVisibilityRequest 값입니다.
 class SetStorefrontVisibilityRequest extends ParsedObject {
@@ -1121,16 +963,16 @@ class SetStorefrontVisibilityRequest extends ParsedObject {
 
 /// [DisableStorefrontHostingRequest] 스키마입니다.
 ///
-/// 호스팅 끄기 — 사이트를 닫고(`CLOSED`) 슬러그를 보류합니다. 확인 입력은 현재 슬러그입니다.
+/// 호스팅 끄기 — 사이트를 닫고(`CLOSED`) 슬러그를 보류합니다. 확인 입력은 받지 않습니다(2026-10-22).
 final ZodObject<DisableStorefrontHostingRequest> disableStorefrontHostingRequestSchema =
     z.object<DisableStorefrontHostingRequest>({
-  'confirmSlug': z.string().min(1),
-}, DisableStorefrontHostingRequest._);
+  'confirmSlug': z.string().max(200).optional(),
+}, DisableStorefrontHostingRequest._, strictRequest: true);
 
-/// 호스팅 끄기 — 사이트를 닫고(`CLOSED`) 슬러그를 보류합니다. 확인 입력은 현재 슬러그입니다.
+/// 호스팅 끄기 — 사이트를 닫고(`CLOSED`) 슬러그를 보류합니다. 확인 입력은 받지 않습니다(2026-10-22).
 class DisableStorefrontHostingRequest extends ParsedObject {
   /// [DisableStorefrontHostingRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  DisableStorefrontHostingRequest({required String confirmSlug}) : super({'confirmSlug': confirmSlug});
+  DisableStorefrontHostingRequest({String? confirmSlug}) : super({if (confirmSlug != null) 'confirmSlug': confirmSlug});
 
   DisableStorefrontHostingRequest._(super.json);
 
@@ -1140,8 +982,8 @@ class DisableStorefrontHostingRequest extends ParsedObject {
 
   Map<String, Object?> get _j => jsonOf(this);
 
-  /// 확인 입력 — 현재 슬러그.
-  String get confirmSlug => _j['confirmSlug'] as String;
+  /// 쓰지 않습니다 — 보내도 무시합니다(옛 확인 입력).
+  String? get confirmSlug => _j['confirmSlug'] as String?;
 }
 
 /// [StorefrontSlugAvailabilityQuery] 스키마입니다.
@@ -1176,7 +1018,7 @@ final ZodObject<CreateStorefrontPreviewLinkRequest> createStorefrontPreviewLinkR
     z.object<CreateStorefrontPreviewLinkRequest>({
   'path': z.string().max(512).optional(),
   'versionId': z.string().max(64).optional(),
-}, CreateStorefrontPreviewLinkRequest._);
+}, CreateStorefrontPreviewLinkRequest._, strictRequest: true);
 
 /// 버전 미리보기 링크 — 상점 플랫폼에서 로그인한 OWNER·ADMIN만 받습니다(PAT·에이전트 불가). 버전마다 미리보기 전용 주소가 있고
 /// (오픈 준비 중이어도 실제 화면), 링크를 5분 안에 열면 그 브라우저에 그 주소 전용 12시간 쿠키가 생깁니다. 사이트 주소는 오픈 전이면
@@ -1197,7 +1039,7 @@ class CreateStorefrontPreviewLinkRequest extends ParsedObject {
   /// 열 경로 (`/`로 시작). 생략하면 `/`.
   String? get path => _j['path'] as String?;
 
-  /// 볼 버전. 생략하면 발행 버전입니다. 보관 기간이 지난 버전(`previewable: false`)은 409 `STOREFRONT_VERSION_NOT_PREVIEWABLE`.
+  /// 볼 버전. 생략하면 발행 버전입니다. 빌드가 끝나지 않았거나 다시 올리지 못한 버전은 409 `STOREFRONT_VERSION_NOT_PREVIEWABLE`.
   String? get versionId => _j['versionId'] as String?;
 }
 
@@ -1487,7 +1329,7 @@ class StorefrontSiteDomains extends ParsedObject {
 /// [AddStorefrontDomainRequest] 스키마입니다.
 final ZodObject<AddStorefrontDomainRequest> addStorefrontDomainRequestSchema = z.object<AddStorefrontDomainRequest>({
   'hostname': z.string().min(1).max(300),
-}, AddStorefrontDomainRequest._);
+}, AddStorefrontDomainRequest._, strictRequest: true);
 
 /// AddStorefrontDomainRequest 값입니다.
 class AddStorefrontDomainRequest extends ParsedObject {
@@ -1506,6 +1348,110 @@ class AddStorefrontDomainRequest extends ParsedObject {
   String get hostname => _j['hostname'] as String;
 }
 
+/// STOREFRONT_SITE_VAR_KEY_PATTERN 값입니다.
+final STOREFRONT_SITE_VAR_KEY_PATTERN = RegExp(r'^[A-Za-z_][A-Za-z0-9_]{0,63}$');
+
+/// STOREFRONT_SITE_VAR_RESERVED_PREFIX 값입니다.
+const STOREFRONT_SITE_VAR_RESERVED_PREFIX = 'SAYREN_';
+
+/// STOREFRONT_SITE_VAR_RESERVED_NAMES 값입니다.
+const STOREFRONT_SITE_VAR_RESERVED_NAMES = <String>['ASSETS'];
+
+/// 사이트당 env 수.
+const STOREFRONT_SITE_VAR_LIMIT = 50;
+
+/// 값 하나의 상한(UTF-8 바이트).
+const STOREFRONT_SITE_VAR_MAX_BYTES = 5120;
+
+/// [StorefrontSiteVar] 스키마입니다.
+final ZodObject<StorefrontSiteVar> storefrontSiteVarSchema = z.object<StorefrontSiteVar>({
+  'key': z.string(),
+  'secret': z.boolean(),
+  'value': z.string().nullable(),
+  'updatedAt': z.string(),
+}, StorefrontSiteVar._);
+
+/// StorefrontSiteVar 값입니다.
+class StorefrontSiteVar extends ParsedObject {
+  /// [StorefrontSiteVar]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontSiteVar({required String key, required bool secret, required String? value, required String updatedAt})
+      : super({'key': key, 'secret': secret, 'value': value, 'updatedAt': updatedAt});
+
+  StorefrontSiteVar._(super.json);
+
+  /// JSON을 [storefrontSiteVarSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontSiteVar.fromJson(Map<String, Object?> json) => storefrontSiteVarSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `key` 값입니다.
+  String get key => _j['key'] as String;
+
+  /// 비밀 값인지입니다 — 값은 응답에 싣지 않고 런타임에만 들어갑니다.
+  bool get secret => _j['secret'] as bool;
+
+  /// 값. 비밀 값이면 null.
+  String? get value => _j['value'] as String?;
+
+  /// `updatedAt` 값입니다.
+  String get updatedAt => _j['updatedAt'] as String;
+}
+
+/// [StorefrontSiteVars] 스키마입니다.
+final ZodObject<StorefrontSiteVars> storefrontSiteVarsSchema = z.object<StorefrontSiteVars>({
+  'limit': z.number().int_().greaterThan(0, inclusive: true),
+  'vars': z.array<StorefrontSiteVar>(storefrontSiteVarSchema),
+}, StorefrontSiteVars._);
+
+/// StorefrontSiteVars 값입니다.
+class StorefrontSiteVars extends ParsedObject {
+  /// [StorefrontSiteVars]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontSiteVars({required int limit, required List<StorefrontSiteVar> vars})
+      : super({'limit': limit, 'vars': vars});
+
+  StorefrontSiteVars._(super.json);
+
+  /// JSON을 [storefrontSiteVarsSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontSiteVars.fromJson(Map<String, Object?> json) => storefrontSiteVarsSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 사이트당 env 수 상한.
+  int get limit => _j['limit'] as int;
+
+  /// 키 순.
+  List<StorefrontSiteVar> get vars => (_j['vars'] as List).cast<StorefrontSiteVar>();
+}
+
+/// [PutStorefrontSiteVarRequest] 스키마입니다.
+final ZodObject<PutStorefrontSiteVarRequest> putStorefrontSiteVarRequestSchema = z.object<PutStorefrontSiteVarRequest>({
+  'value': z
+      .string()
+      .refine((v) => utf8.encode(v as String).length <= STOREFRONT_SITE_VAR_MAX_BYTES, message: '값은 5120바이트 이하입니다'),
+  'secret': z.boolean().optional(),
+}, PutStorefrontSiteVarRequest._, strictRequest: true);
+
+/// PutStorefrontSiteVarRequest 값입니다.
+class PutStorefrontSiteVarRequest extends ParsedObject {
+  /// [PutStorefrontSiteVarRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  PutStorefrontSiteVarRequest({required String value, bool? secret})
+      : super({'value': value, if (secret != null) 'secret': secret});
+
+  PutStorefrontSiteVarRequest._(super.json);
+
+  /// JSON을 [putStorefrontSiteVarRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory PutStorefrontSiteVarRequest.fromJson(Map<String, Object?> json) =>
+      putStorefrontSiteVarRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 값.
+  String get value => _j['value'] as String;
+
+  /// 비밀 값으로 둘지(기본 false). 비밀 값은 런타임에만 들어갑니다.
+  bool? get secret => _j['secret'] as bool?;
+}
+
 /// 플랫폼 전체 동시 편집 환경 상한.
 const STOREFRONT_EDIT_CAPACITY = 20;
 
@@ -1521,6 +1467,9 @@ const STOREFRONT_FILE_MAX_BYTES = 1048576;
 
 /// 작업 트리 전체 최대 크기(바이트) — 파일 수는 2,000개까지.
 const STOREFRONT_WORKSPACE_MAX_BYTES = 20971520;
+
+/// 작업 트리 내용 묶음(tar.gz, #351) 크기 상한 — 트리 상한만큼의 내용 + tar 머리(항목당 1KiB까지). 편집 Sandbox `MAX_PACK_BYTES`와 같습니다.
+const STOREFRONT_SOURCE_PACK_MAX_BYTES = 23085056;
 
 /// 일괄 쓰기 한 번의 최대 파일 수.
 const STOREFRONT_FILE_BATCH_MAX = 50;
@@ -1562,7 +1511,7 @@ final ZodEnum storefrontFileEncodingSchema = z.enum_(['utf8', 'base64']);
 final ZodEnum storefrontEditSessionStatusSchema = z.enum_(['STARTING', 'RUNNING']);
 
 /// 편집 환경을 띄우는 단계 — 상점 플랫폼 진행 표시용입니다. 값은 늘어날 수 있습니다.
-const STOREFRONT_EDIT_START_STAGES = <String>['CONTAINER', 'RESTORE', 'DEV_SERVER'];
+const STOREFRONT_EDIT_START_STAGES = <String>['CONTAINER', 'RESTORE', 'INSTALL', 'DEV_SERVER'];
 
 /// [StorefrontEditSession] 스키마입니다.
 final ZodObject<StorefrontEditSession> storefrontEditSessionSchema = z.object<StorefrontEditSession>({
@@ -1612,7 +1561,7 @@ class StorefrontEditSession extends ParsedObject {
   /// `STARTING` 띄우는 중 · `RUNNING` 사용 중.
   String get status => _j['status'] as String;
 
-  /// `STARTING`일 때 지금 단계 (`CONTAINER` 컨테이너 기동 · `RESTORE` 작업 트리 복원 · `DEV_SERVER` 개발 서버 기동). 늘어날 수 있습니다. `RUNNING`이면 null.
+  /// `STARTING`일 때 지금 단계 (`CONTAINER` 컨테이너 기동 · `RESTORE` 작업 트리 복원 · `INSTALL` 의존성 설치(`pnpm-lock.yaml`이 템플릿과 다를 때만) · `DEV_SERVER` 개발 서버 기동). 늘어날 수 있습니다. `RUNNING`이면 null.
   String? get startStage => _j['startStage'] as String?;
 
   /// 연 시각 (ISO 8601).
@@ -1631,10 +1580,70 @@ class StorefrontEditSession extends ParsedObject {
   String get closesAt => _j['closesAt'] as String;
 }
 
-/// [StorefrontDevLogs] 스키마입니다.
+/// [StorefrontGitMergeRequest] 스키마입니다.
 ///
-/// `GET /v1/storefront/site/editing/logs?lines=` — 편집 환경 dev 서버 로그의 끝부분(2026-10-14). 컴파일 오류·HMR 실패를 바로 읽습니다.
-/// 편집 환경이 켜져 있지 않으면 409 `EDIT_SESSION_REQUIRED`.
+/// `POST /v1/storefront/site/editing/git/merge` — 켜진 편집 환경 작업 트리에 운영 브랜치 최신 커밋을 합칩니다(#138, Git 원천 사이트).
+final ZodObject<StorefrontGitMergeRequest> storefrontGitMergeRequestSchema = z.object<StorefrontGitMergeRequest>({
+  'action': z.enum_(['merge', 'continue', 'abort']).withDefault('merge'),
+}, StorefrontGitMergeRequest._, strictRequest: true);
+
+/// `POST /v1/storefront/site/editing/git/merge` — 켜진 편집 환경 작업 트리에 운영 브랜치 최신 커밋을 합칩니다(#138, Git 원천 사이트).
+class StorefrontGitMergeRequest extends ParsedObject {
+  /// [StorefrontGitMergeRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontGitMergeRequest({String action = 'merge'}) : super({'action': action});
+
+  StorefrontGitMergeRequest._(super.json);
+
+  /// JSON을 [storefrontGitMergeRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontGitMergeRequest.fromJson(Map<String, Object?> json) => storefrontGitMergeRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `merge` 최신 운영 브랜치를 합친다 · `continue` 충돌 표시를 고친 뒤 합치기를 끝낸다 · `abort` 합치기를 취소하고 합치기 전으로 돌립니다.
+  String get action => _j['action'] as String;
+}
+
+/// [StorefrontGitMerge] 스키마입니다.
+final ZodObject<StorefrontGitMerge> storefrontGitMergeSchema = z.object<StorefrontGitMerge>({
+  'status': z.enum_(['MERGED', 'UP_TO_DATE', 'CONFLICT', 'COMMITTED', 'ABORTED']),
+  'conflicts': z.array<String>(z.string()),
+  'mainChanged': z.boolean(),
+  'dependenciesChanged': z.boolean().optional(),
+}, StorefrontGitMerge._);
+
+/// StorefrontGitMerge 값입니다.
+class StorefrontGitMerge extends ParsedObject {
+  /// [StorefrontGitMerge]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontGitMerge(
+      {required String status, required List<String> conflicts, required bool mainChanged, bool? dependenciesChanged})
+      : super({
+          'status': status,
+          'conflicts': conflicts,
+          'mainChanged': mainChanged,
+          if (dependenciesChanged != null) 'dependenciesChanged': dependenciesChanged
+        });
+
+  StorefrontGitMerge._(super.json);
+
+  /// JSON을 [storefrontGitMergeSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontGitMerge.fromJson(Map<String, Object?> json) => storefrontGitMergeSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `MERGED` 합쳤다 · `UP_TO_DATE` 이미 최신이다 · `CONFLICT` 충돌 — `conflicts`의 파일에서 충돌 표시(`<<<<<<<`·`>>>>>>>`)를 고친 뒤 `continue` · `COMMITTED` 충돌을 고쳐 합치기를 끝냈다 · `ABORTED` 취소했습니다.
+  String get status => _j['status'] as String;
+
+  /// 충돌한 파일(`CONFLICT`일 때). 그 밖은 빈 배열.
+  List<String> get conflicts => (_j['conflicts'] as List).cast<String>();
+
+  /// 합친 뒤에도 발행 전 작업이 지금 운영 브랜치 위가 아니다(충돌·취소면 true). false면 버전을 만들어 발행할 수 있습니다.
+  bool get mainChanged => _j['mainChanged'] as bool;
+
+  /// 합친 운영 브랜치가 `package.json`·`pnpm-lock.yaml`을 바꿔 의존성을 다시 검사하고 편집 환경을 다시 띄웠습니다(`STARTING`, 설치가 실패하면 편집 상태 `lastFailure`).
+  bool? get dependenciesChanged => _j['dependenciesChanged'] as bool?;
+}
+
+/// [StorefrontDevLogs] 스키마입니다.
 final ZodObject<StorefrontDevLogs> storefrontDevLogsSchema = z.object<StorefrontDevLogs>({
   'stdout': z.string(),
   'stderr': z.string(),
@@ -1642,8 +1651,7 @@ final ZodObject<StorefrontDevLogs> storefrontDevLogsSchema = z.object<Storefront
   'at': z.string(),
 }, StorefrontDevLogs._);
 
-/// `GET /v1/storefront/site/editing/logs?lines=` — 편집 환경 dev 서버 로그의 끝부분(2026-10-14). 컴파일 오류·HMR 실패를 바로 읽습니다.
-/// 편집 환경이 켜져 있지 않으면 409 `EDIT_SESSION_REQUIRED`.
+/// StorefrontDevLogs 값입니다.
 class StorefrontDevLogs extends ParsedObject {
   /// [StorefrontDevLogs]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   StorefrontDevLogs(
@@ -1714,6 +1722,45 @@ class StorefrontDevLogsBrowserItem extends ParsedObject {
   String get url => _j['url'] as String;
 }
 
+/// [StorefrontEditFailure] 스키마입니다.
+///
+/// 편집 환경 시작 실패(#125) — 작업 트리 `pnpm-lock.yaml`이 템플릿과 다르면 편집 환경은 빌드와 같은 의존성 정책으로 설치한 뒤 개발 서버를
+/// 띄웁니다. 설치가 실패하면 미리보기 대신 이 원인이 남습니다.
+final ZodObject<StorefrontEditFailure> storefrontEditFailureSchema = z.object<StorefrontEditFailure>({
+  'code': z.string(),
+  'message': z.string(),
+  'logTail': z.string().nullable(),
+  'failedAt': z.string().nullable(),
+}, StorefrontEditFailure._);
+
+/// 편집 환경 시작 실패(#125) — 작업 트리 `pnpm-lock.yaml`이 템플릿과 다르면 편집 환경은 빌드와 같은 의존성 정책으로 설치한 뒤 개발 서버를
+/// 띄웁니다. 설치가 실패하면 미리보기 대신 이 원인이 남습니다.
+class StorefrontEditFailure extends ParsedObject {
+  /// [StorefrontEditFailure]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontEditFailure(
+      {required String code, required String message, required String? logTail, required String? failedAt})
+      : super({'code': code, 'message': message, 'logTail': logTail, 'failedAt': failedAt});
+
+  StorefrontEditFailure._(super.json);
+
+  /// JSON을 [storefrontEditFailureSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontEditFailure.fromJson(Map<String, Object?> json) => storefrontEditFailureSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 실패 코드 (`INSTALL_FAILED` 설치 실패 · `INSTALL_TOO_LARGE` 설치 크기 상한 초과 · `DEPENDENCIES_CHANGED` 검사 뒤 의존성 파일이 바뀜 · `DEPENDENCIES_UNCHECKED` 의존성 검사 없음 · `START_TIMEOUT`·`CAPACITY_EXHAUSTED`·`CONTAINER_ERROR`·`RESTART_FAILED` 등, 늘어날 수 있습니다).
+  String get code => _j['code'] as String;
+
+  /// 사용자용 안내.
+  String get message => _j['message'] as String;
+
+  /// 설치 출력 끝부분(레지스트리가 거절한 요청 포함). 설치 단계 실패가 아니면 null.
+  String? get logTail => _j['logTail'] as String?;
+
+  /// 닫힌 시각 (ISO 8601).
+  String? get failedAt => _j['failedAt'] as String?;
+}
+
 /// [StorefrontEditing] 스키마입니다.
 final ZodObject<StorefrontEditing> storefrontEditingSchema = z.object<StorefrontEditing>({
   'enabled': z.boolean(),
@@ -1721,6 +1768,7 @@ final ZodObject<StorefrontEditing> storefrontEditingSchema = z.object<Storefront
   'capacity': storefrontEditingCapacitySchema,
   'preview': storefrontEditPreviewSchema,
   'workingTree': storefrontEditingWorkingTreeSchema,
+  'lastFailure': storefrontEditFailureSchema.nullable().optional(),
 }, StorefrontEditing._);
 
 /// StorefrontEditing 값입니다.
@@ -1731,13 +1779,15 @@ class StorefrontEditing extends ParsedObject {
       required StorefrontEditSession? session,
       required StorefrontEditingCapacity capacity,
       required StorefrontEditPreview preview,
-      required StorefrontEditingWorkingTree workingTree})
+      required StorefrontEditingWorkingTree workingTree,
+      Nullable<StorefrontEditFailure>? lastFailure})
       : super({
           'enabled': enabled,
           'session': session,
           'capacity': capacity,
           'preview': preview,
-          'workingTree': workingTree
+          'workingTree': workingTree,
+          if (lastFailure != null) 'lastFailure': lastFailure.value
         });
 
   StorefrontEditing._(super.json);
@@ -1761,6 +1811,9 @@ class StorefrontEditing extends ParsedObject {
 
   /// `workingTree` 값입니다.
   StorefrontEditingWorkingTree get workingTree => _j['workingTree'] as StorefrontEditingWorkingTree;
+
+  /// 편집 환경이 꺼져 있고 마지막 편집 환경이 시작하지 못하고(또는 다시 띄우지 못하고) 닫혔으면 그 원인. 다시 켜면 사라집니다. 없으면 null.
+  StorefrontEditFailure? get lastFailure => _j['lastFailure'] as StorefrontEditFailure?;
 }
 
 /// [StorefrontEditingCapacity] 스키마입니다.
@@ -1809,7 +1862,7 @@ class StorefrontEditingWorkingTree extends ParsedObject {
 
   Map<String, Object?> get _j => jsonOf(this);
 
-  /// 템플릿에서 한 번이라도 고쳤는가 (사이트 `sourceMode`가 `CUSTOM`).
+  /// 작업 트리를 한 번이라도 고쳤는지입니다.
   bool get modified => _j['modified'] as bool;
 
   /// 마지막으로 파일을 바꾼 시각.
@@ -1975,7 +2028,7 @@ final ZodObject<WriteStorefrontFilesRequest> writeStorefrontFilesRequestSchema =
       .max(50)
       .refine((v) => (v as List).map((f) => jsMap(f)['path']).toSet().length == v.length,
           message: '같은 경로를 두 번 실을 수 없습니다'),
-}, WriteStorefrontFilesRequest._);
+}, WriteStorefrontFilesRequest._, strictRequest: true);
 
 /// `POST /v1/storefront/site/files/batch` — 여러 파일을 한 번에 씁니다. 편집 환경이 없어도 됩니다(잠든 작업 트리에 바로 쓰고,
 /// 편집 환경이 떠 있으면 미리보기에 곧바로 반영됩니다). `expectedHash`: 생략하면 조건 없이 쓴다 · `null`이면 파일이 없어야 합니다(새 파일) · 값이면 지금
@@ -2122,7 +2175,7 @@ class StorefrontFileConflictDetailsConflictsItem extends ParsedObject {
 final ZodObject<DeleteStorefrontFileRequest> deleteStorefrontFileRequestSchema = z.object<DeleteStorefrontFileRequest>({
   'path': storefrontFilePathSchema,
   'expectedHash': storefrontFileHashSchema.optional(),
-}, DeleteStorefrontFileRequest._);
+}, DeleteStorefrontFileRequest._, strictRequest: true);
 
 /// `POST /v1/storefront/site/files/delete` — 없는 파일이면 `deleted: false`(조건을 주면 409 `FILE_CHANGED`).
 class DeleteStorefrontFileRequest extends ParsedObject {
@@ -2179,7 +2232,7 @@ final ZodObject<MoveStorefrontFileRequest> moveStorefrontFileRequestSchema = z.o
   'to': storefrontFilePathSchema,
   'expectedHash': storefrontFileHashSchema.optional(),
   'overwrite': z.boolean().optional(),
-}, MoveStorefrontFileRequest._);
+}, MoveStorefrontFileRequest._, strictRequest: true);
 
 /// `POST /v1/storefront/site/files/move` — 이름 바꾸기·옮기기.
 class MoveStorefrontFileRequest extends ParsedObject {
@@ -2257,7 +2310,7 @@ final ZodObject<SearchStorefrontFilesRequest> searchStorefrontFilesRequestSchema
   'caseSensitive': z.boolean().optional(),
   'pathPrefix': z.string().max(256).optional(),
   'maxResults': z.number().int_().greaterThan(1, inclusive: true).lessThan(200, inclusive: true).optional(),
-}, SearchStorefrontFilesRequest._).refine((v) {
+}, SearchStorefrontFilesRequest._, strictRequest: true).refine((v) {
   final j = jsonOf(v as ParsedObject);
   return !truthy(j['regex']) || (j['query'] as String).length <= 100;
 }, message: '정규식은 100자까지입니다', path: ['query']);
@@ -2371,7 +2424,7 @@ class StorefrontFileSearchResultMatchesItem extends ParsedObject {
 /// 있으면 그 검사를 다시 돌려주고, 다른 종류면 409 `CHECK_RUNNING`(`error.details.checkId`)입니다. 출력은 꼬리만 줍니다.
 final ZodObject<RunStorefrontCheckRequest> runStorefrontCheckRequestSchema = z.object<RunStorefrontCheckRequest>({
   'check': z.enum_(['typecheck', 'lint', 'test']),
-}, RunStorefrontCheckRequest._);
+}, RunStorefrontCheckRequest._, strictRequest: true);
 
 /// `POST /v1/storefront/site/checks` (202) — 작업 트리에 명령 하나를 돌립니다(`typecheck` 타입 검사 · `lint` · `test`). 편집 환경이
 /// 없어도 됩니다(일회용 검사 컨테이너에서 돕니다). 검사는 30초를 넘길 수 있어 **항상 202로 검사 id만 주고** 결과는
@@ -2763,7 +2816,8 @@ const STOREFRONT_BUILD_STAGES = <String>[
 /// 같은 모양입니다. 대상 패키지와 사유. 셀러가 고칠 수 있게 버전·권고 id·거절 사유를 싣습니다.
 /// `reason`: `DENYLISTED`(거절 목록) · `ADVISORY`(보안 권고) · `MALWARE`(악성 코드 권고, 패키지 전체) · `INSTALL_SCRIPT`(루트
 /// package.json의 설치 훅·의존성의 설치 스크립트, 경고) · `INSTALL_CONFIG`(설치 방식 필드, 경고) · `UNSUPPORTED_SOURCE`(레지스트리 밖 설치 경로) · `BUNDLED_DEPENDENCIES`(묶여
-/// 오는 의존성, 경고) · `INVALID_MANIFEST`(package.json·잠금 파일 형식), 늘어날 수 있습니다.
+/// 오는 의존성, 경고) · `INVALID_MANIFEST`(package.json·잠금 파일 형식) · `UNSUPPORTED_PACKAGE_MANAGER`(pnpm·npm 밖의 패키지 관리자) ·
+/// `RESOLVE_FAILED`(잠금 파일 없는 트리의 의존성 해석 실패), 늘어날 수 있습니다.
 final ZodObject<StorefrontDependencyFinding> storefrontDependencyFindingSchema = z.object<StorefrontDependencyFinding>({
   'name': z.string(),
   'version': z.string().nullable(),
@@ -2776,7 +2830,8 @@ final ZodObject<StorefrontDependencyFinding> storefrontDependencyFindingSchema =
 /// 같은 모양입니다. 대상 패키지와 사유. 셀러가 고칠 수 있게 버전·권고 id·거절 사유를 싣습니다.
 /// `reason`: `DENYLISTED`(거절 목록) · `ADVISORY`(보안 권고) · `MALWARE`(악성 코드 권고, 패키지 전체) · `INSTALL_SCRIPT`(루트
 /// package.json의 설치 훅·의존성의 설치 스크립트, 경고) · `INSTALL_CONFIG`(설치 방식 필드, 경고) · `UNSUPPORTED_SOURCE`(레지스트리 밖 설치 경로) · `BUNDLED_DEPENDENCIES`(묶여
-/// 오는 의존성, 경고) · `INVALID_MANIFEST`(package.json·잠금 파일 형식), 늘어날 수 있습니다.
+/// 오는 의존성, 경고) · `INVALID_MANIFEST`(package.json·잠금 파일 형식) · `UNSUPPORTED_PACKAGE_MANAGER`(pnpm·npm 밖의 패키지 관리자) ·
+/// `RESOLVE_FAILED`(잠금 파일 없는 트리의 의존성 해석 실패), 늘어날 수 있습니다.
 class StorefrontDependencyFinding extends ParsedObject {
   /// [StorefrontDependencyFinding]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   StorefrontDependencyFinding(
@@ -3050,7 +3105,7 @@ final ZodObject<CreateStorefrontVersionRequest> createStorefrontVersionRequestSc
     z.object<CreateStorefrontVersionRequest>({
   'message': z.string().max(200).optional(),
   'expectedSourceRef': z.string().max(200).optional(),
-}, CreateStorefrontVersionRequest._);
+}, CreateStorefrontVersionRequest._, strictRequest: true);
 
 /// `POST /v1/storefront/site/versions` — 지금 작업 트리를 고정해 버전을 만듭니다(빌드 시작). 사이트당 끝나지 않은 빌드는
 /// 하나입니다(409 `STOREFRONT_BUILD_IN_PROGRESS`). 편집 환경이 없어도 됩니다.
@@ -3113,7 +3168,7 @@ class StorefrontVersionCreated extends ParsedObject {
 final ZodObject<CreateStorefrontEditPreviewLinkRequest> createStorefrontEditPreviewLinkRequestSchema =
     z.object<CreateStorefrontEditPreviewLinkRequest>({
   'path': z.string().max(512).optional(),
-}, CreateStorefrontEditPreviewLinkRequest._);
+}, CreateStorefrontEditPreviewLinkRequest._, strictRequest: true);
 
 /// `POST /v1/storefront/site/editing/preview-link` — 편집 미리보기(dev 서버) 링크. 상점 플랫폼에서 로그인한 OWNER·ADMIN만
 /// 받습니다(PAT·에이전트 불가). 5분 안에 열면 그 브라우저에 미리보기 호스트 전용 쿠키(12시간)가 생깁니다. 편집 환경이
@@ -3136,9 +3191,6 @@ class CreateStorefrontEditPreviewLinkRequest extends ParsedObject {
 
 /// 압축 파일 조각 하나의 최대 크기(바이트).
 const STOREFRONT_SOURCE_PART_BYTES = 4194304;
-
-/// 내용 올리기 한 번의 최대 파일 수.
-const STOREFRONT_SOURCE_BLOB_BATCH_MAX = 200;
 
 /// 작업 트리 파일 수 상한.
 const STOREFRONT_WORKSPACE_MAX_FILES = 2000;
@@ -3355,89 +3407,176 @@ class StorefrontSourceArchivePart extends ParsedObject {
   String get content => _j['content'] as String;
 }
 
-/// [UploadStorefrontSourceBlobsRequest] 스키마입니다.
+/// [UploadStorefrontSourcePackRequest] 스키마입니다.
 ///
-/// `POST /v1/storefront/site/source/blobs` — 파일 내용 올리기(해시 키, 다시 올려도 안전합니다). 작업 트리는 바뀌지 않습니다.
-final ZodObject<UploadStorefrontSourceBlobsRequest> uploadStorefrontSourceBlobsRequestSchema =
-    z.object<UploadStorefrontSourceBlobsRequest>({
-  'blobs': z
-      .array<UploadStorefrontSourceBlobsRequestBlobsItem>(uploadStorefrontSourceBlobsRequestBlobsItemSchema)
-      .min(1)
-      .max(200),
-}, UploadStorefrontSourceBlobsRequest._);
+/// `POST /v1/storefront/site/source/pack` — 묶음(tar.gz, 항목 이름 = 내용 sha256)을 api를 거쳐 올립니다. 저장소 직접 올리기(`POST source/uploads`)를
+/// 쓸 수 없는 환경(503 `SOURCE_UPLOAD_UNAVAILABLE`)에서만 씁니다. 다시 올려도 안전합니다. 작업 트리는 바뀌지 않습니다.
+final ZodObject<UploadStorefrontSourcePackRequest> uploadStorefrontSourcePackRequestSchema =
+    z.object<UploadStorefrontSourcePackRequest>({
+  'hash': storefrontFileHashSchema,
+  'content': z.string(),
+}, UploadStorefrontSourcePackRequest._, strictRequest: true);
 
-/// `POST /v1/storefront/site/source/blobs` — 파일 내용 올리기(해시 키, 다시 올려도 안전합니다). 작업 트리는 바뀌지 않습니다.
-class UploadStorefrontSourceBlobsRequest extends ParsedObject {
-  /// [UploadStorefrontSourceBlobsRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  UploadStorefrontSourceBlobsRequest({required List<UploadStorefrontSourceBlobsRequestBlobsItem> blobs})
-      : super({'blobs': blobs});
+/// `POST /v1/storefront/site/source/pack` — 묶음(tar.gz, 항목 이름 = 내용 sha256)을 api를 거쳐 올립니다. 저장소 직접 올리기(`POST source/uploads`)를
+/// 쓸 수 없는 환경(503 `SOURCE_UPLOAD_UNAVAILABLE`)에서만 씁니다. 다시 올려도 안전합니다. 작업 트리는 바뀌지 않습니다.
+class UploadStorefrontSourcePackRequest extends ParsedObject {
+  /// [UploadStorefrontSourcePackRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  UploadStorefrontSourcePackRequest({required String hash, required String content})
+      : super({'hash': hash, 'content': content});
 
-  UploadStorefrontSourceBlobsRequest._(super.json);
+  UploadStorefrontSourcePackRequest._(super.json);
 
-  /// JSON을 [uploadStorefrontSourceBlobsRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
-  factory UploadStorefrontSourceBlobsRequest.fromJson(Map<String, Object?> json) =>
-      uploadStorefrontSourceBlobsRequestSchema.parse(json);
+  /// JSON을 [uploadStorefrontSourcePackRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory UploadStorefrontSourcePackRequest.fromJson(Map<String, Object?> json) =>
+      uploadStorefrontSourcePackRequestSchema.parse(json);
 
   Map<String, Object?> get _j => jsonOf(this);
 
-  /// `blobs` 값입니다.
-  List<UploadStorefrontSourceBlobsRequestBlobsItem> get blobs =>
-      (_j['blobs'] as List).cast<UploadStorefrontSourceBlobsRequestBlobsItem>();
+  /// 묶음(tar.gz) 바이트의 sha256.
+  String get hash => _j['hash'] as String;
+
+  /// 묶음 바이트 (base64).
+  String get content => _j['content'] as String;
 }
 
-/// [UploadStorefrontSourceBlobsRequestBlobsItem] 스키마입니다.
-final ZodObject<UploadStorefrontSourceBlobsRequestBlobsItem> uploadStorefrontSourceBlobsRequestBlobsItemSchema =
-    z.object<UploadStorefrontSourceBlobsRequestBlobsItem>({
+/// [StorefrontSourcePack] 스키마입니다.
+final ZodObject<StorefrontSourcePack> storefrontSourcePackSchema = z.object<StorefrontSourcePack>({
   'hash': storefrontFileHashSchema,
-  'content': z.string(),
-}, UploadStorefrontSourceBlobsRequestBlobsItem._);
+  'size': z.number().int_().greaterThan(1, inclusive: true),
+}, StorefrontSourcePack._);
 
-/// UploadStorefrontSourceBlobsRequestBlobsItem 값입니다.
-class UploadStorefrontSourceBlobsRequestBlobsItem extends ParsedObject {
-  /// [UploadStorefrontSourceBlobsRequestBlobsItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  UploadStorefrontSourceBlobsRequestBlobsItem({required String hash, required String content})
-      : super({'hash': hash, 'content': content});
+/// StorefrontSourcePack 값입니다.
+class StorefrontSourcePack extends ParsedObject {
+  /// [StorefrontSourcePack]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontSourcePack({required String hash, required int size}) : super({'hash': hash, 'size': size});
 
-  UploadStorefrontSourceBlobsRequestBlobsItem._(super.json);
+  StorefrontSourcePack._(super.json);
 
-  /// JSON을 [uploadStorefrontSourceBlobsRequestBlobsItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
-  factory UploadStorefrontSourceBlobsRequestBlobsItem.fromJson(Map<String, Object?> json) =>
-      uploadStorefrontSourceBlobsRequestBlobsItemSchema.parse(json);
+  /// JSON을 [storefrontSourcePackSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontSourcePack.fromJson(Map<String, Object?> json) => storefrontSourcePackSchema.parse(json);
 
   Map<String, Object?> get _j => jsonOf(this);
 
   /// 내용 바이트의 SHA-256 (소문자 hex).
   String get hash => _j['hash'] as String;
 
-  /// 파일 내용 (base64, 1MiB까지).
-  String get content => _j['content'] as String;
+  /// 묶음 바이트 수 (`PUT source`의 `pack.size`).
+  int get size => _j['size'] as int;
 }
 
-/// [StorefrontSourceBlobsResult] 스키마입니다.
-final ZodObject<StorefrontSourceBlobsResult> storefrontSourceBlobsResultSchema = z.object<StorefrontSourceBlobsResult>({
-  'stored': z.number().int_().greaterThan(0, inclusive: true),
-  'existing': z.number().int_().greaterThan(0, inclusive: true),
-}, StorefrontSourceBlobsResult._);
+/// [CreateStorefrontSourceUploadsRequest] 스키마입니다.
+///
+/// `POST /v1/storefront/site/source/uploads` — 묶음을 저장소에 직접 올릴 서명 주소(#181·#351). 내용은 api를 거치지 않습니다.
+/// 주소로 `PUT`해 묶음 바이트를 보내고 응답의 `headers`를 그대로 싣습니다(저장소가 크기·해시를 검증합니다).
+final ZodObject<CreateStorefrontSourceUploadsRequest> createStorefrontSourceUploadsRequestSchema =
+    z.object<CreateStorefrontSourceUploadsRequest>({
+  'pack': createStorefrontSourceUploadsRequestPackSchema,
+}, CreateStorefrontSourceUploadsRequest._, strictRequest: true);
 
-/// StorefrontSourceBlobsResult 값입니다.
-class StorefrontSourceBlobsResult extends ParsedObject {
-  /// [StorefrontSourceBlobsResult]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
-  StorefrontSourceBlobsResult({required int stored, required int existing})
-      : super({'stored': stored, 'existing': existing});
+/// `POST /v1/storefront/site/source/uploads` — 묶음을 저장소에 직접 올릴 서명 주소(#181·#351). 내용은 api를 거치지 않습니다.
+/// 주소로 `PUT`해 묶음 바이트를 보내고 응답의 `headers`를 그대로 싣습니다(저장소가 크기·해시를 검증합니다).
+class CreateStorefrontSourceUploadsRequest extends ParsedObject {
+  /// [CreateStorefrontSourceUploadsRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CreateStorefrontSourceUploadsRequest({required CreateStorefrontSourceUploadsRequestPack pack})
+      : super({'pack': pack});
 
-  StorefrontSourceBlobsResult._(super.json);
+  CreateStorefrontSourceUploadsRequest._(super.json);
 
-  /// JSON을 [storefrontSourceBlobsResultSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
-  factory StorefrontSourceBlobsResult.fromJson(Map<String, Object?> json) =>
-      storefrontSourceBlobsResultSchema.parse(json);
+  /// JSON을 [createStorefrontSourceUploadsRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CreateStorefrontSourceUploadsRequest.fromJson(Map<String, Object?> json) =>
+      createStorefrontSourceUploadsRequestSchema.parse(json);
 
   Map<String, Object?> get _j => jsonOf(this);
 
-  /// 새로 올린 수.
-  int get stored => _j['stored'] as int;
+  /// 빠진 파일 내용을 묶은 tar.gz 하나. 항목 이름은 내용의 sha256입니다. 응답 `uploads`는 하나이고 `hash`가 묶음 해시입니다.
+  CreateStorefrontSourceUploadsRequestPack get pack => _j['pack'] as CreateStorefrontSourceUploadsRequestPack;
+}
 
-  /// 이미 있던 수.
-  int get existing => _j['existing'] as int;
+/// [CreateStorefrontSourceUploadsRequestPack] 스키마입니다.
+final ZodObject<CreateStorefrontSourceUploadsRequestPack> createStorefrontSourceUploadsRequestPackSchema =
+    z.object<CreateStorefrontSourceUploadsRequestPack>({
+  'hash': storefrontFileHashSchema,
+  'size': z.number().int_().greaterThan(1, inclusive: true).lessThan(23085056, inclusive: true),
+}, CreateStorefrontSourceUploadsRequestPack._);
+
+/// 빠진 파일 내용을 묶은 tar.gz 하나. 항목 이름은 내용의 sha256입니다. 응답 `uploads`는 하나이고 `hash`가 묶음 해시입니다.
+class CreateStorefrontSourceUploadsRequestPack extends ParsedObject {
+  /// [CreateStorefrontSourceUploadsRequestPack]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  CreateStorefrontSourceUploadsRequestPack({required String hash, required int size})
+      : super({'hash': hash, 'size': size});
+
+  CreateStorefrontSourceUploadsRequestPack._(super.json);
+
+  /// JSON을 [createStorefrontSourceUploadsRequestPackSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory CreateStorefrontSourceUploadsRequestPack.fromJson(Map<String, Object?> json) =>
+      createStorefrontSourceUploadsRequestPackSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 묶음(tar.gz) 바이트의 sha256.
+  String get hash => _j['hash'] as String;
+
+  /// `size` 값입니다.
+  int get size => _j['size'] as int;
+}
+
+/// [StorefrontSourceUploads] 스키마입니다.
+final ZodObject<StorefrontSourceUploads> storefrontSourceUploadsSchema = z.object<StorefrontSourceUploads>({
+  'uploads': z.array<StorefrontSourceUploadsUploadsItem>(storefrontSourceUploadsUploadsItemSchema),
+  'expiresAt': z.string(),
+}, StorefrontSourceUploads._);
+
+/// StorefrontSourceUploads 값입니다.
+class StorefrontSourceUploads extends ParsedObject {
+  /// [StorefrontSourceUploads]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontSourceUploads({required List<StorefrontSourceUploadsUploadsItem> uploads, required String expiresAt})
+      : super({'uploads': uploads, 'expiresAt': expiresAt});
+
+  StorefrontSourceUploads._(super.json);
+
+  /// JSON을 [storefrontSourceUploadsSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontSourceUploads.fromJson(Map<String, Object?> json) => storefrontSourceUploadsSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `uploads` 값입니다.
+  List<StorefrontSourceUploadsUploadsItem> get uploads =>
+      (_j['uploads'] as List).cast<StorefrontSourceUploadsUploadsItem>();
+
+  /// 주소 만료 시각 (ISO 8601).
+  String get expiresAt => _j['expiresAt'] as String;
+}
+
+/// [StorefrontSourceUploadsUploadsItem] 스키마입니다.
+final ZodObject<StorefrontSourceUploadsUploadsItem> storefrontSourceUploadsUploadsItemSchema =
+    z.object<StorefrontSourceUploadsUploadsItem>({
+  'hash': storefrontFileHashSchema,
+  'url': z.string(),
+  'headers': z.record<String>(z.string()),
+}, StorefrontSourceUploadsUploadsItem._);
+
+/// StorefrontSourceUploadsUploadsItem 값입니다.
+class StorefrontSourceUploadsUploadsItem extends ParsedObject {
+  /// [StorefrontSourceUploadsUploadsItem]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontSourceUploadsUploadsItem({required String hash, required String url, required Map<String, String> headers})
+      : super({'hash': hash, 'url': url, 'headers': headers});
+
+  StorefrontSourceUploadsUploadsItem._(super.json);
+
+  /// JSON을 [storefrontSourceUploadsUploadsItemSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontSourceUploadsUploadsItem.fromJson(Map<String, Object?> json) =>
+      storefrontSourceUploadsUploadsItemSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 내용 바이트의 SHA-256 (소문자 hex).
+  String get hash => _j['hash'] as String;
+
+  /// 서명한 PUT 주소.
+  String get url => _j['url'] as String;
+
+  /// PUT에 그대로 싣는 헤더.
+  Map<String, String> get headers => (_j['headers'] as Map).cast<String, String>();
 }
 
 /// [ReplaceStorefrontSourceRequest] 스키마입니다.
@@ -3456,7 +3595,8 @@ final ZodObject<ReplaceStorefrontSourceRequest> replaceStorefrontSourceRequestSc
   'endEditSession': z.boolean().optional(),
   'packageJson': z.string().max(1048576).optional(),
   'lockfile': z.string().max(1048576).optional(),
-}, ReplaceStorefrontSourceRequest._);
+  'pack': replaceStorefrontSourceRequestPackSchema.nullable().optional(),
+}, ReplaceStorefrontSourceRequest._, strictRequest: true);
 
 /// `PUT /v1/storefront/site/source` — 작업 트리 전체를 이 목록으로 바꿉니다(없는 경로는 지웁니다). 전부 아니면 전무입니다.
 /// `package.json`·`pnpm-lock.yaml`도 바꿀 수 있고 의존성은 허용 목록 안이어야 합니다. `.env*`·작업 트리 밖 경로는 받지 않습니다.
@@ -3467,13 +3607,15 @@ class ReplaceStorefrontSourceRequest extends ParsedObject {
       required List<ReplaceStorefrontSourceRequestFilesItem> files,
       bool? endEditSession,
       String? packageJson,
-      String? lockfile})
+      String? lockfile,
+      Nullable<ReplaceStorefrontSourceRequestPack>? pack})
       : super({
           if (expectedBaseRef != null) 'expectedBaseRef': expectedBaseRef,
           'files': files,
           if (endEditSession != null) 'endEditSession': endEditSession,
           if (packageJson != null) 'packageJson': packageJson,
-          if (lockfile != null) 'lockfile': lockfile
+          if (lockfile != null) 'lockfile': lockfile,
+          if (pack != null) 'pack': pack.value
         });
 
   ReplaceStorefrontSourceRequest._(super.json);
@@ -3484,7 +3626,7 @@ class ReplaceStorefrontSourceRequest extends ParsedObject {
 
   Map<String, Object?> get _j => jsonOf(this);
 
-  /// 내려받은 작업 트리. 지금 작업 트리가 이 값일 때만 바꿉니다. 생략하면 조건 없이 덮어씁니다.
+  /// 내려받은 작업 트리. 그 뒤 작업 트리가 바뀌었으면 이 트리를 기준으로 3-way 병합하고, 같은 곳을 고쳤으면 409 `SOURCE_CHANGED`입니다. 생략하면 조건 없이 덮어씁니다.
   String? get expectedBaseRef => _j['expectedBaseRef'] as String?;
 
   /// `files` 값입니다.
@@ -3499,6 +3641,9 @@ class ReplaceStorefrontSourceRequest extends ParsedObject {
 
   /// `files`에 `pnpm-lock.yaml`이 있으면 그 내용(utf8).
   String? get lockfile => _j['lockfile'] as String?;
+
+  /// 새 내용을 올린 묶음(`POST source/uploads`·`source/pack`). 생략·null이면 지금 작업 트리에 없는 내용을 409 `SOURCE_BLOBS_MISSING`으로 알립니다.
+  ReplaceStorefrontSourceRequestPack? get pack => _j['pack'] as ReplaceStorefrontSourceRequestPack?;
 }
 
 /// [ReplaceStorefrontSourceRequestFilesItem] 스키마입니다.
@@ -3533,14 +3678,43 @@ class ReplaceStorefrontSourceRequestFilesItem extends ParsedObject {
   int get size => _j['size'] as int;
 }
 
+/// [ReplaceStorefrontSourceRequestPack] 스키마입니다.
+final ZodObject<ReplaceStorefrontSourceRequestPack> replaceStorefrontSourceRequestPackSchema =
+    z.object<ReplaceStorefrontSourceRequestPack>({
+  'hash': storefrontFileHashSchema,
+  'size': z.number().int_().greaterThan(1, inclusive: true).lessThan(23085056, inclusive: true),
+}, ReplaceStorefrontSourceRequestPack._);
+
+/// ReplaceStorefrontSourceRequestPack 값입니다.
+class ReplaceStorefrontSourceRequestPack extends ParsedObject {
+  /// [ReplaceStorefrontSourceRequestPack]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ReplaceStorefrontSourceRequestPack({required String hash, required int size}) : super({'hash': hash, 'size': size});
+
+  ReplaceStorefrontSourceRequestPack._(super.json);
+
+  /// JSON을 [replaceStorefrontSourceRequestPackSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ReplaceStorefrontSourceRequestPack.fromJson(Map<String, Object?> json) =>
+      replaceStorefrontSourceRequestPackSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 내용 바이트의 SHA-256 (소문자 hex).
+  String get hash => _j['hash'] as String;
+
+  /// `size` 값입니다.
+  int get size => _j['size'] as int;
+}
+
 /// [StorefrontSourceReplaced] 스키마입니다.
 final ZodObject<StorefrontSourceReplaced> storefrontSourceReplacedSchema = z.object<StorefrontSourceReplaced>({
   'sourceRef': storefrontSourceRefSchema,
-  'previousRef': z.string(),
+  'previousRef': z.string().nullable(),
   'treeSha256': z.string(),
   'files': z.number().int_().greaterThan(0, inclusive: true),
   'bytes': z.number().int_().greaterThan(0, inclusive: true),
   'changed': z.boolean(),
+  'merged': z.boolean().optional(),
+  'uploadedRef': storefrontSourceRefSchema.optional(),
   'endedEditSession': z.boolean(),
   'dependencyWarnings': z.array<StorefrontDependencyFinding>(storefrontDependencyFindingSchema),
 }, StorefrontSourceReplaced._);
@@ -3550,11 +3724,13 @@ class StorefrontSourceReplaced extends ParsedObject {
   /// [StorefrontSourceReplaced]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
   StorefrontSourceReplaced(
       {required String sourceRef,
-      required String previousRef,
+      required String? previousRef,
       required String treeSha256,
       required int files,
       required int bytes,
       required bool changed,
+      bool? merged,
+      String? uploadedRef,
       required bool endedEditSession,
       required List<StorefrontDependencyFinding> dependencyWarnings})
       : super({
@@ -3564,6 +3740,8 @@ class StorefrontSourceReplaced extends ParsedObject {
           'files': files,
           'bytes': bytes,
           'changed': changed,
+          if (merged != null) 'merged': merged,
+          if (uploadedRef != null) 'uploadedRef': uploadedRef,
           'endedEditSession': endedEditSession,
           'dependencyWarnings': dependencyWarnings
         });
@@ -3575,11 +3753,11 @@ class StorefrontSourceReplaced extends ParsedObject {
 
   Map<String, Object?> get _j => jsonOf(this);
 
-  /// 새 작업 트리 — 다음 올리기의 `expectedBaseRef`.
+  /// 새 작업 트리(버전 만들기의 `expectedSourceRef`). 다음 올리기의 기준은 `uploadedRef`입니다.
   String get sourceRef => _j['sourceRef'] as String;
 
-  /// 바꾸기 전 작업 트리.
-  String get previousRef => _j['previousRef'] as String;
+  /// 바꾸기 전 작업 트리. 소스가 없던 사이트(템플릿 없이 만든 사이트)의 첫 업로드는 null.
+  String? get previousRef => _j['previousRef'] as String?;
 
   /// `treeSha256` 값입니다.
   String get treeSha256 => _j['treeSha256'] as String;
@@ -3593,10 +3771,334 @@ class StorefrontSourceReplaced extends ParsedObject {
   /// 내용이 바뀌었는가 (같은 트리를 다시 올리면 false).
   bool get changed => _j['changed'] as bool;
 
+  /// 내려받은 뒤 바뀐 작업 트리와 3-way 병합해 결과가 올린 목록과 다른가(서버 쪽 변경이 함께 남습니다). 같은 곳을 고쳤으면 409 `SOURCE_CHANGED`(`details.conflicts` 충돌 파일).
+  bool? get merged => _j['merged'] as bool?;
+
+  /// 올린 목록 그대로의 트리 — 다음 올리기의 `expectedBaseRef`(클라이언트가 가진 트리). 병합하지 않았으면 `sourceRef`와 같습니다.
+  String? get uploadedRef => _j['uploadedRef'] as String?;
+
   /// 열린 편집 환경을 끄고 진행했는지입니다.
   bool get endedEditSession => _j['endedEditSession'] as bool;
 
   /// 배포를 막지 않는 의존성 경고 (보안 권고 등).
   List<StorefrontDependencyFinding> get dependencyWarnings =>
       (_j['dependencyWarnings'] as List).cast<StorefrontDependencyFinding>();
+}
+
+/// [StorefrontGitStatus] 스키마입니다.
+///
+/// `GET /v1/storefront/site/git` — 사이트의 Git 원천. 셀러가 GitHub 저장소를 연결했으면 발행한 소스가 그 저장소 운영 브랜치에 있습니다.
+/// 연결 전이면 필드가 null입니다.
+final ZodObject<StorefrontGitStatus> storefrontGitStatusSchema = z.object<StorefrontGitStatus>({
+  'provider': z.enum_(['GITHUB']).nullable(),
+  'repository': z.string().nullable(),
+  'productionBranch': z.string().nullable(),
+  'rootDirectory': z.string().nullable(),
+  'connectedAt': z.string().nullable(),
+  'headCommitSha': z.string().nullable(),
+  'mainChanged': z.boolean(),
+  'autoPromotePaused': z.boolean(),
+  'publishPending': z.boolean(),
+  'publishErrorCode': z.string().nullable(),
+  'archivedWorkRef': z.string().nullable(),
+  'lastDisconnect': storefrontGitStatusLastDisconnectSchema.nullable().optional(),
+}, StorefrontGitStatus._);
+
+/// `GET /v1/storefront/site/git` — 사이트의 Git 원천. 셀러가 GitHub 저장소를 연결했으면 발행한 소스가 그 저장소 운영 브랜치에 있습니다.
+/// 연결 전이면 필드가 null입니다.
+class StorefrontGitStatus extends ParsedObject {
+  /// [StorefrontGitStatus]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontGitStatus(
+      {required String? provider,
+      required String? repository,
+      required String? productionBranch,
+      required String? rootDirectory,
+      required String? connectedAt,
+      required String? headCommitSha,
+      required bool mainChanged,
+      required bool autoPromotePaused,
+      required bool publishPending,
+      required String? publishErrorCode,
+      required String? archivedWorkRef,
+      Nullable<StorefrontGitStatusLastDisconnect>? lastDisconnect})
+      : super({
+          'provider': provider,
+          'repository': repository,
+          'productionBranch': productionBranch,
+          'rootDirectory': rootDirectory,
+          'connectedAt': connectedAt,
+          'headCommitSha': headCommitSha,
+          'mainChanged': mainChanged,
+          'autoPromotePaused': autoPromotePaused,
+          'publishPending': publishPending,
+          'publishErrorCode': publishErrorCode,
+          'archivedWorkRef': archivedWorkRef,
+          if (lastDisconnect != null) 'lastDisconnect': lastDisconnect.value
+        });
+
+  StorefrontGitStatus._(super.json);
+
+  /// JSON을 [storefrontGitStatusSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontGitStatus.fromJson(Map<String, Object?> json) => storefrontGitStatusSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// 셀러 저장소가 연결돼 있으면 `GITHUB`, 아니면 null.
+  String? get provider => _j['provider'] as String?;
+
+  /// 연결한 셀러 저장소(`owner/name`). 연결 전이면 null.
+  String? get repository => _j['repository'] as String?;
+
+  /// 운영 배포 브랜치.
+  String? get productionBranch => _j['productionBranch'] as String?;
+
+  /// 저장소 안 사이트 루트(빈 문자열 = 저장소 루트).
+  String? get rootDirectory => _j['rootDirectory'] as String?;
+
+  /// 원천이 켜진 시각 (ISO 8601).
+  String? get connectedAt => _j['connectedAt'] as String?;
+
+  /// 운영 브랜치의 마지막 커밋.
+  String? get headCommitSha => _j['headCommitSha'] as String?;
+
+  /// 발행 전 작업이 지금 운영 브랜치 위가 아니다 — 발행하려면 최신 운영 브랜치를 합친 버전을 만듭니다(아니면 409 `STOREFRONT_MAIN_CHANGED`).
+  bool get mainChanged => _j['mainChanged'] as bool;
+
+  /// 되돌린 상태 — 저장소 push는 빌드만 하고 운영을 바꾸지 않습니다. 버전을 발행하면 다시 켜집니다.
+  bool get autoPromotePaused => _j['autoPromotePaused'] as bool;
+
+  /// 발행한 버전을 운영 브랜치에 올리는 중.
+  bool get publishPending => _j['publishPending'] as bool;
+
+  /// 마지막 발행을 운영 브랜치에 올리지 못한 이유(브랜치 보호 등). 운영과 저장소가 다를 수 있습니다.
+  String? get publishErrorCode => _j['publishErrorCode'] as String?;
+
+  /// 셀러 저장소를 연결할 때 보관한 발행 전 작업 트리(연결 전 편집). 없으면 null.
+  String? get archivedWorkRef => _j['archivedWorkRef'] as String?;
+
+  /// 셀러 저장소 연결이 셀러의 해제 없이 끊겼으면 그 까닭. 다시 연결하면 null.
+  StorefrontGitStatusLastDisconnect? get lastDisconnect => _j['lastDisconnect'] as StorefrontGitStatusLastDisconnect?;
+}
+
+/// [StorefrontGitStatusLastDisconnect] 스키마입니다.
+final ZodObject<StorefrontGitStatusLastDisconnect> storefrontGitStatusLastDisconnectSchema =
+    z.object<StorefrontGitStatusLastDisconnect>({
+  'reason': z.string(),
+  'repository': z.string().nullable(),
+  'at': z.string(),
+}, StorefrontGitStatusLastDisconnect._);
+
+/// StorefrontGitStatusLastDisconnect 값입니다.
+class StorefrontGitStatusLastDisconnect extends ParsedObject {
+  /// [StorefrontGitStatusLastDisconnect]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontGitStatusLastDisconnect({required String reason, required String? repository, required String at})
+      : super({'reason': reason, 'repository': repository, 'at': at});
+
+  StorefrontGitStatusLastDisconnect._(super.json);
+
+  /// JSON을 [storefrontGitStatusLastDisconnectSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontGitStatusLastDisconnect.fromJson(Map<String, Object?> json) =>
+      storefrontGitStatusLastDisconnectSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `APP_UNINSTALLED` GitHub App 설치 삭제·정지 · `REPO_ACCESS_REMOVED` 설치에서 저장소 제외 · `STORE_TRANSFERRED` 상점 양도.
+  String get reason => _j['reason'] as String;
+
+  /// 연결이 끊긴 셀러 저장소(`owner/name`). 상점 양도면 이전 소유자의 저장소라 null.
+  String? get repository => _j['repository'] as String?;
+
+  /// 끊긴 시각 (ISO 8601).
+  String get at => _j['at'] as String;
+}
+
+/// [StorefrontGitRepository] 스키마입니다.
+final ZodObject<StorefrontGitRepository> storefrontGitRepositorySchema = z.object<StorefrontGitRepository>({
+  'repoId': z.number().int_(),
+  'fullName': z.string(),
+  'defaultBranch': z.string(),
+}, StorefrontGitRepository._);
+
+/// StorefrontGitRepository 값입니다.
+class StorefrontGitRepository extends ParsedObject {
+  /// [StorefrontGitRepository]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontGitRepository({required int repoId, required String fullName, required String defaultBranch})
+      : super({'repoId': repoId, 'fullName': fullName, 'defaultBranch': defaultBranch});
+
+  StorefrontGitRepository._(super.json);
+
+  /// JSON을 [storefrontGitRepositorySchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontGitRepository.fromJson(Map<String, Object?> json) => storefrontGitRepositorySchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// GitHub 저장소 id.
+  int get repoId => _j['repoId'] as int;
+
+  /// `owner/name`.
+  String get fullName => _j['fullName'] as String;
+
+  /// `defaultBranch` 값입니다.
+  String get defaultBranch => _j['defaultBranch'] as String;
+}
+
+/// [LinkStorefrontGitInstallationRequest] 스키마입니다.
+///
+/// `POST /v1/storefront/site/git/installations` — GitHub App 설치 화면에서 돌아온 값(`installation_id`·`code`).
+final ZodObject<LinkStorefrontGitInstallationRequest> linkStorefrontGitInstallationRequestSchema =
+    z.object<LinkStorefrontGitInstallationRequest>({
+  'installationId': z.number().int_().greaterThan(0, inclusive: false),
+  'code': z.string().min(1).max(200),
+  'state': z.string().min(1).max(200),
+}, LinkStorefrontGitInstallationRequest._, strictRequest: true);
+
+/// [StorefrontGitConnectState] 스키마입니다.
+///
+/// `POST /v1/storefront/site/git/installations/state` — GitHub 설치 화면에 싣는 1회용 state(이 상점·사용자, 10분).
+final ZodObject<StorefrontGitConnectState> storefrontGitConnectStateSchema = z.object<StorefrontGitConnectState>({
+  'state': z.string(),
+  'expiresAt': z.string(),
+}, StorefrontGitConnectState._);
+
+/// `POST /v1/storefront/site/git/installations/state` — GitHub 설치 화면에 싣는 1회용 state(이 상점·사용자, 10분).
+class StorefrontGitConnectState extends ParsedObject {
+  /// [StorefrontGitConnectState]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  StorefrontGitConnectState({required String state, required String expiresAt})
+      : super({'state': state, 'expiresAt': expiresAt});
+
+  StorefrontGitConnectState._(super.json);
+
+  /// JSON을 [storefrontGitConnectStateSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory StorefrontGitConnectState.fromJson(Map<String, Object?> json) => storefrontGitConnectStateSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `state` 값입니다.
+  String get state => _j['state'] as String;
+
+  /// `expiresAt` 값입니다.
+  String get expiresAt => _j['expiresAt'] as String;
+}
+
+/// `POST /v1/storefront/site/git/installations` — GitHub App 설치 화면에서 돌아온 값(`installation_id`·`code`).
+class LinkStorefrontGitInstallationRequest extends ParsedObject {
+  /// [LinkStorefrontGitInstallationRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  LinkStorefrontGitInstallationRequest({required int installationId, required String code, required String state})
+      : super({'installationId': installationId, 'code': code, 'state': state});
+
+  LinkStorefrontGitInstallationRequest._(super.json);
+
+  /// JSON을 [linkStorefrontGitInstallationRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory LinkStorefrontGitInstallationRequest.fromJson(Map<String, Object?> json) =>
+      linkStorefrontGitInstallationRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `installationId` 값입니다.
+  int get installationId => _j['installationId'] as int;
+
+  /// 설치 화면이 돌려준 GitHub 사용자 인증 코드(한 번만 씁니다).
+  String get code => _j['code'] as String;
+
+  /// 설치 화면으로 보내기 전에 받은 연결 state(`POST …/git/installations/state`, 한 번만 씁니다).
+  String get state => _j['state'] as String;
+}
+
+/// [ConnectStorefrontGitRequest] 스키마입니다.
+///
+/// `POST /v1/storefront/site/git/connect`.
+final ZodObject<ConnectStorefrontGitRequest> connectStorefrontGitRequestSchema = z.object<ConnectStorefrontGitRequest>({
+  'installationId': z.number().int_().greaterThan(0, inclusive: false),
+  'repoId': z.number().int_().greaterThan(0, inclusive: false),
+  'productionBranch': z.string().min(1).max(200).pattern(RegExp(r'^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$')).optional(),
+  'rootDirectory': z
+      .string()
+      .max(200)
+      .pattern(RegExp(r'^$|^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$'))
+      .refine((v) => !(v as String).split('/').any((seg) => seg == '.' || seg == '..'), message: '상대 경로만')
+      .optional(),
+}, ConnectStorefrontGitRequest._, strictRequest: true);
+
+/// `POST /v1/storefront/site/git/connect`.
+class ConnectStorefrontGitRequest extends ParsedObject {
+  /// [ConnectStorefrontGitRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  ConnectStorefrontGitRequest(
+      {required int installationId, required int repoId, String? productionBranch, String? rootDirectory})
+      : super({
+          'installationId': installationId,
+          'repoId': repoId,
+          if (productionBranch != null) 'productionBranch': productionBranch,
+          if (rootDirectory != null) 'rootDirectory': rootDirectory
+        });
+
+  ConnectStorefrontGitRequest._(super.json);
+
+  /// JSON을 [connectStorefrontGitRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory ConnectStorefrontGitRequest.fromJson(Map<String, Object?> json) =>
+      connectStorefrontGitRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `installationId` 값입니다.
+  int get installationId => _j['installationId'] as int;
+
+  /// `repoId` 값입니다.
+  int get repoId => _j['repoId'] as int;
+
+  /// 운영 배포 브랜치(생략하면 저장소 기본 브랜치).
+  String? get productionBranch => _j['productionBranch'] as String?;
+
+  /// 저장소 안 사이트 루트(생략하면 저장소 루트).
+  String? get rootDirectory => _j['rootDirectory'] as String?;
+}
+
+/// [SetStorefrontAutoPublishRequest] 스키마입니다.
+///
+/// `PUT /v1/storefront/site/auto-publish` — 배포 뒤 바로 게시(#356). null이면 `sayren.json` `deploy.production`을 따릅니다.
+final ZodObject<SetStorefrontAutoPublishRequest> setStorefrontAutoPublishRequestSchema =
+    z.object<SetStorefrontAutoPublishRequest>({
+  'autoPublish': z.boolean().nullable(),
+}, SetStorefrontAutoPublishRequest._, strictRequest: true);
+
+/// `PUT /v1/storefront/site/auto-publish` — 배포 뒤 바로 게시(#356). null이면 `sayren.json` `deploy.production`을 따릅니다.
+class SetStorefrontAutoPublishRequest extends ParsedObject {
+  /// [SetStorefrontAutoPublishRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  SetStorefrontAutoPublishRequest({required bool? autoPublish}) : super({'autoPublish': autoPublish});
+
+  SetStorefrontAutoPublishRequest._(super.json);
+
+  /// JSON을 [setStorefrontAutoPublishRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory SetStorefrontAutoPublishRequest.fromJson(Map<String, Object?> json) =>
+      setStorefrontAutoPublishRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `autoPublish` 값입니다.
+  bool? get autoPublish => _j['autoPublish'] as bool?;
+}
+
+/// [SetStorefrontDeployApprovalRequest] 스키마입니다.
+///
+/// `PUT /v1/storefront/site/deploy-approval` — 승인 없이 배포(#138).
+final ZodObject<SetStorefrontDeployApprovalRequest> setStorefrontDeployApprovalRequestSchema =
+    z.object<SetStorefrontDeployApprovalRequest>({
+  'deployWithoutApproval': z.boolean(),
+}, SetStorefrontDeployApprovalRequest._, strictRequest: true);
+
+/// `PUT /v1/storefront/site/deploy-approval` — 승인 없이 배포(#138).
+class SetStorefrontDeployApprovalRequest extends ParsedObject {
+  /// [SetStorefrontDeployApprovalRequest]을 만듭니다. 검증하지 않으므로 테스트·미리보기 데이터에 사용하십시오.
+  SetStorefrontDeployApprovalRequest({required bool deployWithoutApproval})
+      : super({'deployWithoutApproval': deployWithoutApproval});
+
+  SetStorefrontDeployApprovalRequest._(super.json);
+
+  /// JSON을 [setStorefrontDeployApprovalRequestSchema]로 검증해 만듭니다. 맞지 않으면 [ZodError]를 던집니다.
+  factory SetStorefrontDeployApprovalRequest.fromJson(Map<String, Object?> json) =>
+      setStorefrontDeployApprovalRequestSchema.parse(json);
+
+  Map<String, Object?> get _j => jsonOf(this);
+
+  /// `deployWithoutApproval` 값입니다.
+  bool get deployWithoutApproval => _j['deployWithoutApproval'] as bool;
 }

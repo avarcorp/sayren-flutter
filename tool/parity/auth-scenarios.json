@@ -90,6 +90,22 @@
       ]
     },
     {
+      "name": "requestPasswordReset",
+      "method": "requestPasswordReset",
+      "args": [
+        {
+          "email": "buyer@example.test",
+          "successUrl": "https://shop.example.test/login"
+        }
+      ],
+      "responses": [
+        {
+          "status": 204,
+          "body": null
+        }
+      ]
+    },
+    {
       "name": "signUp",
       "method": "signUp",
       "args": [
